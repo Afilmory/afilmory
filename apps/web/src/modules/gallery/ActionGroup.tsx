@@ -2,6 +2,7 @@ import { photoLoader } from '@afilmory/data'
 import { useAtom } from 'jotai'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import { Drawer } from 'vaul'
 
 import { gallerySettingAtom } from '~/atoms/app'
@@ -311,9 +312,21 @@ const ResponsiveActionButton = ({
 export const ActionGroup = () => {
   const { t } = useTranslation()
   const [gallerySetting] = useAtom(gallerySettingAtom)
+  const navigate = useNavigate()
 
   return (
     <div className="flex items-center justify-center gap-3">
+      {/* 地图探索按钮 */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate('/explory')}
+        className="h-10 w-10 rounded-full border-0 bg-gray-100 transition-all duration-200 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+        title={t('action.map.explore')}
+      >
+        <i className="i-mingcute-map-pin-line text-base text-gray-600 dark:text-gray-300" />
+      </Button>
+
       {/* 标签筛选按钮 */}
       <ResponsiveActionButton
         icon="i-mingcute-tag-line"

@@ -11,7 +11,15 @@ export interface SiteConfig {
   author: Author
   social?: Social
   feed?: Feed
+  map?: MapConfig
 }
+
+/**
+ * Map configuration - can be either:
+ * - A string for a single provider: 'maplibre'
+ * - An array for multiple providers in priority order: ['maplibre']
+ */
+type MapConfig = 'maplibre'[]
 
 interface Feed {
   folo?: {

@@ -8,12 +8,6 @@ body {
   @apply grow h-0 shrink-0 overflow-auto relative;
 }
 
-@layer utilities {
-  * {
-    user-select: none;
-  }
-}
-
 @media screen and (min-width: 1024px) {
   ::-webkit-scrollbar-thumb {
     background-color: transparent;

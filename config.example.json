@@ -8,5 +8,8 @@
     "name": "Innei",
     "url": "https://innei.in/",
     "avatar": "https://cdn.jsdelivr.net/gh/Innei/static@master/avatar.png"
-  }
+  },
+  "map": [
+    "maplibre"
+  ]
 }

@@ -43,6 +43,7 @@ Live Photo Galleries:
 - ⚡ **Concurrent Processing** - Multi-process/multi-thread concurrent processing support
 - 🗂️ **Multi-Storage Support** - S3, GitHub, and other storage backends
 - 📷 **Share Image** - Share image to social media or embed iframe to your website
+- 🗺️ **Interactive Map Explorer** - Geographic visualization of photos with GPS coordinates from EXIF data using MapLibre
 
 ## 🏗️ Technical Architecture
 
