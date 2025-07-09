@@ -316,6 +316,8 @@ export const PhotoViewer = ({
                               // Live Photo props
                               isLivePhoto={photo.isLivePhoto}
                               livePhotoVideoUrl={photo.livePhotoVideoUrl}
+                              // HDR props
+                              isHDR={photo.isHDR}
                             />
                           </m.div>
                         </SwiperSlide>

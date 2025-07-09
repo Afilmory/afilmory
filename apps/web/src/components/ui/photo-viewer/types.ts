@@ -29,6 +29,9 @@ export interface ProgressiveImageProps {
   isLivePhoto?: boolean
   livePhotoVideoUrl?: string
 
+  // HDR 相关 props
+  isHDR?: boolean
+
   loadingIndicatorRef: React.RefObject<LoadingIndicatorRef | null>
 }
 

@@ -210,6 +210,8 @@ export async function executePhotoProcessingPipeline(
       isLivePhoto: livePhotoResult.isLivePhoto,
       livePhotoVideoUrl: livePhotoResult.livePhotoVideoUrl,
       livePhotoVideoS3Key: livePhotoResult.livePhotoVideoS3Key,
+      // HDR 相关字段
+      isHDR: exifData?.MPImageType === 'Gain Map Image',
     }
 
     loggers.image.success(`✅ 处理完成：${photoKey}`)

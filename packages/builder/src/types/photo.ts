@@ -55,6 +55,7 @@ export interface PhotoManifestItem extends PhotoInfo {
   exif: PickedExif | null
   toneAnalysis: ToneAnalysis | null // 影调分析结果
   isLivePhoto?: boolean
+  isHDR?: boolean
   livePhotoVideoUrl?: string
   livePhotoVideoS3Key?: string
 }
@@ -146,6 +147,9 @@ export interface PickedExif {
 
   // 富士胶片配方
   FujiRecipe?: FujiRecipe
+
+  // HDR 相关
+  MPImageType?: Tags['MPImageType']
 }
 
 export interface ThumbnailResult {
