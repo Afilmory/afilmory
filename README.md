@@ -34,6 +34,7 @@ Live Photo Galleries:
 - 📊 **EXIF Information Display** - Complete shooting parameters including camera model, focal length, aperture, etc.
 - 🌈 **Blurhash Placeholders** - Elegant image loading experience
 - 📱 **Live Photo Support** - Detection and display of iPhone Live Photos
+- ☀️ **HDR Image Support** - Display HDR images
 
 ### Advanced Features
 
