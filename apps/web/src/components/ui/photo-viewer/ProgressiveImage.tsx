@@ -102,6 +102,8 @@ export const ProgressiveImage = ({
   const showContextMenu = useShowContextMenu()
 
   const isHDRSupported = useMediaQuery('(dynamic-range: high)')
+  // Only use HDR if the browser supports it and the image is HDR
+  const shouldUseHDR = isHDR && isHDRSupported
 
   return (
     <div
@@ -137,7 +139,7 @@ export const ProgressiveImage = ({
           }}
         >
           {/* LivePhoto 或 HDR 模式使用 DOMImageViewer */}
-          {isLivePhoto || (isHDR && isHDRSupported) ? (
+          {isLivePhoto || shouldUseHDR ? (
             <DOMImageViewer
               ref={domImageViewerRef}
               onZoomChange={onDOMTransformed}
@@ -190,7 +192,7 @@ export const ProgressiveImage = ({
         />
       )}
 
-      {isHDR && highResLoaded && blobSrc && isCurrentImage && !error && (
+      {shouldUseHDR && highResLoaded && blobSrc && isCurrentImage && !error && (
         <HDRBadge />
       )}
 
