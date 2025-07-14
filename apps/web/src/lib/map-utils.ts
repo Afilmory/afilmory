@@ -1,4 +1,4 @@
-import type { PhotoManifestItem } from '@afilmory/builder'
+import type { PhotoManifestItem, PickedExif } from '@afilmory/builder'
 
 import type {
   GPSCoordinates,
@@ -9,35 +9,16 @@ import type {
 import { GPSDirection } from '~/types/map'
 
 /**
- * GPS coordinate validation function
+ * Convert EXIF GPS data to decimal coordinates with proper directional handling
  */
-export function isValidGPSCoordinates(
-  coords: GPSCoordinates | null,
-): coords is GPSCoordinates {
-  if (!coords) return false
-
-  const { latitude, longitude } = coords
-
-  return (
-    typeof latitude === 'number' &&
-    typeof longitude === 'number' &&
-    !Number.isNaN(latitude) &&
-    !Number.isNaN(longitude) &&
-    latitude >= -90 &&
-    latitude <= 90 &&
-    longitude >= -180 &&
-    longitude <= 180
-  )
-}
-
-/**
- * Convert PhotoManifestItem to PhotoMarker if it has GPS coordinates in EXIF
- */
-export function convertPhotoToMarkerFromEXIF(
-  photo: PhotoManifestItem,
-): PhotoMarker | null {
-  const { exif } = photo
-
+export function convertExifGPSToDecimal(exif: PickedExif | null): {
+  latitude: number
+  longitude: number
+  latitudeRef: GPSDirection.North | GPSDirection.South
+  longitudeRef: GPSDirection.East | GPSDirection.West
+  altitude?: number
+  altitudeRef?: 'Above Sea Level' | 'Below Sea Level'
+} | null {
   if (!exif?.GPSLatitude || !exif?.GPSLongitude) {
     return null
   }
@@ -97,34 +78,70 @@ export function convertPhotoToMarkerFromEXIF(
       }
     }
 
-    // Validate coordinates
-    if (
-      Number.isNaN(latitude) ||
-      Number.isNaN(longitude) ||
-      latitude < -90 ||
-      latitude > 90 ||
-      longitude < -180 ||
-      longitude > 180
-    ) {
+    // Validate coordinates using the validation function
+    const coordinatesToValidate = { latitude, longitude }
+    if (!isValidGPSCoordinates(coordinatesToValidate)) {
       return null
     }
 
-    return {
-      id: photo.id,
-      longitude,
-      latitude,
-      altitude,
-      latitudeRef,
-      longitudeRef,
-      altitudeRef,
-      photo,
-    }
+    return { latitude, longitude, latitudeRef, longitudeRef, altitude, altitudeRef }
   } catch (error) {
-    console.warn(
-      `Failed to parse GPS coordinates for photo ${photo.id}:`,
-      error,
-    )
+    console.warn('Failed to parse GPS coordinates from EXIF:', error)
     return null
+  }
+}
+
+/**
+ * GPS coordinate validation function
+ */
+export function isValidGPSCoordinates(
+  coords: GPSCoordinates | null,
+): coords is GPSCoordinates {
+  if (!coords) return false
+
+  const { latitude, longitude } = coords
+
+  return (
+    typeof latitude === 'number' &&
+    typeof longitude === 'number' &&
+    !Number.isNaN(latitude) &&
+    !Number.isNaN(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+  )
+}
+
+/**
+ * Convert PhotoManifestItem to PhotoMarker if it has GPS coordinates in EXIF
+ */
+export function convertPhotoToMarkerFromEXIF(
+  photo: PhotoManifestItem,
+): PhotoMarker | null {
+  const { exif } = photo
+
+  if (!exif) {
+    return null
+  }
+
+  // Use the common GPS conversion function
+  const gpsData = convertExifGPSToDecimal(exif)
+  if (!gpsData) {
+    return null
+  }
+
+  const { latitude, longitude, latitudeRef, longitudeRef, altitude, altitudeRef } = gpsData
+
+  return {
+    id: photo.id,
+    longitude,
+    latitude,
+    altitude,
+    latitudeRef,
+    longitudeRef,
+    altitudeRef,
+    photo,
   }
 }
 

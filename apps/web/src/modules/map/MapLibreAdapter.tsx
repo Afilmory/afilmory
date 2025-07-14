@@ -37,6 +37,7 @@ export const MapLibreMapComponent: React.FC<BaseMapProps> = ({
   id,
   initialViewState,
   markers,
+  selectedMarkerId,
   geoJsonData,
   className,
   style,
@@ -100,6 +101,7 @@ export const MapLibreMapComponent: React.FC<BaseMapProps> = ({
       id={id}
       initialViewState={initialViewState}
       markers={markers}
+      selectedMarkerId={selectedMarkerId}
       geoJsonData={geoJsonData}
       onMarkerClick={handleMarkerClick}
       onGeoJsonClick={handleGeoJsonClick}

@@ -7,6 +7,8 @@ import type { BaseMapProps, PhotoMarker } from '~/types/map'
 interface GenericMapProps extends Omit<BaseMapProps, 'handlers'> {
   /** Photo markers to display */
   markers?: PhotoMarker[]
+  /** ID of the marker to select */
+  selectedMarkerId?: string | null
   /** Callback when marker is clicked */
   onMarkerClick?: (marker: PhotoMarker) => void
   /** Callback when GeoJSON feature is clicked */
@@ -24,6 +26,7 @@ const DEFAULT_MARKERS: PhotoMarker[] = []
  */
 export const GenericMap: React.FC<GenericMapProps> = ({
   markers = DEFAULT_MARKERS,
+  selectedMarkerId,
   onMarkerClick,
   onGeoJsonClick,
   onGeolocate,
@@ -61,6 +64,7 @@ export const GenericMap: React.FC<GenericMapProps> = ({
     <MapComponent
       {...props}
       markers={markers}
+      selectedMarkerId={selectedMarkerId}
       initialViewState={calculatedInitialViewState}
       autoFitBounds={autoFitBounds}
       handlers={handlers}

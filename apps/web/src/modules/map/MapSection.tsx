@@ -2,6 +2,7 @@ import { photoLoader } from '@afilmory/data'
 import { m } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router'
 
 import {
   GenericMap,
@@ -11,6 +12,7 @@ import {
 } from '~/components/ui/map'
 import {
   calculateMapBounds,
+  convertExifGPSToDecimal,
   convertPhotosToMarkersFromEXIF,
   getInitialViewStateForMarkers,
 } from '~/lib/map-utils'
@@ -27,6 +29,7 @@ export const MapSection = () => {
 
 const MapSectionContent = () => {
   const { t } = useTranslation()
+  const [searchParams] = useSearchParams()
 
   // Photo markers state and loading logic
   const [isLoading, setIsLoading] = useState(true)
@@ -64,11 +67,46 @@ const MapSectionContent = () => {
     loadPhotoMarkersData()
   }, [setMarkers])
 
-  // Initial view state calculation
-  const initialViewState = useMemo(
-    () => getInitialViewStateForMarkers(markers),
-    [markers],
-  )
+  // Parse URL parameters - only use photoId
+  const { latitude, longitude, zoom, photoId } = useMemo(() => {
+    const photoIdParam = searchParams.get('photoId')
+
+    if (photoIdParam) {
+      const photo = photoLoader.getPhoto(photoIdParam)
+      const gpsData = convertExifGPSToDecimal(photo?.exif ?? null)
+      
+      if (gpsData) {
+        return {
+          latitude: gpsData.latitude,
+          longitude: gpsData.longitude,
+          zoom: 15, // Default zoom when coordinates derived from photo
+          photoId: photoIdParam,
+        }
+      }
+    }
+
+    return {
+      latitude: null,
+      longitude: null,
+      zoom: null,
+      photoId: photoIdParam,
+    }
+  }, [searchParams])
+
+  // Initial view state calculation - handle URL parameters
+  const initialViewState = useMemo(() => {
+    if (latitude !== null && longitude !== null) {
+      // Use URL parameters if provided
+      return {
+        latitude,
+        longitude,
+        zoom: zoom ?? 15,
+      }
+    }
+
+    // Fall back to markers-based view state
+    return getInitialViewStateForMarkers(markers)
+  }, [markers, latitude, longitude, zoom])
 
   // Show loading state
   if (isLoading) {
@@ -110,6 +148,8 @@ const MapSectionContent = () => {
         <GenericMap
           markers={markers}
           initialViewState={initialViewState}
+          autoFitBounds={latitude === null || longitude === null}
+          selectedMarkerId={photoId}
           className="h-full w-full"
         />
       </m.div>

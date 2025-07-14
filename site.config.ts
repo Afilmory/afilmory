@@ -12,6 +12,7 @@ export interface SiteConfig {
   social?: Social
   feed?: Feed
   map?: MapConfig
+  mapStyle?: string
 }
 
 /**

@@ -4,10 +4,10 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Map from 'react-map-gl/maplibre'
 
+import { getMapStyle } from '~/lib/map/style'
 import { calculateMapBounds } from '~/lib/map-utils'
 import type { PhotoMarker } from '~/types/map'
 
-import MAP_STYLE from './MapLibreStyle.json'
 import {
   ClusterMarker,
   clusterMarkers,
@@ -27,6 +27,7 @@ export interface PureMaplibreProps {
     zoom: number
   }
   markers?: PhotoMarker[]
+  selectedMarkerId?: string | null
   geoJsonData?: GeoJSON.FeatureCollection
   onMarkerClick?: (marker: PhotoMarker) => void
   onGeoJsonClick?: (event: any) => void
@@ -42,6 +43,7 @@ export const Maplibre = ({
   id,
   initialViewState = DEFAULT_VIEW_STATE,
   markers = DEFAULT_MARKERS,
+  selectedMarkerId: externalSelectedMarkerId,
   geoJsonData,
   onMarkerClick,
   onGeoJsonClick,
@@ -52,10 +54,19 @@ export const Maplibre = ({
   mapRef,
   autoFitBounds = true,
 }: PureMaplibreProps) => {
-  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(
+    externalSelectedMarkerId || null,
+  )
   const [currentZoom, setCurrentZoom] = useState(initialViewState.zoom)
   const [viewState, setViewState] = useState(initialViewState)
   const [isMapLoaded, setIsMapLoaded] = useState(false)
+
+  // Sync external selectedMarkerId with internal state
+  useEffect(() => {
+    if (externalSelectedMarkerId !== undefined) {
+      setSelectedMarkerId(externalSelectedMarkerId)
+    }
+  }, [externalSelectedMarkerId])
 
   // Handle marker click
   const handleMarkerClick = useCallback(
@@ -194,8 +205,7 @@ export const Maplibre = ({
         ref={mapRef}
         {...viewState}
         style={{ width: '100%', height: '100%' }}
-        // @ts-expect-error
-        mapStyle={MAP_STYLE}
+        mapStyle={getMapStyle()}
         attributionControl={false}
         interactiveLayerIds={geoJsonData ? ['data'] : undefined}
         onClick={onGeoJsonClick}

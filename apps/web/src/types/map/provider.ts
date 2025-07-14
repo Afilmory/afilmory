@@ -33,6 +33,7 @@ export interface BaseMapProps {
   id?: string
   initialViewState?: MapViewState
   markers?: PhotoMarker[]
+  selectedMarkerId?: string | null
   geoJsonData?: GeoJSON.FeatureCollection
   className?: string
   style?: React.CSSProperties

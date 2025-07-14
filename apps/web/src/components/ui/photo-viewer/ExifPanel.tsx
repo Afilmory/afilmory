@@ -5,7 +5,7 @@ import { isNil } from 'es-toolkit/compat'
 import { useAtomValue } from 'jotai'
 import { m } from 'motion/react'
 import type { FC } from 'react'
-import { Fragment } from 'react'
+import { Fragment, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { isExiftoolLoadedAtom } from '~/atoms/app'
@@ -19,11 +19,13 @@ import {
   TablerAperture,
 } from '~/icons'
 import { getImageFormat } from '~/lib/image-utils'
+import { convertExifGPSToDecimal } from '~/lib/map-utils'
 import { Spring } from '~/lib/spring'
 
 import { MotionButtonBase } from '../button'
 import { formatExifData, Row } from './formatExifData'
 import { HistogramChart } from './HistogramChart'
+import { MiniMap } from './MiniMap'
 import { RawExifViewer } from './RawExifViewer'
 
 export const ExifPanel: FC<{
@@ -36,6 +38,16 @@ export const ExifPanel: FC<{
   const isMobile = useMobile()
   const formattedExifData = formatExifData(exifData)
   const isExiftoolLoaded = useAtomValue(isExiftoolLoadedAtom)
+  
+  // Compute decimal GPS coordinates from raw EXIF data
+  const gpsData = useMemo(
+    () => convertExifGPSToDecimal(exifData),
+    [exifData]
+  )
+  
+  const decimalLatitude = gpsData?.latitude || null
+  const decimalLongitude = gpsData?.longitude || null
+  
   // 使用通用的图片格式提取函数
   const imageFormat = getImageFormat(
     currentPhoto.originalUrl || currentPhoto.s3Key || '',
@@ -563,17 +575,17 @@ export const ExifPanel: FC<{
                         value={`${formattedExifData.gps.altitude}m`}
                       />
                     )}
-                    <div className="mt-2 text-right">
-                      <a
-                        href={`https://uri.amap.com/marker?position=${formattedExifData.gps.longitude},${formattedExifData.gps.latitude}&name=${encodeURIComponent(t('exif.gps.location.name'))}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue inline-flex items-center gap-1 text-xs underline transition-colors hover:text-blue-300"
-                      >
-                        {t('exif.gps.view.map')}
-                        <i className="i-mingcute-external-link-line" />
-                      </a>
-                    </div>
+
+                    {/* Maplibre MiniMap */}
+                    {decimalLatitude !== null && decimalLongitude !== null && (
+                      <div className="mt-3">
+                        <MiniMap
+                          latitude={decimalLatitude}
+                          longitude={decimalLongitude}
+                          photoId={currentPhoto.id}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
