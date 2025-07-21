@@ -150,6 +150,9 @@ export interface PickedExif {
 
   // HDR 相关
   MPImageType?: Tags['MPImageType']
+
+  // 评分
+  Rating?: number
 }
 
 export interface ThumbnailResult {

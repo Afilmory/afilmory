@@ -128,6 +128,12 @@ export const ExifPanel: FC<{
                   value={formattedExifData.colorSpace}
                 />
               )}
+              {formattedExifData?.rating && formattedExifData.rating > 0 && (
+                <Row
+                  label={t('exif.rating')}
+                  value={'★'.repeat(formattedExifData.rating)}
+                />
+              )}
 
               {formattedExifData?.dateTime && (
                 <Row

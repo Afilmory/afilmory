@@ -150,6 +150,7 @@
   "exif.noise.reduction": "노이즈 감소",
   "exif.not.available": "N/A",
   "exif.pixels": "픽셀",
+  "exif.rating": "평점",
   "exif.raw.category.basic": "파일 정보",
   "exif.raw.category.camera": "카메라 정보",
   "exif.raw.category.datetime": "날짜 및 시간",

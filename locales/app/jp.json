@@ -150,6 +150,7 @@
   "exif.noise.reduction": "ノイズリダクション",
   "exif.not.available": "N/A",
   "exif.pixels": "ピクセル",
+  "exif.rating": "評価",
   "exif.raw.category.basic": "ファイル情報",
   "exif.raw.category.camera": "カメラ情報",
   "exif.raw.category.datetime": "日時",

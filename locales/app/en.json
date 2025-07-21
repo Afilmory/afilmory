@@ -150,6 +150,7 @@
   "exif.noise.reduction": "Noise Reduction",
   "exif.not.available": "N/A",
   "exif.pixels": "Pixels",
+  "exif.rating": "Rating",
   "exif.raw.category.basic": "File Information",
   "exif.raw.category.camera": "Camera Information",
   "exif.raw.category.datetime": "Date & Time",
