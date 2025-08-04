@@ -211,7 +211,7 @@ export const FilterPanel = () => {
       {
         id: 'lenses' as const,
         label: t('action.lens.filter'),
-        icon: 'i-mingcute-camera-lens-line',
+        icon: 'i-ri-camera-lens-line',
         count: gallerySetting.selectedLenses.length,
         data: allLenses.map((lens) => lens.displayName),
         filteredData: filteredLenses,

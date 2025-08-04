@@ -85,6 +85,7 @@
   "devDependencies": {
     "@egoist/tailwindcss-icons": "catalog:",
     "@iconify-json/mingcute": "catalog:",
+    "@iconify-json/ri": "^1.2.5",
     "@tailwindcss/postcss": "catalog:",
     "@tailwindcss/typography": "catalog:",
     "@tailwindcss/vite": "4.1.11",
