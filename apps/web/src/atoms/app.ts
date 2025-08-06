@@ -9,9 +9,11 @@ export const gallerySettingAtom = atom({
   selectedTags: [] as string[],
   selectedCameras: [] as string[], // Selected camera display names
   selectedLenses: [] as string[], // Selected lens display names
+  selectedRatings: null as number | null, // Selected minimum rating threshold
   tagSearchQuery: '' as string,
   cameraSearchQuery: '' as string, // Camera search query
   lensSearchQuery: '' as string, // Lens search query
+  ratingSearchQuery: '' as string, // Rating search query
   isTagsPanelOpen: false as boolean,
   columns: 'auto' as number | 'auto', // 自定义列数，auto 表示自动计算
 })

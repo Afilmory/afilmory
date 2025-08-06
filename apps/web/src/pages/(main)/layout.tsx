@@ -92,24 +92,29 @@ const useStateRestoreFromUrl = () => {
     const tagsFromSearchParams = searchParams.get('tags')?.split(',')
     const camerasFromSearchParams = searchParams.get('cameras')?.split(',')
     const lensesFromSearchParams = searchParams.get('lenses')?.split(',')
+    const ratingsFromSearchParams = searchParams.get('rating')
+      ? Number(searchParams.get('rating'))
+      : null
 
     if (
       tagsFromSearchParams ||
       camerasFromSearchParams ||
-      lensesFromSearchParams
+      lensesFromSearchParams ||
+      ratingsFromSearchParams !== null
     ) {
       setGallerySetting((prev) => ({
         ...prev,
         selectedTags: tagsFromSearchParams || prev.selectedTags,
         selectedCameras: camerasFromSearchParams || prev.selectedCameras,
         selectedLenses: lensesFromSearchParams || prev.selectedLenses,
+        selectedRatings: ratingsFromSearchParams ?? prev.selectedRatings,
       }))
     }
   }, [openViewer, photoId, searchParams, setGallerySetting])
 }
 
 const useSyncStateToUrl = () => {
-  const { selectedTags, selectedCameras, selectedLenses } =
+  const { selectedTags, selectedCameras, selectedLenses, selectedRatings } =
     useAtomValue(gallerySettingAtom)
   const [_, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -143,17 +148,20 @@ const useSyncStateToUrl = () => {
     const tags = selectedTags.join(',')
     const cameras = selectedCameras.join(',')
     const lenses = selectedLenses.join(',')
+    const rating = selectedRatings?.toString() ?? ''
 
     setSearchParams((search) => {
       const currentTags = search.get('tags')
       const currentCameras = search.get('cameras')
       const currentLenses = search.get('lenses')
+      const currentRating = search.get('rating')
 
       // Check if anything has changed
       if (
         currentTags === tags &&
         currentCameras === cameras &&
-        currentLenses === lenses
+        currentLenses === lenses &&
+        currentRating === rating
       ) {
         return search
       }
@@ -181,7 +189,14 @@ const useSyncStateToUrl = () => {
         newer.delete('lenses')
       }
 
+      // Update rating
+      if (rating) {
+        newer.set('rating', rating)
+      } else {
+        newer.delete('rating')
+      }
+
       return newer
     })
-  }, [selectedTags, selectedCameras, selectedLenses, setSearchParams])
+  }, [selectedTags, selectedCameras, selectedLenses, selectedRatings, setSearchParams])
 }
