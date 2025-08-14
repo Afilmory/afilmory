@@ -84,6 +84,16 @@ export const MasonryHeaderMasonryItem = ({
                 <i className="i-mingcute-twitter-fill text-sm" />
               </a>
             )}
+            {siteConfig.social.rss && (
+              <a
+                href={siteConfig.social.rss}
+                target="_blank"
+                className="text-text-secondary flex items-center justify-center p-2 duration-200 hover:text-[#ec672c]"
+                title="RSS"
+              >
+                <i className="i-mingcute-rss-2-fill text-sm" />
+              </a>
+            )}
           </div>
         )}
 
