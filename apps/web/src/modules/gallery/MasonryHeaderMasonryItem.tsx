@@ -86,7 +86,7 @@ export const MasonryHeaderMasonryItem = ({
             )}
             {siteConfig.social.rss && (
               <a
-                href={siteConfig.social.rss}
+                href="/feed.xml"
                 target="_blank"
                 className="text-text-secondary flex items-center justify-center p-2 duration-200 hover:text-[#ec672c]"
                 title="RSS"
