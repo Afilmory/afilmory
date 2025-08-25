@@ -52,12 +52,13 @@ export function convertExifGPSToDecimal(exif: PickedExif | null): {
         ? GPSDirection.West
         : GPSDirection.East
 
-    // Apply reference direction to coordinates
-    if (latitudeRef === GPSDirection.South) {
+    // Apply reference direction to coordinates only if they're positive
+    // Some EXIF tools already provide properly signed coordinates
+    if (latitudeRef === GPSDirection.South && latitude > 0) {
       latitude = -latitude
     }
 
-    if (longitudeRef === GPSDirection.West) {
+    if (longitudeRef === GPSDirection.West && longitude > 0) {
       longitude = -longitude
     }
 
