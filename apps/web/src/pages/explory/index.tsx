@@ -58,6 +58,8 @@ const ExploryPageSkeleton = () => {
 }
 
 const ExploryPageError = () => {
+  const { t } = useTranslation()
+
   return (
     <m.div
       className="flex h-full w-full items-center justify-center"
@@ -80,7 +82,7 @@ const ExploryPageError = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          地图加载失败
+          {t('explory.map.error.title')}
         </m.div>
         <m.p
           className="text-sm text-red-600 dark:text-red-400"
@@ -88,7 +90,7 @@ const ExploryPageError = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
         >
-          请检查网络连接或刷新页面重试
+          {t('explory.map.error.description')}
         </m.p>
       </div>
     </m.div>

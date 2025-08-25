@@ -1,10 +1,12 @@
 import { m } from 'motion/react'
+import { useTranslation } from 'react-i18next'
 import { useMap } from 'react-map-gl/maplibre'
 
 import type { MapControlsProps } from './types'
 
 export const MapControls = ({ onGeolocate }: MapControlsProps) => {
   const { current: map } = useMap()
+  const { t } = useTranslation()
 
   const handleZoomIn = () => {
     if (map) {
@@ -66,7 +68,7 @@ export const MapControls = ({ onGeolocate }: MapControlsProps) => {
           type="button"
           onClick={handleZoomIn}
           className="group hover:bg-fill-secondary active:bg-fill-tertiary flex h-12 w-12 items-center justify-center transition-colors"
-          title="放大"
+          title={t('explory.controls.zoom.in')}
         >
           <i className="i-mingcute-add-line text-text size-5 transition-transform group-hover:scale-110 group-active:scale-95" />
         </button>
@@ -79,7 +81,7 @@ export const MapControls = ({ onGeolocate }: MapControlsProps) => {
           type="button"
           onClick={handleZoomOut}
           className="group hover:bg-fill-secondary active:bg-fill-tertiary flex h-12 w-12 items-center justify-center transition-colors"
-          title="缩小"
+          title={t('explory.controls.zoom.out')}
         >
           <i className="i-mingcute-minimize-line text-text size-5 transition-transform group-hover:scale-110 group-active:scale-95" />
         </button>
@@ -91,7 +93,7 @@ export const MapControls = ({ onGeolocate }: MapControlsProps) => {
           type="button"
           onClick={handleCompass}
           className="group hover:bg-fill-secondary active:bg-fill-tertiary flex h-12 w-12 items-center justify-center transition-colors"
-          title="重置方向"
+          title={t('explory.controls.compass')}
         >
           <i className="i-mingcute-navigation-line text-text size-5 transition-transform group-hover:scale-110 group-active:scale-95" />
         </button>
@@ -103,7 +105,7 @@ export const MapControls = ({ onGeolocate }: MapControlsProps) => {
           type="button"
           onClick={handleGeolocate}
           className="group hover:bg-fill-secondary active:bg-fill-tertiary flex h-12 w-12 items-center justify-center transition-colors"
-          title="定位到我的位置"
+          title={t('explory.controls.locate')}
         >
           <i className="i-mingcute-location-fill text-text size-5 transition-transform group-hover:scale-110 group-active:scale-95" />
         </button>

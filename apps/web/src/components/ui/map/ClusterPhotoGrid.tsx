@@ -18,16 +18,16 @@ export const ClusterPhotoGrid = ({
   // 最多显示 6 张照片
   const displayPhotos = photos.slice(0, 6)
   const remainingCount = Math.max(0, photos.length - 6)
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   return (
     <div className="space-y-3">
       {/* 标题 */}
       <div className="flex items-center justify-between">
         <h3 className="text-text text-sm font-semibold">
-          {photos.length} 张照片
+          {t('explory.cluster.photos', { count: photos.length })}
         </h3>
-        <div className="text-text-secondary text-xs">点击查看详情</div>
+        <div className="text-text-secondary text-xs">{t('explory.cluster.click.details')}</div>
       </div>
 
       {/* 照片网格 */}
@@ -104,7 +104,7 @@ export const ClusterPhotoGrid = ({
               <div className="text-text text-lg font-bold">
                 +{remainingCount}
               </div>
-              <div className="text-text-secondary text-xs">更多</div>
+              <div className="text-text-secondary text-xs">{t('explory.cluster.more')}</div>
             </div>
           </m.div>
         )}
