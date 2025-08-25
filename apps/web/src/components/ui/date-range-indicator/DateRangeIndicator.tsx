@@ -1,5 +1,6 @@
 import { AnimatePresence, m } from 'motion/react'
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useMobile } from '~/hooks/useMobile'
 import { clsxm } from '~/lib/cn'
@@ -14,6 +15,11 @@ interface DateRangeIndicatorProps {
 
 export const DateRangeIndicator = memo(
   ({ dateRange, location, isVisible, className }: DateRangeIndicatorProps) => {
+    const { t } = useTranslation()
+    const translateDay = (day: string | number) => t(`date.day.${day}` as any)
+    const translateMonth = (month: string | number) =>
+      t(`date.month.${month}` as any)
+
     // 解析日期范围，提取主要的日期信息
     const parseMainDate = (range: string) => {
       // 匹配跨年日期范围格式 "2022年3月 - 2023年5月"
@@ -22,7 +28,8 @@ export const DateRangeIndicator = memo(
       )
       if (crossYearMatch) {
         const [, startYear, startMonth, endYear, endMonth] = crossYearMatch
-        return `${startMonth}月 ${startYear} – ${endMonth}月 ${endYear}`
+        // return `${startMonth}月 ${startYear} – ${endMonth}月 ${endYear}`
+        return `${translateMonth(startMonth)} ${startYear} - ${translateMonth(endMonth)} ${endYear}`
       }
 
       // 匹配类似 "2022年3月30日 - 5月2日" 的格式
@@ -32,21 +39,24 @@ export const DateRangeIndicator = memo(
       if (singleYearDayMatch) {
         const [, year, startMonth, startDay, endMonth, endDay] =
           singleYearDayMatch
-        return `${startMonth}月${startDay}日–${endMonth}月${endDay}日, ${year}`
+        // return `${startMonth}月${startDay}日–${endMonth}月${endDay}日, ${year}`
+        return `${translateMonth(startMonth)} ${translateDay(startDay)} - ${translateMonth(endMonth)} ${translateDay(endDay)} ${year}`
       }
 
       // 匹配类似 "2022年3月 - 5月" 的格式
       const monthRangeMatch = range.match(/(\d{4})年(\d+)月\s*-\s*(\d+)月/)
       if (monthRangeMatch) {
         const [, year, startMonth, endMonth] = monthRangeMatch
-        return `${startMonth}月–${endMonth}月, ${year}`
+        // return `${startMonth}月–${endMonth}月, ${year}`
+        return `${translateMonth(startMonth)} - ${translateMonth(endMonth)} ${year}`
       }
 
       // 匹配单个日期
       const singleDateMatch = range.match(/(\d{4})年(\d+)月(\d+)日/)
       if (singleDateMatch) {
         const [, year, month, day] = singleDateMatch
-        return `${month}月${day}日, ${year}`
+        // return `${month}月${day}日, ${year}`
+        return `${translateMonth(month)} ${translateDay(day)} ${year}`
       }
 
       // 默认返回原始字符串
