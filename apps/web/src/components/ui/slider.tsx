@@ -174,7 +174,9 @@ export const Slider = ({
 
       {/* 当前值显示 */}
       <div className="mt-8 text-center text-sm font-medium text-gray-700 dark:text-gray-300">
-        {value === 'auto' ? finalAutoLabel : `${value} 列`}
+        {value === 'auto'
+          ? finalAutoLabel
+          : t('slider.columns', { count: value } as any)}
       </div>
     </div>
   )

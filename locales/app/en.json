@@ -336,6 +336,7 @@
   "photo.webgl.unavailable": "WebGL is unavailable, unable to render image",
   "photo.zoom.hint": "Double-tap or pinch to zoom",
   "slider.auto": "Auto",
+  "slider.columns": "{{count}} column",
   "video.codec.keyword": "Encoder",
   "video.conversion.cached.result": "Using cached result",
   "video.conversion.codec.fallback": "No MP4 codec found that supports this resolution. Falling back to WebM.",

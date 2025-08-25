@@ -336,6 +336,7 @@
   "photo.webgl.unavailable": "WebGL 不可用，无法渲染图像",
   "photo.zoom.hint": "双击或捏合缩放",
   "slider.auto": "自动",
+  "slider.columns": "{{count}} 列",
   "video.codec.keyword": "编码器",
   "video.conversion.cached.result": "使用缓存结果",
   "video.conversion.codec.fallback": "找不到此分辨率支持的 MP4 编解码器。回退到 WebM。",

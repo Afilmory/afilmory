@@ -332,6 +332,7 @@
   "photo.webgl.unavailable": "WebGL が利用できないため、画像をレンダリングできません",
   "photo.zoom.hint": "ダブルタップまたはピンチしてズーム",
   "slider.auto": "自動",
+  "slider.columns": "{{count}} 列",
   "video.codec.keyword": "エンコーダー",
   "video.conversion.cached.result": "キャッシュされた結果を使用",
   "video.conversion.codec.fallback": "この解像度でサポートされている MP4 コーデックが見つかりません。WebM にフォールバックします。",
