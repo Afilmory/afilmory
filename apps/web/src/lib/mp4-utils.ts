@@ -1,3 +1,5 @@
+import { getI18n } from '~/i18n'
+
 interface ConversionProgress {
   isConverting: boolean
   progress: number
@@ -50,7 +52,7 @@ export async function transmuxMovToMp4Simple(
     onProgress?.({
       isConverting: true,
       progress: 10,
-      message: 'Fetching video file...',
+      message: getI18n().t('video.conversion.transmux.fetching'),
     })
 
     // Fetch the video file
@@ -64,13 +66,13 @@ export async function transmuxMovToMp4Simple(
     onProgress?.({
       isConverting: true,
       progress: 30,
-      message: 'Analyzing MOV structure...',
+      message: getI18n().t('video.conversion.transmux.analyzing'),
     })
 
     onProgress?.({
       isConverting: true,
       progress: 60,
-      message: 'Converting container format...',
+      message: getI18n().t('video.conversion.transmux.converting'),
     })
 
     // For now, we'll create a simple container change
@@ -83,7 +85,7 @@ export async function transmuxMovToMp4Simple(
     onProgress?.({
       isConverting: true,
       progress: 80,
-      message: 'Creating MP4 container...',
+      message: getI18n().t('video.conversion.transmux.creating'),
     })
 
     // Create blob with MP4 MIME type
@@ -93,7 +95,7 @@ export async function transmuxMovToMp4Simple(
     onProgress?.({
       isConverting: false,
       progress: 100,
-      message: 'Transmux completed successfully',
+      message: getI18n().t('video.conversion.transmux.success'),
     })
 
     return {
