@@ -28,6 +28,7 @@ export interface ProgressiveImageProps {
   // Live Photo 相关 props
   isLivePhoto?: boolean
   livePhotoVideoUrl?: string
+  shouldAutoPlayLivePhotoOnce?: boolean
 
   // HDR 相关 props
   isHDR?: boolean

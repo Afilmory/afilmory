@@ -24,6 +24,8 @@ interface LivePhotoVideoProps {
   /** 自定义样式类名 */
   className?: string
   onPlayingChange?: (isPlaying: boolean) => void
+  /** 是否自动播放一次 */
+  shouldAutoPlayOnce?: boolean
 }
 
 export interface LivePhotoVideoHandle {
@@ -40,12 +42,14 @@ export const LivePhotoVideo = ({
   isCurrentImage,
   className,
   onPlayingChange,
+  shouldAutoPlayOnce = false,
 }: LivePhotoVideoProps & {
   ref?: React.RefObject<LivePhotoVideoHandle | null>
 }) => {
   const [isPlayingLivePhoto, setIsPlayingLivePhoto] = useState(false)
   const [livePhotoVideoLoaded, setLivePhotoVideoLoaded] = useState(false)
   const [isConvertingVideo, setIsConvertingVideo] = useState(false)
+  const hasAutoPlayedRef = useRef(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoAnimateController = useAnimationControls()
@@ -98,6 +102,7 @@ export const LivePhotoVideo = ({
       setIsPlayingLivePhoto(false)
       setLivePhotoVideoLoaded(false)
       setIsConvertingVideo(false)
+      hasAutoPlayedRef.current = false
 
       videoAnimateController.set({ opacity: 0 })
     }
@@ -137,6 +142,28 @@ export const LivePhotoVideo = ({
     })
     setIsPlayingLivePhoto(false)
   }, [isPlayingLivePhoto, videoAnimateController])
+
+  // Auto-play effect - play once when video is loaded
+  useEffect(() => {
+    if (
+      shouldAutoPlayOnce &&
+      isCurrentImage &&
+      livePhotoVideoLoaded &&
+      !isPlayingLivePhoto &&
+      !isConvertingVideo &&
+      !hasAutoPlayedRef.current
+    ) {
+      hasAutoPlayedRef.current = true
+      play()
+    }
+  }, [
+    shouldAutoPlayOnce,
+    isCurrentImage,
+    livePhotoVideoLoaded,
+    isPlayingLivePhoto,
+    isConvertingVideo,
+    play,
+  ])
 
   useImperativeHandle(ref, () => ({
     play,

@@ -40,6 +40,7 @@ export const ProgressiveImage = ({
   isCurrentImage = false,
   isLivePhoto = false,
   livePhotoVideoUrl,
+  shouldAutoPlayLivePhotoOnce: shouldAutoPlayLivePhoto = false,
   isHDR = false,
   loadingIndicatorRef,
 }: ProgressiveImageProps) => {
@@ -159,6 +160,7 @@ export const ProgressiveImage = ({
                   loadingIndicatorRef={loadingIndicatorRef}
                   isCurrentImage={isCurrentImage}
                   onPlayingChange={setState.setIsLivePhotoPlaying}
+                  shouldAutoPlayOnce={shouldAutoPlayLivePhoto}
                 />
               )}
             </DOMImageViewer>

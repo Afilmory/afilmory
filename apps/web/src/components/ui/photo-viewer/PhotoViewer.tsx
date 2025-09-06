@@ -314,6 +314,7 @@ export const PhotoViewer = ({
                               // Live Photo props
                               isLivePhoto={photo.isLivePhoto}
                               livePhotoVideoUrl={photo.livePhotoVideoUrl}
+                              shouldAutoPlayLivePhotoOnce={isCurrentImage}
                               // HDR props
                               isHDR={photo.isHDR}
                             />
