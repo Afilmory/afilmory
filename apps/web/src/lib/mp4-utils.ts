@@ -49,10 +49,11 @@ export async function transmuxMovToMp4Simple(
   try {
     console.info(`🎯 Starting simple transmux conversion`)
 
+    const { t } = getI18n()
     onProgress?.({
       isConverting: true,
       progress: 10,
-      message: getI18n().t('video.conversion.transmux.fetching'),
+      message: t('video.conversion.transmux.fetching'),
     })
 
     // Fetch the video file
@@ -66,13 +67,13 @@ export async function transmuxMovToMp4Simple(
     onProgress?.({
       isConverting: true,
       progress: 30,
-      message: getI18n().t('video.conversion.transmux.analyzing'),
+      message: t('video.conversion.transmux.analyzing'),
     })
 
     onProgress?.({
       isConverting: true,
       progress: 60,
-      message: getI18n().t('video.conversion.transmux.converting'),
+      message: t('video.conversion.transmux.converting'),
     })
 
     // For now, we'll create a simple container change
@@ -85,7 +86,7 @@ export async function transmuxMovToMp4Simple(
     onProgress?.({
       isConverting: true,
       progress: 80,
-      message: getI18n().t('video.conversion.transmux.creating'),
+      message: t('video.conversion.transmux.creating'),
     })
 
     // Create blob with MP4 MIME type
@@ -95,7 +96,7 @@ export async function transmuxMovToMp4Simple(
     onProgress?.({
       isConverting: false,
       progress: 100,
-      message: getI18n().t('video.conversion.transmux.success'),
+      message: t('video.conversion.transmux.success'),
     })
 
     return {
