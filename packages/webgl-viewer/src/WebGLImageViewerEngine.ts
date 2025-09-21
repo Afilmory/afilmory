@@ -901,8 +901,10 @@ export class WebGLImageViewerEngine extends ImageViewerEngineBase {
       gl.drawArrays(gl.TRIANGLES, 0, 6)
     }
 
-    // 更新调试信息
-    this.updateDebugInfo()
+    // 更新调试信息（仅在调试模式下）
+    if (this.config.debug) {
+      this.updateDebugInfo()
+    }
 
     // 定期更新瓦片缓存
     if (
