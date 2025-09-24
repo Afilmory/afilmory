@@ -357,6 +357,9 @@ export const PhotoViewer = ({
                                   : true
                               }
                               enableZoom={true}
+                              shouldRenderHighRes={
+                                isViewerContentVisible && isOpen
+                              }
                               onZoomChange={
                                 isCurrentImage ? handleZoomChange : undefined
                               }

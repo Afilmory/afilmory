@@ -38,6 +38,7 @@ export const ProgressiveImage = ({
   maxZoom = 20,
   minZoom = 1,
   isCurrentImage = false,
+  shouldRenderHighRes = true,
   isLivePhoto = false,
   livePhotoVideoUrl,
   shouldAutoPlayLivePhotoOnce: shouldAutoPlayLivePhoto = false,
@@ -58,6 +59,8 @@ export const ProgressiveImage = ({
     isThumbnailLoaded,
     isLivePhotoPlaying,
   } = state
+
+  const isActiveImage = Boolean(isCurrentImage && shouldRenderHighRes)
 
   // Refs
   const thumbnailRef = useRef<HTMLImageElement>(null)
@@ -131,7 +134,7 @@ export const ProgressiveImage = ({
       )}
 
       {/* 高分辨率图片 - 只在成功加载且非错误状态时显示 */}
-      {highResLoaded && blobSrc && isCurrentImage && !error && (
+      {highResLoaded && blobSrc && isActiveImage && !error && (
         <div
           className="absolute inset-0 h-full w-full"
           onContextMenu={(e) => {
@@ -186,7 +189,7 @@ export const ProgressiveImage = ({
         </div>
       )}
 
-      {isLivePhoto && highResLoaded && blobSrc && isCurrentImage && !error && (
+      {isLivePhoto && highResLoaded && blobSrc && isActiveImage && !error && (
         <LivePhotoBadge
           livePhotoRef={livePhotoRef}
           isLivePhotoPlaying={isLivePhotoPlaying}
@@ -194,12 +197,12 @@ export const ProgressiveImage = ({
         />
       )}
 
-      {shouldUseHDR && highResLoaded && blobSrc && isCurrentImage && !error && (
+      {shouldUseHDR && highResLoaded && blobSrc && isActiveImage && !error && (
         <HDRBadge />
       )}
 
       {/* 备用图片（当 WebGL 不可用时） - 只在非错误状态时显示 */}
-      {!canUseWebGL && highResLoaded && blobSrc && !error && (
+      {!canUseWebGL && highResLoaded && blobSrc && isActiveImage && !error && (
         <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/20">
           <i className="i-mingcute-warning-line mb-2 text-4xl" />
           <span className="text-center text-sm text-white">

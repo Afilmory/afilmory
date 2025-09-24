@@ -301,8 +301,8 @@ export const usePhotoViewerTransitions = ({
     )
 
     const imageSrc =
-      currentBlobSrc ||
       currentPhoto.thumbnailUrl ||
+      currentBlobSrc ||
       currentPhoto.originalUrl ||
       null
 

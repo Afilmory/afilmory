@@ -24,6 +24,7 @@ export interface ProgressiveImageProps {
   minZoom?: number
 
   isCurrentImage?: boolean
+  shouldRenderHighRes?: boolean
 
   // Live Photo 相关 props
   isLivePhoto?: boolean
