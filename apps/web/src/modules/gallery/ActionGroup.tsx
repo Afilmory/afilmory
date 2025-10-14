@@ -97,6 +97,47 @@ const ColumnsPanel = () => {
   )
 }
 
+// 搜索照片逻辑
+const searchPhotos = (
+  photos: ReturnType<typeof photoLoader.getPhotos>,
+  query: string,
+) => {
+  const lowerQuery = query.trim().toLowerCase()
+  if (!lowerQuery) return []
+
+  return photos.filter((photo) => {
+    // 搜索文件名/标题
+    const matchesTitle = photo.title?.toLowerCase().includes(lowerQuery)
+
+    // 搜索描述
+    const matchesDescription = photo.description
+      ?.toLowerCase()
+      .includes(lowerQuery)
+
+    // 搜索标签
+    const matchesTags = photo.tags?.some((tag) =>
+      tag.toLowerCase().includes(lowerQuery),
+    )
+
+    // 搜索相机
+    const matchesCamera =
+      photo.exif?.Make?.toLowerCase().includes(lowerQuery) ||
+      photo.exif?.Model?.toLowerCase().includes(lowerQuery)
+
+    // 搜索镜头
+    const matchesLens =
+      photo.exif?.LensModel?.toLowerCase().includes(lowerQuery)
+
+    return (
+      matchesTitle ||
+      matchesDescription ||
+      matchesTags ||
+      matchesCamera ||
+      matchesLens
+    )
+  })
+}
+
 const SearchPanel = () => {
   const { t } = useTranslation()
   const [gallerySetting, setGallerySetting] = useAtom(gallerySettingAtom)
@@ -117,42 +158,9 @@ const SearchPanel = () => {
     })
   }
 
-  // 搜索照片逻辑
+  // 使用搜索函数
   const searchResults = useMemo(() => {
-    const query = gallerySetting.searchQuery.trim().toLowerCase()
-    if (!query) return []
-
-    const allPhotos = photoLoader.getPhotos()
-    return allPhotos.filter((photo) => {
-      // 搜索文件名/标题
-      const matchesTitle = photo.title?.toLowerCase().includes(query)
-
-      // 搜索描述
-      const matchesDescription = photo.description
-        ?.toLowerCase()
-        .includes(query)
-
-      // 搜索标签
-      const matchesTags = photo.tags?.some((tag) =>
-        tag.toLowerCase().includes(query),
-      )
-
-      // 搜索相机
-      const matchesCamera =
-        photo.exif?.Make?.toLowerCase().includes(query) ||
-        photo.exif?.Model?.toLowerCase().includes(query)
-
-      // 搜索镜头
-      const matchesLens = photo.exif?.LensModel?.toLowerCase().includes(query)
-
-      return (
-        matchesTitle ||
-        matchesDescription ||
-        matchesTags ||
-        matchesCamera ||
-        matchesLens
-      )
-    })
+    return searchPhotos(photoLoader.getPhotos(), gallerySetting.searchQuery)
   }, [gallerySetting.searchQuery])
 
   // 点击搜索结果跳转到照片详情
