@@ -17,6 +17,7 @@ export const gallerySettingAtom = atom({
   ratingSearchQuery: '' as string, // Rating search query
   isTagsPanelOpen: false as boolean,
   columns: 'auto' as number | 'auto', // 自定义列数，auto 表示自动计算
+  searchQuery: '' as string, // Global search query for photos
 })
 
 export const isExiftoolLoadedAtom = atom(false)
