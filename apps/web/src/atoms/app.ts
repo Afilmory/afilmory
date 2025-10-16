@@ -21,3 +21,6 @@ export const gallerySettingAtom = atom({
 })
 
 export const isExiftoolLoadedAtom = atom(false)
+
+// Command Palette state
+export const isCommandPaletteOpenAtom = atom(false)

@@ -1,9 +1,8 @@
-import { useAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
-import { gallerySettingAtom } from '~/atoms/app'
-import { UnifiedSearchPanel } from '~/components/gallery/UnifiedSearchPanel'
+import { gallerySettingAtom, isCommandPaletteOpenAtom } from '~/atoms/app'
 import { Button } from '~/components/ui/button'
 
 import { ResponsiveActionButton } from './components/ActionButton'
@@ -11,29 +10,15 @@ import { ViewPanel } from './panels/ViewPanel'
 
 export const ActionGroup = () => {
   const { t } = useTranslation()
-  const [gallerySetting, setGallerySetting] = useAtom(gallerySettingAtom)
+  const [gallerySetting] = useAtom(gallerySettingAtom)
+  const setCommandPaletteOpen = useSetAtom(isCommandPaletteOpenAtom)
   const navigate = useNavigate()
-
-  const onTagsPanelOpenChange = (open: boolean) => {
-    setGallerySetting((prev: any) => ({
-      ...prev,
-      isTagsPanelOpen: open,
-    }))
-  }
 
   // 计算视图设置是否有自定义配置
   const hasViewCustomization =
     gallerySetting.columns !== 'auto' || gallerySetting.sortOrder !== 'desc'
 
-  // 计算搜索和过滤的激活状态
-  const hasSearchOrFilter =
-    gallerySetting.searchQuery ||
-    gallerySetting.selectedTags.length > 0 ||
-    gallerySetting.selectedCameras.length > 0 ||
-    gallerySetting.selectedLenses.length > 0 ||
-    gallerySetting.selectedRatings !== null
-
-  // 计算过滤器数量（不包括搜索查询）
+  // 计算过滤器数量
   const filterCount =
     gallerySetting.selectedTags.length +
     gallerySetting.selectedCameras.length +
@@ -42,18 +27,23 @@ export const ActionGroup = () => {
 
   return (
     <div className="flex items-center justify-center gap-3">
-      {/* 统一搜索和过滤按钮 */}
-      <ResponsiveActionButton
-        icon="i-mingcute-search-line"
+      {/* 搜索和过滤按钮 - 打开命令面板 */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          setCommandPaletteOpen(true)
+        }}
+        className="relative h-10 min-w-10 rounded-full border-0 bg-gray-100 px-3 transition-all duration-200 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
         title={t('action.search.unified.title')}
-        badge={
-          filterCount > 0 ? filterCount : hasSearchOrFilter ? '●' : undefined
-        }
-        globalOpen={gallerySetting.isTagsPanelOpen}
-        onGlobalOpenChange={onTagsPanelOpenChange}
       >
-        <UnifiedSearchPanel />
-      </ResponsiveActionButton>
+        <i className="i-mingcute-search-line text-base text-gray-600 dark:text-gray-300" />
+        {filterCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs font-medium text-white">
+            {filterCount}
+          </span>
+        )}
+      </Button>
 
       {/* 地图探索按钮 */}
       <Button
