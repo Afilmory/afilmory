@@ -111,7 +111,7 @@ export const Slider = ({
         {/* 背景轨道 */}
         <div
           ref={trackRef}
-          className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-gray-200 dark:bg-gray-700"
+          className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-neutral-200 dark:bg-neutral-700"
         >
           {/* 自动档区域指示 */}
           <div className="absolute top-0 left-0 h-full w-[12%] rounded-l-full bg-green-100 dark:bg-green-900/50" />
@@ -143,7 +143,7 @@ export const Slider = ({
         />
 
         {/* 数值刻度 */}
-        <div className="absolute top-full mt-1 flex w-full text-xs text-gray-400">
+        <div className="text-text-secondary absolute top-full mt-1 flex w-full text-xs">
           <div className="w-[15%] text-left">
             <span
               className={clsxm(
