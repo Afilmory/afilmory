@@ -10,20 +10,14 @@ import { Spring } from '~/lib/spring'
 type TranslationKeys = keyof typeof en
 
 const actions: {
-  id: 'sort' | 'tags' | 'columns'
+  id: 'view'
   icon: string
   title: TranslationKeys
 }[] = [
   {
-    id: 'sort',
-    icon: 'i-mingcute-sort-descending-line',
-    title: 'action.sort.mode',
-  },
-  { id: 'tags', icon: 'i-mingcute-filter-line', title: 'action.filter.title' },
-  {
-    id: 'columns',
-    icon: 'i-mingcute-grid-line',
-    title: 'action.columns.setting',
+    id: 'view',
+    icon: 'i-mingcute-settings-3-line',
+    title: 'action.view.settings',
   },
 ] as const
 

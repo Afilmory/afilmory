@@ -1,22 +1,12 @@
 import { Drawer } from 'vaul'
 
-import { UnifiedSearchPanel } from '~/components/gallery/UnifiedSearchPanel'
-
-import { ColumnsPanel } from './panels/ColumnsPanel'
-import { SortPanel } from './panels/SortPanel'
 import { ViewPanel } from './panels/ViewPanel'
 
 const panelMap = {
-  sort: SortPanel,
-  tags: UnifiedSearchPanel,
-  columns: ColumnsPanel,
-  search: UnifiedSearchPanel,
   view: ViewPanel,
 }
 
 export type PanelType = keyof typeof panelMap
-// 导出 ActionType 以保持与 FloatingActionButton 的一致性
-export type ActionType = PanelType
 
 export const ActionPanel = ({
   open,

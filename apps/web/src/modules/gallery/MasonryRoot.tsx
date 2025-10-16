@@ -14,9 +14,8 @@ import { Spring } from '~/lib/spring'
 import type { PhotoManifest } from '~/types/photo'
 
 import { ActionGroup } from './ActionGroup'
-import type { ActionType } from './ActionPanel'
+import type { PanelType } from './ActionPanel'
 import { ActionPanel } from './ActionPanel'
-import { FloatingActionButton } from './FloatingActionButton'
 import type { MasonryRef } from './Masonic'
 import { Masonry } from './Masonic'
 import { MasonryHeaderMasonryItem } from './MasonryHeaderMasonryItem'
@@ -63,10 +62,7 @@ export const MasonryRoot = () => {
   }, [])
   const isMobile = useMobile()
 
-  const [activePanel, setActivePanel] = useState<ActionType | null>(null)
-  const handleActionClick = (action: ActionType) => {
-    setActivePanel(action)
-  }
+  const [activePanel, setActivePanel] = useState<PanelType | null>(null)
 
   // 监听容器宽度变化
   useEffect(() => {
@@ -154,13 +150,6 @@ export const MasonryRoot = () => {
             className="relative top-0 left-0"
           />
         </div>
-      )}
-
-      {isMobile && (
-        <FloatingActionButton
-          isVisible={showFloatingActions}
-          onActionClick={handleActionClick}
-        />
       )}
 
       <div className="p-1 lg:px-0 lg:pb-0 [&_*]:!select-none">

@@ -421,7 +421,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
 
       {/* Command Palette Panel */}
       <div
-        className="animate-in fade-in slide-in-from-top-4 border-border relative w-full max-w-2xl overflow-hidden rounded-2xl rounded-b-none border shadow-2xl backdrop-blur-[120px] duration-200 lg:!rounded-2xl"
+        className="animate-in fade-in slide-in-from-bottom-4 lg:slide-in-from-top-4 border-border relative w-full max-w-2xl overflow-hidden rounded-2xl rounded-b-none border shadow-2xl backdrop-blur-[120px] duration-200 lg:!rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
