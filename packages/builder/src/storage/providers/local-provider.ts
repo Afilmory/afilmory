@@ -244,7 +244,9 @@ export class LocalStorageProvider implements StorageProvider {
 
       // 如果是图片文件，查找对应的视频文件
       if (SUPPORTED_FORMATS.has(ext)) {
-        const baseName = path.basename(obj.key, ext)
+        // use path.parse to get the name without extension to avoid issues
+        // when the file extension has different casing (e.g. .HEIC)
+        const baseName = path.parse(obj.key).name
         const dirName = path.dirname(obj.key)
 
         // 查找对应的 .mov 文件

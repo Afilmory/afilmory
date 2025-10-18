@@ -229,7 +229,7 @@ export class S3StorageProvider implements StorageProvider {
       if (!obj.key) continue
 
       const dir = path.dirname(obj.key)
-      const basename = path.basename(obj.key, path.extname(obj.key))
+      const basename = path.parse(obj.key).name
       const groupKey = `${dir}/${basename}`
 
       if (!fileGroups.has(groupKey)) {

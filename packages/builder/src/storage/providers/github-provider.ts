@@ -242,7 +242,8 @@ export class GitHubStorageProvider implements StorageProvider {
       if (!obj.key) continue
 
       const dir = path.dirname(obj.key)
-      const basename = path.basename(obj.key, path.extname(obj.key))
+      // use path.parse to safely get the filename without extension (case-insensitive extension handling)
+      const basename = path.parse(obj.key).name
       const groupKey = `${dir}/${basename}`
 
       if (!fileGroups.has(groupKey)) {
