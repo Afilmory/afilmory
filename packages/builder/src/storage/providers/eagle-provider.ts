@@ -122,7 +122,7 @@ export class EagleStorageProvider implements StorageProvider {
         .then((res) => res.isDirectory())
         .catch(() => false))
     ) {
-      fs.mkdir(this.config.distPath, { recursive: true })
+      await fs.mkdir(this.config.distPath, { recursive: true })
       logger.main.info(
         `EagleStorageProvider: 已创建 distPath 目录：${this.config.distPath}`,
       )

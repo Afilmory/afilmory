@@ -108,8 +108,20 @@ export type EagleRule =
     }
   | {
       type: 'folder'
+      /**
+       * Only a folder name, not the full path.
+       */
       name: string
+      /**
+       * Defaults to `false`.
+       */
       includeSubfolder?: boolean
+    }
+  | {
+      /**
+       * Smart folders are not yet supported.
+       */
+      type: 'smartFolder'
     }
 
 export type EagleConfig = {
