@@ -1,12 +1,14 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
+import { SUPPORTED_FORMATS } from '@afilmory/builder/constants/index.js'
 import { workdir } from '@afilmory/builder/path.js'
 
 import type { Logger } from '../../logger/index.js'
 import { logger } from '../../logger/index.js'
 import type {
   EagleConfig,
+  EagleRule,
   StorageObject,
   StorageProvider,
 } from '../interfaces.js'
@@ -50,6 +52,7 @@ interface EagleImageMetadata {
   url: string
   annotation: string
   modificationTime: number
+  star?: number
   height: number
   width: number
   noThumbnail: boolean
@@ -68,6 +71,10 @@ const defaultEagleConfig = {
 
 export class EagleStorageProvider implements StorageProvider {
   private readonly config: Required<EagleConfig>
+  /**
+   * Folder index map: folder ID -> folder path array
+   */
+  private folderIndex = new Map<string, string[]>()
 
   constructor(userConfig: EagleConfig) {
     if (!userConfig.libraryPath || userConfig.libraryPath.trim() === '') {
@@ -121,17 +128,22 @@ export class EagleStorageProvider implements StorageProvider {
       )
     }
 
-    const metadata = await readEagleLibraryMetadata(this.config.libraryPath)
+    const libraryMetadata = await readEagleLibraryMetadata(
+      this.config.libraryPath,
+    )
     logger.main.info(
-      `EagleStorageProvider: 检测到 Eagle 版本：${metadata.applicationVersion}`,
+      `EagleStorageProvider: 检测到 Eagle 版本：${libraryMetadata.applicationVersion}`,
     )
     if (
-      Number(metadata.applicationVersion.at(0)) !== Number(EAGLE_VERSION.at(0))
+      Number(libraryMetadata.applicationVersion.at(0)) !==
+      Number(EAGLE_VERSION.at(0))
     ) {
       logger.main.warn(
-        `EagleStorageProvider: 当前支持 Eagle ${EAGLE_VERSION} 版本的库，检测到的版本为：${metadata.applicationVersion}，可能会导致兼容性问题。`,
+        `EagleStorageProvider: 当前支持 Eagle ${EAGLE_VERSION} 版本的库，检测到的版本为：${libraryMetadata.applicationVersion}，可能会导致兼容性问题。`,
       )
     }
+
+    this.folderIndex = buildFolderIndexes(libraryMetadata.folders ?? [])
   }
 
   async getFile(key: string, logger?: Logger['s3']): Promise<Buffer | null> {
@@ -153,6 +165,12 @@ export class EagleStorageProvider implements StorageProvider {
       this.config.libraryPath,
       key,
     )
+    if (!SUPPORTED_FORMATS.has(`.${imageMetadata.ext.toLowerCase()}`)) {
+      logger?.error?.(
+        `EagleStorageProvider: 不支持的图片格式。key: ${key}, 格式: .${imageMetadata.ext}`,
+      )
+      return null
+    }
     const imageFileName = `${imageMetadata.name}.${imageMetadata.ext}`
     const imageFilePath = path.join(imageInfoPath, imageFileName)
     try {
@@ -180,13 +198,31 @@ export class EagleStorageProvider implements StorageProvider {
     await this.initialize()
     const imagesDir = path.join(this.config.libraryPath, 'images')
     const imageEntries = await fs.readdir(imagesDir, { withFileTypes: true })
-    const objs = imageEntries
+    const keys = imageEntries
+      // Filter out .DS_Store
       .filter((entry) => entry.isDirectory() && entry.name.endsWith('.info'))
       .map((entry) => {
-        return { key: entry.name.replace(/\.info$/, '') }
+        return entry.name.replace(/\.info$/, '')
       })
-    // TODO filter include/exclude rules
-    return objs
+    const filtered: StorageObject[] = []
+
+    await Promise.all(
+      keys.map(async (key) => {
+        const meta = await readImageMetadata(this.config.libraryPath, key)
+        const include = this.runPredicate(meta, this.config.include)
+        const exclude = this.runPredicate(meta, this.config.exclude)
+
+        if (include && !exclude) {
+          filtered.push({
+            key,
+            size: meta.size,
+            lastModified: new Date(meta.lastModified),
+          })
+        }
+      }),
+    )
+
+    return filtered
   }
 
   async generatePublicUrl(key: string) {
@@ -210,11 +246,67 @@ export class EagleStorageProvider implements StorageProvider {
       imageName,
     )
     const distFile = path.join(this.config.distPath, imageName)
+    if (
+      await fs
+        .stat(distFile)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      // 文件已存在，跳过复制
+      logger.main.log(
+        `EagleStorageProvider: 发布目录已存在文件，跳过复制： ${imageName} -> ${distFile}`,
+      )
+      return imageName
+    }
     await fs.copyFile(sourceImage, distFile)
-    logger.main.info(
+    logger.main.log(
       `EagleStorageProvider: 已复制文件到发布目录： ${imageName} -> ${distFile}`,
     )
     return imageName
+  }
+
+  /**
+   * Returns `true` if the image should be included.
+   */
+  private runPredicate(
+    imageMeta: EagleImageMetadata,
+    rules: EagleRule[],
+  ): boolean {
+    if (rules.length === 0) {
+      return true
+    }
+    return rules.some((condition) => {
+      switch (condition.type) {
+        case 'tag': {
+          return imageMeta.tags.includes(condition.name)
+        }
+        case 'folder': {
+          const includeSubfolder = !!condition.includeSubfolder
+          for (const folderId of imageMeta.folders) {
+            const folderPath = this.folderIndex.get(folderId)
+            if (!folderPath) {
+              logger.main.warn(
+                `EagleStorageProvider: 无法找到文件夹索引，跳过该文件夹过滤条件。folderId: ${folderId}`,
+              )
+              continue
+            }
+            if (includeSubfolder) {
+              return folderPath.includes(condition.name)
+            } else {
+              return folderPath.at(-1) === condition.name
+            }
+          }
+          return false
+        }
+        case 'smartFolder': {
+          // Not supported yet
+          return false
+        }
+        default: {
+          return false
+        }
+      }
+    })
   }
 }
 
@@ -288,4 +380,21 @@ async function readImageMetadata(
   )
   const content = await fs.readFile(metadataPath, 'utf-8')
   return JSON.parse(content) as EagleImageMetadata
+}
+
+function buildFolderIndexes(folders: EagleFolderNode[]) {
+  const map = new Map<string, string[]>()
+  const traverse = (node: EagleFolderNode, parent: string[]) => {
+    const path = [...parent, node.name]
+    map.set(node.id, path)
+    const children = node.children ?? []
+    for (const child of children) {
+      traverse(child, path)
+    }
+  }
+
+  for (const folder of folders) {
+    traverse(folder, [])
+  }
+  return map
 }
