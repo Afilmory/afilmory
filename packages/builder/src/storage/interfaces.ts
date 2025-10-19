@@ -101,4 +101,38 @@ export type LocalConfig = {
   maxFileLimit?: number
 }
 
-export type StorageConfig = S3Config | GitHubConfig | LocalConfig
+export type EagleRule =
+  | {
+      type: 'tag'
+      name: string
+    }
+  | {
+      type: 'folder'
+      name: string
+      includeSubfolder?: boolean
+    }
+
+export type EagleConfig = {
+  provider: 'eagle'
+  /**
+   * The path to the Eagle library.
+   */
+  libraryPath: string
+  /**
+   * The path where original files need to be stored.
+   * The original files will be copied to this path during the build process.
+   *
+   * Defaults to `web/public/originals/`
+   */
+  distPath?: string
+  /**
+   * The base URL to access the original files.
+   *
+   * Defaults to `/originals/`
+   */
+  baseUrl?: string
+  include?: EagleRule[]
+  exclude?: EagleRule[]
+}
+
+export type StorageConfig = S3Config | GitHubConfig | EagleConfig | LocalConfig
