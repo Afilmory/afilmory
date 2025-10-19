@@ -270,4 +270,68 @@ photos/
 | 适用场景 | 生产环境 | 小型项目、演示 |
 | 设置复杂度 | 中等 | 简单 |
 
-选择存储提供商时，请根据你的具体需求和预算进行选择。 
+选择存储提供商时，请根据你的具体需求和预算进行选择。
+
+## Eagle 存储提供商
+
+直接读取 Eagle 桌面应用生成的素材库，并在构建时将所需图片复制到指定目录。
+
+### 特点
+
+- ✅ 方便管理：直接在已有 Eagle 素材库中管理图片
+- ✅ 多条件筛选：支持按文件夹（含子文件夹）或标签过滤
+- ✅ 自动复制：首次访问时自动复制原图到发布目录
+- ⚠️ 需自行托管筛选出的图片文件
+
+### 配置示例
+
+```typescript
+import type { EagleConfig } from '@afilmory/builder'
+
+const eagleConfig: EagleConfig = {
+  provider: 'eagle',
+  libraryPath: '/Users/alice/Pictures/Eagle.library',
+  distPath: '/Users/alice/workspaces/afilmory/apps/web/public/originals',
+  baseUrl: '/originals/',
+  include: [
+    { type: 'folder', name: '精选', includeSubfolder: true },
+    { type: 'tag', name: 'Published' },
+  ],
+  exclude: [{ type: 'tag', name: 'Private' }],
+}
+```
+
+### 设置步骤
+
+1. **定位 Eagle 素材库**：找到 Eagle 「库位置」，复制完整路径。
+2. **准备 distPath**：指定一个绝对路径，默认为 `apps/web/public/originals` 或自定义静态资源目录。
+3. **调整访问 URL**：设置 `baseUrl` 以匹配前端访问路径（默认 `/originals/`）。
+4. **定义筛选规则（可选）**：通过 `include` 与 `exclude` 精确控制导出范围。
+
+### 规则说明
+
+- `include` 为空时表示包含库内所有支持格式的图片。
+- `exclude` 优先级高于 `include`，命中后即排除。
+- `folder` 规则的 `name` 仅填写文件夹名称；勾选 `includeSubfolder` 可递归包含子目录。
+- `tag` 规则将与 Eagle 标签匹配，大小写敏感。
+
+### 使用示例
+
+```typescript
+import { EagleStorageProvider } from '@/core/storage'
+
+const provider = new EagleStorageProvider(eagleConfig)
+
+const files = await provider.listImages()
+const buffer = await provider.getFile(files[0].key)
+const publicUrl = await provider.generatePublicUrl(files[0].key)
+```
+
+首次生成公共 URL 时，提供商会将原图复制到 `distPath`，后续则复用已存在文件。
+
+### 常见问题
+
+- **路径错误**：`libraryPath` 或 `distPath` 不是绝对路径会导致实例化失败。
+- **版本兼容**：若检测到非 4.x 版本，会输出告警，建议升级 Eagle。
+- **不支持的格式**：仅处理 `SUPPORTED_FORMATS` 中列出的扩展名（与其它提供商一致）。
+- **权限限制**：确保进程具备对素材库与目标目录的读写权限。
