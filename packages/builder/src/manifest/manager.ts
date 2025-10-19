@@ -98,17 +98,19 @@ export async function handleDeletedPhotos(
   items: PhotoManifestItem[],
 ): Promise<number> {
   logger.main.info('🔍 检查已删除的图片...')
+  const thumbnailsDir = path.join(workdir, 'public', 'thumbnails')
+  if (!(await fs.stat(thumbnailsDir).catch(() => false))) {
+    return 0
+  }
   if (items.length === 0) {
     // Clear all thumbnails
-    await fs.rm(path.join(workdir, 'public/thumbnails'), { recursive: true })
+    await fs.rm(thumbnailsDir, { recursive: true })
     logger.main.info('🔍 没有图片，清空缩略图...')
     return 0
   }
 
   let deletedCount = 0
-  const allThumbnails = await fs.readdir(
-    path.join(workdir, 'public/thumbnails'),
-  )
+  const allThumbnails = await fs.readdir(thumbnailsDir)
 
   // If thumbnails not in manifest, delete it
   const manifestKeySet = new Set(items.map((item) => item.id))
