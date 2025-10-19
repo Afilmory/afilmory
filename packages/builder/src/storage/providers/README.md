@@ -79,14 +79,12 @@ const githubConfig: StorageConfig = {
      ...defaultBuilderConfig,
      storage: {
        provider: 'github',
-       github: {
-         owner: 'your-username',
-         repo: 'photo-gallery',
-         branch: 'main',
-         token: process.env.GITHUB_TOKEN,
-         path: 'photos',
-         useRawUrl: true,
-       },
+      owner: 'your-username',
+      repo: 'photo-gallery',
+      branch: 'main',
+      token: process.env.GITHUB_TOKEN,
+      path: 'photos',
+      useRawUrl: true,
      },
    }
    ```
@@ -98,13 +96,11 @@ import { GitHubStorageProvider } from '@/core/storage'
 
 const githubProvider = new GitHubStorageProvider({
   provider: 'github',
-  github: {
-    owner: 'octocat',
-    repo: 'Hello-World',
-    branch: 'main',
-    token: 'your-token',
-    path: 'images',
-  },
+  owner: 'octocat',
+  repo: 'Hello-World',
+  branch: 'main',
+  token: 'your-token',
+  path: 'images',
 })
 
 // 获取文件
@@ -270,4 +266,4 @@ photos/
 | 适用场景 | 生产环境 | 小型项目、演示 |
 | 设置复杂度 | 中等 | 简单 |
 
-选择存储提供商时，请根据你的具体需求和预算进行选择。 
+选择存储提供商时，请根据你的具体需求和预算进行选择。

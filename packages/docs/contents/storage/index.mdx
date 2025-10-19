@@ -2,7 +2,7 @@
 title: Storage providers
 description: Afilmory can work with multiple storage providers, including S3, Git and local file system
 createdAt: 2025-08-12T15:09:08+08:00
-lastModified: 2025-08-31T11:08:35+08:00
+lastModified: 2025-10-19T14:03:13+08:00
 ---
 
 # Storage Providers
@@ -54,13 +54,11 @@ GitHub storage leverages Git repositories for photo storage, ideal for static si
 {
   "storage": {
     "provider": "github",
-    "github": {
-      "owner": "your-username",
-      "repo": "photo-storage",
-      "branch": "main",
-      "path": "photos",
-      "useRawUrl": true
-    }
+    "owner": "your-username",
+    "repo": "photo-storage",
+    "branch": "main",
+    "path": "photos",
+    "useRawUrl": true
   }
 }
 ```
@@ -256,7 +254,7 @@ Store sensitive credentials securely:
 S3_ACCESS_KEY_ID=prod_access_key
 S3_SECRET_ACCESS_KEY=prod_secret_key
 
-# .env.development  
+# .env.development
 S3_ACCESS_KEY_ID=dev_access_key
 S3_SECRET_ACCESS_KEY=dev_secret_key
 ```
