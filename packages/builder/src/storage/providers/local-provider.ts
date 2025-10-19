@@ -5,15 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import { SUPPORTED_FORMATS } from '../../constants/index.js'
 import { logger } from '../../logger/index.js'
-import type { StorageObject, StorageProvider } from '../interfaces'
-
-export interface LocalConfig {
-  provider: 'local'
-  basePath: string // 本地照片存储的基础路径
-  baseUrl?: string // 用于生成公共 URL 的基础 URL（可选）
-  excludeRegex?: string // 排除文件的正则表达式
-  maxFileLimit?: number // 最大文件数量限制
-}
+import type { LocalConfig, StorageObject, StorageProvider } from '../interfaces'
 
 export interface ScanProgress {
   currentPath: string

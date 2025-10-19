@@ -95,10 +95,10 @@ export type GitHubConfig = {
 
 export type LocalConfig = {
   provider: 'local'
-  basePath: string
-  baseUrl?: string
-  excludeRegex?: string
-  maxFileLimit?: number
+  basePath: string // 本地照片存储的基础路径
+  baseUrl?: string // 用于生成公共 URL 的基础 URL（可选）
+  excludeRegex?: string // 排除文件的正则表达式
+  maxFileLimit?: number // 最大文件数量限制
 }
 
 export type StorageConfig = S3Config | GitHubConfig | LocalConfig
