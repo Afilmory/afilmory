@@ -48,7 +48,7 @@ export interface StorageProvider {
    * @param key 文件的键值/路径
    * @returns 公共访问 URL
    */
-  generatePublicUrl: (key: string) => string
+  generatePublicUrl: (key: string) => string | Promise<string>
 
   /**
    * 检测 Live Photos 配对
