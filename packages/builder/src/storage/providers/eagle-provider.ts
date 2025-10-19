@@ -184,14 +184,8 @@ export class EagleStorageProvider implements StorageProvider {
     }
   }
 
-  async listImages(): Promise<StorageObject[]> {
-    const allFiles = await this.listAllFiles()
-    // TODO
-    return allFiles
-    // return allFiles.filter((file) => {
-    //   const ext = path.extname(file.key)
-    //   return SUPPORTED_FORMATS.has(ext)
-    // })
+  async listImages() {
+    return this.listAllFiles()
   }
 
   async listAllFiles(): Promise<StorageObject[]> {
@@ -209,10 +203,19 @@ export class EagleStorageProvider implements StorageProvider {
     await Promise.all(
       keys.map(async (key) => {
         const meta = await readImageMetadata(this.config.libraryPath, key)
-        const include = this.runPredicate(meta, this.config.include)
-        const exclude = this.runPredicate(meta, this.config.exclude)
+        const include =
+          this.config.include.length === 0
+            ? true
+            : this.runPredicate(meta, this.config.include)
+        const exclude =
+          this.config.exclude.length === 0
+            ? false
+            : this.runPredicate(meta, this.config.exclude)
+        const supportedFormat = SUPPORTED_FORMATS.has(
+          `.${meta.ext.toLowerCase()}`,
+        )
 
-        if (include && !exclude) {
+        if (include && !exclude && supportedFormat) {
           filtered.push({
             key,
             size: meta.size,
@@ -266,7 +269,7 @@ export class EagleStorageProvider implements StorageProvider {
   }
 
   /**
-   * Returns `true` if the image should be included.
+   * Returns `true` if the image matches any of the given rules.
    */
   private runPredicate(
     imageMeta: EagleImageMetadata,
@@ -291,9 +294,15 @@ export class EagleStorageProvider implements StorageProvider {
               continue
             }
             if (includeSubfolder) {
-              return folderPath.includes(condition.name)
+              if (folderPath.includes(condition.name)) {
+                return true
+              }
+              continue
             } else {
-              return folderPath.at(-1) === condition.name
+              if (folderPath.at(-1) === condition.name) {
+                return true
+              }
+              continue
             }
           }
           return false
