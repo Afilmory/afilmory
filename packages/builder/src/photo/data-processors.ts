@@ -14,6 +14,7 @@ import {
 import { decompressUint8Array } from '../lib/u8array.js'
 import { workdir } from '../path.js'
 import type { StorageConfig } from '../storage/interfaces.js'
+import { resolveThumbnailKey } from '../storage/thumbnail-utils.js'
 import type {
   PhotoManifestItem,
   PickedExif,
@@ -26,25 +27,6 @@ export interface ThumbnailResult {
   thumbnailUrl: string
   thumbnailBuffer: Buffer
   thumbHash: Uint8Array | null
-}
-
-function resolveThumbnailKey(
-  photoId: string,
-  storageConfig: StorageConfig,
-): string | null {
-  if (!storageConfig.uploadThumbnails) {
-    return null
-  }
-
-  const explicitPrefix = storageConfig.thumbnailPrefix
-
-  if (explicitPrefix) {
-    return `${explicitPrefix}${photoId}.jpg`
-  }
-
-  const fallbackPrefix = 'thumbnails/'
-
-  return `${fallbackPrefix}${photoId}.jpg`
 }
 
 async function maybeUploadThumbnailToRemote(
