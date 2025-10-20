@@ -36,10 +36,6 @@ export const resolveThumbnailPrefix = (
     return ensureTrailingSlash(explicit)
   }
 
-  if (basePrefix) {
-    return ensureTrailingSlash(`${basePrefix}/thumbnails`)
-  }
-
   return 'thumbnails/'
 }
 
