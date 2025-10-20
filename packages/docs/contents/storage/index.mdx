@@ -2,7 +2,7 @@
 title: Storage providers
 description: Afilmory can work with multiple storage providers, including S3, Git, Eagle, and local file system
 createdAt: 2025-08-12T15:09:08+08:00
-lastModified: 2025-10-19T14:03:13+08:00
+lastModified: 2025-10-21T00:30:57+08:00
 ---
 
 # Storage Providers
@@ -24,7 +24,9 @@ S3-compatible storage is the recommended option for production deployments, offe
     "bucket": "your-photos-bucket",
     "region": "us-east-1",
     "prefix": "photos/",
-    "customDomain": "cdn.yourdomain.com"
+    "customDomain": "cdn.yourdomain.com",
+    "uploadThumbnails": true,
+    "thumbnailPrefix": "thumbnails/"
   }
 }
 ```
@@ -62,6 +64,18 @@ GitHub storage leverages Git repositories for photo storage, ideal for static si
   }
 }
 ```
+
+### Thumbnail Upload Options
+
+You can offload generated thumbnails to the same remote storage to serve them directly from a CDN. These flags apply to any provider that supports uploads (currently S3-compatible backends and GitHub):
+
+- `uploadThumbnails` (boolean, default `false`): when enabled, the builder uploads each generated thumbnail after creation or reuse.
+- `thumbnailPrefix` (string, optional): override the remote directory for thumbnails. When omitted, the builder appends `thumbnails/` to the main `prefix`. The builder automatically prevents the thumbnail prefix from matching the photo prefix to avoid recursion loops.
+
+**Tips:**
+
+- Keep the thumbnail prefix outside of the original photo directory (e.g., `photos/thumbnails/`) so future scans skip already-uploaded thumbnails.
+- For S3, set a long-lived cache policy via `Cache-Control` on your CDN if you need different expiry behaviour than the default `public,max-age=31536000,immutable` added by the builder.
 
 **Environment Variables:**
 

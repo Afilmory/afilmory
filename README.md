@@ -10,10 +10,10 @@ A modern photo gallery website built with React + TypeScript, supporting automat
 
 Live Photo Galleries:
 
-- https://afilmory.innei.in
-- https://gallery.mxte.cc
-- https://photography.pseudoyu.com
-- https://afilmory.magren.cc
+- <https://afilmory.innei.in>
+- <https://gallery.mxte.cc>
+- <https://photography.pseudoyu.com>
+- <https://afilmory.magren.cc>
 
 ## 🌟 Features
 
@@ -109,6 +109,8 @@ This will automatically pull resources from the remote repository, avoiding rebu
 - `prefix`: File prefix
 - `customDomain`: Custom domain
 - `excludeRegex`: Regular expression to exclude files (optional)
+- `uploadThumbnails`: Upload generated thumbnails to the same provider (defaults to `false`)
+- `thumbnailPrefix`: Override the remote directory for uploaded thumbnails
 
 #### Build Options (`options`)
 
