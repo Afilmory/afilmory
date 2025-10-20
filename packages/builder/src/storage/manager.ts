@@ -6,11 +6,14 @@ import type {
   StorageProvider,
   UploadFileOptions,
 } from './interfaces.js'
+import { resolveThumbnailPrefix } from './thumbnail-utils.js'
 
 export class StorageManager {
   private provider: StorageProvider
+  private config: StorageConfig
 
   constructor(config: StorageConfig) {
+    this.config = config
     this.provider = StorageFactory.createProvider(config)
   }
 
@@ -29,7 +32,14 @@ export class StorageManager {
    * @returns 图片文件对象数组
    */
   async listImages(): Promise<StorageObject[]> {
-    return this.provider.listImages()
+    const images = await this.provider.listImages()
+    const thumbnailPrefix = resolveThumbnailPrefix(this.config)
+
+    if (!thumbnailPrefix) {
+      return images
+    }
+
+    return images.filter((image) => !image.key.startsWith(thumbnailPrefix))
   }
 
   /**
@@ -37,7 +47,13 @@ export class StorageManager {
    * @returns 所有文件对象数组
    */
   async listAllFiles(): Promise<StorageObject[]> {
-    return this.provider.listAllFiles()
+    const allFiles = await this.provider.listAllFiles()
+    const thumbnailPrefix = resolveThumbnailPrefix(this.config)
+    if (!thumbnailPrefix) {
+      return allFiles
+    }
+
+    return allFiles.filter((file) => !file.key.startsWith(thumbnailPrefix))
   }
 
   /**
@@ -86,6 +102,7 @@ export class StorageManager {
    * @param config 新的存储配置
    */
   switchProvider(config: StorageConfig): void {
+    this.config = config
     this.provider = StorageFactory.createProvider(config)
   }
 }
