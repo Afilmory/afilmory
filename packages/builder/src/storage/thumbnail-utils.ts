@@ -30,7 +30,7 @@ export const resolveThumbnailPrefix = (
   const explicit = normalizePrefix(casted.thumbnailPrefix)
   if (explicit) {
     if (basePrefix && explicit === basePrefix) {
-      return 'thumbnails/'
+      return ensureTrailingSlash(`${basePrefix}/thumbnails`)
     }
 
     return ensureTrailingSlash(explicit)
