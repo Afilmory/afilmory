@@ -248,7 +248,8 @@ export class EagleStorageProvider implements StorageProvider {
       `${key}.info`,
       imageName,
     )
-    const distFile = path.join(this.config.distPath, imageName)
+    const distName = `${key}.${imageMeta.ext}`
+    const distFile = path.join(this.config.distPath, distName)
     if (
       await fs
         .stat(distFile)
@@ -265,7 +266,7 @@ export class EagleStorageProvider implements StorageProvider {
     logger.main.log(
       `EagleStorageProvider: 已复制文件到发布目录： ${imageName} -> ${distFile}`,
     )
-    return imageName
+    return distName
   }
 
   /**
