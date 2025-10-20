@@ -1,4 +1,5 @@
 import type { StorageConfig, StorageProvider } from './interfaces'
+import { EagleStorageProvider } from './providers/eagle-provider.js'
 import { GitHubStorageProvider } from './providers/github-provider.js'
 import { LocalStorageProvider } from './providers/local-provider.js'
 import { S3StorageProvider } from './providers/s3-provider.js'
@@ -16,6 +17,9 @@ export class StorageFactory {
       }
       case 'github': {
         return new GitHubStorageProvider(config)
+      }
+      case 'eagle': {
+        return new EagleStorageProvider(config)
       }
       case 'local': {
         return new LocalStorageProvider(config)

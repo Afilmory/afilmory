@@ -201,7 +201,7 @@ export async function customImageProcessor(buffer: Buffer) {
 
 ## 📄 License
 
-MIT License © 2025 Afilmory Team
+AGPL v3 License © 2025 Afilmory Team
 
 ## 🔗 Related Links
 

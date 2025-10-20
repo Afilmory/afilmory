@@ -202,7 +202,7 @@ export async function executePhotoProcessingPipeline(
     const photoInfo = extractPhotoInfo(photoKey, exifData)
 
     // 7. 处理 Live Photo
-    const livePhotoResult = processLivePhoto(photoKey, livePhotoMap)
+    const livePhotoResult = await processLivePhoto(photoKey, livePhotoMap)
 
     // 8. 构建照片清单项
     const aspectRatio = metadata.width / metadata.height
@@ -213,7 +213,7 @@ export async function executePhotoProcessingPipeline(
       description: photoInfo.description,
       dateTaken: photoInfo.dateTaken,
       tags: photoInfo.tags,
-      originalUrl: defaultBuilder
+      originalUrl: await defaultBuilder
         .getStorageManager()
         .generatePublicUrl(photoKey),
       thumbnailUrl: thumbnailResult.thumbnailUrl,

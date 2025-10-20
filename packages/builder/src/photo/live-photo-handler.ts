@@ -16,10 +16,10 @@ export interface LivePhotoResult {
  * @param livePhotoMap Live Photo 映射表
  * @returns Live Photo 处理结果
  */
-export function processLivePhoto(
+export async function processLivePhoto(
   photoKey: string,
   livePhotoMap: Map<string, _Object | StorageObject>,
-): LivePhotoResult {
+): Promise<LivePhotoResult> {
   const loggers = getGlobalLoggers()
   const livePhotoVideo = livePhotoMap.get(photoKey)
   const isLivePhoto = !!livePhotoVideo
@@ -40,7 +40,7 @@ export function processLivePhoto(
     return { isLivePhoto: false }
   }
 
-  const livePhotoVideoUrl = defaultBuilder
+  const livePhotoVideoUrl = await defaultBuilder
     .getStorageManager()
     .generatePublicUrl(videoKey)
 
