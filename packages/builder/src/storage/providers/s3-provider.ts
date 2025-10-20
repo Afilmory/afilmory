@@ -1,7 +1,11 @@
 import path from 'node:path'
 
 import type { _Object, S3Client } from '@aws-sdk/client-s3'
-import { GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
+import {
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3'
 
 import { SUPPORTED_FORMATS } from '../../constants/index.js'
 import { backoffDelay, sleep } from '../../lib/backoff.js'
@@ -13,6 +17,7 @@ import type {
   S3Config,
   StorageObject,
   StorageProvider,
+  UploadFileOptions,
 } from '../interfaces'
 
 // 将 AWS S3 对象转换为通用存储对象
@@ -265,5 +270,35 @@ export class S3StorageProvider implements StorageProvider {
     }
 
     return livePhotoMap
+  }
+
+  async uploadFile(
+    key: string,
+    data: Buffer,
+    options?: UploadFileOptions,
+  ): Promise<void> {
+    await this.limiter.run(async () => {
+      const startTime = Date.now()
+      try {
+        const command = new PutObjectCommand({
+          Bucket: this.config.bucket,
+          Key: key,
+          Body: data,
+          ContentType: options?.contentType,
+          CacheControl: options?.cacheControl,
+          Metadata: options?.metadata,
+        })
+
+        await this.s3Client.send(command)
+
+        const duration = Date.now() - startTime
+        const sizeKB = Math.round(data.length / 1024)
+        logger.s3.success(`上传完成：${key} (${sizeKB}KB, ${duration}ms)`)
+      } catch (error) {
+        const duration = Date.now() - startTime
+        logger.s3.error(`上传失败：${key} (${duration}ms)`, error)
+        throw error
+      }
+    })
   }
 }

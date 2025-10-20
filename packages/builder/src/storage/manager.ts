@@ -4,6 +4,7 @@ import type {
   StorageConfig,
   StorageObject,
   StorageProvider,
+  UploadFileOptions,
 } from './interfaces.js'
 
 export class StorageManager {
@@ -46,6 +47,18 @@ export class StorageManager {
    */
   async generatePublicUrl(key: string): Promise<string> {
     return this.provider.generatePublicUrl(key)
+  }
+
+  async uploadFile(
+    key: string,
+    data: Buffer,
+    options?: UploadFileOptions,
+  ): Promise<void> {
+    if (typeof this.provider.uploadFile !== 'function') {
+      throw new TypeError('当前存储提供商不支持文件上传')
+    }
+
+    await this.provider.uploadFile(key, data, options)
   }
 
   /**

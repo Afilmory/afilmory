@@ -1,5 +1,11 @@
 import type { Logger } from '../logger/index.js'
 
+export interface UploadFileOptions {
+  contentType?: string
+  cacheControl?: string
+  metadata?: Record<string, string>
+}
+
 // 扫描进度接口
 export interface ScanProgress {
   currentPath: string
@@ -56,6 +62,20 @@ export interface StorageProvider {
    * @returns Live Photo 配对映射 (图片 key -> 视频对象)
    */
   detectLivePhotos: (allObjects: StorageObject[]) => Map<string, StorageObject>
+
+  /**
+   * 上传文件到存储（可选能力，部分提供商不支持）
+   */
+  uploadFile?: (
+    key: string,
+    data: Buffer,
+    options?: UploadFileOptions,
+  ) => Promise<void>
+}
+
+type ThumbnailUploadOptions = {
+  uploadThumbnails?: boolean
+  thumbnailPrefix?: string
 }
 
 export type S3Config = {
@@ -81,7 +101,7 @@ export type S3Config = {
   maxAttempts?: number
   // Download concurrency limiter within a single process/worker
   downloadConcurrency?: number
-}
+} & ThumbnailUploadOptions
 
 export type GitHubConfig = {
   provider: 'github'
@@ -91,7 +111,7 @@ export type GitHubConfig = {
   token?: string
   path?: string
   useRawUrl?: boolean
-}
+} & ThumbnailUploadOptions
 
 export type LocalConfig = {
   provider: 'local'
@@ -99,7 +119,7 @@ export type LocalConfig = {
   baseUrl?: string // 用于生成公共 URL 的基础 URL（可选）
   excludeRegex?: string // 排除文件的正则表达式
   maxFileLimit?: number // 最大文件数量限制
-}
+} & ThumbnailUploadOptions
 
 export type EagleRule =
   | {
@@ -145,6 +165,6 @@ export type EagleConfig = {
   baseUrl?: string
   include?: EagleRule[]
   exclude?: EagleRule[]
-}
+} & ThumbnailUploadOptions
 
 export type StorageConfig = S3Config | GitHubConfig | EagleConfig | LocalConfig

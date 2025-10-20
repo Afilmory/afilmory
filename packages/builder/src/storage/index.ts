@@ -5,6 +5,7 @@ export type {
   StorageConfig,
   StorageObject,
   StorageProvider,
+  UploadFileOptions,
 } from './interfaces.js'
 
 // 导出工厂类

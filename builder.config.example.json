@@ -5,6 +5,8 @@
     "region": "us-east-1",
     "prefix": "photos/",
     "customDomain": "https://cdn.example.com",
-    "endpoint": "https://s3.amazonaws.com"
+    "endpoint": "https://s3.amazonaws.com",
+    "uploadThumbnails": true,
+    "thumbnailPrefix": "thumbnails/"
   }
 }

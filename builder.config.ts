@@ -75,6 +75,19 @@ export interface BuilderConfig {
   }
 }
 
+const buildDefaultThumbnailPrefix = (prefix?: string | null): string => {
+  if (!prefix) {
+    return 'thumbnails/'
+  }
+
+  const sanitized = prefix.replaceAll(/\/+$/g, '')
+  if (!sanitized) {
+    return 'thumbnails/'
+  }
+
+  return `${sanitized}/thumbnails/`
+}
+
 export const defaultBuilderConfig: BuilderConfig = {
   repo: {
     enable: false,
@@ -93,6 +106,8 @@ export const defaultBuilderConfig: BuilderConfig = {
     customDomain: env.S3_CUSTOM_DOMAIN,
     excludeRegex: env.S3_EXCLUDE_REGEX,
     maxFileLimit: 1000,
+    uploadThumbnails: false,
+    thumbnailPrefix: buildDefaultThumbnailPrefix(env.S3_PREFIX),
     // Network tuning defaults
     keepAlive: true,
     maxSockets: 64,

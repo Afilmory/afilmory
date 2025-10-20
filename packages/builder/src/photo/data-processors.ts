@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import type sharp from 'sharp'
 
+import { defaultBuilder } from '../builder/builder.js'
 import { HEIC_FORMATS } from '../constants/index.js'
 import { extractExifData } from '../image/exif.js'
 import { calculateHistogramAndAnalyzeTone } from '../image/histogram.js'
@@ -12,6 +13,7 @@ import {
 } from '../image/thumbnail.js'
 import { decompressUint8Array } from '../lib/u8array.js'
 import { workdir } from '../path.js'
+import type { StorageConfig } from '../storage/interfaces.js'
 import type {
   PhotoManifestItem,
   PickedExif,
@@ -26,6 +28,74 @@ export interface ThumbnailResult {
   thumbHash: Uint8Array | null
 }
 
+function resolveThumbnailKey(
+  photoId: string,
+  storageConfig: StorageConfig,
+): string | null {
+  if (!storageConfig.uploadThumbnails) {
+    return null
+  }
+
+  const explicitPrefix = storageConfig.thumbnailPrefix
+
+  if (explicitPrefix) {
+    return `${explicitPrefix}${photoId}.jpg`
+  }
+
+  const fallbackPrefix = 'thumbnails/'
+
+  return `${fallbackPrefix}${photoId}.jpg`
+}
+
+async function maybeUploadThumbnailToRemote(
+  photoId: string,
+  result: ThumbnailResult,
+  storageConfig: StorageConfig,
+): Promise<ThumbnailResult> {
+  if (
+    !storageConfig.uploadThumbnails ||
+    storageConfig.provider === 'local' ||
+    result.thumbnailBuffer.length === 0
+  ) {
+    return result
+  }
+
+  const remoteKey = resolveThumbnailKey(photoId, storageConfig)
+  if (!remoteKey) {
+    return result
+  }
+
+  const storageManager = defaultBuilder.getStorageManager()
+  const provider = storageManager.getProvider()
+  const loggers = getGlobalLoggers()
+
+  if (typeof provider.uploadFile !== 'function') {
+    loggers.thumbnail.warn('当前存储提供商不支持缩略图上传，已使用本地路径')
+    return result
+  }
+
+  try {
+    await storageManager.uploadFile(remoteKey, result.thumbnailBuffer, {
+      contentType: 'image/jpeg',
+      cacheControl: 'public,max-age=31536000,immutable',
+    })
+
+    const remoteUrl = await storageManager.generatePublicUrl(remoteKey)
+    loggers.thumbnail.success(`缩略图已上传至远程存储：${photoId}`)
+
+    return {
+      ...result,
+      thumbnailUrl: remoteUrl,
+    }
+  } catch (error) {
+    loggers.thumbnail.error(
+      `缩略图上传失败，继续使用本地版本：${photoId}`,
+      error,
+    )
+    return result
+  }
+}
+
 /**
  * 处理缩略图和 blurhash
  * 优先复用现有数据，如果不存在或需要强制更新则重新生成
@@ -37,6 +107,7 @@ export async function processThumbnailAndBlurhash(
   options: PhotoProcessorOptions,
 ): Promise<ThumbnailResult> {
   const loggers = getGlobalLoggers()
+  const storageConfig = defaultBuilder.getConfig().storage
 
   // 检查是否可以复用现有数据
   if (
@@ -52,16 +123,23 @@ export async function processThumbnailAndBlurhash(
         `${photoId}.jpg`,
       )
       const thumbnailBuffer = await fs.readFile(thumbnailPath)
-      const thumbnailUrl = `/thumbnails/${photoId}.jpg`
+      const thumbnailUrl =
+        existingItem?.thumbnailUrl || `/thumbnails/${photoId}.jpg`
 
       loggers.blurhash.info(`复用现有 blurhash: ${photoId}`)
       loggers.thumbnail.info(`复用现有缩略图：${photoId}`)
 
-      return {
+      const baseResult: ThumbnailResult = {
         thumbnailUrl,
         thumbnailBuffer,
         thumbHash: decompressUint8Array(existingItem.thumbHash),
       }
+
+      return await maybeUploadThumbnailToRemote(
+        photoId,
+        baseResult,
+        storageConfig,
+      )
     } catch (error) {
       loggers.thumbnail.warn(`读取现有缩略图失败，重新生成：${photoId}`, error)
       // 继续执行生成逻辑
@@ -75,11 +153,26 @@ export async function processThumbnailAndBlurhash(
     options.isForceMode || options.isForceThumbnails,
   )
 
-  return {
-    thumbnailUrl: result.thumbnailUrl!,
-    thumbnailBuffer: result.thumbnailBuffer!,
-    thumbHash: result.thumbHash!,
+  if (!result.thumbnailUrl || !result.thumbnailBuffer) {
+    getGlobalLoggers().thumbnail.error(`缩略图生成失败：${photoId}`)
+    return {
+      thumbnailUrl: existingItem?.thumbnailUrl || `/thumbnails/${photoId}.jpg`,
+      thumbnailBuffer: Buffer.alloc(0),
+      thumbHash: result.thumbHash ?? null,
+    }
   }
+
+  const generatedResult: ThumbnailResult = {
+    thumbnailUrl: result.thumbnailUrl,
+    thumbnailBuffer: result.thumbnailBuffer,
+    thumbHash: result.thumbHash ?? null,
+  }
+
+  return await maybeUploadThumbnailToRemote(
+    photoId,
+    generatedResult,
+    storageConfig,
+  )
 }
 
 /**
