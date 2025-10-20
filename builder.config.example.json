@@ -6,7 +6,7 @@
     "prefix": "photos/",
     "customDomain": "https://cdn.example.com",
     "endpoint": "https://s3.amazonaws.com",
-    "uploadThumbnails": true,
+    "uploadThumbnails": false,
     "thumbnailPrefix": "thumbnails/"
   }
 }
