@@ -16,7 +16,6 @@ export interface StorageObject {
   size?: number
   lastModified?: Date
   etag?: string
-  meta?: Record<string, unknown>
 }
 
 // 存储提供商的通用接口
