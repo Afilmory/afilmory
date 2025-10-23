@@ -159,6 +159,14 @@ const localConfig: StorageConfig = {
   provider: 'local',
   basePath: './photos',              // 本地照片存储路径（相对或绝对路径）
   baseUrl: 'http://localhost:3000/photos', // 可选：用于生成公共 URL
+  /**
+   * 可选：将 basePath 下的文件复制到发布目录，用于静态托管
+   * - 支持绝对/相对路径（相对路径相对于项目根目录解析）
+   * - 注意：会覆盖目标目录下的同名文件
+   *
+   * 如果你使用了下面的配置，你可以将 baseUrl 配置为 '/originals/' 以匹配前端访问路径。
+   */
+  distPath: './apps/web/public/originals',
   excludeRegex: '\\.(tmp|cache)$',   // 可选：排除文件的正则表达式
   maxFileLimit: 1000,                // 可选：最大文件数量限制
 }
@@ -168,6 +176,7 @@ const localConfig: StorageConfig = {
 
 - **相对路径**: 相对于项目根目录，如 `./photos`、`../images`
 - **绝对路径**: 完整的文件系统路径，如 `/home/user/photos`、`C:\\Photos`
+ - **distPath 解析**: 若配置了 `distPath`，同样支持相对/绝对路径；相对路径将以项目根目录为基准进行解析。
 
 ### 使用示例
 
@@ -178,6 +187,8 @@ const localProvider = new LocalStorageProvider({
   provider: 'local',
   basePath: './photos',
   baseUrl: 'http://localhost:3000/photos',
+  // 可选：在初始化时自动将 basePath 的内容复制到 distPath（会覆盖同名文件）
+  distPath: './apps/web/public/photos',
 })
 
 // 获取文件
@@ -224,6 +235,13 @@ photos/
 4. **备份策略**: 定期备份重要照片文件
 5. **监控空间**: 监控磁盘空间使用情况
 
+### 发布目录复制（distPath）
+
+- 启用 `distPath` 后，提供商会在实例化时将 `basePath` 下的所有文件复制到目标发布目录。
+- 复制为增量覆盖模式：目标目录中同名文件会被覆盖，请谨慎使用。
+- 适合将本地图片同步到前端应用的静态目录（如 `apps/web/public/photos`），便于直接通过静态资源服务器或 CDN 提供访问。
+- 建议在构建阶段使用，避免在高并发运行态频繁触发大规模复制。
+
 ### 开发环境配置
 
 对于开发环境，推荐使用相对路径：
@@ -233,7 +251,8 @@ photos/
   "storage": {
     "provider": "local",
     "basePath": "./dev-photos",
-    "baseUrl": "http://localhost:1924/photos"
+    "baseUrl": "http://localhost:1924/photos",
+    "distPath": "./apps/web/public/photos"
   }
 }
 ```
@@ -248,6 +267,7 @@ photos/
     "provider": "local",
     "basePath": "/var/www/photos",
     "baseUrl": "https://yourdomain.com/photos",
+    "distPath": "/var/www/site/public/photos",
     "excludeRegex": "\\.(tmp|cache|DS_Store)$",
     "maxFileLimit": 5000
   }
@@ -265,6 +285,13 @@ photos/
 | 设置复杂度 | 中等 | 简单 |
 
 选择存储提供商时，请根据你的具体需求和预算进行选择。
+
+## 通用接口更新：StorageObject.meta
+
+自 vNext 起，`StorageObject` 增加可选字段 `meta?: Record<string, unknown>`，用于承载与文件相关的附加元数据（例如来源标记、处理标志、外部索引 ID 等）。
+
+- 各存储提供商可按需填充该字段；未使用时可忽略。
+- 该字段不会影响文件读取与 URL 生成逻辑，仅作为扩展信息通道。
 
 ## Eagle 存储提供商
 

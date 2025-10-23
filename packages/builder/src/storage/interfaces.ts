@@ -16,6 +16,7 @@ export interface StorageObject {
   size?: number
   lastModified?: Date
   etag?: string
+  meta?: Record<string, unknown>
 }
 
 // 存储提供商的通用接口
@@ -97,6 +98,12 @@ export type LocalConfig = {
   provider: 'local'
   basePath: string // 本地照片存储的基础路径
   baseUrl?: string // 用于生成公共 URL 的基础 URL（可选）
+  /**
+   * 本地照片存储需要被复制到的目录。
+   *
+   * 注意：操作会覆盖目标目录下的同名文件。
+   */
+  distPath?: string
   excludeRegex?: string // 排除文件的正则表达式
   maxFileLimit?: number // 最大文件数量限制
 }

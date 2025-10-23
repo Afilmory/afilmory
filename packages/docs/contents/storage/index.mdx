@@ -2,7 +2,7 @@
 title: Storage providers
 description: Afilmory can work with multiple storage providers, including S3, Git, Eagle, and local file system
 createdAt: 2025-08-12T15:09:08+08:00
-lastModified: 2025-10-19T14:03:13+08:00
+lastModified: 2025-10-23T17:02:10+08:00
 ---
 
 # Storage Providers
@@ -146,15 +146,32 @@ Local storage is suitable for development, testing, or self-hosted deployments w
 
 **Configuration in `builder.config.json`:**
 
+Self-hosted original image (manually serve to `basePath`):
+
 ```json
 {
   "storage": {
     "provider": "local",
     "basePath": "./photos",
-    "baseUrl": "http://localhost:3000/photos/"
+    "baseUrl": "http://example.com:3000/photos/"
   }
 }
 ```
+
+Hosted with frontend (serve via app static assets):
+
+```json
+{
+  "storage": {
+    "provider": "local",
+    "basePath": "./photos",
+    "distPath": "./apps/web/public/originals",
+    "baseUrl": "/originals/"
+  }
+}
+```
+
+  Use when you want originals deployed alongside your frontend’s static assets. On initialization/build, files from `basePath` are copied to `distPath` (overwriting same-named files).
 
 ## Photo Processing Workflow
 
@@ -218,7 +235,8 @@ For local development, use local storage:
   "storage": {
     "provider": "local",
     "basePath": "./dev-photos",
-    "baseUrl": "http://localhost:1924/photos"
+    "baseUrl": "http://localhost:1924/photos",
+    "distPath": "./apps/web/public/photos"
   }
 }
 ```
