@@ -25,7 +25,6 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   constructor(config: LocalConfig) {
-    // 参数验证
     if (!config.basePath || config.basePath.trim() === '') {
       throw new Error('LocalStorageProvider: basePath 不能为空')
     }
@@ -65,6 +64,7 @@ export class LocalStorageProvider implements StorageProvider {
         const projectRoot = path.resolve(__dirname, '../../../../../')
         this.distPath = path.resolve(projectRoot, config.distPath)
       }
+      copyToDist(this.basePath, this.distPath)
     }
   }
 
@@ -118,14 +118,9 @@ export class LocalStorageProvider implements StorageProvider {
     })
   }
 
-  private copyToDist = false
   async listAllFiles(
     progressCallback?: ProgressCallback,
   ): Promise<StorageObject[]> {
-    if (this.distPath && !this.copyToDist) {
-      this.copyToDist = true
-      await copyToDist(this.basePath, this.distPath)
-    }
     const files: StorageObject[] = []
     const excludeRegex = this.config.excludeRegex
       ? new RegExp(this.config.excludeRegex)
@@ -322,8 +317,6 @@ export class LocalStorageProvider implements StorageProvider {
  * 将文件夹复制到 dist 目录（保持相对路径结构）。
  */
 async function copyToDist(fromPath: string, distPath: string): Promise<void> {
-  if (!distPath) return
-
   try {
     // 确保目标目录存在
     await fs.mkdir(distPath, { recursive: true })
