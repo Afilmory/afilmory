@@ -13,6 +13,7 @@ export interface SiteConfig {
   feed?: Feed
   map?: MapConfig
   mapStyle?: string
+  mapProjection?: 'globe' | 'mercator'
 }
 
 /**

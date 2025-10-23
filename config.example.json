@@ -12,5 +12,6 @@
   "map": [
     "maplibre"
   ],
-  "mapStyle": "builtin"
+  "mapStyle": "builtin",
+  "mapProjection": "mercator"
 }

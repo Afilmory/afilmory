@@ -1,6 +1,7 @@
 // Styles
 import 'maplibre-gl/dist/maplibre-gl.css'
 
+import { siteConfig } from '@config'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Map from 'react-map-gl/maplibre'
 
@@ -199,6 +200,13 @@ export const Maplibre = ({
   // 当地图加载完成时触发适配
   const handleMapLoad = useCallback(() => {
     setIsMapLoaded(true)
+    if (mapRef?.current?.getMap) {
+      const map = mapRef.current.getMap()
+      const projectionType = siteConfig.mapProjection || 'mercator'
+      map.setProjection({
+        type: projectionType,
+      })
+    }
   }, [])
 
   // 当标记点变化时，重新适配边界
