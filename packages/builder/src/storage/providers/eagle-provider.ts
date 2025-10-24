@@ -260,7 +260,7 @@ export class EagleStorageProvider implements StorageProvider {
       logger.main.log(
         `EagleStorageProvider: 发布目录已存在文件，跳过复制： ${imageName} -> ${distFile}`,
       )
-      return imageName
+      return distName
     }
     await fs.copyFile(sourceImage, distFile)
     logger.main.log(
