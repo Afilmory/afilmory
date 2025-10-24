@@ -203,6 +203,10 @@ export class EagleStorageProvider implements StorageProvider {
     await Promise.all(
       keys.map(async (key) => {
         const meta = await readImageMetadata(this.config.libraryPath, key)
+        if (meta.isDeleted) {
+          // Skip deleted images
+          return
+        }
         const include =
           this.config.include.length === 0
             ? true
