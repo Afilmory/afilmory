@@ -5,14 +5,22 @@ import { visit } from 'unist-util-visit'
 /**
  * 生成标题ID的函数
  * 保持与 toc-extractor.ts 中的 generateHeadingId 函数完全一致
+ * Supports Chinese (CJK) characters in heading IDs
  */
 function generateHeadingId(text: string): string {
-  return text
-    .toLowerCase()
-    .replaceAll(/[^\w\s-]/g, '') // 移除特殊字符
-    .replaceAll(/\s+/g, '-') // 空格替换为连字符
-    .replaceAll(/-+/g, '-') // 多个连字符合并为一个
-    .replaceAll(/^-|-$/g, '') // 移除开头和结尾的连字符
+  return (
+    text
+      .toLowerCase()
+      // Keep: Chinese (CJK), English, numbers, spaces, hyphens
+      // Remove: emojis and special symbols
+      .replaceAll(/[^\u4e00-\u9fa5a-z0-9\s-]/gi, '')
+      .trim()
+      .replaceAll(/\s+/g, '-') // 空格替换为连字符
+      .replaceAll(/-+/g, '-') // 多个连字符合并为一个
+      .replaceAll(/^-|-$/g, '') || // 移除开头和结尾的连字符
+    // Fallback for empty results (e.g., emoji-only headings)
+    `heading-${Math.random().toString(36).substring(2, 9)}`
+  )
 }
 
 /**
