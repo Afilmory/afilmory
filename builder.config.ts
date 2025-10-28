@@ -18,13 +18,13 @@ export const defaultBuilderConfig: BuilderConfig = {
 
   storage: {
     provider: 's3',
-    bucket: 'my-photos',
-    region: 'us-east-1',
-    endpoint: 'https://s3.amazonaws.com',
+    bucket: '',
+    region: '',
+    endpoint: '',
     accessKeyId: '',
     secretAccessKey: '',
     prefix: 'photos/',
-    customDomain: 'https://cdn.example.com',
+    customDomain: '',
     excludeRegex: '',
     maxFileLimit: 1000,
     // Network tuning defaults
