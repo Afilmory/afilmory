@@ -251,6 +251,7 @@ function removeCodeBlocks(content: string): string {
 
 function extractHeadings(content: string, maxDepth: number): TocItem[] {
   const headings: TocItem[] = []
+  const usedIds = new Set<string>() // Track used IDs to avoid duplicates
 
   // 首先移除所有代码块
   const contentWithoutCodeBlocks = removeCodeBlocks(content)
@@ -267,11 +268,21 @@ function extractHeadings(content: string, maxDepth: number): TocItem[] {
 
     const text = match[2].trim()
 
-    // 生成 ID（转换为小写，替换空格和特殊字符）
-    const id = `heading-${generateHeadingId(text)}`
+    // 生成基础 ID
+    const baseId = `heading-${generateHeadingId(text)}`
+    let finalId = baseId
+
+    // 处理 ID 冲突，添加数字后缀（与 remark-heading.ts 保持一致）
+    let counter = 1
+    while (usedIds.has(finalId)) {
+      finalId = `${baseId}-${counter}`
+      counter++
+    }
+
+    usedIds.add(finalId)
 
     headings.push({
-      id,
+      id: finalId,
       level,
       text,
     })
