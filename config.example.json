@@ -9,6 +9,19 @@
     "url": "https://innei.in/",
     "avatar": "https://cdn.jsdelivr.net/gh/Innei/static@master/avatar.png"
   },
+  "social": {
+    "github": "",
+    "twitter": "",
+    "rss": false
+  },
+  "feed": {
+    "folo": {
+      "challenge": {
+        "feedId": "",
+        "userId": ""
+      }
+    }
+  },
   "map": [
     "maplibre"
   ],
