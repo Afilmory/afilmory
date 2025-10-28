@@ -18,14 +18,14 @@ export const defaultBuilderConfig: BuilderConfig = {
 
   storage: {
     provider: 's3',
-    bucket: env.S3_BUCKET_NAME,
-    region: env.S3_REGION,
-    endpoint: env.S3_ENDPOINT,
-    accessKeyId: env.S3_ACCESS_KEY_ID,
-    secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-    prefix: env.S3_PREFIX,
-    customDomain: env.S3_CUSTOM_DOMAIN,
-    excludeRegex: env.S3_EXCLUDE_REGEX,
+    bucket: 'my-photos',
+    region: 'us-east-1',
+    endpoint: 'https://s3.amazonaws.com',
+    accessKeyId: '',
+    secretAccessKey: '',
+    prefix: 'photos/',
+    customDomain: 'https://cdn.example.com',
+    excludeRegex: '',
     maxFileLimit: 1000,
     // Network tuning defaults
     keepAlive: true,
@@ -76,7 +76,23 @@ const readUserConfig = () => {
     readFileSync(new URL('builder.config.json', import.meta.url), 'utf-8'),
   ) as BuilderConfig
 
-  return merge(defaultBuilderConfig, userConfig)
+  const envConfig = {
+    repo: {
+      token: env.GIT_TOKEN,
+    },
+    storage: {
+      bucket: env.S3_BUCKET_NAME,
+      region: env.S3_REGION,
+      endpoint: env.S3_ENDPOINT,
+      accessKeyId: env.S3_ACCESS_KEY_ID,
+      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+      prefix: env.S3_PREFIX,
+      customDomain: env.S3_CUSTOM_DOMAIN,
+      excludeRegex: env.S3_EXCLUDE_REGEX,
+    },
+  }
+
+  return merge(defaultBuilderConfig, merge(userConfig, envConfig))
 }
 
 export const builderConfig: BuilderConfig = readUserConfig()
