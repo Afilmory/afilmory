@@ -1,13 +1,12 @@
+import { ModalContainer, Toaster } from '@afilmory/ui'
+import { Spring } from '@afilmory/utils'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Provider } from 'jotai'
 import { LazyMotion, MotionConfig } from 'motion/react'
 import type { FC, PropsWithChildren } from 'react'
 
-import { ModalContainer } from '@afilmory/ui'
-import { Toaster } from '@afilmory/ui'
 import { jotaiStore } from '~/lib/jotai'
 import { queryClient } from '~/lib/query-client'
-import { Spring } from '@afilmory/utils'
 
 import { ContextMenuProvider } from './context-menu-provider'
 import { EventProvider } from './event-provider'

@@ -1,11 +1,3 @@
-import { Fragment, memo, useCallback, useEffect, useRef } from 'react'
-
-import type { FollowMenuItem } from '~/atoms/context-menu'
-import {
-  MenuItemSeparator,
-  MenuItemType,
-  useContextMenuState,
-} from '~/atoms/context-menu'
 import {
   ContextMenu,
   ContextMenuCheckboxItem,
@@ -19,6 +11,14 @@ import {
   ContextMenuTrigger,
 } from '@afilmory/ui'
 import { clsxm as cn } from '@afilmory/utils'
+import { Fragment, memo, useCallback, useEffect, useRef } from 'react'
+
+import type { FollowMenuItem } from '~/atoms/context-menu'
+import {
+  MenuItemSeparator,
+  MenuItemType,
+  useContextMenuState,
+} from '~/atoms/context-menu'
 import { nextFrame, preventDefault } from '~/lib/dom'
 
 export const ContextMenuProvider: Component = ({ children }) => (

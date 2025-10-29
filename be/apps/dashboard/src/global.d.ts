@@ -26,8 +26,6 @@ declare global {
   const APP_NAME: string
 }
 
-export {}
-
 declare global {
   export type Component<P = object> = FC<Prettify<ComponentType & P>>
 

@@ -1,4 +1,4 @@
-import type { settings } from '@memora/db'
+import type { settings } from '@afilmory/db'
 import type { z } from 'zod'
 
 import type {

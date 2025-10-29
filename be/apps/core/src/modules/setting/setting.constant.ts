@@ -1,8 +1,35 @@
 import { z } from 'zod'
 
 import type { SettingDefinition, SettingMetadata } from './setting.type'
+import { STORAGE_PROVIDER_VALUES, StorageConfigRecordSchema, StorageConfigSchema } from './storage.schema'
+
+function createJsonStringSchema(schema: z.ZodTypeAny, message: string) {
+  return z.string().refine((value) => {
+    try {
+      const parsed = JSON.parse(value)
+      return schema.safeParse(parsed).success
+    } catch {
+      return false
+    }
+  }, message)
+}
 
 export const DEFAULT_SETTING_DEFINITIONS = {
+  'storage.activeProvider': {
+    isSensitive: false,
+    schema: z.enum(STORAGE_PROVIDER_VALUES),
+  },
+  'storage.providerConfig': {
+    isSensitive: true,
+    schema: createJsonStringSchema(StorageConfigSchema, 'Storage provider configuration must be a valid JSON object'),
+  },
+  'storage.providerConfigs': {
+    isSensitive: true,
+    schema: createJsonStringSchema(
+      StorageConfigRecordSchema,
+      'Storage provider configuration map must be a valid JSON object',
+    ),
+  },
   'ai.openai.apiKey': {
     isSensitive: true,
     schema: z.string().min(1, 'OpenAI API key cannot be empty'),

@@ -1,8 +1,13 @@
 import { Module } from '@afilmory/framework'
 
-import { PhotoBuilderService } from './photo.service'
+import { DatabaseModule } from '../../database/database.module'
+import { SettingModule } from '../setting/setting.module'
+import { PhotoController } from './photo.controller'
+import { PhotoBuilderService, PhotoService } from './photo.service'
 
 @Module({
-  providers: [PhotoBuilderService],
+  imports: [DatabaseModule, SettingModule],
+  providers: [PhotoBuilderService, PhotoService],
+  controllers: [PhotoController],
 })
 export class PhotoModule {}

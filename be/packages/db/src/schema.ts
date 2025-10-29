@@ -1,10 +1,59 @@
 import { generateId } from '@afilmory/be-utils'
-import { boolean, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
+import {
+  bigint,
+  boolean,
+  doublePrecision,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+} from 'drizzle-orm/pg-core'
 
 function createSnowflakeId(name: string) {
   return text(name).$defaultFn(() => generateId())
 }
 const snowflakeId = createSnowflakeId('id').primaryKey()
+
+type JsonRecord = Record<string, unknown>
+
+export type PhotoManifestJson = {
+  id: string
+  title: string
+  description: string
+  dateTaken: string
+  tags: string[]
+  originalUrl: string
+  thumbnailUrl: string
+  thumbHash: string | null
+  width: number
+  height: number
+  aspectRatio: number
+  s3Key: string
+  lastModified: string
+  size: number
+  exif: JsonRecord | null
+  toneAnalysis: JsonRecord | null
+  isLivePhoto?: boolean
+  isHDR?: boolean
+  livePhotoVideoUrl?: string | null
+  livePhotoVideoS3Key?: string | null
+}
+
+type CameraInfoJson = {
+  make: string
+  model: string
+  displayName: string
+}
+
+type LensInfoJson = {
+  make?: string | null
+  model: string
+  displayName: string
+}
 
 // =========================
 // Better Auth custom schema
@@ -114,6 +163,62 @@ export const settings = pgTable(
   (t) => [unique('uq_settings_tenant_key').on(t.tenantId, t.key)],
 )
 
+export const photos = pgTable(
+  'photo',
+  {
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    id: text('id').notNull(),
+    storageKey: text('storage_key').notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    dateTaken: timestamp('date_taken', { mode: 'string' }).notNull(),
+    tags: jsonb('tags').notNull().$type<string[]>(),
+    originalUrl: text('original_url').notNull(),
+    thumbnailUrl: text('thumbnail_url').notNull(),
+    thumbHash: text('thumb_hash'),
+    width: integer('width').notNull(),
+    height: integer('height').notNull(),
+    aspectRatio: doublePrecision('aspect_ratio').notNull(),
+    size: bigint('size', { mode: 'number' }).notNull(),
+    lastModified: timestamp('last_modified', { mode: 'string' }).notNull(),
+    manifest: jsonb('manifest').notNull().$type<PhotoManifestJson>(),
+    exif: jsonb('exif').$type<JsonRecord | null>(),
+    toneAnalysis: jsonb('tone_analysis').$type<JsonRecord | null>(),
+    isLivePhoto: boolean('is_live_photo').notNull().default(false),
+    isHdr: boolean('is_hdr').notNull().default(false),
+    livePhotoVideoUrl: text('live_photo_video_url'),
+    livePhotoVideoKey: text('live_photo_video_key'),
+    syncedAt: timestamp('synced_at', { mode: 'string' }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.tenantId, table.id], name: 'pk_photo_tenant' }),
+    storageKeyUnique: unique('uq_photo_storage').on(table.tenantId, table.storageKey),
+  }),
+)
+
+export const photoManifests = pgTable(
+  'photo_manifest',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    version: text('version').notNull(),
+    totalPhotos: integer('total_photos').notNull().default(0),
+    cameras: jsonb('cameras').notNull().$type<CameraInfoJson[]>(),
+    lenses: jsonb('lenses').notNull().$type<LensInfoJson[]>(),
+    syncedAt: timestamp('synced_at', { mode: 'string' }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  (table) => [unique('uq_photo_manifest_tenant').on(table.tenantId)],
+)
+
 export const dbSchema = {
   tenants,
   tenantDomains,
@@ -121,6 +226,8 @@ export const dbSchema = {
   authSessions,
   authAccounts,
   settings,
+  photos,
+  photoManifests,
 }
 
 export type DBSchema = typeof dbSchema
