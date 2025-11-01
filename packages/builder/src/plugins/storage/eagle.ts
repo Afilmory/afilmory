@@ -1,9 +1,5 @@
 import type { EagleConfig } from '../../storage/interfaces.js'
-import {
-  EagleStorageProvider,
-  getEagleFolderIndex,
-  readImageMetadata,
-} from '../../storage/providers/eagle-provider.js'
+import { EagleStorageProvider, getEagleFolderIndex, readImageMetadata } from '../../storage/providers/eagle-provider.js'
 import type { BuilderPlugin } from '../types.js'
 
 export interface EagleStoragePluginOptions {
@@ -55,8 +51,8 @@ export default function eagleStoragePlugin(options: EagleStoragePluginOptions = 
             logger.main.warn(`eagle: failed to append folder tags for key=${key}: ${String(e)}`)
           }
         }
-        // Apply omitTagNamesInManifest filter
-        const omit = new Set(eagleConfig.omitTagNamesInManifest ?? [])
+        // Apply omitTagNamesInMetadata filter
+        const omit = new Set(eagleConfig.omitTagNamesInMetadata ?? [])
         if (omit.size > 0 && meta.tags) {
           meta.tags = meta.tags.filter((t) => !omit.has(t))
         }

@@ -63,7 +63,7 @@ const defaultEagleConfig = {
   include: [],
   exclude: [],
   folderAsTag: false,
-  omitTagNamesInManifest: [],
+  omitTagNamesInMetadata: [],
 } satisfies Required<EagleConfig>
 
 export class EagleStorageProvider implements StorageProvider {
