@@ -59,8 +59,8 @@ export default function eagleStoragePlugin(options: EagleStoragePluginOptions = 
         meta.tags?.sort((a, b) => a.localeCompare(b))
 
         // Overwrite title and tags with Eagle metadata when available
-        if (meta?.name) payload.item.title = meta.name
-        if (meta?.tags) payload.item.tags = meta.tags
+        if (meta.name) payload.item.title = meta.name
+        if (meta.tags) payload.item.tags = meta.tags
       },
     },
   }
