@@ -1,5 +1,9 @@
 import type { EagleConfig } from '../../storage/interfaces.js'
-import { EagleStorageProvider, getEagleFolderIndex, readImageMetadata } from '../../storage/providers/eagle-provider.js'
+import {
+  EagleStorageProvider,
+  getEagleFolderIndex,
+  readImageMetadata,
+} from '../../storage/providers/eagle-provider.js'
 import type { BuilderPlugin } from '../types.js'
 
 export interface EagleStoragePluginOptions {
@@ -28,22 +32,7 @@ export default function eagleStoragePlugin(options: EagleStoragePluginOptions = 
         const eagleConfig = storage
         const key = payload.item.s3Key
 
-        type EagleMeta = {
-          name?: string
-          tags?: string[]
-        }
-
-        let meta: EagleMeta | undefined
-        try {
-          const data = await readImageMetadata(eagleConfig.libraryPath, key)
-          meta = {
-            name: data.name,
-            tags: Array.isArray(data.tags) ? data.tags : [],
-          }
-        } catch (error) {
-          logger.main.warn(`eagle: failed to read image metadata for key=${key}: ${String(error)}`)
-          return
-        }
+        const meta = await readImageMetadata(eagleConfig.libraryPath, key)
 
         // Append folder names as tags if enabled
         if (eagleConfig.folderAsTag) {
@@ -54,8 +43,7 @@ export default function eagleStoragePlugin(options: EagleStoragePluginOptions = 
               folderIndex = await getEagleFolderIndex(eagleConfig.libraryPath)
               runShared.set(indexCacheKey, folderIndex)
             }
-            const data = await readImageMetadata(eagleConfig.libraryPath, key)
-            const folderNames = (data.folders ?? [])
+            const folderNames = (meta.folders ?? [])
               .map((id) => folderIndex?.get(id))
               .filter((p): p is string[] => Array.isArray(p) && p.length > 0)
               .map((p) => p.at(-1) as string) // take leaf folder name

@@ -34,7 +34,7 @@ interface EagleLibraryMetadata {
   applicationVersion: '4.0.0'
 }
 
-interface EagleImageMetadata {
+export interface EagleImageMetadata {
   id: string
   name: string
   size: number
