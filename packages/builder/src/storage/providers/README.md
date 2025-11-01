@@ -314,6 +314,8 @@ const eagleConfig: EagleConfig = {
     { type: 'tag', name: 'Published' },
   ],
   exclude: [{ type: 'tag', name: 'Private' }],
+  folderAsTag: true,
+  omitTagNamesInMetadata: ['Temp'],
 }
 ```
 

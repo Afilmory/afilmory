@@ -2,7 +2,7 @@
 title: Storage providers
 description: Afilmory can work with multiple storage providers, including S3, Git, Eagle, and local file system
 createdAt: 2025-08-12T15:09:08+08:00
-lastModified: 2025-10-28T19:48:05+08:00
+lastModified: 2025-11-01T19:31:16+08:00
 ---
 
 # Storage Providers
@@ -117,6 +117,8 @@ export default defineBuilderConfig(() => ({
       { type: 'tag', name: 'Featured' },
     ],
     exclude: [{ type: 'tag', name: 'Private' }],
+    folderAsTag: true,
+    omitTagNamesInMetadata: ['Temp'],
   },
 }))
 ```
