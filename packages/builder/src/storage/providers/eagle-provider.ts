@@ -62,6 +62,7 @@ const defaultEagleConfig = {
   baseUrl: '/originals/',
   include: [],
   exclude: [],
+  folderAsTag: false,
 } satisfies Required<EagleConfig>
 
 export class EagleStorageProvider implements StorageProvider {
@@ -113,15 +114,7 @@ export class EagleStorageProvider implements StorageProvider {
       logger.main.info(`EagleStorageProvider: 已创建 distPath 目录：${this.config.distPath}`)
     }
 
-    const libraryMetadata = await readEagleLibraryMetadata(this.config.libraryPath)
-    logger.main.info(`EagleStorageProvider: 检测到 Eagle 版本：${libraryMetadata.applicationVersion}`)
-    if (Number(libraryMetadata.applicationVersion.at(0)) !== Number(EAGLE_VERSION.at(0))) {
-      logger.main.warn(
-        `EagleStorageProvider: 当前支持 Eagle ${EAGLE_VERSION} 版本的库，检测到的版本为：${libraryMetadata.applicationVersion}，可能会导致兼容性问题。`,
-      )
-    }
-
-    this.folderIndex = buildFolderIndexes(libraryMetadata.folders ?? [])
+    this.folderIndex = await getEagleFolderIndex(this.config.libraryPath)
   }
 
   async getFile(key: string): Promise<Buffer | null> {
@@ -319,7 +312,7 @@ async function readEagleLibraryMetadata(libraryPath: string): Promise<EagleLibra
   }
 }
 
-async function readImageMetadata(libraryPath: string, key: string): Promise<EagleImageMetadata> {
+export async function readImageMetadata(libraryPath: string, key: string): Promise<EagleImageMetadata> {
   const metadataPath = path.join(libraryPath, 'images', `${key}.info`, 'metadata.json')
   const content = await fs.readFile(metadataPath, 'utf-8')
   return JSON.parse(content) as EagleImageMetadata
@@ -340,4 +333,19 @@ function buildFolderIndexes(folders: EagleFolderNode[]) {
     traverse(folder, [])
   }
   return map
+}
+
+/**
+ * Public helper for plugins to retrieve the folder index (folderId -> path segments)
+ * from the Eagle library metadata.
+ */
+export async function getEagleFolderIndex(libraryPath: string): Promise<Map<string, string[]>> {
+  const metadata = await readEagleLibraryMetadata(libraryPath)
+  logger.main.info(`EagleStorageProvider: 检测到 Eagle 版本：${metadata.applicationVersion}`)
+  if (Number(metadata.applicationVersion.at(0)) !== Number(EAGLE_VERSION.at(0))) {
+    logger.main.warn(
+      `EagleStorageProvider: 当前支持 Eagle ${EAGLE_VERSION} 版本的库，检测到的版本为：${metadata.applicationVersion}，可能会导致兼容性问题。`,
+    )
+  }
+  return buildFolderIndexes(metadata.folders ?? [])
 }
