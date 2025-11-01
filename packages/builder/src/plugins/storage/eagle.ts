@@ -28,32 +28,21 @@ export default function eagleStoragePlugin(options: EagleStoragePluginOptions = 
         const eagleConfig = storage
         const key = payload.item.s3Key
 
-        // Simple per-run cache to avoid re-reading the same metadata file
-        const cacheKey = 'afilmory:eagle:imageMetaCache'
         type EagleMeta = {
           name?: string
           tags?: string[]
-          folderTags?: string[]
-        }
-        let cache = runShared.get(cacheKey) as Map<string, EagleMeta> | undefined
-        if (!cache) {
-          cache = new Map<string, EagleMeta>()
-          runShared.set(cacheKey, cache)
         }
 
-        let meta = cache.get(key)
-        if (!meta) {
-          try {
-            const data = await readImageMetadata(eagleConfig.libraryPath, key)
-            meta = {
-              name: data.name,
-              tags: Array.isArray(data.tags) ? data.tags : [],
-            }
-            cache.set(key, meta)
-          } catch (error) {
-            logger.main.warn(`eagle: failed to read image metadata for key=${key}: ${String(error)}`)
-            return
+        let meta: EagleMeta | undefined
+        try {
+          const data = await readImageMetadata(eagleConfig.libraryPath, key)
+          meta = {
+            name: data.name,
+            tags: Array.isArray(data.tags) ? data.tags : [],
           }
+        } catch (error) {
+          logger.main.warn(`eagle: failed to read image metadata for key=${key}: ${String(error)}`)
+          return
         }
 
         // Append folder names as tags if enabled
@@ -72,13 +61,19 @@ export default function eagleStoragePlugin(options: EagleStoragePluginOptions = 
               .map((p) => p.at(-1) as string) // take leaf folder name
             if (folderNames.length > 0) {
               const merged = new Set([...(meta.tags ?? []), ...folderNames])
-              meta.folderTags = folderNames
               meta.tags = Array.from(merged)
             }
           } catch (e) {
             logger.main.warn(`eagle: failed to append folder tags for key=${key}: ${String(e)}`)
           }
         }
+        // Apply omitTagNamesInManifest filter
+        const omit = new Set(eagleConfig.omitTagNamesInManifest ?? [])
+        if (omit.size > 0 && meta.tags) {
+          meta.tags = meta.tags.filter((t) => !omit.has(t))
+        }
+        meta.tags?.sort((a, b) => a.localeCompare(b))
+
         // Overwrite title and tags with Eagle metadata when available
         if (meta?.name) payload.item.title = meta.name
         if (meta?.tags) payload.item.tags = meta.tags

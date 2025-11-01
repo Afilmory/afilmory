@@ -169,6 +169,11 @@ export type EagleConfig = {
    * Defaults to false.
    */
   folderAsTag?: boolean
+  /**
+   * Omit these tag names only from the manifest display (metadata) output.
+   * Exact match, case-sensitive. Does not affect which images are included/excluded.
+   */
+  omitTagNamesInManifest?: string[]
 }
 
 export type StorageConfig = S3Config | GitHubConfig | EagleConfig | LocalConfig
