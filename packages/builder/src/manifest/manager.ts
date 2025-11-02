@@ -19,6 +19,7 @@ export async function loadExistingManifest(): Promise<AfilmoryManifest> {
     manifest = JSON.parse(manifestContent) as AfilmoryManifest
   } catch {
     logger.fs.error('🔍 未找到 manifest 文件/解析失败，创建新的 manifest 文件...')
+    await saveManifest([])
     return {
       version: CURRENT_MANIFEST_VERSION,
       data: [],
