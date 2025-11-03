@@ -208,7 +208,7 @@ export class AfilmoryBuilder {
       const concurrency = options.concurrencyLimit ?? this.config.options.defaultConcurrency
       const { useClusterMode } = this.config.performance.worker
       const shouldUseCluster = useClusterMode && tasksToProcess.length >= concurrency * 2
-      const {progressListener} = options
+      const { progressListener } = options
 
       await this.emitPluginEvent(runState, 'beforeProcessTasks', {
         options,
@@ -634,14 +634,6 @@ export class AfilmoryBuilder {
       })
     }
 
-    for (const ref of this.config.plugins ?? []) {
-      addReference(ref)
-    }
-
-    if (this.config.repo.enable && !hasPluginWithName('afilmory:github-repo-sync')) {
-      addReference(() => import('@afilmory/builder/plugins/github-repo-sync.js'))
-    }
-
     const storagePluginByProvider: Record<string, BuilderPluginESMImporter> = {
       s3: () => import('@afilmory/builder/plugins/storage/s3.js'),
       github: () => import('@afilmory/builder/plugins/storage/github.js'),
@@ -657,6 +649,14 @@ export class AfilmoryBuilder {
         return references
       }
       addReference(storagePlugin)
+    }
+
+    for (const ref of this.config.plugins ?? []) {
+      addReference(ref)
+    }
+
+    if (this.config.repo.enable && !hasPluginWithName('afilmory:github-repo-sync')) {
+      addReference(() => import('@afilmory/builder/plugins/github-repo-sync.js'))
     }
 
     return references
