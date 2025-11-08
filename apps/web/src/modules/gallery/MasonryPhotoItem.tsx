@@ -99,20 +99,18 @@ export const MasonryPhotoItem = ({ data, width, index: _ }: { data: PhotoManifes
   // 使用通用的图片格式提取函数
   const imageFormat = getImageFormat(data.originalUrl || data.s3Key || '')
 
-  // Live Photo 视频加载逻辑
+  // 检查是否有视频内容（Live Photo 或 Motion Photo）
+  const hasVideo = data.video !== undefined
+
+  // Live Photo/Motion Photo 视频加载逻辑
   useEffect(() => {
-    if (
-      !data.isLivePhoto ||
-      !data.livePhotoVideoUrl ||
-      !imageLoaded ||
-      livePhotoVideoLoaded ||
-      isConvertingVideo ||
-      !videoRef.current
-    ) {
+    if (!data.video || !imageLoaded || livePhotoVideoLoaded || isConvertingVideo || !videoRef.current) {
       return
     }
 
-    const loadLivePhotoVideo = async () => {
+    const {video, originalUrl} = data
+
+    const loadVideo = async () => {
       setIsConvertingVideo(true)
 
       // 创建新的 image loader manager
@@ -120,18 +118,39 @@ export const MasonryPhotoItem = ({ data, width, index: _ }: { data: PhotoManifes
       imageLoaderManagerRef.current = imageLoaderManager
 
       try {
-        await imageLoaderManager.processLivePhotoVideo(data.livePhotoVideoUrl!, videoRef.current!)
+        // 构造 VideoSource（适配前端格式）- 使用 type narrowing
+        let videoSource: Parameters<typeof imageLoaderManager.processVideo>[0]
 
-        setLivePhotoVideoLoaded(true)
+        if (video.type === 'motion-photo') {
+          videoSource = {
+            type: 'motion-photo',
+            imageUrl: originalUrl,
+            offset: video.offset,
+            size: video.size,
+            presentationTimestamp: video.presentationTimestamp,
+          }
+        } else if (video.type === 'live-photo') {
+          videoSource = {
+            type: 'live-photo',
+            videoUrl: video.videoUrl,
+          }
+        } else {
+          videoSource = { type: 'none' }
+        }
+
+        if (videoSource.type !== 'none') {
+          await imageLoaderManager.processVideo(videoSource, videoRef.current!)
+          setLivePhotoVideoLoaded(true)
+        }
       } catch (videoError) {
-        console.error('Failed to process Live Photo video:', videoError)
+        console.error('Failed to process video:', videoError)
         setVideoConversionError(videoError)
       } finally {
         setIsConvertingVideo(false)
       }
     }
 
-    loadLivePhotoVideo()
+    loadVideo()
 
     return () => {
       if (imageLoaderManagerRef.current) {
@@ -140,11 +159,11 @@ export const MasonryPhotoItem = ({ data, width, index: _ }: { data: PhotoManifes
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.isLivePhoto, data.livePhotoVideoUrl, imageLoaded, livePhotoVideoLoaded])
+  }, [data.video, data.originalUrl, imageLoaded, livePhotoVideoLoaded])
 
-  // Live Photo hover 处理（仅在桌面端）
+  // Live Photo/Motion Photo hover 处理（仅在桌面端）
   const handleMouseEnter = useCallback(() => {
-    if (isMobileDevice || !data.isLivePhoto || !livePhotoVideoLoaded || isPlayingLivePhoto || isConvertingVideo) {
+    if (isMobileDevice || !hasVideo || !livePhotoVideoLoaded || isPlayingLivePhoto || isConvertingVideo) {
       return
     }
 
@@ -156,7 +175,7 @@ export const MasonryPhotoItem = ({ data, width, index: _ }: { data: PhotoManifes
         video.play()
       }
     }, 200) // 200ms hover 延迟
-  }, [data.isLivePhoto, livePhotoVideoLoaded, isPlayingLivePhoto, isConvertingVideo])
+  }, [hasVideo, livePhotoVideoLoaded, isPlayingLivePhoto, isConvertingVideo])
 
   const handleMouseLeave = useCallback(() => {
     if (hoverTimerRef.current) {
@@ -215,8 +234,8 @@ export const MasonryPhotoItem = ({ data, width, index: _ }: { data: PhotoManifes
         />
       )}
 
-      {/* Live Photo 视频 */}
-      {data.isLivePhoto && data.livePhotoVideoUrl && (
+      {/* Live Photo/Motion Photo 视频 */}
+      {hasVideo && (
         <video
           ref={videoRef}
           className={clsx(
@@ -239,8 +258,8 @@ export const MasonryPhotoItem = ({ data, width, index: _ }: { data: PhotoManifes
         </div>
       )}
 
-      {/* Live Photo 标识 */}
-      {data.isLivePhoto && (
+      {/* Live Photo/Motion Photo 标识 */}
+      {hasVideo && (
         <div
           className={clsx(
             'absolute z-20 flex items-center space-x-1 rounded-xl bg-black/50 px-1 py-1 text-xs text-white transition-all duration-200 hover:bg-black/70',

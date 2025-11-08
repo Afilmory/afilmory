@@ -1,9 +1,11 @@
 import { fileTypeFromBlob } from 'file-type'
 
+import type { VideoSource } from '~/components/ui/photo-viewer/types'
 import { i18nAtom } from '~/i18n'
 import { imageConverterManager } from '~/lib/image-convert'
 import { jotaiStore } from '~/lib/jotai'
 import { LRUCache } from '~/lib/lru-cache'
+import { extractMotionPhotoVideo } from '~/lib/motion-photo-extractor'
 import { convertMovToMp4, needsVideoConversion } from '~/lib/video-converter'
 
 export interface LoadingState {
@@ -182,8 +184,11 @@ export class ImageLoaderManager {
     })
   }
 
-  async processLivePhotoVideo(
-    livePhotoVideoUrl: string,
+  /**
+   * 处理视频（Live Photo 或 Motion Photo）
+   */
+  async processVideo(
+    videoSource: VideoSource,
     videoElement: HTMLVideoElement,
     callbacks: LoadingCallbacks = {},
   ): Promise<VideoProcessResult> {
@@ -192,16 +197,62 @@ export class ImageLoaderManager {
     return new Promise((resolve, reject) => {
       const processVideo = async () => {
         try {
-          // 检查是否需要转换
-          if (needsVideoConversion(livePhotoVideoUrl)) {
-            const result = await this.convertVideo(livePhotoVideoUrl, videoElement, callbacks)
-            resolve(result)
+          // Pattern matching on VideoSource
+          if (videoSource.type === 'motion-photo') {
+            // Motion Photo: 从图片中提取嵌入视频
+            console.info('Processing Motion Photo embedded video...')
+            onLoadingStateUpdate?.({
+              isVisible: true,
+              conversionMessage: 'Extracting embedded video...',
+            })
+
+            const extractedVideoUrl = await extractMotionPhotoVideo(videoSource.imageUrl, {
+              motionPhotoOffset: videoSource.offset,
+              motionPhotoVideoSize: videoSource.size,
+              presentationTimestampUs: videoSource.presentationTimestamp,
+            })
+
+            if (extractedVideoUrl) {
+              videoElement.src = extractedVideoUrl
+              videoElement.load()
+
+              console.info('Motion Photo video extracted successfully')
+
+              onLoadingStateUpdate?.({
+                isVisible: false,
+              })
+
+              const result = await new Promise<VideoProcessResult>((resolveVideo) => {
+                const handleVideoCanPlay = () => {
+                  videoElement.removeEventListener('canplaythrough', handleVideoCanPlay)
+                  resolveVideo({
+                    convertedVideoUrl: extractedVideoUrl,
+                    conversionMethod: 'motion-photo-extraction',
+                  })
+                }
+
+                videoElement.addEventListener('canplaythrough', handleVideoCanPlay)
+              })
+
+              resolve(result)
+            } else {
+              throw new Error('Failed to extract Motion Photo video')
+            }
+          } else if (videoSource.type === 'live-photo') {
+            // Live Photo: 处理独立视频文件
+            if (needsVideoConversion(videoSource.videoUrl)) {
+              const result = await this.convertVideo(videoSource.videoUrl, videoElement, callbacks)
+              resolve(result)
+            } else {
+              const result = await this.loadDirectVideo(videoSource.videoUrl, videoElement)
+              resolve(result)
+            }
           } else {
-            const result = await this.loadDirectVideo(livePhotoVideoUrl, videoElement)
-            resolve(result)
+            // type === 'none'
+            throw new Error('No video source provided')
           }
         } catch (error) {
-          console.error('Failed to process Live Photo video:', error)
+          console.error('Failed to process video:', error)
           onLoadingStateUpdate?.({
             isVisible: false,
           })

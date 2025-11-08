@@ -5,10 +5,11 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'r
 import type { ImageLoaderManager } from '~/lib/image-loader-manager'
 
 import type { LoadingIndicatorRef } from './LoadingIndicator'
+import type { VideoSource } from './types'
 
 interface LivePhotoVideoProps {
-  /** Live Photo 视频 URL */
-  videoUrl: string
+  /** Video source (Live Photo or Motion Photo) */
+  videoSource: VideoSource
   /** 图片加载管理器实例 */
   imageLoaderManager: ImageLoaderManager
   /** 加载指示器引用 */
@@ -30,7 +31,7 @@ export interface LivePhotoVideoHandle {
 
 export const LivePhotoVideo = ({
   ref,
-  videoUrl,
+  videoSource,
   imageLoaderManager,
   loadingIndicatorRef,
   isCurrentImage,
@@ -47,19 +48,35 @@ export const LivePhotoVideo = ({
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoAnimateController = useAnimationControls()
+  const presentationTimestampRef = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     onPlayingChange?.(isPlayingLivePhoto)
   }, [isPlayingLivePhoto, onPlayingChange])
 
+  // Extract and track presentationTimestamp for Motion Photo
+  useEffect(() => {
+    if (videoSource.type === 'motion-photo' && videoSource.presentationTimestamp) {
+      // Convert microseconds to seconds
+      presentationTimestampRef.current = videoSource.presentationTimestamp / 1_000_000
+    } else {
+      presentationTimestampRef.current = undefined
+    }
+  }, [videoSource])
+
   useEffect(() => {
     if (!isCurrentImage || livePhotoVideoLoaded || isConvertingVideo || !videoRef.current) {
       return
     }
+    // 如果没有视频源，直接返回
+    if (videoSource.type === 'none') {
+      return
+    }
+
     setIsConvertingVideo(true)
     const processVideo = async () => {
       try {
-        await imageLoaderManager.processLivePhotoVideo(videoUrl, videoRef.current!, {
+        await imageLoaderManager.processVideo(videoSource, videoRef.current!, {
           onLoadingStateUpdate: (state) => {
             loadingIndicatorRef.current?.updateLoadingState(state)
           },
@@ -67,13 +84,13 @@ export const LivePhotoVideo = ({
 
         setLivePhotoVideoLoaded(true)
       } catch (videoError) {
-        console.error('Failed to process Live Photo video:', videoError)
+        console.error('Failed to process video:', videoError)
       } finally {
         setIsConvertingVideo(false)
       }
     }
     processVideo()
-  }, [isCurrentImage, livePhotoVideoLoaded, isConvertingVideo, videoUrl, imageLoaderManager, loadingIndicatorRef])
+  }, [isCurrentImage, livePhotoVideoLoaded, isConvertingVideo, videoSource, imageLoaderManager, loadingIndicatorRef])
 
   useEffect(() => {
     if (!isCurrentImage) {
@@ -141,6 +158,22 @@ export const LivePhotoVideo = ({
     stop()
   }, [stop])
 
+  // Handle Motion Photo presentation timestamp
+  const handleTimeUpdate = useCallback(() => {
+    const video = videoRef.current
+    const timestamp = presentationTimestampRef.current
+
+    // Only handle Motion Photo with valid timestamp
+    if (!video || timestamp === undefined || videoSource.type !== 'motion-photo') {
+      return
+    }
+
+    // Stop playback when reaching or passing the presentation timestamp
+    if (video.currentTime >= timestamp) {
+      stop()
+    }
+  }, [videoSource, stop])
+
   return (
     <m.video
       ref={videoRef}
@@ -151,6 +184,7 @@ export const LivePhotoVideo = ({
       }}
       muted
       playsInline
+      onTimeUpdate={handleTimeUpdate}
       onEnded={handleVideoEnded}
       initial={{ opacity: 0 }}
       animate={videoAnimateController}

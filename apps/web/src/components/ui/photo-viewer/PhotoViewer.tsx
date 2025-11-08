@@ -327,10 +327,24 @@ export const PhotoViewer = ({
                               shouldRenderHighRes={isViewerContentVisible && isOpen}
                               onZoomChange={isCurrentImage ? handleZoomChange : undefined}
                               onBlobSrcChange={isCurrentImage ? handleBlobSrcChange : undefined}
-                              // Live Photo props
-                              isLivePhoto={photo.isLivePhoto}
-                              livePhotoVideoUrl={photo.livePhotoVideoUrl}
-                              shouldAutoPlayLivePhotoOnce={isCurrentImage}
+                              // Video source (Live Photo or Motion Photo)
+                              videoSource={
+                                photo.video?.type === 'motion-photo'
+                                  ? {
+                                      type: 'motion-photo',
+                                      imageUrl: photo.originalUrl,
+                                      offset: photo.video.offset,
+                                      size: photo.video.size,
+                                      presentationTimestamp: photo.video.presentationTimestamp,
+                                    }
+                                  : photo.video?.type === 'live-photo'
+                                    ? {
+                                        type: 'live-photo',
+                                        videoUrl: photo.video.videoUrl,
+                                      }
+                                    : { type: 'none' }
+                              }
+                              shouldAutoPlayVideoOnce={isCurrentImage}
                               // HDR props
                               isHDR={photo.isHDR}
                             />

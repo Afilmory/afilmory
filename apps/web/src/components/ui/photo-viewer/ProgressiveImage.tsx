@@ -39,9 +39,8 @@ export const ProgressiveImage = ({
   minZoom = 1,
   isCurrentImage = false,
   shouldRenderHighRes = true,
-  isLivePhoto = false,
-  livePhotoVideoUrl,
-  shouldAutoPlayLivePhotoOnce: shouldAutoPlayLivePhoto = false,
+  videoSource,
+  shouldAutoPlayVideoOnce = false,
   isHDR = false,
   loadingIndicatorRef,
 }: ProgressiveImageProps) => {
@@ -61,6 +60,9 @@ export const ProgressiveImage = ({
   } = state
 
   const isActiveImage = Boolean(isCurrentImage && shouldRenderHighRes)
+
+  // 判断是否有视频内容（Live Photo 或 Motion Photo）
+  const hasVideo = Boolean(videoSource && videoSource.type !== 'none')
 
   // Refs
   const thumbnailRef = useRef<HTMLImageElement>(null)
@@ -90,11 +92,7 @@ export const ProgressiveImage = ({
     setState.setShowScaleIndicator,
   )
 
-  const { handleLongPressStart, handleLongPressEnd } = useLivePhotoControls(
-    isLivePhoto,
-    isLivePhotoPlaying,
-    livePhotoRef,
-  )
+  const { handleLongPressStart, handleLongPressEnd } = useLivePhotoControls(hasVideo, isLivePhotoPlaying, livePhotoRef)
 
   const handleWebGLLoadingStateChange = useWebGLLoadingState(loadingIndicatorRef)
 
@@ -141,8 +139,8 @@ export const ProgressiveImage = ({
             showContextMenu(items, e)
           }}
         >
-          {/* LivePhoto 或 HDR 模式使用 DOMImageViewer */}
-          {isLivePhoto || shouldUseHDR ? (
+          {/* LivePhoto/Motion Photo 或 HDR 模式使用 DOMImageViewer */}
+          {hasVideo || shouldUseHDR ? (
             <DOMImageViewer
               ref={domImageViewerRef}
               onZoomChange={onDOMTransformed}
@@ -153,16 +151,16 @@ export const ProgressiveImage = ({
               highResLoaded={highResLoaded}
               onLoad={() => setState.setIsHighResImageRendered(true)}
             >
-              {/* LivePhoto 视频组件作为 children，跟随图片的变换 */}
-              {livePhotoVideoUrl && imageLoaderManagerRef.current && (
+              {/* LivePhoto/Motion Photo 视频组件作为 children，跟随图片的变换 */}
+              {hasVideo && videoSource && imageLoaderManagerRef.current && (
                 <LivePhotoVideo
                   ref={livePhotoRef}
-                  videoUrl={livePhotoVideoUrl}
+                  videoSource={videoSource}
                   imageLoaderManager={imageLoaderManagerRef.current}
                   loadingIndicatorRef={loadingIndicatorRef}
                   isCurrentImage={isCurrentImage}
                   onPlayingChange={setState.setIsLivePhotoPlaying}
-                  shouldAutoPlayOnce={shouldAutoPlayLivePhoto}
+                  shouldAutoPlayOnce={shouldAutoPlayVideoOnce}
                 />
               )}
             </DOMImageViewer>
@@ -188,7 +186,7 @@ export const ProgressiveImage = ({
         </div>
       )}
 
-      {isLivePhoto && highResLoaded && blobSrc && isActiveImage && !error && (
+      {hasVideo && highResLoaded && blobSrc && isActiveImage && !error && (
         <LivePhotoBadge
           livePhotoRef={livePhotoRef}
           isLivePhotoPlaying={isLivePhotoPlaying}
@@ -207,7 +205,7 @@ export const ProgressiveImage = ({
       )}
 
       {/* 操作提示 */}
-      {!isLivePhoto && (
+      {!hasVideo && (
         <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded bg-black/50 px-2 py-1 text-xs text-white opacity-0 duration-200 group-hover:opacity-50">
           {t('photo.zoom.hint')}
         </div>

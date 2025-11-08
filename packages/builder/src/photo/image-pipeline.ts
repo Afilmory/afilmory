@@ -21,6 +21,7 @@ import { getPhotoExecutionContext } from './execution-context.js'
 import { extractPhotoInfo } from './info-extractor.js'
 import { processLivePhoto } from './live-photo-handler.js'
 import { getGlobalLoggers } from './logger-adapter.js'
+import { detectMotionPhoto } from './motion-photo-detector.js'
 import type { PhotoProcessorOptions } from './processor.js'
 
 export interface ProcessedImageData {
@@ -174,16 +175,29 @@ export async function executePhotoProcessingPipeline(
     // 4. 处理 EXIF 数据
     const exifData = await processExifData(imageBuffer, imageData.rawBuffer, photoKey, existingItem, options)
 
-    // 5. 处理影调分析
-    const toneAnalysis = await processToneAnalysis(sharpInstance, photoKey, existingItem, options)
+    // 5. 检测 Motion Photo（从图片中提取嵌入视频的元数据）
+    const motionPhotoMetadata = detectMotionPhoto({
+      rawImageBuffer: imageData.rawBuffer,
+      exifData: exifData as Record<string, unknown> | null,
+    })
 
-    // 6. 提取照片信息
-    const photoInfo = extractPhotoInfo(photoKey, exifData)
-
-    // 7. 处理 Live Photo
+    // 6. 处理 Live Photo（独立的视频文件）
     const livePhotoResult = await processLivePhoto(photoKey, livePhotoMap, storageManager)
 
-    // 8. 构建照片清单项
+    // 检测冲突：不允许同时存在 Motion Photo 和 Live Photo
+    if (motionPhotoMetadata?.isMotionPhoto && livePhotoResult.isLivePhoto) {
+      const errorMsg = `❌ 检测到同时存在 Motion Photo (嵌入视频) 和 Live Photo (独立视频文件)：${photoKey}。这是不允许的，请只保留一种格式。`
+      loggers.image.error(errorMsg)
+      throw new Error(errorMsg)
+    }
+
+    // 7. 处理影调分析
+    const toneAnalysis = await processToneAnalysis(sharpInstance, photoKey, existingItem, options)
+
+    // 8. 提取照片信息
+    const photoInfo = extractPhotoInfo(photoKey, exifData)
+
+    // 9. 构建照片清单项
     const aspectRatio = metadata.width / metadata.height
 
     const photoItem: PhotoManifestItem = {
@@ -203,10 +217,22 @@ export async function executePhotoProcessingPipeline(
       size: obj.Size || 0,
       exif: exifData,
       toneAnalysis,
-      // Live Photo 相关字段
-      isLivePhoto: livePhotoResult.isLivePhoto,
-      livePhotoVideoUrl: livePhotoResult.livePhotoVideoUrl,
-      livePhotoVideoS3Key: livePhotoResult.livePhotoVideoS3Key,
+      // Video source (Motion Photo or Live Photo)
+      video:
+        motionPhotoMetadata?.isMotionPhoto && motionPhotoMetadata.motionPhotoOffset !== undefined
+          ? {
+              type: 'motion-photo',
+              offset: motionPhotoMetadata.motionPhotoOffset,
+              size: motionPhotoMetadata.motionPhotoVideoSize,
+              presentationTimestamp: motionPhotoMetadata.presentationTimestampUs,
+            }
+          : livePhotoResult.isLivePhoto
+            ? {
+                type: 'live-photo',
+                videoUrl: livePhotoResult.livePhotoVideoUrl!,
+                s3Key: livePhotoResult.livePhotoVideoS3Key!,
+              }
+            : undefined,
       // HDR 相关字段
       isHDR: exifData?.MPImageType === 'Gain Map Image',
     }

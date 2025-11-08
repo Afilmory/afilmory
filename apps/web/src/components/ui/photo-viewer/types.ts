@@ -5,6 +5,12 @@ import type { LoadingIndicatorRef } from './LoadingIndicator'
 
 export const SHOW_SCALE_INDICATOR_DURATION = 1000
 
+// Video source 的 sum type：Live Photo 或 Motion Photo
+export type VideoSource =
+  | { type: 'live-photo'; videoUrl: string }
+  | { type: 'motion-photo'; imageUrl: string; offset: number; size?: number; presentationTimestamp?: number }
+  | { type: 'none' }
+
 export interface ProgressiveImageProps {
   src: string
   thumbnailSrc?: string
@@ -26,10 +32,9 @@ export interface ProgressiveImageProps {
   isCurrentImage?: boolean
   shouldRenderHighRes?: boolean
 
-  // Live Photo 相关 props
-  isLivePhoto?: boolean
-  livePhotoVideoUrl?: string
-  shouldAutoPlayLivePhotoOnce?: boolean
+  // Video source (Live Photo or Motion Photo)
+  videoSource?: VideoSource
+  shouldAutoPlayVideoOnce?: boolean
 
   // HDR 相关 props
   isHDR?: boolean

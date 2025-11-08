@@ -28,6 +28,11 @@ export interface ToneAnalysis {
   highlightRatio: number // 0-1，高光区域占比
 }
 
+// Video source sum type: Live Photo or Motion Photo
+export type VideoSource =
+  | { type: 'live-photo'; videoUrl: string; s3Key: string }
+  | { type: 'motion-photo'; offset: number; size?: number; presentationTimestamp?: number }
+
 export interface PhotoInfo {
   title: string
   dateTaken: string
@@ -54,10 +59,9 @@ export interface PhotoManifestItem extends PhotoInfo {
   size: number
   exif: PickedExif | null
   toneAnalysis: ToneAnalysis | null // 影调分析结果
-  isLivePhoto?: boolean
   isHDR?: boolean
-  livePhotoVideoUrl?: string
-  livePhotoVideoS3Key?: string
+  // Video source (Live Photo or Motion Photo)
+  video?: VideoSource
 }
 
 export interface ProcessPhotoResult {
