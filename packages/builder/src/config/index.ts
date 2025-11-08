@@ -16,7 +16,7 @@ function normalizeBuilderConfig(defaults: BuilderConfig, input: BuilderConfigInp
   const base = clone(defaults)
   const merged = merge(base, input as Record<string, unknown>) as BuilderConfig
 
-  if (input.storage) {
+  if (input.storage && input.storage.provider !== defaults.storage.provider) {
     merged.storage = input.storage as BuilderConfig['storage']
   }
 
