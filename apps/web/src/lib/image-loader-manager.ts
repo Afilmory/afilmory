@@ -196,6 +196,8 @@ export class ImageLoaderManager {
 
     return new Promise((resolve, reject) => {
       const processVideo = async () => {
+        const i18n = jotaiStore.get(i18nAtom)
+
         try {
           // Pattern matching on VideoSource
           if (videoSource.type === 'motion-photo') {
@@ -203,7 +205,7 @@ export class ImageLoaderManager {
             console.info('Processing Motion Photo embedded video...')
             onLoadingStateUpdate?.({
               isVisible: true,
-              conversionMessage: 'Extracting embedded video...',
+              conversionMessage: i18n.t('video.motion-photo.extracting'),
             })
 
             const extractedVideoUrl = await extractMotionPhotoVideo(videoSource.imageUrl, {

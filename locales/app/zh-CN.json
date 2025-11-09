@@ -355,6 +355,7 @@
   "slider.columns": "{{count}} 列",
   "video.codec.keyword": "编码器",
   "video.conversion.cached.result": "使用缓存结果",
+  "video.motion-photo.extracting": "正在提取嵌入的视频...",
   "video.conversion.codec.fallback": "找不到此分辨率支持的 MP4 编解码器。回退到 WebM。",
   "video.conversion.complete": "转换完成",
   "video.conversion.converting": "转换中... {{current}}/{{total}} 帧",

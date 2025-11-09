@@ -351,6 +351,7 @@
   "slider.columns": "{{count}} 列",
   "video.codec.keyword": "編碼器",
   "video.conversion.cached.result": "使用快取結果",
+  "video.motion-photo.extracting": "正在提取嵌入的影片...",
   "video.conversion.codec.fallback": "找不到此解析度支援的 MP4 編解碼器。回退到 WebM。",
   "video.conversion.complete": "轉換完成",
   "video.conversion.converting": "轉換中... {{current}}/{{total}} 幀",

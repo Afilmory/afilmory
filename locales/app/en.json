@@ -358,6 +358,7 @@
   "slider.columns": "{{count}} column",
   "video.codec.keyword": "Encoder",
   "video.conversion.cached.result": "Using cached result",
+  "video.motion-photo.extracting": "Extracting embedded video...",
   "video.conversion.codec.fallback": "No MP4 codec found that supports this resolution. Falling back to WebM.",
   "video.conversion.complete": "Conversion complete",
   "video.conversion.converting": "Converting... {{current}}/{{total}} frames",

@@ -351,6 +351,7 @@
   "slider.columns": "{{count}} 열",
   "video.codec.keyword": "인코더",
   "video.conversion.cached.result": "캐시된 결과 사용",
+  "video.motion-photo.extracting": "내장된 비디오 추출 중...",
   "video.conversion.codec.fallback": "이 해상도에서 지원되는 MP4 코덱을 찾을 수 없습니다. WebM 으로 대체합니다.",
   "video.conversion.complete": "변환 완료",
   "video.conversion.converting": "변환 중... {{current}}/{{total}} 프레임",
