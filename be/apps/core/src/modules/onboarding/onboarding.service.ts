@@ -10,6 +10,7 @@ import { injectable } from 'tsyringe'
 import { DbAccessor } from '../../database/database.provider'
 import { AuthProvider } from '../auth/auth.provider'
 import { SettingService } from '../setting/setting.service'
+import { SiteSettingService } from '../site-setting/site-setting.service'
 import { TenantService } from '../tenant/tenant.service'
 import type { NormalizedSettingEntry, OnboardingInitDto } from './onboarding.dto'
 
@@ -22,12 +23,17 @@ export class OnboardingService {
     private readonly auth: AuthProvider,
     private readonly settings: SettingService,
     private readonly tenantService: TenantService,
+    private readonly siteSettingService: SiteSettingService,
   ) {}
 
   async isInitialized(): Promise<boolean> {
     const db = this.db.get()
     const [user] = await db.select().from(authUsers).limit(1)
     return Boolean(user)
+  }
+
+  async getSiteSchema() {
+    return await this.siteSettingService.getOnboardingUiSchema()
   }
 
   async initialize(
@@ -43,8 +49,6 @@ export class OnboardingService {
     const tenantAggregate = await this.tenantService.createTenant({
       name: payload.tenant.name,
       slug: payload.tenant.slug,
-      domain: payload.tenant.domain,
-      isPrimary: true,
     })
 
     log.info(`Created tenant ${tenantAggregate.tenant.slug} (${tenantAggregate.tenant.id})`)
@@ -60,7 +64,7 @@ export class OnboardingService {
       await this.settings.setMany(entriesWithTenant)
     }
 
-    const auth = this.auth.getAuth()
+    const auth = await this.auth.getAuth()
 
     // Create initial admin for this tenant
     const adminResult = await auth.api.signUpEmail({

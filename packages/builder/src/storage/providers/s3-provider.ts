@@ -1,19 +1,14 @@
 import path from 'node:path'
 
 import type { _Object, S3Client } from '@aws-sdk/client-s3'
-import { GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from '@aws-sdk/client-s3'
 
 import { backoffDelay, sleep } from '../../../../utils/src/backoff.js'
 import { Semaphore } from '../../../../utils/src/semaphore.js'
 import { SUPPORTED_FORMATS } from '../../constants/index.js'
 import { logger } from '../../logger/index.js'
 import { createS3Client } from '../../s3/client.js'
-import type {
-  ProgressCallback,
-  S3Config,
-  StorageObject,
-  StorageProvider,
-} from '../interfaces'
+import type { ProgressCallback, S3Config, StorageObject, StorageProvider, StorageUploadOptions } from '../interfaces'
 
 // 将 AWS S3 对象转换为通用存储对象
 function convertS3ObjectToStorageObject(s3Object: _Object): StorageObject {
@@ -72,9 +67,7 @@ export class S3StorageProvider implements StorageProvider {
           if (response.Body instanceof Buffer) {
             const duration = Date.now() - startTime
             const sizeKB = Math.round(response.Body.length / 1024)
-            logger.s3.success(
-              `下载完成：${key} (${sizeKB}KB, ${duration}ms, attempt ${attempt})`,
-            )
+            logger.s3.success(`下载完成：${key} (${sizeKB}KB, ${duration}ms, attempt ${attempt})`)
             return response.Body
           }
 
@@ -113,17 +106,12 @@ export class S3StorageProvider implements StorageProvider {
           const duration = Date.now() - startTime
           const ttfb = firstByteAt ? firstByteAt - startTime : duration
           const sizeKB = Math.round(buffer.length / 1024)
-          logger.s3.success(
-            `下载完成：${key} (${sizeKB}KB, ${duration}ms, TTFB ${ttfb}ms, attempt ${attempt})`,
-          )
+          logger.s3.success(`下载完成：${key} (${sizeKB}KB, ${duration}ms, TTFB ${ttfb}ms, attempt ${attempt})`)
           clearTimeout(totalTimer)
           return buffer
         } catch (error) {
           const elapsed = Date.now() - startTime
-          logger.s3.warn(
-            `下载失败：${key} (attempt ${attempt}/${maxAttempts}, ${elapsed}ms)`,
-            error,
-          )
+          logger.s3.warn(`下载失败：${key} (attempt ${attempt}/${maxAttempts}, ${elapsed}ms)`, error)
           clearTimeout(totalTimer)
 
           if (attempt < maxAttempts) {
@@ -150,9 +138,7 @@ export class S3StorageProvider implements StorageProvider {
 
     const listResponse = await this.s3Client.send(listCommand)
     const objects = listResponse.Contents || []
-    const excludeRegex = this.config.excludeRegex
-      ? new RegExp(this.config.excludeRegex)
-      : null
+    const excludeRegex = this.config.excludeRegex ? new RegExp(this.config.excludeRegex) : null
 
     // 过滤出图片文件并转换为通用格式
     const imageObjects = objects
@@ -168,9 +154,7 @@ export class S3StorageProvider implements StorageProvider {
     return imageObjects
   }
 
-  async listAllFiles(
-    _progressCallback?: ProgressCallback,
-  ): Promise<StorageObject[]> {
+  async listAllFiles(_progressCallback?: ProgressCallback): Promise<StorageObject[]> {
     const listCommand = new ListObjectsV2Command({
       Bucket: this.config.bucket,
       Prefix: this.config.prefix,
@@ -265,5 +249,33 @@ export class S3StorageProvider implements StorageProvider {
     }
 
     return livePhotoMap
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    const command = new DeleteObjectCommand({
+      Bucket: this.config.bucket,
+      Key: key,
+    })
+
+    await this.s3Client.send(command)
+  }
+
+  async uploadFile(key: string, data: Buffer, options?: StorageUploadOptions): Promise<StorageObject> {
+    const command = new PutObjectCommand({
+      Bucket: this.config.bucket,
+      Key: key,
+      Body: data,
+      ContentType: options?.contentType,
+    })
+
+    const response = await this.s3Client.send(command)
+    const lastModified = new Date()
+
+    return {
+      key,
+      size: data.byteLength,
+      lastModified,
+      etag: response.ETag ?? undefined,
+    }
   }
 }

@@ -64,15 +64,12 @@
   /* Font families */
   --font-sans: Geist, ui-sans-serif, system-ui, sans-serif;
   --font-serif:
-    'Noto Serif CJK SC', 'Noto Serif SC', var(--font-serif),
-    'Source Han Serif SC', 'Source Han Serif', source-han-serif-sc, SongTi SC,
-    SimSum, 'Hiragino Sans GB', system-ui, -apple-system, Segoe UI, Roboto,
-    Helvetica, 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
+    'Noto Serif CJK SC', 'Noto Serif SC', var(--font-serif), 'Source Han Serif SC', 'Source Han Serif',
+    source-han-serif-sc, SongTi SC, SimSum, 'Hiragino Sans GB', system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+    'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
   --font-mono:
-    'OperatorMonoSSmLig Nerd Font', 'Cascadia Code PL',
-    'FantasqueSansMono Nerd Font', 'operator mono', JetBrainsMono,
-    'Fira code Retina', 'Fira code', Consolas, Monaco, 'Hannotate SC',
-    monospace, -apple-system;
+    'OperatorMonoSSmLig Nerd Font', 'Cascadia Code PL', 'FantasqueSansMono Nerd Font', 'operator mono', JetBrainsMono,
+    'Fira code Retina', 'Fira code', Consolas, Monaco, 'Hannotate SC', monospace, -apple-system;
 
   /* Custom screens */
   --screen-light-mode: (prefers-color-scheme: light);
@@ -145,16 +142,7 @@ html body {
 }
 
 [data-sonner-toast] {
-  background-image: linear-gradient(
-    to bottom right,
-    color-mix(in srgb, var(--color-background) 98%, transparent),
-    color-mix(in srgb, var(--color-background) 95%, transparent)
-  ) !important;
-  border-color: color-mix(
-    in srgb,
-    var(--color-accent) 20%,
-    transparent
-  ) !important;
+  border-color: color-mix(in srgb, var(--color-accent) 20%, transparent) !important;
   box-shadow:
     0 8px 32px color-mix(in srgb, var(--color-accent) 8%, transparent),
     0 4px 16px color-mix(in srgb, var(--color-accent) 6%, transparent),
@@ -163,47 +151,22 @@ html body {
 
 [data-sonner-toast][data-type='success'] {
   border-color: rgba(48, 209, 88, 0.3) !important;
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(48, 209, 88, 0.15),
-    color-mix(in srgb, var(--color-background) 95%, transparent)
-  ) !important;
 }
 
 [data-sonner-toast][data-type='error'] {
   border-color: rgba(255, 69, 58, 0.3) !important;
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(255, 69, 58, 0.15),
-    color-mix(in srgb, var(--color-background) 95%, transparent)
-  ) !important;
 }
 
 [data-sonner-toast][data-type='warning'] {
   border-color: rgba(255, 159, 10, 0.3) !important;
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(255, 159, 10, 0.15),
-    color-mix(in srgb, var(--color-background) 95%, transparent)
-  ) !important;
 }
 
 [data-sonner-toast][data-type='info'] {
   border-color: rgba(10, 132, 255, 0.3) !important;
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(10, 132, 255, 0.15),
-    color-mix(in srgb, var(--color-background) 95%, transparent)
-  ) !important;
 }
 
 [data-sonner-toast][data-type='loading'] {
   border-color: rgba(142, 142, 147, 0.3) !important;
-  background-image: linear-gradient(
-    to bottom right,
-    rgba(142, 142, 147, 0.15),
-    color-mix(in srgb, var(--color-background) 95%, transparent)
-  ) !important;
 }
 
 [data-sonner-toast]::before {

@@ -4,10 +4,7 @@ import { debounce } from 'es-toolkit/compat'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 const createDebounce = debounce
-declare type ResizeObserverCallback = (
-  entries: any[],
-  observer: ResizeObserver,
-) => void
+declare type ResizeObserverCallback = (entries: any[], observer: ResizeObserver) => void
 declare class ResizeObserver {
   constructor(callback: ResizeObserverCallback)
   observe(target: Element, options?: any): void
@@ -30,11 +27,7 @@ export interface RectReadOnly {
 
 type HTMLOrSVGElement = HTMLElement | SVGElement
 
-type Result = [
-  (element: HTMLOrSVGElement | null) => void,
-  RectReadOnly,
-  () => void,
-]
+type Result = [(element: HTMLOrSVGElement | null) => void, RectReadOnly, () => void]
 
 type State = {
   element: HTMLOrSVGElement | null
@@ -54,11 +47,7 @@ const defaultOptions: Options = {
   scroll: false,
   offsetSize: false,
 }
-export function useMeasure({
-  debounce,
-  scroll,
-  offsetSize,
-}: Options = defaultOptions): Result {
+export function useMeasure({ debounce, scroll, offsetSize }: Options = defaultOptions): Result {
   const [bounds, set] = useState<RectReadOnly>({
     left: 0,
     top: 0,
@@ -79,16 +68,8 @@ export function useMeasure({
   })
 
   // set actual debounce values early, so effects know if they should react accordingly
-  const scrollDebounce = debounce
-    ? typeof debounce === 'number'
-      ? debounce
-      : debounce.scroll
-    : null
-  const resizeDebounce = debounce
-    ? typeof debounce === 'number'
-      ? debounce
-      : debounce.resize
-    : null
+  const scrollDebounce = debounce ? (typeof debounce === 'number' ? debounce : debounce.scroll) : null
+  const resizeDebounce = debounce ? (typeof debounce === 'number' ? debounce : debounce.resize) : null
 
   // make sure to update state only as long as the component is truly mounted
   const mounted = useRef(false)
@@ -135,9 +116,7 @@ export function useMeasure({
   // cleanup current scroll-listeners / observers
   function removeListeners() {
     if (state.current.scrollContainers) {
-      state.current.scrollContainers.forEach((element) =>
-        element.removeEventListener('scroll', scrollChange, true),
-      )
+      state.current.scrollContainers.forEach((element) => element.removeEventListener('scroll', scrollChange, true))
       state.current.scrollContainers = null
     }
 
@@ -205,32 +184,16 @@ function useOnWindowScroll(onScroll: () => void, enabled: boolean) {
 }
 
 // Returns a list of scroll offsets
-function findScrollContainers(
-  element: HTMLOrSVGElement | null,
-): HTMLOrSVGElement[] {
+function findScrollContainers(element: HTMLOrSVGElement | null): HTMLOrSVGElement[] {
   const result: HTMLOrSVGElement[] = []
   if (!element || element === document.body) return result
   const { overflow, overflowX, overflowY } = window.getComputedStyle(element)
-  if (
-    [overflow, overflowX, overflowY].some(
-      (prop) => prop === 'auto' || prop === 'scroll',
-    )
-  ) {
+  if ([overflow, overflowX, overflowY].some((prop) => prop === 'auto' || prop === 'scroll')) {
     result.push(element)
   }
   return [...result, ...findScrollContainers(element.parentElement)]
 }
 
 // Checks if element boundaries are equal
-const keys: (keyof RectReadOnly)[] = [
-  'x',
-  'y',
-  'top',
-  'bottom',
-  'left',
-  'right',
-  'width',
-  'height',
-]
-const areBoundsEqual = (a: RectReadOnly, b: RectReadOnly): boolean =>
-  keys.every((key) => a[key] === b[key])
+const keys: (keyof RectReadOnly)[] = ['x', 'y', 'top', 'bottom', 'left', 'right', 'width', 'height']
+const areBoundsEqual = (a: RectReadOnly, b: RectReadOnly): boolean => keys.every((key) => a[key] === b[key])

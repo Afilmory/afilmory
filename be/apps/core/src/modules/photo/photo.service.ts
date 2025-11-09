@@ -1,15 +1,29 @@
 import type {
   BuilderConfig,
+  BuilderOptions,
   PhotoManifestItem,
   PhotoProcessingContext,
   PhotoProcessorOptions,
   StorageConfig,
   StorageObject,
-  StorageProvider,
 } from '@afilmory/builder'
-import { AfilmoryBuilder, processPhotoWithPipeline, StorageFactory, StorageManager } from '@afilmory/builder'
+import {
+  AfilmoryBuilder,
+  processPhotoWithPipeline,
+  THUMBNAIL_PLUGIN_SYMBOL,
+  thumbnailStoragePlugin,
+} from '@afilmory/builder'
+import type { Logger as BuilderLogger } from '@afilmory/builder/logger/index.js'
+import {
+  createPhotoProcessingLoggers,
+  createStorageKeyNormalizer,
+  runWithPhotoExecutionContext,
+} from '@afilmory/builder/photo/index.js'
 import type { _Object } from '@aws-sdk/client-s3'
 import { injectable } from 'tsyringe'
+
+import { logger as coreLogger } from '../../helpers/logger.helper'
+import { createBuilderLoggerAdapter } from './builder-logger.adapter'
 
 const DEFAULT_PROCESSOR_OPTIONS: PhotoProcessorOptions = {
   isForceMode: false,
@@ -27,16 +41,12 @@ export type ProcessPhotoOptions = {
 
 @injectable()
 export class PhotoBuilderService {
+  private readonly baseLogger = coreLogger.extend('PhotoBuilder')
+  private readonly builderLogger: BuilderLogger = createBuilderLoggerAdapter(this.baseLogger)
+
   createBuilder(config: BuilderConfig): AfilmoryBuilder {
-    return new AfilmoryBuilder(config)
-  }
-
-  createStorageManager(config: StorageConfig): StorageManager {
-    return new StorageManager(config)
-  }
-
-  resolveStorageProvider(config: StorageConfig): StorageProvider {
-    return StorageFactory.createProvider(config)
+    const enhancedConfig = this.ensureThumbnailPlugin(config)
+    return new AfilmoryBuilder(enhancedConfig)
   }
 
   applyStorageConfig(builder: AfilmoryBuilder, config: StorageConfig): void {
@@ -49,21 +59,37 @@ export class PhotoBuilderService {
   ): Promise<Awaited<ReturnType<typeof processPhotoWithPipeline>>> {
     const { existingItem, livePhotoMap, processorOptions, builder, builderConfig } = options ?? {}
     const activeBuilder = this.resolveBuilder(builder, builderConfig)
+    await activeBuilder.ensurePluginsReady()
 
     const mergedOptions: PhotoProcessorOptions = {
       ...DEFAULT_PROCESSOR_OPTIONS,
       ...processorOptions,
     }
 
+    const photoLoggers = createPhotoProcessingLoggers(0, this.builderLogger)
     const context: PhotoProcessingContext = {
       photoKey: object.key,
       obj: this.toLegacyObject(object),
       existingItem,
       livePhotoMap: this.toLegacyLivePhotoMap(livePhotoMap),
       options: mergedOptions,
+      pluginData: {},
     }
 
-    return await processPhotoWithPipeline(context, activeBuilder)
+    const runtime = this.createPluginRuntime(activeBuilder, mergedOptions, builderConfig)
+    const storageManager = activeBuilder.getStorageManager()
+    const storageConfig = activeBuilder.getConfig().storage
+
+    return await runWithPhotoExecutionContext(
+      {
+        builder: activeBuilder,
+        storageManager,
+        storageConfig,
+        normalizeStorageKey: createStorageKeyNormalizer(storageConfig),
+        loggers: photoLoggers,
+      },
+      async () => await processPhotoWithPipeline(context, runtime),
+    )
   }
 
   private resolveBuilder(builder?: AfilmoryBuilder, builderConfig?: BuilderConfig): AfilmoryBuilder {
@@ -78,6 +104,26 @@ export class PhotoBuilderService {
     throw new Error(
       'PhotoBuilderService requires a builder instance or configuration. Pass builder or builderConfig in ProcessPhotoOptions.',
     )
+  }
+
+  private createPluginRuntime(
+    builder: AfilmoryBuilder,
+    processorOptions: PhotoProcessorOptions,
+    builderConfig?: BuilderConfig,
+  ): { runState: ReturnType<AfilmoryBuilder['createPluginRunState']>; builderOptions: BuilderOptions } {
+    const config = builderConfig ?? builder.getConfig()
+
+    const builderOptions: BuilderOptions = {
+      isForceMode: processorOptions.isForceMode,
+      isForceManifest: processorOptions.isForceManifest,
+      isForceThumbnails: processorOptions.isForceThumbnails,
+      concurrencyLimit: config.options.defaultConcurrency,
+    }
+
+    return {
+      runState: builder.createPluginRunState(),
+      builderOptions,
+    }
   }
 
   private toLegacyObject(object: StorageObject): _Object {
@@ -101,5 +147,25 @@ export class PhotoBuilderService {
     }
 
     return result
+  }
+
+  private ensureThumbnailPlugin(config: BuilderConfig): BuilderConfig {
+    const existingPlugins = config.plugins ?? []
+    const hasPlugin = existingPlugins.some((entry) => {
+      // Check for the unique Symbol identifier for reliable detection
+      if (typeof entry === 'object' && entry !== null && THUMBNAIL_PLUGIN_SYMBOL in entry) {
+        return true
+      }
+      return false
+    })
+
+    if (hasPlugin) {
+      return config
+    }
+
+    return {
+      ...config,
+      plugins: [...existingPlugins, thumbnailStoragePlugin()],
+    }
   }
 }

@@ -1,14 +1,8 @@
+import { clsxm } from '@afilmory/utils'
 import type { PropsWithChildren } from 'react'
 import { useEffect, useState } from 'react'
 
-import { clsxm } from '@afilmory/utils'
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipPortal,
-  TooltipTrigger,
-} from '../tooltip'
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from '../tooltip'
 
 const isTextOverflowed = (element: HTMLElement, dir: 'h' | 'v') => {
   if (dir === 'h') {
@@ -74,10 +68,7 @@ export const EllipsisTextWithTooltip = (props: EllipsisProps) => {
 
       <TooltipPortal>
         <TooltipContent>
-          <span
-            className="break-all whitespace-pre-line"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <span className="break-all whitespace-pre-line" onClick={(e) => e.stopPropagation()}>
             {children}
           </span>
         </TooltipContent>
@@ -91,11 +82,5 @@ export const EllipsisTextWithTooltip = (props: EllipsisProps) => {
  */
 export const EllipsisHorizontalTextWithTooltip = (props: EllipsisProps) => {
   const { className, ...rest } = props
-  return (
-    <EllipsisTextWithTooltip
-      className={clsxm('block truncate', className)}
-      {...rest}
-      dir="h"
-    />
-  )
+  return <EllipsisTextWithTooltip className={clsxm('block truncate', className)} {...rest} dir="h" />
 }

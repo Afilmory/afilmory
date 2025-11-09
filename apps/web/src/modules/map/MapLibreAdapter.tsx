@@ -6,9 +6,7 @@ import type { BaseMapProps, PhotoMarker } from '~/types/map'
 
 import type { MapAdapter } from './MapProvider'
 
-const Maplibre = lazy(() =>
-  import('~/components/ui/map/MapLibre').then((m) => ({ default: m.Maplibre })),
-)
+const Maplibre = lazy(() => import('~/components/ui/map/MapLibre').then((m) => ({ default: m.Maplibre })))
 /**
  * MapLibre map adapter implementation
  * This adapts MapLibre to work with our generic map provider system

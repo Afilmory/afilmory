@@ -59,15 +59,7 @@ export interface FormFieldProps {
  * </FormField>
  * ```
  */
-export const FormField: FC<FormFieldProps> = ({
-  label,
-  htmlFor,
-  error,
-  helperText,
-  required,
-  children,
-  className,
-}) => (
+export const FormField: FC<FormFieldProps> = ({ label, htmlFor, error, helperText, required, children, className }) => (
   <div className={clsxm('space-y-2', className)}>
     <label htmlFor={htmlFor} className="text-text block text-sm font-medium">
       {label}
@@ -75,9 +67,7 @@ export const FormField: FC<FormFieldProps> = ({
     </label>
     {children}
     {error && <p className="text-red text-xs">{error}</p>}
-    {!error && helperText && (
-      <p className="text-text-tertiary text-xs">{helperText}</p>
-    )}
+    {!error && helperText && <p className="text-text-tertiary text-xs">{helperText}</p>}
   </div>
 )
 

@@ -36,45 +36,7 @@ const githubConfigSchema = z.object({
   useRawUrl: z.boolean().optional(),
 })
 
-const localConfigSchema = z.object({
-  provider: z.literal('local'),
-  basePath: z.string().min(1),
-  baseUrl: z.string().optional(),
-  distPath: z.string().optional(),
-  excludeRegex: z.string().optional(),
-  maxFileLimit: z.number().int().positive().optional(),
-})
-
-const eagleRuleSchema = z.union([
-  z.object({
-    type: z.literal('tag'),
-    name: z.string().min(1),
-  }),
-  z.object({
-    type: z.literal('folder'),
-    name: z.string().min(1),
-    includeSubfolder: z.boolean().optional(),
-  }),
-  z.object({
-    type: z.literal('smartFolder'),
-  }),
-])
-
-const eagleConfigSchema = z.object({
-  provider: z.literal('eagle'),
-  libraryPath: z.string().min(1),
-  distPath: z.string().optional(),
-  baseUrl: z.string().optional(),
-  include: z.array(eagleRuleSchema).optional(),
-  exclude: z.array(eagleRuleSchema).optional(),
-})
-
-const storageConfigSchema = z.discriminatedUnion('provider', [
-  s3ConfigSchema,
-  githubConfigSchema,
-  localConfigSchema,
-  eagleConfigSchema,
-])
+const storageConfigSchema = z.discriminatedUnion('provider', [s3ConfigSchema, githubConfigSchema])
 
 const builderConfigSchema = z
   .object({
@@ -88,7 +50,7 @@ const builderConfigSchema = z
 
 export const runDataSyncSchema = z
   .object({
-    builderConfig: builderConfigSchema,
+    builderConfig: builderConfigSchema.optional(),
     storageConfig: storageConfigSchema.optional(),
     dryRun: z.boolean().optional().default(false),
   })
@@ -99,22 +61,12 @@ export const runDataSyncSchema = z
 
 const conflictResolutionSchema = z.nativeEnum(ConflictResolutionStrategy)
 
-export const resolveConflictSchema = z
-  .object({
-    strategy: conflictResolutionSchema,
-    builderConfig: builderConfigSchema.optional(),
-    storageConfig: storageConfigSchema.optional(),
-    dryRun: z.boolean().optional().default(false),
-  })
-  .superRefine((payload, ctx) => {
-    if (payload.strategy === ConflictResolutionStrategy.PREFER_STORAGE && !payload.builderConfig) {
-      ctx.addIssue({
-        path: ['builderConfig'],
-        code: z.ZodIssueCode.custom,
-        message: 'builderConfig is required when preferring storage.',
-      })
-    }
-  })
+export const resolveConflictSchema = z.object({
+  strategy: conflictResolutionSchema,
+  builderConfig: builderConfigSchema.optional(),
+  storageConfig: storageConfigSchema.optional(),
+  dryRun: z.boolean().optional().default(false),
+})
 
 export type RunDataSyncInput = z.infer<typeof runDataSyncSchema>
 export type ResolveConflictInput = z.infer<typeof resolveConflictSchema>

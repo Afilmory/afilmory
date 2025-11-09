@@ -114,8 +114,7 @@ export const routes: RouteConfig[] = [
     title: 'Storage providers',
     meta: {
       title: 'Storage providers',
-      description:
-        'Afilmory can work with multiple storage providers, including S3, Git and local file system',
+      description: 'Afilmory can work with multiple storage providers, including S3, Git and local file system',
       createdAt: '2025-08-12T15:09:08+08:00',
       lastModified: '2025-08-31T11:08:35+08:00',
     },

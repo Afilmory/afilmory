@@ -1,5 +1,3 @@
-import type { Logger } from '../logger/index.js'
-
 // 扫描进度接口
 export interface ScanProgress {
   currentPath: string
@@ -18,6 +16,10 @@ export interface StorageObject {
   etag?: string
 }
 
+export interface StorageUploadOptions {
+  contentType?: string
+}
+
 // 存储提供商的通用接口
 export interface StorageProvider {
   /**
@@ -26,7 +28,7 @@ export interface StorageProvider {
    * @param logger 可选的日志记录器
    * @returns 文件的 Buffer 数据，如果不存在则返回 null
    */
-  getFile: (key: string, logger?: Logger['s3']) => Promise<Buffer | null>
+  getFile: (key: string) => Promise<Buffer | null>
 
   /**
    * 列出存储中的所有图片文件
@@ -39,9 +41,7 @@ export interface StorageProvider {
    * @param progressCallback 可选的进度回调函数
    * @returns 所有文件对象数组
    */
-  listAllFiles: (
-    progressCallback?: ProgressCallback,
-  ) => Promise<StorageObject[]>
+  listAllFiles: (progressCallback?: ProgressCallback) => Promise<StorageObject[]>
 
   /**
    * 生成文件的公共访问 URL
@@ -56,6 +56,19 @@ export interface StorageProvider {
    * @returns Live Photo 配对映射 (图片 key -> 视频对象)
    */
   detectLivePhotos: (allObjects: StorageObject[]) => Map<string, StorageObject>
+
+  /**
+   * 从存储中删除文件
+   */
+  deleteFile: (key: string) => Promise<void>
+
+  /**
+   * 向存储上传文件
+   * @param key 文件的键值/路径
+   * @param data 文件数据
+   * @param options 上传选项
+   */
+  uploadFile: (key: string, data: Buffer, options?: StorageUploadOptions) => Promise<StorageObject>
 }
 
 export type S3Config = {
@@ -151,6 +164,16 @@ export type EagleConfig = {
   baseUrl?: string
   include?: EagleRule[]
   exclude?: EagleRule[]
+  /**
+   * When enabled, also add Eagle folder names as tags for each image.
+   * Defaults to false.
+   */
+  folderAsTag?: boolean
+  /**
+   * Omit these tag names only from the manifest display (metadata) output.
+   * Exact match, case-sensitive. Does not affect which images are included/excluded.
+   */
+  omitTagNamesInMetadata?: string[]
 }
 
 export type StorageConfig = S3Config | GitHubConfig | EagleConfig | LocalConfig

@@ -4,7 +4,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger, ScrollArea 
+  DialogTrigger,
+  ScrollArea,
 } from '@afilmory/ui'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,9 +44,7 @@ const ExifDataRow = ({ label, value }: { label: string; value: string }) => (
     <span className="max-w-[45%] min-w-0 flex-shrink-0 self-start pr-4 text-sm font-medium break-words text-white/70">
       {label}
     </span>
-    <span className="max-w-[55%] min-w-0 text-right font-mono text-sm break-words text-white/95">
-      {value}
-    </span>
+    <span className="max-w-[55%] min-w-0 text-right font-mono text-sm break-words text-white/95">{value}</span>
   </div>
 )
 
@@ -281,9 +280,7 @@ const categories = {
   ],
 }
 
-export const RawExifViewer: React.FC<RawExifViewerProps> = ({
-  currentPhoto,
-}) => {
+export const RawExifViewer: React.FC<RawExifViewerProps> = ({ currentPhoto }) => {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [rawExifData, setRawExifData] = useState<string | null>(null)
@@ -325,16 +322,12 @@ export const RawExifViewer: React.FC<RawExifViewerProps> = ({
   const dataEntries = Object.entries(parsedData)
 
   const getCategoryData = (categoryKeys: string[]) => {
-    return dataEntries.filter(([key]) =>
-      categoryKeys.some((catKey) => key.includes(catKey)),
-    )
+    return dataEntries.filter(([key]) => categoryKeys.some((catKey) => key.includes(catKey)))
   }
 
   const getUncategorizedData = () => {
     const allCategoryKeys = Object.values(categories).flat()
-    return dataEntries.filter(
-      ([key]) => !allCategoryKeys.some((catKey) => key.includes(catKey)),
-    )
+    return dataEntries.filter(([key]) => !allCategoryKeys.some((catKey) => key.includes(catKey)))
   }
 
   return (
@@ -355,13 +348,10 @@ export const RawExifViewer: React.FC<RawExifViewerProps> = ({
       </DialogTrigger>
       <DialogContent className="flex h-[80vh] max-w-4xl flex-col gap-2 text-white">
         <DialogHeader>
-          <DialogTitle>
-            {t('exif.raw.title', { defaultValue: 'Raw EXIF Data' })}
-          </DialogTitle>
+          <DialogTitle>{t('exif.raw.title', { defaultValue: 'Raw EXIF Data' })}</DialogTitle>
           <DialogDescription>
             {t('exif.raw.description', {
-              defaultValue:
-                'Complete EXIF metadata extracted from the image file',
+              defaultValue: 'Complete EXIF metadata extracted from the image file',
             })}
           </DialogDescription>
         </DialogHeader>
@@ -520,15 +510,9 @@ export const RawExifViewer: React.FC<RawExifViewerProps> = ({
                   })}
                 </h4>
                 <div className="space-y-2">
-                  {getCategoryData(categories.imageProperties).map(
-                    ([key, value]) => (
-                      <ExifDataRow
-                        key={key}
-                        label={key}
-                        value={String(value)}
-                      />
-                    ),
-                  )}
+                  {getCategoryData(categories.imageProperties).map(([key, value]) => (
+                    <ExifDataRow key={key} label={key} value={String(value)} />
+                  ))}
                 </div>
               </div>
             )}
@@ -542,15 +526,9 @@ export const RawExifViewer: React.FC<RawExifViewerProps> = ({
                   })}
                 </h4>
                 <div className="space-y-2">
-                  {getCategoryData(categories.whiteBalance).map(
-                    ([key, value]) => (
-                      <ExifDataRow
-                        key={key}
-                        label={key}
-                        value={String(value)}
-                      />
-                    ),
-                  )}
+                  {getCategoryData(categories.whiteBalance).map(([key, value]) => (
+                    <ExifDataRow key={key} label={key} value={String(value)} />
+                  ))}
                 </div>
               </div>
             )}
@@ -612,15 +590,9 @@ export const RawExifViewer: React.FC<RawExifViewerProps> = ({
                   })}
                 </h4>
                 <div className="space-y-2">
-                  {getCategoryData(categories.faceDetection).map(
-                    ([key, value]) => (
-                      <ExifDataRow
-                        key={key}
-                        label={key}
-                        value={String(value)}
-                      />
-                    ),
-                  )}
+                  {getCategoryData(categories.faceDetection).map(([key, value]) => (
+                    <ExifDataRow key={key} label={key} value={String(value)} />
+                  ))}
                 </div>
               </div>
             )}

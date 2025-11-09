@@ -1,7 +1,6 @@
-import { m } from 'motion/react'
-
 import { Thumbhash } from '@afilmory/ui'
 import { Spring } from '@afilmory/utils'
+import { m } from 'motion/react'
 
 import type { PhotoViewerTransition } from './types'
 
@@ -10,13 +9,9 @@ interface PhotoViewerTransitionPreviewProps {
   onComplete: () => void
 }
 
-export const PhotoViewerTransitionPreview = ({
-  transition,
-  onComplete,
-}: PhotoViewerTransitionPreviewProps) => {
+export const PhotoViewerTransitionPreview = ({ transition, onComplete }: PhotoViewerTransitionPreviewProps) => {
   const baseTransition = Spring.snappy(0.5)
-  const thumbHash =
-    typeof transition.thumbHash === 'string' ? transition.thumbHash : null
+  const thumbHash = typeof transition.thumbHash === 'string' ? transition.thumbHash : null
 
   return (
     <m.div
@@ -43,10 +38,7 @@ export const PhotoViewerTransitionPreview = ({
     >
       <div className="relative h-full w-full overflow-hidden bg-black">
         {thumbHash && (
-          <Thumbhash
-            thumbHash={thumbHash}
-            className="pointer-events-none absolute inset-0 h-full w-full"
-          />
+          <Thumbhash thumbHash={thumbHash} className="pointer-events-none absolute inset-0 h-full w-full" />
         )}
         <img
           src={transition.imageSrc}

@@ -1,4 +1,4 @@
-import { ScrollArea } from '@afilmory/ui'
+import { Button, ScrollArea } from '@afilmory/ui'
 import { Spring } from '@afilmory/utils'
 import { m } from 'motion/react'
 import { useState } from 'react'
@@ -7,11 +7,9 @@ import { Navigate, NavLink, Outlet } from 'react-router'
 import { useAuthUserValue, useIsSuperAdmin } from '~/atoms/auth'
 import { usePageRedirect } from '~/hooks/usePageRedirect'
 
-const navigationTabs = [
-  { label: '系统设置', path: '/superadmin/settings' },
-] as const
+const navigationTabs = [{ label: 'System Settings', path: '/superadmin/settings' }] as const
 
-export const Component = () => {
+export function Component() {
   const { logout } = usePageRedirect()
   const user = useAuthUserValue()
   const isSuperAdmin = useIsSuperAdmin()
@@ -37,19 +35,13 @@ export const Component = () => {
 
   return (
     <div className="flex h-screen flex-col">
-      <nav className="shrink-0 border-b border-border/50 bg-background-tertiary px-6 py-3">
+      <nav className="border-border/50 bg-background-tertiary shrink-0 border-b px-6 py-3">
         <div className="flex items-center gap-6">
-          <div className="text-base font-semibold text-text">
-            Afilmory · Superadmin
-          </div>
+          <div className="text-text text-base font-semibold">Afilmory · System Settings</div>
 
           <div className="flex flex-1 items-center gap-1">
             {navigationTabs.map((tab) => (
-              <NavLink
-                key={tab.path}
-                to={tab.path}
-                end={tab.path === '/superadmin/settings'}
-              >
+              <NavLink key={tab.path} to={tab.path} end={tab.path === '/superadmin/settings'}>
                 {({ isActive }) => (
                   <m.div
                     className="relative overflow-hidden rounded-md px-3 py-1.5"
@@ -69,9 +61,7 @@ export const Component = () => {
                     <span
                       className="relative z-10 text-[13px] font-medium transition-colors"
                       style={{
-                        color: isActive
-                          ? 'var(--color-accent)'
-                          : 'var(--color-text-secondary)',
+                        color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                       }}
                     >
                       {tab.label}
@@ -86,36 +76,29 @@ export const Component = () => {
             {user && (
               <div className="flex items-center gap-2">
                 <div className="text-right">
-                  <div className="text-[13px] font-medium text-text">
-                    {user.name || user.email}
-                  </div>
-                  <div className="text-[11px] capitalize text-text-tertiary">
-                    {user.role}
-                  </div>
+                  <div className="text-text text-[13px] font-medium">{user.name || user.email}</div>
+                  <div className="text-text-tertiary text-[11px] capitalize">{user.role}</div>
                 </div>
-                {user.image && (
-                  <img
-                    src={user.image}
-                    alt={user.name || user.email}
-                    className="size-7 rounded-full"
-                  />
-                )}
+                {user.image && <img src={user.image} alt={user.name || user.email} className="size-7 rounded-full" />}
               </div>
             )}
 
-            <button
+            <Button
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="rounded-md bg-accent px-3 py-1.5 text-[13px] font-medium text-white transition-all duration-150 hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
+              isLoading={isLoggingOut}
+              loadingText="Logging out..."
+              variant="primary"
+              size="sm"
             >
-              {isLoggingOut ? 'Logging out...' : 'Logout'}
-            </button>
+              Logout
+            </Button>
           </div>
         </div>
       </nav>
 
-      <main className="flex-1 overflow-hidden bg-background">
+      <main className="bg-background flex-1 overflow-hidden">
         <ScrollArea rootClassName="h-full" viewportClassName="h-full">
           <div className="mx-auto max-w-5xl px-6 py-6">
             <Outlet />

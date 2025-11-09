@@ -1,9 +1,7 @@
 import type { UiFieldNode, UiNode } from './types'
 
-export const collectFieldNodes = <Key extends string>(
-  nodes: ReadonlyArray<UiNode<Key>>,
-): UiFieldNode<Key>[] => {
-  const fields: UiFieldNode<Key>[] = []
+export function collectFieldNodes<Key extends string>(nodes: ReadonlyArray<UiNode<Key>>): Array<UiFieldNode<Key>> {
+  const fields: Array<UiFieldNode<Key>> = []
 
   for (const node of nodes) {
     if (node.type === 'field') {

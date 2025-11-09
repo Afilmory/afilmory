@@ -3,6 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 import { settings } from '@afilmory/db'
 import { env } from '@afilmory/env'
 import { EventEmitterService } from '@afilmory/framework'
+import { BizException, ErrorCode } from 'core/errors'
 import { and, eq, inArray } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
@@ -12,6 +13,13 @@ import { TenantService } from '../tenant/tenant.service'
 import { AES_ALGORITHM, AUTH_TAG_LENGTH, DEFAULT_SETTING_METADATA, IV_LENGTH } from './setting.constant'
 import type { SettingKeyType, SettingRecord, SettingUiSchemaResponse, SettingValueMap } from './setting.type'
 import { SETTING_UI_SCHEMA, SETTING_UI_SCHEMA_KEYS } from './setting.ui-schema'
+import { STORAGE_PROVIDERS_SETTING_KEY } from './storage-provider.constants'
+import type { BuilderStorageProvider } from './storage-provider.utils'
+import {
+  parseStorageProviders,
+  prepareStorageProvidersForPersist,
+  sanitizeStorageProviders,
+} from './storage-provider.utils'
 
 export type SettingOption = {
   tenantId?: string
@@ -28,7 +36,7 @@ declare module '@afilmory/framework' {
     'setting.deleted': { tenantId: string; key: string }
   }
 }
-type SettingEntryInput = {
+export type SettingEntryInput = {
   [K in SettingKeyType]: { key: K; value: SettingValueMap[K]; options?: SetSettingOptions }
 }[SettingKeyType]
 
@@ -55,8 +63,13 @@ export class SettingService {
     if (!record) {
       return null
     }
-    const value = record.isSensitive ? this.decrypt(record.value) : record.value
-    return value
+    const rawValue = record.isSensitive ? this.decrypt(record.value) : record.value
+
+    if (key === STORAGE_PROVIDERS_SETTING_KEY) {
+      return sanitizeStorageProviders(rawValue)
+    }
+
+    return rawValue
   }
 
   async getMany<K extends readonly SettingKeyType[]>(
@@ -85,9 +98,50 @@ export class SettingService {
         acc[key] = null
         return acc
       }
-      acc[key] = record.isSensitive ? this.decrypt(record.value) : record.value
+      const rawValue = record.isSensitive ? this.decrypt(record.value) : record.value
+
+      if (key === STORAGE_PROVIDERS_SETTING_KEY) {
+        acc[key] = sanitizeStorageProviders(rawValue)
+        return acc
+      }
+
+      acc[key] = rawValue
       return acc
     }, {})
+  }
+
+  async getStorageProvidersRaw(options?: SettingOption): Promise<BuilderStorageProvider[]> {
+    const tenantId = await this.resolveTenantId(options)
+    const record = await this.findSettingRecord(STORAGE_PROVIDERS_SETTING_KEY, tenantId)
+    if (!record) {
+      return []
+    }
+
+    const rawValue = record.isSensitive ? this.decrypt(record.value) : record.value
+    return parseStorageProviders(rawValue)
+  }
+
+  async getActiveStorageProvider(options: SettingOption): Promise<BuilderStorageProvider | null> {
+    const providers = await this.getStorageProvidersRaw(options)
+    const activeIdRaw = await this.get('builder.storage.activeProvider', options)
+    const activeId = typeof activeIdRaw === 'string' && activeIdRaw.trim().length > 0 ? activeIdRaw.trim() : null
+
+    // If activeId exists and matches, return it
+    if (activeId) {
+      const found = providers.find((provider) => provider.id === activeId) ?? null
+      if (found) return found
+    }
+
+    // Fallback: if there is exactly one provider, automatically set it active and persist the setting
+    if (providers.length === 1) {
+      const only = providers[0]
+      // Persist synchronously; ignore schema sensitivity (it's non-sensitive)
+      const setOptions = options ? { ...options, isSensitive: false } : { isSensitive: false }
+      await this.set('builder.storage.activeProvider', only.id, setOptions)
+      return only
+    }
+
+    return null
   }
 
   async set<K extends SettingKeyType>(key: K, value: SettingValueMap[K], options: SetSettingOptions): Promise<void>
@@ -96,8 +150,19 @@ export class SettingService {
     const tenantId = await this.resolveTenantId(options)
     const existing = await this.findSettingRecord(key, tenantId)
     const defaultMetadata = isSettingKey(key) ? DEFAULT_SETTING_METADATA[key] : undefined
-    const isSensitive = options.isSensitive ?? defaultMetadata?.isSensitive ?? existing?.isSensitive ?? false
-    const payload = isSensitive ? this.encrypt(value) : value
+    let isSensitive = options.isSensitive ?? defaultMetadata?.isSensitive ?? existing?.isSensitive ?? false
+    let persistedValue = value
+    let maskedValue = value
+
+    if (key === STORAGE_PROVIDERS_SETTING_KEY) {
+      const existingRaw = existing ? (existing.isSensitive ? this.decrypt(existing.value) : existing.value) : null
+      const result = prepareStorageProvidersForPersist(value, existingRaw)
+      persistedValue = result.stored
+      maskedValue = result.masked
+      isSensitive = true
+    }
+
+    const payload = isSensitive ? this.encrypt(persistedValue) : persistedValue
     const db = this.dbAccessor.get()
 
     const insertPayload: typeof settings.$inferInsert = {
@@ -121,7 +186,7 @@ export class SettingService {
         set: updatePayload,
       })
 
-    await this.eventEmitter.emit('setting.updated', { tenantId, key, value })
+    await this.eventEmitter.emit('setting.updated', { tenantId, key, value: maskedValue })
   }
 
   async setMany(entries: readonly SettingEntryInput[]): Promise<void> {
@@ -196,8 +261,7 @@ export class SettingService {
       return tenant.tenant.id
     }
 
-    const fallback = await this.tenantService.resolve({ fallbackToDefault: true })
-    return fallback.tenant.id
+    throw new BizException(ErrorCode.TENANT_NOT_FOUND)
   }
 
   private encrypt(value: string): string {

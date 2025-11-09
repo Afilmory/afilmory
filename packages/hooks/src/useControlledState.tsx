@@ -5,7 +5,6 @@ interface CommonControlledStateProps<T> {
   defaultValue?: T
 }
 
- 
 export function useControlledState<T, Rest extends any[] = []>(
   props: CommonControlledStateProps<T> & {
     onChange?: (value: T, ...args: Rest) => void
@@ -13,9 +12,7 @@ export function useControlledState<T, Rest extends any[] = []>(
 ): readonly [T, (next: T, ...args: Rest) => void] {
   const { value, defaultValue, onChange } = props
 
-  const [state, setInternalState] = React.useState<T>(
-    value !== undefined ? value : (defaultValue as T),
-  )
+  const [state, setInternalState] = React.useState<T>(value !== undefined ? value : (defaultValue as T))
 
   React.useEffect(() => {
     if (value !== undefined) setInternalState(value)

@@ -2,13 +2,7 @@ import type { SVGProps } from 'react'
 
 export function TablerAperture(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       {/* Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE */}
       <path
         fill="none"
@@ -24,13 +18,7 @@ export function TablerAperture(props: SVGProps<SVGSVGElement>) {
 
 export function CarbonIsoOutline(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 32 32"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>
       {/* Icon from Carbon by IBM   */}
       <path
         fill="currentColor"
@@ -46,13 +34,7 @@ export function CarbonIsoOutline(props: SVGProps<SVGSVGElement>) {
 
 export function MaterialSymbolsShutterSpeed(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       {/* Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE */}
       <path
         fill="currentColor"
@@ -66,20 +48,9 @@ export function StreamlineImageAccessoriesLensesPhotosCameraShutterPicturePhotog
   props: SVGProps<SVGSVGElement>,
 ) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 14 14"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 14 14" {...props}>
       {/* Icon from Streamline by Streamline - https://creativecommons.org/licenses/by/4.0/ */}
-      <g
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
+      <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="7" cy="7" r="6.5" />
         <circle cx="7" cy="7" r="2.5" />
         <path d="M4.5 7V1M7 4.5h6M9.5 7v6M7 9.5H1" />
@@ -90,13 +61,7 @@ export function StreamlineImageAccessoriesLensesPhotosCameraShutterPicturePhotog
 
 export function MaterialSymbolsExposure(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="1em"
-      height="1em"
-      viewBox="0 0 24 24"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>
       {/* Icon from Material Symbols by Google - https://github.com/google/material-design-icons/blob/master/LICENSE */}
       <path
         fill="currentColor"

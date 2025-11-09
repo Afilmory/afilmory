@@ -40,10 +40,7 @@ const reactionButton = tv({
       'rounded-full border border-accent/20 p-2 backdrop-blur-2xl',
       'select-none',
     ],
-    reactionItem: [
-      'relative flex size-10 items-center justify-center',
-      'cursor-pointer text-xl',
-    ],
+    reactionItem: ['relative flex size-10 items-center justify-center', 'cursor-pointer text-xl'],
   },
 })
 
@@ -81,12 +78,7 @@ const iconVariants = {
   open: { rotate: 180 },
   closed: { rotate: 0 },
 }
-export const ReactionButton = ({
-  className,
-  disabled = false,
-  photoId,
-  style,
-}: ReactionButtonProps) => {
+export const ReactionButton = ({ className, disabled = false, photoId, style }: ReactionButtonProps) => {
   const [panelElement, setPanelElement] = useState<HTMLDivElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const styles = reactionButton()
@@ -109,8 +101,7 @@ export const ReactionButton = ({
         mutate((data) => {
           return produce(data, (draft) => {
             if (!draft) return
-            draft.data.reactions[reaction] =
-              (draft.data.reactions[reaction] || 0) + 1
+            draft.data.reactions[reaction] = (draft.data.reactions[reaction] || 0) + 1
           })
         })
       })
@@ -123,9 +114,7 @@ export const ReactionButton = ({
     setIsOpen(false)
   })
 
-  const [currentAnimatingEmoji, setCurrentAnimatingEmoji] = useState<
-    (typeof reactions)[number] | null
-  >(null)
+  const [currentAnimatingEmoji, setCurrentAnimatingEmoji] = useState<(typeof reactions)[number] | null>(null)
 
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -167,12 +156,7 @@ export const ReactionButton = ({
                     }, 1000)
                   }}
                 >
-                  <FluentEmoji
-                    cdn="aliyun"
-                    emoji={getEmoji(currentAnimatingEmoji)!}
-                    size={24}
-                    type="anim"
-                  />
+                  <FluentEmoji cdn="aliyun" emoji={getEmoji(currentAnimatingEmoji)!} size={24} type="anim" />
                 </m.span>
               ) : (
                 <m.div variants={iconVariants}>
@@ -183,11 +167,7 @@ export const ReactionButton = ({
                       exit={{ opacity: 0, transition: { duration: 0 } }}
                       transition={Spring.presets.smooth}
                       key={isOpen ? 'close' : 'emoji'}
-                      className={
-                        isOpen
-                          ? 'i-mingcute-close-fill'
-                          : 'i-mingcute-emoji-fill'
-                      }
+                      className={isOpen ? 'i-mingcute-close-fill' : 'i-mingcute-emoji-fill'}
                     />
                   </AnimatePresence>
                 </m.div>
@@ -228,12 +208,7 @@ export const ReactionButton = ({
                       whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.9 }}
                     >
-                      <FluentEmoji
-                        cdn="aliyun"
-                        emoji={getEmoji(reaction)!}
-                        size={24}
-                        type="anim"
-                      />
+                      <FluentEmoji cdn="aliyun" emoji={getEmoji(reaction)!} size={24} type="anim" />
                       {!!data?.data.reactions[reaction] && (
                         <span className="bg-red/50 absolute top-0 right-0 rounded-full px-1.5 py-0.5 text-[8px] text-white tabular-nums backdrop-blur-2xl">
                           {data.data.reactions[reaction]}

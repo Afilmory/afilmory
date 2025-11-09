@@ -17,11 +17,7 @@ export class TiffConverterStrategy implements ImageConverterStrategy {
     return !this.isBrowserSupportTiff()
   }
 
-  async convert(
-    blob: Blob,
-    _originalUrl: string,
-    callbacks?: LoadingCallbacks,
-  ): Promise<ConversionResult> {
+  async convert(blob: Blob, _originalUrl: string, callbacks?: LoadingCallbacks): Promise<ConversionResult> {
     const { onLoadingStateUpdate } = callbacks || {}
 
     try {
@@ -57,9 +53,7 @@ export class TiffConverterStrategy implements ImageConverterStrategy {
   }
 
   // 转换实现
-  private async convertTiffToJpeg(
-    blob: Blob,
-  ): Promise<{ url: string; size: number }> {
+  private async convertTiffToJpeg(blob: Blob): Promise<{ url: string; size: number }> {
     try {
       // 动态导入 tiff 库
       const tiff = await import('tiff')
@@ -139,10 +133,8 @@ export class TiffConverterStrategy implements ImageConverterStrategy {
           // 8位数据
           const data = sourceData as Uint8Array
           targetData[dstIndex] = data[srcIndex] || 0 // R
-          targetData[dstIndex + 1] =
-            channels > 1 ? data[srcIndex + 1] || 0 : data[srcIndex] || 0 // G
-          targetData[dstIndex + 2] =
-            channels > 2 ? data[srcIndex + 2] || 0 : data[srcIndex] || 0 // B
+          targetData[dstIndex + 1] = channels > 1 ? data[srcIndex + 1] || 0 : data[srcIndex] || 0 // G
+          targetData[dstIndex + 2] = channels > 2 ? data[srcIndex + 2] || 0 : data[srcIndex] || 0 // B
           targetData[dstIndex + 3] = hasAlpha ? data[srcIndex + 3] || 255 : 255 // A
 
           break
@@ -152,16 +144,10 @@ export class TiffConverterStrategy implements ImageConverterStrategy {
           const data = sourceData as Uint16Array
           targetData[dstIndex] = Math.round((data[srcIndex] || 0) / 257) // R
           targetData[dstIndex + 1] =
-            channels > 1
-              ? Math.round((data[srcIndex + 1] || 0) / 257)
-              : Math.round((data[srcIndex] || 0) / 257) // G
+            channels > 1 ? Math.round((data[srcIndex + 1] || 0) / 257) : Math.round((data[srcIndex] || 0) / 257) // G
           targetData[dstIndex + 2] =
-            channels > 2
-              ? Math.round((data[srcIndex + 2] || 0) / 257)
-              : Math.round((data[srcIndex] || 0) / 257) // B
-          targetData[dstIndex + 3] = hasAlpha
-            ? Math.round((data[srcIndex + 3] || 65535) / 257)
-            : 255 // A
+            channels > 2 ? Math.round((data[srcIndex + 2] || 0) / 257) : Math.round((data[srcIndex] || 0) / 257) // B
+          targetData[dstIndex + 3] = hasAlpha ? Math.round((data[srcIndex + 3] || 65535) / 257) : 255 // A
 
           break
         }
@@ -170,16 +156,10 @@ export class TiffConverterStrategy implements ImageConverterStrategy {
           const data = sourceData as Float32Array | Float64Array
           targetData[dstIndex] = Math.round((data[srcIndex] || 0) * 255) // R
           targetData[dstIndex + 1] =
-            channels > 1
-              ? Math.round((data[srcIndex + 1] || 0) * 255)
-              : Math.round((data[srcIndex] || 0) * 255) // G
+            channels > 1 ? Math.round((data[srcIndex + 1] || 0) * 255) : Math.round((data[srcIndex] || 0) * 255) // G
           targetData[dstIndex + 2] =
-            channels > 2
-              ? Math.round((data[srcIndex + 2] || 0) * 255)
-              : Math.round((data[srcIndex] || 0) * 255) // B
-          targetData[dstIndex + 3] = hasAlpha
-            ? Math.round((data[srcIndex + 3] || 1) * 255)
-            : 255 // A
+            channels > 2 ? Math.round((data[srcIndex + 2] || 0) * 255) : Math.round((data[srcIndex] || 0) * 255) // B
+          targetData[dstIndex + 3] = hasAlpha ? Math.round((data[srcIndex + 3] || 1) * 255) : 255 // A
 
           break
         }

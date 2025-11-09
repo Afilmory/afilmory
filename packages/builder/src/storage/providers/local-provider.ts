@@ -3,9 +3,12 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { CompatibleLoggerAdapter } from '@afilmory/builder/photo/logger-adapter.js'
+import consola from 'consola'
+
 import { SUPPORTED_FORMATS } from '../../constants/index.js'
 import { logger } from '../../logger/index.js'
-import type { LocalConfig, StorageObject, StorageProvider } from '../interfaces'
+import type { LocalConfig, StorageObject, StorageProvider, StorageUploadOptions } from '../interfaces'
 
 export interface ScanProgress {
   currentPath: string
@@ -24,6 +27,8 @@ export class LocalStorageProvider implements StorageProvider {
     filesScanned: 0,
   }
 
+  private logger = new CompatibleLoggerAdapter(consola.withTag('LOCAL'))
+
   constructor(config: LocalConfig) {
     if (!config.basePath || config.basePath.trim() === '') {
       throw new Error('LocalStorageProvider: basePath 不能为空')
@@ -37,9 +42,7 @@ export class LocalStorageProvider implements StorageProvider {
       try {
         new RegExp(config.excludeRegex)
       } catch (error) {
-        throw new Error(
-          `LocalStorageProvider: excludeRegex 不是有效的正则表达式: ${error}`,
-        )
+        throw new Error(`LocalStorageProvider: excludeRegex 不是有效的正则表达式: ${error}`)
       }
     }
 
@@ -68,27 +71,18 @@ export class LocalStorageProvider implements StorageProvider {
     }
   }
 
-  async getFile(key: string, logger?: any): Promise<Buffer | null> {
+  async getFile(key: string): Promise<Buffer | null> {
     try {
-      logger?.info(`读取本地文件：${key}`)
+      this.logger.info(`读取本地文件：${key}`)
       const startTime = Date.now()
 
-      const filePath = path.join(this.basePath, key)
-
-      // 安全检查：确保文件路径在基础路径内
-      const resolvedPath = path.resolve(filePath)
-      const resolvedBasePath = path.resolve(this.basePath)
-
-      if (!resolvedPath.startsWith(resolvedBasePath)) {
-        logger?.error(`文件路径不安全：${key}`)
-        return null
-      }
+      const filePath = this.resolveSafePath(key)
 
       // 检查文件是否存在
       try {
         await fs.access(filePath)
       } catch {
-        logger?.warn(`文件不存在：${key}`)
+        this.logger.warn(`文件不存在：${key}`)
         return null
       }
 
@@ -96,14 +90,13 @@ export class LocalStorageProvider implements StorageProvider {
 
       const duration = Date.now() - startTime
       const sizeKB = Math.round(buffer.length / 1024)
-      logger?.success(`读取完成：${key} (${sizeKB}KB, ${duration}ms)`)
+      this.logger.success(`读取完成：${key} (${sizeKB}KB, ${duration}ms)`)
 
       return buffer
     } catch (error) {
       const errorType = error instanceof Error ? error.name : 'UnknownError'
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
-      logger?.error(`[${errorType}] 读取文件失败：${key} - ${errorMessage}`)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      this.logger.error(`[${errorType}] 读取文件失败：${key} - ${errorMessage}`)
       return null
     }
   }
@@ -118,13 +111,9 @@ export class LocalStorageProvider implements StorageProvider {
     })
   }
 
-  async listAllFiles(
-    progressCallback?: ProgressCallback,
-  ): Promise<StorageObject[]> {
+  async listAllFiles(progressCallback?: ProgressCallback): Promise<StorageObject[]> {
     const files: StorageObject[] = []
-    const excludeRegex = this.config.excludeRegex
-      ? new RegExp(this.config.excludeRegex)
-      : null
+    const excludeRegex = this.config.excludeRegex ? new RegExp(this.config.excludeRegex) : null
 
     // 重置进度
     this.scanProgress = {
@@ -132,23 +121,86 @@ export class LocalStorageProvider implements StorageProvider {
       filesScanned: 0,
     }
 
-    await this.scanDirectory(
-      this.basePath,
-      '',
-      files,
-      excludeRegex,
-      progressCallback,
-    )
+    await this.scanDirectory(this.basePath, '', files, excludeRegex, progressCallback)
 
     // 应用文件数量限制
     if (this.config.maxFileLimit && files.length > this.config.maxFileLimit) {
-      logger.main.info(
-        `文件数量超过限制 ${this.config.maxFileLimit}，截取前 ${this.config.maxFileLimit} 个文件`,
-      )
+      logger.main.info(`文件数量超过限制 ${this.config.maxFileLimit}，截取前 ${this.config.maxFileLimit} 个文件`)
       return files.slice(0, this.config.maxFileLimit)
     }
 
     return files
+  }
+
+  private resolveSafePath(key: string): string {
+    const filePath = path.join(this.basePath, key)
+    const resolvedPath = path.resolve(filePath)
+    const resolvedBasePath = path.resolve(this.basePath)
+
+    if (!resolvedPath.startsWith(resolvedBasePath)) {
+      throw new Error(`LocalStorageProvider: 文件路径不安全：${key}`)
+    }
+
+    return resolvedPath
+  }
+
+  private async syncDistFile(key: string, sourcePath: string): Promise<void> {
+    if (!this.distPath) {
+      return
+    }
+
+    const distFilePath = path.join(this.distPath, key)
+    const distDir = path.dirname(distFilePath)
+    await fs.mkdir(distDir, { recursive: true })
+    await fs.copyFile(sourcePath, distFilePath)
+  }
+
+  private async removeDistFile(key: string): Promise<void> {
+    if (!this.distPath) {
+      return
+    }
+
+    const distFilePath = path.join(this.distPath, key)
+    try {
+      await fs.rm(distFilePath, { force: true })
+    } catch (error) {
+      this.logger.warn(`删除 dist 文件失败：${distFilePath}`, error)
+    }
+  }
+
+  async deleteFile(key: string): Promise<void> {
+    const filePath = this.resolveSafePath(key)
+
+    try {
+      await fs.rm(filePath, { force: true })
+      await this.removeDistFile(key)
+      this.logger.success(`已删除本地文件：${key}`)
+    } catch (error) {
+      this.logger.error(`删除本地文件失败：${key}`, error)
+      throw error
+    }
+  }
+
+  async uploadFile(key: string, data: Buffer, _options?: StorageUploadOptions): Promise<StorageObject> {
+    const filePath = this.resolveSafePath(key)
+
+    try {
+      const dir = path.dirname(filePath)
+      await fs.mkdir(dir, { recursive: true })
+      await fs.writeFile(filePath, data)
+      await this.syncDistFile(key, filePath)
+
+      const stats = await fs.stat(filePath)
+
+      return {
+        key,
+        size: stats.size,
+        lastModified: stats.mtime,
+      }
+    } catch (error) {
+      this.logger.error(`上传本地文件失败：${key}`, error)
+      throw error
+    }
   }
 
   private async scanDirectory(
@@ -167,9 +219,7 @@ export class LocalStorageProvider implements StorageProvider {
 
       for (const entry of entries) {
         const fullPath = path.join(dirPath, entry.name)
-        const relativeFilePath = relativePath
-          ? path.join(relativePath, entry.name).replaceAll('\\', '/')
-          : entry.name
+        const relativeFilePath = relativePath ? path.join(relativePath, entry.name).replaceAll('\\', '/') : entry.name
 
         // 应用排除规则
         if (excludeRegex && excludeRegex.test(relativeFilePath)) {
@@ -178,13 +228,7 @@ export class LocalStorageProvider implements StorageProvider {
 
         if (entry.isDirectory()) {
           // 递归扫描子目录
-          await this.scanDirectory(
-            fullPath,
-            relativeFilePath,
-            files,
-            excludeRegex,
-            progressCallback,
-          )
+          await this.scanDirectory(fullPath, relativeFilePath, files, excludeRegex, progressCallback)
         } else if (entry.isFile()) {
           try {
             const stats = await fs.stat(fullPath)
@@ -203,23 +247,16 @@ export class LocalStorageProvider implements StorageProvider {
               progressCallback?.(this.scanProgress)
             }
           } catch (error) {
-            const errorType =
-              error instanceof Error ? error.name : 'UnknownError'
-            const errorMessage =
-              error instanceof Error ? error.message : String(error)
-            logger.main.warn(
-              `[${errorType}] 获取文件信息失败：${relativeFilePath} - ${errorMessage}`,
-            )
+            const errorType = error instanceof Error ? error.name : 'UnknownError'
+            const errorMessage = error instanceof Error ? error.message : String(error)
+            logger.main.warn(`[${errorType}] 获取文件信息失败：${relativeFilePath} - ${errorMessage}`)
           }
         }
       }
     } catch (error) {
       const errorType = error instanceof Error ? error.name : 'UnknownError'
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
-      logger.main.error(
-        `[${errorType}] 扫描目录失败：${dirPath} - ${errorMessage}`,
-      )
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      logger.main.error(`[${errorType}] 扫描目录失败：${dirPath} - ${errorMessage}`)
     }
   }
 
@@ -254,9 +291,7 @@ export class LocalStorageProvider implements StorageProvider {
         const dirName = path.dirname(obj.key)
 
         // 查找对应的 .mov 文件
-        const videoKey = path
-          .join(dirName, `${baseName}.mov`)
-          .replaceAll('\\', '/')
+        const videoKey = path.join(dirName, `${baseName}.mov`).replaceAll('\\', '/')
         const videoObj = fileMap.get(videoKey.toLowerCase())
 
         if (videoObj) {
@@ -303,11 +338,8 @@ export class LocalStorageProvider implements StorageProvider {
       logger.main.info(`创建本地存储目录：${this.basePath}`)
     } catch (error) {
       const errorType = error instanceof Error ? error.name : 'UnknownError'
-      const errorMessage =
-        error instanceof Error ? error.message : String(error)
-      logger.main.error(
-        `[${errorType}] 创建本地存储目录失败：${this.basePath} - ${errorMessage}`,
-      )
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      logger.main.error(`[${errorType}] 创建本地存储目录失败：${this.basePath} - ${errorMessage}`)
       throw error
     }
   }
@@ -325,12 +357,8 @@ async function copyToDist(fromPath: string, distPath: string): Promise<void> {
       force: true,
     })
 
-    logger.main.log(
-      `LocalStorageProvider: 已复制文件到发布目录： ${fromPath} -> ${distPath}`,
-    )
+    logger.main.log(`LocalStorageProvider: 已复制文件到发布目录： ${fromPath} -> ${distPath}`)
   } catch (error) {
-    logger.main.error(
-      `LocalStorageProvider: basePath: ${fromPath}, distPath: ${distPath}, 错误: ${error}`,
-    )
+    logger.main.error(`LocalStorageProvider: basePath: ${fromPath}, distPath: ${distPath}, 错误: ${error}`)
   }
 }

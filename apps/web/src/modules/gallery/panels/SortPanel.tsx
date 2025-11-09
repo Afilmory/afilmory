@@ -35,9 +35,7 @@ export const SortPanel = () => {
       >
         <i className="i-mingcute-sort-descending-line" />
         <span>{t('action.sort.newest.first')}</span>
-        {gallerySetting.sortOrder === 'desc' && (
-          <i className="i-mingcute-check-line ml-auto" />
-        )}
+        {gallerySetting.sortOrder === 'desc' && <i className="i-mingcute-check-line ml-auto" />}
       </div>
       <div
         className="group flex cursor-pointer items-center gap-2 rounded-lg bg-transparent px-2 py-2 transition-all duration-200 lg:py-1"
@@ -59,9 +57,7 @@ export const SortPanel = () => {
       >
         <i className="i-mingcute-sort-ascending-line" />
         <span>{t('action.sort.oldest.first')}</span>
-        {gallerySetting.sortOrder === 'asc' && (
-          <i className="i-mingcute-check-line ml-auto" />
-        )}
+        {gallerySetting.sortOrder === 'asc' && <i className="i-mingcute-check-line ml-auto" />}
       </div>
     </div>
   )

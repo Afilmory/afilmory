@@ -1,5 +1,5 @@
 export * from './api'
-export * from './hooks'
-export * from './types'
 export * from './components/SettingsForm'
 export * from './components/SettingsNavigation'
+export * from './hooks'
+export * from './types'

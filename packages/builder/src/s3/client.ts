@@ -23,8 +23,7 @@ export function createS3Client(config: S3Config): S3Client {
   const connectionTimeout = config.connectionTimeoutMs ?? 5_000
   const socketTimeout = config.socketTimeoutMs ?? 30_000
   const maxAttempts = config.maxAttempts ?? 3
-  const retryMode =
-    (config.retryMode as S3ClientConfig['retryMode']) ?? 'standard'
+  const retryMode = (config.retryMode as S3ClientConfig['retryMode']) ?? 'standard'
 
   const httpAgent = new http.Agent({ keepAlive, maxSockets })
   const httpsAgent = new https.Agent({ keepAlive, maxSockets })

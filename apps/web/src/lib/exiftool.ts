@@ -29,9 +29,7 @@ class ExifToolManagerStatic {
     if (!this.exifTool) {
       throw new Error('ExifTool not loaded')
     }
-    const metadata = await this.exifTool.parseMetadata(
-      new File([buffer], `/afilmory/${filename}`),
-    )
+    const metadata = await this.exifTool.parseMetadata(new File([buffer], `/afilmory/${filename}`))
 
     if (metadata.error) {
       throw new Error(metadata.error)

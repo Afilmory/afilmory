@@ -23,16 +23,8 @@ export interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
  * </Label>
  * ```
  */
-export const Label: FC<LabelProps> = ({
-  required,
-  className,
-  children,
-  ...props
-}) => (
-  <label
-    className={clsxm('block text-sm font-medium text-text', className)}
-    {...props}
-  >
+export const Label: FC<LabelProps> = ({ required, className, children, ...props }) => (
+  <label className={clsxm('block text-sm font-medium text-text', className)} {...props}>
     {children}
     {required && <span className="text-red ml-1">*</span>}
   </label>

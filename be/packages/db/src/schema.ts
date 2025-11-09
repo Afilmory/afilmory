@@ -1,5 +1,5 @@
 import type { PhotoManifestItem } from '@afilmory/builder'
-import { bigint, boolean, jsonb, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
+import { bigint, boolean, index, jsonb, pgEnum, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 
 import { generateId } from './snowflake'
 
@@ -18,7 +18,11 @@ export const tenantStatusEnum = pgEnum('tenant_status', ['active', 'inactive', '
 export const photoSyncStatusEnum = pgEnum('photo_sync_status', ['pending', 'synced', 'conflict'])
 export const CURRENT_PHOTO_MANIFEST_VERSION = 'v7' as const
 
-export type PhotoAssetConflictType = 'missing-in-storage' | 'metadata-mismatch'
+export type PhotoAssetConflictType = 'missing-in-storage' | 'metadata-mismatch' | 'photo-id-conflict'
+/**
+ * For conflict resolution, we use this provider to mark the record as database-only. Mark it as orphan item.
+ */
+export const DATABASE_ONLY_PROVIDER = 'database-only'
 
 export interface PhotoAssetConflictSnapshot {
   size: number | null
@@ -31,6 +35,7 @@ export interface PhotoAssetConflictPayload {
   type: PhotoAssetConflictType
   storageSnapshot?: PhotoAssetConflictSnapshot | null
   recordSnapshot?: PhotoAssetConflictSnapshot | null
+  incomingStorageKey?: string | null
 }
 
 export interface PhotoAssetManifest {
@@ -45,27 +50,10 @@ export const tenants = pgTable(
     slug: text('slug').notNull(),
     name: text('name').notNull(),
     status: tenantStatusEnum('status').notNull().default('inactive'),
-    primaryDomain: text('primary_domain'),
-    isPrimary: boolean('is_primary').notNull().default(false),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
   (t) => [unique('uq_tenant_slug').on(t.slug)],
-)
-
-export const tenantDomains = pgTable(
-  'tenant_domain',
-  {
-    id: snowflakeId,
-    tenantId: text('tenant_id')
-      .notNull()
-      .references(() => tenants.id, { onDelete: 'cascade' }),
-    domain: text('domain').notNull(),
-    isPrimary: boolean('is_primary').notNull().default(false),
-    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
-  },
-  (t) => [unique('uq_tenant_domain_domain').on(t.domain)],
 )
 
 // Custom users table (Better Auth: user)
@@ -121,6 +109,76 @@ export const authAccounts = pgTable('auth_account', {
   updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
 })
 
+export const authVerifications = pgTable('auth_verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at', { mode: 'string' }).notNull(),
+  createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+})
+
+export const tenantAuthUsers = pgTable(
+  'tenant_auth_user',
+  {
+    id: text('id').primaryKey(),
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    email: text('email').notNull(),
+    emailVerified: boolean('email_verified').default(false).notNull(),
+    image: text('image'),
+    role: text('role').default('guest').notNull(),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+    twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
+    username: text('username'),
+    displayUsername: text('display_username'),
+    banned: boolean('banned').default(false).notNull(),
+    banReason: text('ban_reason'),
+    banExpires: timestamp('ban_expires_at', { mode: 'string' }),
+  },
+  (t) => [unique('uq_tenant_auth_user_tenant_email').on(t.tenantId, t.email)],
+)
+
+export const tenantAuthSessions = pgTable('tenant_auth_session', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id')
+    .notNull()
+    .references(() => tenants.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at', { mode: 'string' }).notNull(),
+  token: text('token').notNull().unique(),
+  createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  userId: text('user_id')
+    .notNull()
+    .references(() => tenantAuthUsers.id, { onDelete: 'cascade' }),
+})
+
+export const tenantAuthAccounts = pgTable('tenant_auth_account', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id')
+    .notNull()
+    .references(() => tenants.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => tenantAuthUsers.id, { onDelete: 'cascade' }),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  idToken: text('id_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at', { mode: 'string' }),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { mode: 'string' }),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+})
+
 export const settings = pgTable(
   'settings',
   {
@@ -151,6 +209,20 @@ export const systemSettings = pgTable(
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
   (t) => [unique('uq_system_setting_key').on(t.key)],
+)
+
+export const reactions = pgTable(
+  'reactions',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    refKey: text('ref_key').notNull(),
+    reaction: text('reaction').notNull(),
+  },
+  (t) => [index('idx_reactions_tenant_ref_key').on(t.tenantId, t.refKey)],
 )
 
 export const photoAssets = pgTable(
@@ -184,12 +256,15 @@ export const photoAssets = pgTable(
 
 export const dbSchema = {
   tenants,
-  tenantDomains,
   authUsers,
   authSessions,
   authAccounts,
+  tenantAuthUsers,
+  tenantAuthSessions,
+  tenantAuthAccounts,
   settings,
   systemSettings,
+  reactions,
   photoAssets,
 }
 

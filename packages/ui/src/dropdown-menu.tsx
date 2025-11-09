@@ -1,7 +1,6 @@
+import { clsxm } from '@afilmory/utils'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import * as React from 'react'
-
-import { clsxm } from '@afilmory/utils'
 
 const DropdownMenu: typeof DropdownMenuPrimitive.Root = (props) => {
   return <DropdownMenuPrimitive.Root {...props} />
@@ -22,9 +21,7 @@ const DropdownMenuSubTrigger = ({
 }: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
   inset?: boolean
 } & {
-  ref?: React.Ref<React.ElementRef<
-    typeof DropdownMenuPrimitive.SubTrigger
-  > | null>
+  ref?: React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger> | null>
 }) => (
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
@@ -41,8 +38,7 @@ const DropdownMenuSubTrigger = ({
     <i className="i-mingcute-right-line -mr-1 ml-auto size-3.5" />
   </DropdownMenuPrimitive.SubTrigger>
 )
-DropdownMenuSubTrigger.displayName =
-  DropdownMenuPrimitive.SubTrigger.displayName
+DropdownMenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName
 
 const DropdownMenuContent = ({
   ref,
@@ -131,9 +127,7 @@ const DropdownMenuCheckboxItem = ({
   ...props
 }: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem> & {
   icon?: React.ReactNode
-  ref?: React.Ref<React.ElementRef<
-    typeof DropdownMenuPrimitive.CheckboxItem
-  > | null>
+  ref?: React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem> | null>
 }) => (
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
@@ -151,11 +145,7 @@ const DropdownMenuCheckboxItem = ({
     }}
     {...props}
   >
-    {!!icon && (
-      <span className="mr-1.5 inline-flex size-4 items-center justify-center">
-        {icon}
-      </span>
-    )}
+    {!!icon && <span className="mr-1.5 inline-flex size-4 items-center justify-center">{icon}</span>}
     {children}
     <span className="ml-auto flex size-3.5 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator className="ml-1 flex items-center justify-center">
@@ -164,8 +154,7 @@ const DropdownMenuCheckboxItem = ({
     </span>
   </DropdownMenuPrimitive.CheckboxItem>
 )
-DropdownMenuCheckboxItem.displayName =
-  DropdownMenuPrimitive.CheckboxItem.displayName
+DropdownMenuCheckboxItem.displayName = DropdownMenuPrimitive.CheckboxItem.displayName
 
 const DropdownMenuLabel = ({
   ref,
@@ -179,11 +168,7 @@ const DropdownMenuLabel = ({
 }) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
-    className={clsxm(
-      'text-text px-2 py-1 text-sm font-semibold',
-      inset && 'pl-8',
-      className,
-    )}
+    className={clsxm('text-text px-2 py-1 text-sm font-semibold', inset && 'pl-8', className)}
     {...props}
   />
 )
@@ -193,9 +178,7 @@ const DropdownMenuSeparator = ({
   ref,
   ...props
 }: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator> & {
-  ref?: React.Ref<React.ElementRef<
-    typeof DropdownMenuPrimitive.Separator
-  > | null>
+  ref?: React.Ref<React.ElementRef<typeof DropdownMenuPrimitive.Separator> | null>
 }) => (
   <DropdownMenuPrimitive.Separator
     className="mx-2 my-1 h-px px-2"

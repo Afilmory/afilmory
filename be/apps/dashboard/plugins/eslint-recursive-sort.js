@@ -1,4 +1,4 @@
-const sortObjectKeys = (obj) => {
+function sortObjectKeys(obj) {
   if (typeof obj !== 'object' || obj === null) {
     return obj
   }

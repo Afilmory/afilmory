@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
@@ -21,28 +17,12 @@
     "noEmit": true,
     "jsx": "preserve",
     "paths": {
-      "~/*": [
-        "./src/*"
-      ],
-      "@pkg": [
-        "./package.json"
-      ],
-      "@config": [
-        "../../site.config.ts"
-      ],
-      "@builder": [
-        "../../builder.config.ts"
-      ],
-      "@env": [
-        "../../env.ts"
-      ],
-      "@locales/*": [
-        "../../locales/*"
-      ]
-    },
+      "~/*": ["./src/*"],
+      "@pkg": ["./package.json"],
+      "@config": ["../../site.config.ts"],
+      "@env": ["../../env.ts"],
+      "@locales/*": ["../../locales/*"]
+    }
   },
-  "include": [
-    "./src/**/*",
-    "./scripts/**/*"
-  ]
+  "include": ["./src/**/*", "./scripts/**/*"]
 }

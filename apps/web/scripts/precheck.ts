@@ -5,7 +5,7 @@ import { $ } from 'execa'
 
 export const precheck = async () => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
-  const workdir = path.resolve(__dirname, '..')
+  const workdir = path.resolve(__dirname, '../../..')
 
   await $({
     cwd: workdir,

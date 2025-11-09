@@ -8,7 +8,7 @@ import { RootProviders } from './providers/root-providers'
 // prefetch preview page route
 function App() {
   useEffect(() => {
-    import('~/pages/(main)/[photoId]/index')
+    import('~/pages/(main)/photos/[photoId]/index')
   }, [])
 
   return (

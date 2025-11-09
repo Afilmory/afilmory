@@ -1,9 +1,7 @@
+import { clsxm, Spring } from '@afilmory/utils'
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { m } from 'motion/react'
 import * as React from 'react'
-
-import { clsxm } from '@afilmory/utils'
-import { Spring } from '@afilmory/utils'
 
 import { tooltipStyle } from './styles'
 

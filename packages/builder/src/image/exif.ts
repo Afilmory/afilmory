@@ -11,10 +11,7 @@ import { getGlobalLoggers } from '../photo/logger-adapter.js'
 import type { PickedExif } from '../types/photo.js'
 
 // 提取 EXIF 数据
-export async function extractExifData(
-  imageBuffer: Buffer,
-  originalBuffer?: Buffer,
-): Promise<PickedExif | null> {
+export async function extractExifData(imageBuffer: Buffer, originalBuffer?: Buffer): Promise<PickedExif | null> {
   const log = getGlobalLoggers().exif
 
   try {
@@ -39,10 +36,7 @@ export async function extractExifData(
     }
 
     await mkdir('/tmp/image_process', { recursive: true })
-    const tempImagePath = path.resolve(
-      '/tmp/image_process',
-      `${crypto.randomUUID()}.jpg`,
-    )
+    const tempImagePath = path.resolve('/tmp/image_process', `${crypto.randomUUID()}.jpg`)
 
     await writeFile(tempImagePath, originalBuffer || imageBuffer)
     const exifData = await exiftool.read(tempImagePath)

@@ -29,7 +29,7 @@
     "clsx": "^2.1.1",
     "jotai": "^2.15.0",
     "motion": "^12.23.24",
-    "react-intersection-observer": "9.16.0",
+    "react-intersection-observer": "10.0.0",
     "sonner": "2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwind-variants": "^3.1.1",

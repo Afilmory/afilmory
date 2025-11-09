@@ -1,23 +1,13 @@
 import { photoLoader } from '@afilmory/data'
 import { ScrollArea, ScrollElementContext } from '@afilmory/ui'
-import siteConfig from '@config'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useEffect, useRef } from 'react'
-import {
-  Outlet,
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router'
+import { Outlet, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import { gallerySettingAtom } from '~/atoms/app'
+import { siteConfig } from '~/config'
 import { useMobile } from '~/hooks/useMobile'
-import {
-  getFilteredPhotos,
-  usePhotos,
-  usePhotoViewer,
-} from '~/hooks/usePhotoViewer'
+import { getFilteredPhotos, usePhotos, usePhotoViewer } from '~/hooks/usePhotoViewer'
 import { MasonryRoot } from '~/modules/gallery/MasonryRoot'
 import { PhotosProvider } from '~/providers/photos-provider'
 
@@ -52,10 +42,7 @@ export const Component = () => {
             <MasonryRoot />
           </ScrollElementContext>
         ) : (
-          <ScrollArea
-            rootClassName={'h-svh w-full'}
-            viewportClassName="size-full"
-          >
+          <ScrollArea rootClassName={'h-svh w-full'} viewportClassName="size-full">
             <MasonryRoot />
           </ScrollArea>
         )}
@@ -81,9 +68,7 @@ const useStateRestoreFromUrl = () => {
     isRestored = true
 
     if (photoId) {
-      const photo = photoLoader
-        .getPhotos()
-        .find((photo) => photo.id === photoId)
+      const photo = photoLoader.getPhotos().find((photo) => photo.id === photoId)
       if (photo) {
         openViewer(photoLoader.getPhotos().indexOf(photo))
       }
@@ -92,13 +77,8 @@ const useStateRestoreFromUrl = () => {
     const tagsFromSearchParams = searchParams.get('tags')?.split(',')
     const camerasFromSearchParams = searchParams.get('cameras')?.split(',')
     const lensesFromSearchParams = searchParams.get('lenses')?.split(',')
-    const ratingsFromSearchParams = searchParams.get('rating')
-      ? Number(searchParams.get('rating'))
-      : null
-    const tagModeFromSearchParams = searchParams.get('tag_mode') as
-      | 'union'
-      | 'intersection'
-      | null
+    const ratingsFromSearchParams = searchParams.get('rating') ? Number(searchParams.get('rating')) : null
+    const tagModeFromSearchParams = searchParams.get('tag_mode') as 'union' | 'intersection' | null
 
     if (
       tagsFromSearchParams ||
@@ -120,13 +100,8 @@ const useStateRestoreFromUrl = () => {
 }
 
 const useSyncStateToUrl = () => {
-  const {
-    selectedTags,
-    selectedCameras,
-    selectedLenses,
-    selectedRatings,
-    tagFilterMode,
-  } = useAtomValue(gallerySettingAtom)
+  const { selectedTags, selectedCameras, selectedLenses, selectedRatings, tagFilterMode } =
+    useAtomValue(gallerySettingAtom)
   const [_, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -146,7 +121,7 @@ const useSyncStateToUrl = () => {
       }
     } else {
       const photos = getFilteredPhotos()
-      const targetPathname = `/${photos[currentIndex].id}`
+      const targetPathname = `/photos/${photos[currentIndex].id}`
       if (location.pathname !== targetPathname) {
         navigate(targetPathname)
       }
@@ -219,12 +194,5 @@ const useSyncStateToUrl = () => {
 
       return newer
     })
-  }, [
-    selectedTags,
-    selectedCameras,
-    selectedLenses,
-    selectedRatings,
-    tagFilterMode,
-    setSearchParams,
-  ])
+  }, [selectedTags, selectedCameras, selectedLenses, selectedRatings, tagFilterMode, setSearchParams])
 }

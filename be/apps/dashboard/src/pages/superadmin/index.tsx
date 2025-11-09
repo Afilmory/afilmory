@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router'
 
-export const Component = () => {
+export function Component() {
   return <Navigate to="/superadmin/settings" replace />
 }

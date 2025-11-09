@@ -18,9 +18,7 @@ const ContextMenuSubTrigger = ({
 }: React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubTrigger> & {
   inset?: boolean
 } & {
-  ref?: React.Ref<React.ElementRef<
-    typeof ContextMenuPrimitive.SubTrigger
-  > | null>
+  ref?: React.Ref<React.ElementRef<typeof ContextMenuPrimitive.SubTrigger> | null>
 }) => (
   <ContextMenuPrimitive.SubTrigger
     ref={ref}
@@ -44,9 +42,7 @@ const ContextMenuSubContent = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubContent> & {
-  ref?: React.Ref<React.ElementRef<
-    typeof ContextMenuPrimitive.SubContent
-  > | null>
+  ref?: React.Ref<React.ElementRef<typeof ContextMenuPrimitive.SubContent> | null>
 }) => (
   <RootPortal>
     <ContextMenuPrimitive.SubContent
@@ -134,9 +130,7 @@ const ContextMenuCheckboxItem = ({
   checked,
   ...props
 }: React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.CheckboxItem> & {
-  ref?: React.Ref<React.ElementRef<
-    typeof ContextMenuPrimitive.CheckboxItem
-  > | null>
+  ref?: React.Ref<React.ElementRef<typeof ContextMenuPrimitive.CheckboxItem> | null>
 }) => (
   <ContextMenuPrimitive.CheckboxItem
     ref={ref}
@@ -163,8 +157,7 @@ const ContextMenuCheckboxItem = ({
     {children}
   </ContextMenuPrimitive.CheckboxItem>
 )
-ContextMenuCheckboxItem.displayName =
-  ContextMenuPrimitive.CheckboxItem.displayName
+ContextMenuCheckboxItem.displayName = ContextMenuPrimitive.CheckboxItem.displayName
 
 const ContextMenuLabel = ({
   ref,
@@ -178,11 +171,7 @@ const ContextMenuLabel = ({
 }) => (
   <ContextMenuPrimitive.Label
     ref={ref}
-    className={clsxm(
-      'text-text px-2 py-1.5 font-semibold',
-      inset && 'pl-8',
-      className,
-    )}
+    className={clsxm('text-text px-2 py-1.5 font-semibold', inset && 'pl-8', className)}
     {...props}
   />
 )
@@ -192,9 +181,7 @@ const ContextMenuSeparator = ({
   ref,
   ...props
 }: React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Separator> & {
-  ref?: React.Ref<React.ElementRef<
-    typeof ContextMenuPrimitive.Separator
-  > | null>
+  ref?: React.Ref<React.ElementRef<typeof ContextMenuPrimitive.Separator> | null>
 }) => (
   <ContextMenuPrimitive.Separator
     className="mx-2 my-1 h-px"

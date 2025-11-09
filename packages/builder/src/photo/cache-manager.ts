@@ -1,4 +1,3 @@
-
 import { thumbnailExists } from '../image/thumbnail.js'
 import type { PhotoManifestItem } from '../types/photo.js'
 import type { PhotoProcessorOptions } from './processor.js'
@@ -34,8 +33,7 @@ export async function shouldProcessPhoto(
   }
 
   // 检查文件是否更新
-  const fileNeedsUpdate =
-    existingItem.lastModified !== obj.LastModified?.toISOString()
+  const fileNeedsUpdate = existingItem.lastModified !== obj.LastModified?.toISOString()
 
   if (fileNeedsUpdate || options.isForceManifest) {
     return {
@@ -76,15 +74,8 @@ export function validateCacheData(
   }
 
   return {
-    needsThumbnail:
-      options.isForceMode ||
-      options.isForceThumbnails ||
-      !existingItem.thumbHash,
-    needsExif:
-      options.isForceMode || options.isForceManifest || !existingItem.exif,
-    needsToneAnalysis:
-      options.isForceMode ||
-      options.isForceManifest ||
-      !existingItem.toneAnalysis,
+    needsThumbnail: options.isForceMode || options.isForceThumbnails || !existingItem.thumbHash,
+    needsExif: options.isForceMode || options.isForceManifest || !existingItem.exif,
+    needsToneAnalysis: options.isForceMode || options.isForceManifest || !existingItem.toneAnalysis,
   }
 }

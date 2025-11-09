@@ -5,19 +5,14 @@ import type { TocItem } from '../toc-data'
 import { getTocByPath } from '../toc-data'
 
 // Custom hook to track active TOC item position for the thumb indicator
-function useTocThumb(
-  containerRef: React.RefObject<HTMLDivElement | null>,
-  activeId: string | null,
-) {
+function useTocThumb(containerRef: React.RefObject<HTMLDivElement | null>, activeId: string | null) {
   const [pos, setPos] = useState<[number, number]>([0, 0])
 
   useLayoutEffect(() => {
     if (!containerRef.current || !activeId) return
 
     const container = containerRef.current
-    const activeElement = container.querySelector(
-      `a[href="#${activeId}"]`,
-    ) as HTMLElement
+    const activeElement = container.querySelector(`a[href="#${activeId}"]`) as HTMLElement
 
     if (!activeElement) return
 
@@ -55,13 +50,7 @@ function getLineOffset(depth: number): number {
   return depth >= 3 ? 12 : 0
 }
 
-function TocItemComponent({
-  item,
-  activeId,
-  level,
-  onItemClick,
-  handleScroll,
-}: TocItemProps) {
+function TocItemComponent({ item, activeId, level, onItemClick, handleScroll }: TocItemProps) {
   const isActive = activeId === item.id
   const hasChildren = item.children && item.children.length > 0
 
@@ -108,11 +97,7 @@ function TocItemComponent({
   )
 }
 
-export function TableOfContents({
-  currentPath,
-  onItemClick,
-  handleScroll,
-}: TableOfContentsProps) {
+export function TableOfContents({ currentPath, onItemClick, handleScroll }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pos = useTocThumb(containerRef, activeId)
@@ -138,10 +123,7 @@ export function TableOfContents({
       let h = 0
       const d: string[] = []
 
-      const getAllItems = (
-        items: TocItem[],
-        currentLevel = 1,
-      ): Array<{ item: TocItem; level: number }> => {
+      const getAllItems = (items: TocItem[], currentLevel = 1): Array<{ item: TocItem; level: number }> => {
         const result: Array<{ item: TocItem; level: number }> = []
         for (const item of items) {
           result.push({ item, level: currentLevel })
@@ -155,18 +137,13 @@ export function TableOfContents({
       const allItems = currentToc ? getAllItems(currentToc) : []
 
       for (const [i, { item, level }] of allItems.entries()) {
-        const element = container.querySelector(
-          `a[href="#${item.id}"]`,
-        ) as HTMLElement
+        const element = container.querySelector(`a[href="#${item.id}"]`) as HTMLElement
         if (!element) continue
 
         const styles = getComputedStyle(element)
         const offset = getLineOffset(level) + 1
         const top = element.offsetTop + Number.parseFloat(styles.paddingTop)
-        const bottom =
-          element.offsetTop +
-          element.clientHeight -
-          Number.parseFloat(styles.paddingBottom)
+        const bottom = element.offsetTop + element.clientHeight - Number.parseFloat(styles.paddingBottom)
 
         w = Math.max(offset, w)
         h = Math.max(h, bottom)

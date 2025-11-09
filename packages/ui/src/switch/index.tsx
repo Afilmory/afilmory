@@ -2,10 +2,7 @@ import { clsxm } from '@afilmory/utils'
 import type * as SwitchPrimitives from '@radix-ui/react-switch'
 import type { HTMLMotionProps } from 'motion/react'
 
-import {
-  Switch as SwitchAnimate,
-  SwitchThumb,
-} from '../animate-ui/primitives/radix/switch'
+import { Switch as SwitchAnimate, SwitchThumb } from '../animate-ui/primitives/radix/switch'
 
 type SwitchProps = React.ComponentProps<typeof SwitchPrimitives.Root> &
   HTMLMotionProps<'button'> & {

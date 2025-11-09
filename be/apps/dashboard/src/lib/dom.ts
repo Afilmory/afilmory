@@ -1,10 +1,10 @@
-import type { ReactEventHandler } from "react"
+import type { ReactEventHandler } from 'react'
 
 export const stopPropagation: ReactEventHandler<any> = (e) => e.stopPropagation()
 
 export const preventDefault: ReactEventHandler<any> = (e) => e.preventDefault()
 
-export const nextFrame = (fn: (...args: any[]) => any) => {
+export function nextFrame(fn: (...args: any[]) => any) {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       fn()
@@ -12,7 +12,7 @@ export const nextFrame = (fn: (...args: any[]) => any) => {
   })
 }
 
-export const getElementTop = (element: HTMLElement) => {
+export function getElementTop(element: HTMLElement) {
   let actualTop = element.offsetTop
   let current = element.offsetParent as HTMLElement
   while (current !== null) {

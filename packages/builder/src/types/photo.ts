@@ -63,6 +63,7 @@ export interface PhotoManifestItem extends PhotoInfo {
 export interface ProcessPhotoResult {
   item: PhotoManifestItem | null
   type: 'processed' | 'skipped' | 'new' | 'failed'
+  pluginData?: Record<string, unknown>
 }
 
 export interface PickedExif {

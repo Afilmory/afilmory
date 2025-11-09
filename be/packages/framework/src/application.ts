@@ -522,9 +522,10 @@ export class HonoHttpApplication {
 
   private normalizeMiddlewareDefinition(definition: MiddlewareDefinition): MiddlewareDefinition {
     const priority = definition.priority ?? 0
+    const path = definition.path ?? '/*'
     return {
       handler: definition.handler,
-      path: definition.path,
+      path,
       priority,
     }
   }
@@ -545,15 +546,17 @@ export class HonoHttpApplication {
 
     for (const definition of normalized) {
       this.globalEnhancers.middlewares.push(definition)
-      const { path } = definition
+      let { path } = definition
+      if (path == null) {
+        path = '/*'
+        definition.path = path
+      }
       const handlerName = definition.handler.constructor.name || 'AnonymousMiddleware'
       const middlewareFn = async (context: Context, next: Next) => {
         return await definition.handler.use(context, next)
       }
 
-      if (path == null) {
-        this.app.use(middlewareFn)
-      } else if (Array.isArray(path)) {
+      if (Array.isArray(path)) {
         for (const entry of path) {
           this.app.use(entry as any, middlewareFn)
         }
@@ -561,7 +564,7 @@ export class HonoHttpApplication {
         this.app.use(path as any, middlewareFn)
       }
 
-      this.middlewareLogger.info(
+      this.middlewareLogger.verbose(
         `Registered middleware ${handlerName} on ${this.describeMiddlewarePath(path)}`,
         colors.green(`+${performance.now().toFixed(2)}ms`),
       )
@@ -868,12 +871,12 @@ export class HonoHttpApplication {
 
   private registerController(controller: Constructor): void {
     const controllerInstance = this.getProviderInstance(controller)
-    const { prefix } = getControllerMetadata(controller)
+    const controllerMetadata = getControllerMetadata(controller)
     const routes = getRoutesMetadata(controller)
 
     for (const route of routes) {
       const method = route.method.toUpperCase() as HTTPMethod
-      const fullPath = this.buildPath(prefix, route.path)
+      const fullPath = this.buildPath(controllerMetadata, route.path)
 
       this.app.on(method, fullPath, async (context: Context) => {
         return await HttpContext.run(context, async () => {
@@ -915,19 +918,31 @@ export class HonoHttpApplication {
     }
   }
 
-  private buildPath(prefix: string, routePath: string): string {
+  private buildPath(controller: ReturnType<typeof getControllerMetadata>, routePath: string): string {
     const globalPrefix = this.options.globalPrefix ?? ''
-    const pieces = [globalPrefix, prefix, routePath]
+    const pieces = [routePath]
+    if (controller.prefix) {
+      pieces.unshift(controller.prefix)
+    }
+    if (!controller.bypassGlobalPrefix && globalPrefix) {
+      pieces.unshift(globalPrefix)
+    }
+
+    if (pieces.length === 0) {
+      return '/'
+    }
+
+    const normalized = pieces
       .map((segment) => segment?.trim())
       .filter(Boolean)
       .map((segment) => (segment!.startsWith('/') ? segment : `/${segment}`))
 
-    const normalized = pieces.join('').replaceAll(/[\\/]+/g, '/')
-    if (normalized.length > 1 && normalized.endsWith('/')) {
-      return normalized.slice(0, -1)
+    const joined = normalized.join('').replaceAll(/[\\/]+/g, '/')
+    if (joined.length > 1 && joined.endsWith('/')) {
+      return joined.slice(0, -1)
     }
 
-    return normalized || '/'
+    return joined || '/'
   }
 
   private async executeGuards(

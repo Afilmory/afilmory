@@ -79,33 +79,19 @@ function App({ url }: { url?: string }) {
                 className="text-text-primary hover:bg-background-secondary rounded-lg p-2 transition-colors"
                 type="button"
               >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
               <div className="flex-1 text-center">
-                <h1 className="text-text-primary text-lg font-semibold">
-                  Afilmory Docs
-                </h1>
+                <h1 className="text-text-primary text-lg font-semibold">Afilmory Docs</h1>
               </div>
               <div className="w-10" /> {/* 平衡按钮 */}
             </div>
           </div>
 
           <div className="mx-4 mt-16 rounded-xl p-8 text-center lg:mt-0">
-            <div className="mb-6 flex items-center justify-center text-4xl">
-              {getRandomKaomoji()}
-            </div>
+            <div className="mb-6 flex items-center justify-center text-4xl">{getRandomKaomoji()}</div>
             <h1 className="mb-1 text-3xl font-semibold">404</h1>
             <p className="text-text-secondary text-lg">Page not found</p>
             <button
@@ -155,10 +141,7 @@ function App({ url }: { url?: string }) {
       </>
 
       {/* 主内容区域 */}
-      <main
-        className="bg-background relative flex-1 overflow-y-auto"
-        ref={mainContentRef}
-      >
+      <main className="bg-background relative flex-1 overflow-y-auto" ref={mainContentRef}>
         <div className="bg-background border-border sticky top-0 z-30 h-16 border-b backdrop-blur-3xl lg:hidden">
           <div className="flex h-full items-center px-4">
             <button
@@ -166,25 +149,13 @@ function App({ url }: { url?: string }) {
               className="text-text-primary hover:bg-background-secondary rounded-lg p-2 transition-colors"
               type="button"
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             <div className="flex-1 text-center">
               <a href="/" className="select-none">
-                <h1 className="text-text-primary text-lg font-semibold">
-                  Afilmory Docs
-                </h1>
+                <h1 className="text-text-primary text-lg font-semibold">Afilmory Docs</h1>
               </a>
             </div>
             <div className="w-10" /> {/* 平衡按钮 */}
@@ -196,10 +167,7 @@ function App({ url }: { url?: string }) {
           <div className="w-full flex-1 px-4 py-6 lg:px-8 lg:py-12">
             <article className="prose prose-lg bg-background max-w-none rounded-xl p-4 lg:p-8">
               <MDX content={<Component />} />
-              <DocumentFooter
-                createdAt={meta.createdAt}
-                lastModified={meta.lastModified}
-              />
+              <DocumentFooter createdAt={meta.createdAt} lastModified={meta.lastModified} />
             </article>
           </div>
 
@@ -210,19 +178,13 @@ function App({ url }: { url?: string }) {
               On this page
             </h4>
             <div className="scrollbar-hide sticky top-6 max-h-[calc(100vh-2rem)] overflow-y-auto">
-              <TableOfContents
-                currentPath={currentPath}
-                handleScroll={handleScrollMainContent}
-              />
+              <TableOfContents currentPath={currentPath} handleScroll={handleScrollMainContent} />
             </div>
           </div>
         </div>
 
         {/* 移动端 TOC */}
-        <MobileTableOfContents
-          currentPath={currentPath}
-          handleScroll={handleScrollMainContent}
-        />
+        <MobileTableOfContents currentPath={currentPath} handleScroll={handleScrollMainContent} />
       </main>
     </div>
   )

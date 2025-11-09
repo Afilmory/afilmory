@@ -1,8 +1,7 @@
 import { clsxm } from '@afilmory/utils'
 import type { TextareaHTMLAttributes } from 'react'
 
-export interface TextareaProps
-  extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   /**
    * Whether the textarea has an error state
    */
@@ -17,7 +16,7 @@ export interface TextareaProps
  * A styled textarea component following the dashboard design language.
  *
  * Features:
- * - `rounded-lg` for approachable feel
+ * - `rounded` for subtle rounded corners
  * - Consistent padding and text styles
  * - Focus ring with accent color
  * - Error state support
@@ -33,21 +32,26 @@ export interface TextareaProps
  * />
  * ```
  */
-export const Textarea = ({ ref, error, className, ...props }: TextareaProps & { ref?: React.RefObject<HTMLTextAreaElement | null> }) => (
-    <textarea
-      ref={ref}
-      className={clsxm(
-        'w-full rounded-lg border border-fill-tertiary bg-background',
-        'px-3 py-2 text-sm text-text placeholder:text-text-tertiary/70',
-        'focus:outline-none focus:ring-2 focus:ring-accent/40',
-        'transition-all duration-200',
-        'disabled:cursor-not-allowed disabled:opacity-60',
-        'resize-y',
-        error && 'border-red/60 focus:ring-red/30',
-        className,
-      )}
-      {...props}
-    />
-  )
+export const Textarea = ({
+  ref,
+  error,
+  className,
+  ...props
+}: TextareaProps & { ref?: React.RefObject<HTMLTextAreaElement | null> }) => (
+  <textarea
+    ref={ref}
+    className={clsxm(
+      'w-full rounded border border-fill-tertiary bg-background',
+      'px-3 py-2 text-sm text-text placeholder:text-text-tertiary/70',
+      'focus:outline-none focus:ring-2 focus:ring-accent/40',
+      'transition-all duration-200',
+      'disabled:cursor-not-allowed disabled:opacity-60',
+      'resize-y',
+      error && 'border-red/60 focus:ring-red/30',
+      className,
+    )}
+    {...props}
+  />
+)
 
 Textarea.displayName = 'Textarea'

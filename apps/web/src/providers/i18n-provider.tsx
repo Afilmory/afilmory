@@ -22,9 +22,7 @@ export const I18nProvider: FC<PropsWithChildren> = ({ children }) => {
       [update],
     )
 
-  return (
-    <I18nextProvider i18n={currentI18NInstance}>{children}</I18nextProvider>
-  )
+  return <I18nextProvider i18n={currentI18NInstance}>{children}</I18nextProvider>
 }
 
 declare module '~/lib/event-bus' {

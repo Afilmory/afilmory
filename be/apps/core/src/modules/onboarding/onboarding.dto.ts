@@ -38,11 +38,6 @@ export class OnboardingInitDto extends createZodDto(
         .string()
         .min(1)
         .regex(/^[a-z0-9-]+$/, { message: 'Slug should be lowercase alphanumeric with hyphen' }),
-      domain: z
-        .string()
-        .min(1)
-        .regex(/^[a-z0-9.-]+$/, { message: 'Domain should be lowercase letters, numbers, dot or hyphen' })
-        .optional(),
     }),
     settings: normalizeEntries.optional().transform((entries) => entries ?? []),
   }),

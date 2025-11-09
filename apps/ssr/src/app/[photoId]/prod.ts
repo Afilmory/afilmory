@@ -8,16 +8,9 @@ import { injectConfigToDocument } from '~/lib/injectable'
 import { photoLoader } from '~/lib/photo-loader'
 
 type HtmlElement = ReturnType<typeof DOMParser.prototype.parseFromString>
-type OnlyHTMLDocument = HtmlElement extends infer T
-  ? T extends { [key: string]: any; head: any }
-    ? T
-    : never
-  : never
+type OnlyHTMLDocument = HtmlElement extends infer T ? (T extends { [key: string]: any; head: any } ? T : never) : never
 
-export const handler = async (
-  request: NextRequest,
-  { params }: { params: Promise<{ photoId: string }> },
-) => {
+export const handler = async (request: NextRequest, { params }: { params: Promise<{ photoId: string }> }) => {
   const { photoId } = await params
 
   const photo = photoLoader.getPhoto(photoId)
@@ -67,11 +60,7 @@ export const handler = async (
   }
 }
 
-const createAndInsertOpenGraphMeta = (
-  document: OnlyHTMLDocument,
-  photo: PhotoManifestItem,
-  request: NextRequest,
-) => {
+const createAndInsertOpenGraphMeta = (document: OnlyHTMLDocument, photo: PhotoManifestItem, request: NextRequest) => {
   // Open Graph meta tags
 
   // X forward host

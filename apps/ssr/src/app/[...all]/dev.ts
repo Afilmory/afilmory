@@ -10,10 +10,7 @@ export const handler = async (req: NextRequest) => {
     return new NextResponse(null, { status: 404 })
   }
 
-  if (
-    req.nextUrl.pathname.startsWith('/thumbnails') ||
-    req.nextUrl.pathname.startsWith('/photos')
-  ) {
+  if (req.nextUrl.pathname.startsWith('/thumbnails') || req.nextUrl.pathname.startsWith('/photos')) {
     return proxyAssets(req)
   }
 
@@ -35,9 +32,7 @@ async function proxyIndexHtml() {
   const parser = new DOMParser()
   const document = parser.parseFromString(htmlText, 'text/html')
 
-  const scripts = document.querySelectorAll(
-    'script',
-  ) as NodeListOf<HTMLScriptElement>
+  const scripts = document.querySelectorAll('script') as NodeListOf<HTMLScriptElement>
 
   scripts.forEach((script) => {
     if (script.src.startsWith('/')) {
@@ -55,10 +50,7 @@ async function proxyIndexHtml() {
   const injectScripts = document.querySelectorAll('script[type="module"]')
   injectScripts.forEach((script) => {
     script.innerHTML = script.innerHTML
-      .replace(
-        '/@vite-plugin-checker-runtime',
-        `${host}/@vite-plugin-checker-runtime`,
-      )
+      .replace('/@vite-plugin-checker-runtime', `${host}/@vite-plugin-checker-runtime`)
       .replace('/@react-refresh', `${host}/@react-refresh`)
   })
 
@@ -69,8 +61,5 @@ async function proxyIndexHtml() {
   })
 }
 const replaceUrl = (url: string, host: string) => {
-  return new URL(
-    url.startsWith('http') ? new URL(url).pathname : url,
-    new URL(host),
-  ).toString()
+  return new URL(url.startsWith('http') ? new URL(url).pathname : url, new URL(host)).toString()
 }

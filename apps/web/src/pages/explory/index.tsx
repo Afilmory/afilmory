@@ -3,9 +3,7 @@ import { lazy, Suspense } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useTranslation } from 'react-i18next'
 
-const MapSection = lazy(() =>
-  import('~/modules/map/MapSection').then((m) => ({ default: m.MapSection })),
-)
+const MapSection = lazy(() => import('~/modules/map/MapSection').then((m) => ({ default: m.MapSection })))
 
 export const Component = () => {
   return (

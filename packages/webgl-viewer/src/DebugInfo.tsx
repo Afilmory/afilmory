@@ -63,9 +63,7 @@ const CollapsibleSection: React.FC<{
         </span>
         <span style={{ fontWeight: 'bold', fontSize: '11px' }}>{title}</span>
       </div>
-      {expanded && (
-        <div style={{ paddingLeft: '16px', fontSize: '11px' }}>{children}</div>
-      )}
+      {expanded && <div style={{ paddingLeft: '16px', fontSize: '11px' }}>{children}</div>}
     </div>
   )
 }
@@ -73,10 +71,7 @@ const CollapsibleSection: React.FC<{
 /**
  * 状态指示器组件
  */
-const StatusIndicator: React.FC<{ color: string; label: string }> = ({
-  color,
-  label,
-}) => (
+const StatusIndicator: React.FC<{ color: string; label: string }> = ({ color, label }) => (
   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
     <span
       style={{
@@ -100,11 +95,7 @@ const StatusIndicator: React.FC<{ color: string; label: string }> = ({
  * @param props 组件属性
  * @returns JSX 元素
  */
-const DebugInfoComponent = ({
-  ref,
-  outlineEnabled,
-  onToggleOutline,
-}: DebugInfoProps) => {
+const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoProps) => {
   // 调试信息状态，包含所有需要显示的调试数据
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
 
@@ -204,10 +195,7 @@ const DebugInfoComponent = ({
 
   if (!debugInfo) return null
 
-  const currentOutlineEnabled =
-    outlineEnabled !== undefined
-      ? outlineEnabled
-      : (debugInfo.tileOutlinesEnabled ?? false)
+  const currentOutlineEnabled = outlineEnabled !== undefined ? outlineEnabled : (debugInfo.tileOutlinesEnabled ?? false)
 
   return (
     <div
@@ -241,9 +229,7 @@ const DebugInfoComponent = ({
           borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
-        <span style={{ fontWeight: 'bold', fontSize: '12px' }}>
-          WebGL Debug
-        </span>
+        <span style={{ fontWeight: 'bold', fontSize: '12px' }}>WebGL Debug</span>
         <button
           type="button"
           style={{
@@ -273,9 +259,7 @@ const DebugInfoComponent = ({
                 <button
                   type="button"
                   style={{
-                    background: currentOutlineEnabled
-                      ? 'rgba(34, 197, 94, 0.25)'
-                      : 'rgba(148, 163, 184, 0.25)',
+                    background: currentOutlineEnabled ? 'rgba(34, 197, 94, 0.25)' : 'rgba(148, 163, 184, 0.25)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     color: 'white',
                     cursor: 'pointer',
@@ -304,10 +288,7 @@ const DebugInfoComponent = ({
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Quality:</span>
-              <StatusIndicator
-                color={getQualityColor(debugInfo.quality)}
-                label={debugInfo.quality}
-              />
+              <StatusIndicator color={getQualityColor(debugInfo.quality)} label={debugInfo.quality} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Status:</span>
@@ -327,8 +308,7 @@ const DebugInfoComponent = ({
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Position:</span>
               <span>
-                ({debugInfo.translateX.toFixed(0)},{' '}
-                {debugInfo.translateY.toFixed(0)})
+                ({debugInfo.translateX.toFixed(0)}, {debugInfo.translateY.toFixed(0)})
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -389,8 +369,7 @@ const DebugInfoComponent = ({
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Active LODs:</span>
               <span>
-                {debugInfo.memory.activeLODs} /{' '}
-                {debugInfo.memory.maxConcurrentLODs}
+                {debugInfo.memory.activeLODs} / {debugInfo.memory.maxConcurrentLODs}
               </span>
             </div>
           </CollapsibleSection>
@@ -404,10 +383,7 @@ const DebugInfoComponent = ({
         <div style={{ fontSize: '10px', opacity: 0.8 }}>
           <div>
             Scale: {debugInfo.scale.toFixed(2)} | LOD: {debugInfo.currentLOD} |{' '}
-            <StatusIndicator
-              color={getQualityColor(debugInfo.quality)}
-              label={debugInfo.quality}
-            />
+            <StatusIndicator color={getQualityColor(debugInfo.quality)} label={debugInfo.quality} />
           </div>
         </div>
       )}

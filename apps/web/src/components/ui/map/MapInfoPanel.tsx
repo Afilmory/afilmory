@@ -83,9 +83,7 @@ export const MapInfoPanel = ({ markersCount, bounds }: MapInfoPanelProps) => {
               {/* Section header */}
               <div className="mb-4 flex items-center gap-2.5">
                 <i className="i-mingcute-location-line text-text-secondary" />
-                <span className="text-text text-sm font-medium tracking-tight">
-                  {t('explory.shooting.range')}
-                </span>
+                <span className="text-text text-sm font-medium tracking-tight">{t('explory.shooting.range')}</span>
               </div>
 
               {/* Enhanced coordinate cards */}
@@ -99,15 +97,11 @@ export const MapInfoPanel = ({ markersCount, bounds }: MapInfoPanelProps) => {
                   <div className="space-y-1">
                     <div className="text-text flex items-center justify-between">
                       <span className="text-xs font-medium">Lat</span>
-                      <span className="font-mono text-sm tabular-nums">
-                        {bounds.minLat.toFixed(6)}°
-                      </span>
+                      <span className="font-mono text-sm tabular-nums">{bounds.minLat.toFixed(6)}°</span>
                     </div>
                     <div className="text-text flex items-center justify-between">
                       <span className="text-xs font-medium">Lng</span>
-                      <span className="font-mono text-sm tabular-nums">
-                        {bounds.minLng.toFixed(6)}°
-                      </span>
+                      <span className="font-mono text-sm tabular-nums">{bounds.minLng.toFixed(6)}°</span>
                     </div>
                   </div>
                 </div>
@@ -121,15 +115,11 @@ export const MapInfoPanel = ({ markersCount, bounds }: MapInfoPanelProps) => {
                   <div className="space-y-1">
                     <div className="text-text flex items-center justify-between">
                       <span className="text-xs font-medium">Lat</span>
-                      <span className="font-mono text-sm tabular-nums">
-                        {bounds.maxLat.toFixed(6)}°
-                      </span>
+                      <span className="font-mono text-sm tabular-nums">{bounds.maxLat.toFixed(6)}°</span>
                     </div>
                     <div className="text-text flex items-center justify-between">
                       <span className="text-xs font-medium">Lng</span>
-                      <span className="font-mono text-sm tabular-nums">
-                        {bounds.maxLng.toFixed(6)}°
-                      </span>
+                      <span className="font-mono text-sm tabular-nums">{bounds.maxLng.toFixed(6)}°</span>
                     </div>
                   </div>
                 </div>
@@ -141,12 +131,7 @@ export const MapInfoPanel = ({ markersCount, bounds }: MapInfoPanelProps) => {
                   <i className="i-mingcute-grid-line" />
                   <span className="font-medium">
                     Coverage: ~
-                    {Math.abs(
-                      (bounds.maxLat - bounds.minLat) *
-                        (bounds.maxLng - bounds.minLng) *
-                        111 *
-                        111,
-                    ).toFixed(1)}{' '}
+                    {Math.abs((bounds.maxLat - bounds.minLat) * (bounds.maxLng - bounds.minLng) * 111 * 111).toFixed(1)}{' '}
                     km²
                   </span>
                 </div>

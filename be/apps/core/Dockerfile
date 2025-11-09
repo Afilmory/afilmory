@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1.7
+
+ARG NODE_VERSION=22.11.0
+
+FROM node:${NODE_VERSION}-slim AS builder
+ENV PNPM_HOME=/pnpm
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@10.19.0 --activate
+
+WORKDIR /workspace
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY be/apps/core/package.json be/apps/core/package.json
+COPY be/apps/dashboard/package.json be/apps/dashboard/package.json
+COPY apps/web/package.json apps/web/package.json
+
+RUN pnpm fetch --filter core...
+RUN pnpm fetch --filter '@afilmory/web...'
+RUN pnpm fetch --filter '@afilmory/dashboard...'
+
+COPY . .
+
+RUN pnpm install --filter core... --filter '@afilmory/web...' --filter '@afilmory/dashboard...' --frozen-lockfile
+RUN pnpm --filter core build:web
+RUN pnpm --filter @afilmory/dashboard build
+RUN pnpm --filter core build
+RUN mkdir -p be/apps/core/dist/static/web && cp -r apps/web/dist/. be/apps/core/dist/static/web/
+RUN mkdir -p be/apps/core/dist/static/dashboard && cp -r be/apps/dashboard/dist/. be/apps/core/dist/static/dashboard/
+
+FROM node:${NODE_VERSION}-slim AS runner
+ENV NODE_ENV=production
+WORKDIR /app
+
+RUN apk install --no-cache perl
+COPY --from=builder /workspace/be/apps/core/dist ./dist
+COPY --from=builder /workspace/be/apps/core/drizzle ./drizzle
+
+RUN if [ -f dist/package.json ]; then \
+  cd dist && \
+  npm install --omit=dev --no-audit --no-fund; \
+  fi
+
+EXPOSE 1841
+
+CMD ["node", "./dist/main.js"]

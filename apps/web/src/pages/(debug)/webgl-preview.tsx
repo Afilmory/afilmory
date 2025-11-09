@@ -1,7 +1,7 @@
+import { Button } from '@afilmory/ui'
 import { WebGLImageViewer } from '@afilmory/webgl-viewer'
 import { useState } from 'react'
 
-import { Button } from '@afilmory/ui'
 import { useBlobUrl } from '~/lib/blob-url-manager'
 
 export const Component = () => {

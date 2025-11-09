@@ -65,12 +65,7 @@ interface NavigationItemProps {
   level?: number
 }
 
-function NavigationItemComponent({
-  item,
-  currentPath,
-  onNavigate,
-  level = 0,
-}: NavigationItemProps) {
+function NavigationItemComponent({ item, currentPath, onNavigate, level = 0 }: NavigationItemProps) {
   // 检查是否应该展开：当前路径是该项目的子路径，或者当前路径就是该项目且有子项目
   const shouldExpand = useCallback(() => {
     if (!currentPath) return false
@@ -83,11 +78,7 @@ function NavigationItemComponent({
     }
 
     // 如果当前路径就是该项目路径，且有子项目，也展开
-    if (
-      currentPath === item.path &&
-      item.children &&
-      item.children.length > 0
-    ) {
+    if (currentPath === item.path && item.children && item.children.length > 0) {
       return true
     }
 
@@ -95,9 +86,7 @@ function NavigationItemComponent({
   }, [currentPath, item.path, item.children])
 
   const [isExpanded, setIsExpanded] = useState(shouldExpand)
-  const isActive = currentPath
-    ? getMatchedRoute(currentPath)?.path === item.path
-    : false
+  const isActive = currentPath ? getMatchedRoute(currentPath)?.path === item.path : false
   const hasChildren = item.children && item.children.length > 0
 
   // 当 currentPath 改变时，重新计算是否应该展开
@@ -180,23 +169,14 @@ export function Sidebar({ currentPath, onNavigate }: SidebarProps) {
             className="h-14 w-14 rounded-t-lg"
           />
           <div className="ml-3 flex-1">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Afilmory
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Documentation
-            </p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Afilmory</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Documentation</p>
           </div>
         </div>
 
         <nav className="space-y-1">
           {navigationTree.map((item) => (
-            <NavigationItemComponent
-              key={item.path}
-              item={item}
-              currentPath={currentPath}
-              onNavigate={onNavigate}
-            />
+            <NavigationItemComponent key={item.path} item={item} currentPath={currentPath} onNavigate={onNavigate} />
           ))}
         </nav>
       </div>

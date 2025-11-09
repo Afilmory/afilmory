@@ -16,7 +16,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * A styled input component following the dashboard design language.
  *
  * Features:
- * - `rounded-lg` for approachable feel
+ * - `rounded` for subtle rounded corners
  * - Consistent padding and text styles
  * - Focus ring with accent color
  * - Error state support
@@ -40,7 +40,7 @@ export const Input = ({
   <input
     ref={ref}
     className={clsxm(
-      'w-full rounded-lg border border-fill-tertiary bg-background',
+      'w-full rounded border border-fill-tertiary bg-background',
       'px-3 py-2 text-sm text-text placeholder:text-text-tertiary/70',
       'focus:outline-none focus:ring-2 focus:ring-accent/40',
       'transition-all duration-200',

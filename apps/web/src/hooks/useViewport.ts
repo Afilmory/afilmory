@@ -6,9 +6,7 @@ import { shallow } from 'zustand/shallow'
 
 import { viewportAtom } from '../atoms/viewport'
 
-export const useViewport = <T>(
-  selector: (value: ExtractAtomValue<typeof viewportAtom>) => T,
-): T =>
+export const useViewport = <T>(selector: (value: ExtractAtomValue<typeof viewportAtom>) => T): T =>
   useAtomValue(
     selectAtom(
       viewportAtom,

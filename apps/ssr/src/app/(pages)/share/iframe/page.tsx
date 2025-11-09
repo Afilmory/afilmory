@@ -6,9 +6,7 @@ import { photoLoader } from '~/lib/photo-loader'
 import { MasonryGallery } from './MasonryGallery'
 import { PhotoItem } from './PhotoItem'
 
-export default async function Page({
-  searchParams,
-}: NextPageExtractedParams<unknown>) {
+export default async function Page({ searchParams }: NextPageExtractedParams<unknown>) {
   const { id } = await searchParams
 
   let photos: PhotoManifestItem[] = []
@@ -28,12 +26,7 @@ export default async function Page({
   }
 
   if (photos.length === 1) {
-    return (
-      <PhotoItem
-        photo={photos[0]}
-        className="absolute inset-0 size-full !pt-0"
-      />
-    )
+    return <PhotoItem photo={photos[0]} className="absolute inset-0 size-full !pt-0" />
   }
 
   return (

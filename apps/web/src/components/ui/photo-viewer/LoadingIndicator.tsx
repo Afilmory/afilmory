@@ -45,14 +45,9 @@ const initialLoadingState: LoadingState = {
   errorMessage: undefined,
 }
 
-export const LoadingIndicator = ({
-  ref,
-}: {
-  ref?: React.Ref<LoadingIndicatorRef | null>
-}) => {
+export const LoadingIndicator = ({ ref }: { ref?: React.Ref<LoadingIndicatorRef | null> }) => {
   const { t } = useTranslation()
-  const [loadingState, setLoadingState] =
-    useState<LoadingState>(initialLoadingState)
+  const [loadingState, setLoadingState] = useState<LoadingState>(initialLoadingState)
 
   useImperativeHandle(
     ref,
@@ -110,9 +105,7 @@ export const LoadingIndicator = ({
             // WebGL 加载状态
             <>
               <div className="flex items-center gap-2">
-                <p className="text-xs font-medium text-white">
-                  {loadingState.webglMessage || t('loading.webgl.main')}
-                </p>
+                <p className="text-xs font-medium text-white">{loadingState.webglMessage || t('loading.webgl.main')}</p>
                 {loadingState.webglQuality !== 'unknown' && (
                   <span
                     className="text-xs tabular-nums"
@@ -131,22 +124,16 @@ export const LoadingIndicator = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-white/70">
-                {t('loading.webgl.building')}
-              </p>
+              <p className="text-xs text-white/70">{t('loading.webgl.building')}</p>
             </>
           ) : (
             // 图片加载状态
             <>
               <div className="flex items-center gap-2">
                 <p className="text-xs font-medium text-white">
-                  {loadingState.isHeicFormat
-                    ? t('loading.heic.main')
-                    : t('loading.default')}
+                  {loadingState.isHeicFormat ? t('loading.heic.main') : t('loading.default')}
                 </p>
-                <span className="text-xs text-white/60 tabular-nums">
-                  {Math.round(loadingState.loadingProgress)}%
-                </span>
+                <span className="text-xs text-white/60 tabular-nums">{Math.round(loadingState.loadingProgress)}%</span>
               </div>
               {loadingState.totalBytes > 0 && (
                 <p className="text-xs text-white/70 tabular-nums">

@@ -2,6 +2,68 @@ import { z } from 'zod'
 
 import type { SettingDefinition, SettingMetadata } from './setting.type'
 
+const HEX_COLOR_REGEX = /^#(?:[0-9a-f]{3}){1,2}$/i
+
+function createOptionalUrlSchema(errorMessage: string) {
+  return z
+    .string()
+    .trim()
+    .superRefine((value, ctx) => {
+      if (value.length === 0) {
+        return
+      }
+
+      try {
+        new URL(value)
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: errorMessage,
+        })
+      }
+    })
+}
+
+function createJsonStringArraySchema(options: {
+  allowEmpty?: boolean
+  validator?: (value: unknown) => boolean
+  errorMessage: string
+}) {
+  return z.string().transform((value, ctx) => {
+    const normalized = value.trim()
+
+    if (normalized.length === 0) {
+      if (options.allowEmpty) {
+        return '[]'
+      }
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: options.errorMessage,
+      })
+      return z.NEVER
+    }
+
+    try {
+      const parsed = JSON.parse(normalized)
+      if (!Array.isArray(parsed) || (options.validator && !parsed.every(options.validator))) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: options.errorMessage,
+        })
+        return z.NEVER
+      }
+      return JSON.stringify(parsed)
+    } catch {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: options.errorMessage,
+      })
+      return z.NEVER
+    }
+  })
+}
+
 export const DEFAULT_SETTING_DEFINITIONS = {
   // 'ai.openai.apiKey': {
   //   isSensitive: true,
@@ -15,59 +77,131 @@ export const DEFAULT_SETTING_DEFINITIONS = {
   //   isSensitive: false,
   //   schema: z.string().min(1, 'AI Model name cannot be empty'),
   // },
-  'auth.google.clientId': {
-    isSensitive: false,
-    schema: z.string().min(1, 'Google Client ID cannot be empty'),
-  },
-  'auth.google.clientSecret': {
-    isSensitive: true,
-    schema: z.string().min(1, 'Google Client secret cannot be empty'),
-  },
-  'auth.github.clientId': {
-    isSensitive: false,
-    schema: z.string().min(1, 'GitHub Client ID cannot be empty'),
-  },
-  'auth.github.clientSecret': {
-    isSensitive: true,
-    schema: z.string().min(1, 'GitHub Client secret cannot be empty'),
-  },
   'builder.storage.providers': {
     isSensitive: false,
-    schema: z.string().transform((value, ctx) => {
-      const normalized = value.trim()
-      if (normalized.length === 0) {
-        return '[]'
-      }
-
-      try {
-        const parsed = JSON.parse(normalized)
-        if (!Array.isArray(parsed)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Builder storage providers must be a JSON array',
-          })
-          return z.NEVER
-        }
-        return JSON.stringify(parsed)
-      } catch {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Builder storage providers must be valid JSON',
-        })
-        return z.NEVER
-      }
+    schema: createJsonStringArraySchema({
+      allowEmpty: true,
+      errorMessage: 'Builder storage providers must be a JSON array',
     }),
   },
   'builder.storage.activeProvider': {
     isSensitive: false,
     schema: z.string().transform((value) => value.trim()),
   },
-  'http.cors.allowedOrigins': {
+  'site.name': {
+    isSensitive: false,
+    schema: z.string().trim().min(1, 'Site name cannot be empty'),
+  },
+  'site.title': {
+    isSensitive: false,
+    schema: z.string().trim().min(1, 'Site title cannot be empty'),
+  },
+  'site.description': {
+    isSensitive: false,
+    schema: z.string().trim().min(1, 'Site description cannot be empty'),
+  },
+  'site.url': {
+    isSensitive: false,
+    schema: z.string().trim().url('Site URL must be a valid URL'),
+  },
+  'site.accentColor': {
     isSensitive: false,
     schema: z
       .string()
-      .min(1, 'CORS allowed origins cannot be empty')
-      .transform((value) => value.trim()),
+      .trim()
+      .superRefine((value, ctx) => {
+        if (value.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Accent color cannot be empty',
+          })
+          return
+        }
+
+        if (!HEX_COLOR_REGEX.test(value)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Accent color must be a valid hex color',
+          })
+        }
+      }),
+  },
+  'site.author.name': {
+    isSensitive: false,
+    schema: z.string().trim().min(1, 'Author name cannot be empty'),
+  },
+  'site.author.url': {
+    isSensitive: false,
+    schema: z.url('Author URL must be a valid URL'),
+  },
+  'site.author.avatar': {
+    isSensitive: false,
+    schema: createOptionalUrlSchema('Author avatar must be a valid URL'),
+  },
+  'site.social.twitter': {
+    isSensitive: false,
+    schema: z.string().trim(),
+  },
+  'site.social.github': {
+    isSensitive: false,
+    schema: z.string().trim(),
+  },
+  'site.social.rss': {
+    isSensitive: false,
+    schema: z
+      .string()
+      .trim()
+      .transform((value) => value.toLowerCase())
+      .superRefine((value, ctx) => {
+        if (value.length === 0) {
+          return
+        }
+
+        if (value !== 'true' && value !== 'false') {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'RSS toggle must be either "true" or "false"',
+          })
+        }
+      }),
+  },
+  'site.feed.folo.challenge.feedId': {
+    isSensitive: false,
+    schema: z.string().trim(),
+  },
+  'site.feed.folo.challenge.userId': {
+    isSensitive: false,
+    schema: z.string().trim(),
+  },
+  'site.map.providers': {
+    isSensitive: false,
+    schema: createJsonStringArraySchema({
+      allowEmpty: true,
+      errorMessage: 'Map providers must be a JSON array of provider identifiers',
+      validator: (value): value is string => typeof value === 'string',
+    }),
+  },
+  'site.mapStyle': {
+    isSensitive: false,
+    schema: z.string().trim(),
+  },
+  'site.mapProjection': {
+    isSensitive: false,
+    schema: z
+      .string()
+      .trim()
+      .superRefine((value, ctx) => {
+        if (value.length === 0) {
+          return
+        }
+
+        if (value !== 'globe' && value !== 'mercator') {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Map projection must be either globe or mercator',
+          })
+        }
+      }),
   },
 } as const satisfies Record<string, SettingDefinition>
 

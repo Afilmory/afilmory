@@ -1,0 +1,1 @@
+ALTER TABLE "tenant" DROP COLUMN IF EXISTS "is_primary";

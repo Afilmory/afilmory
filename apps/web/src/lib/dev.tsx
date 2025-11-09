@@ -22,10 +22,7 @@ export const attachOpenInEditor = (stack: string) => {
           <div
             className="cursor-pointer"
             key={line}
-            onClick={openInEditor.bind(
-              null,
-              realFsPath.replace(/\?v=[a-f0-9]+/, ''),
-            )}
+            onClick={openInEditor.bind(null, realFsPath.replace(/\?v=[a-f0-9]+/, ''))}
           >
             {line}
           </div>
@@ -38,11 +35,7 @@ export const attachOpenInEditor = (stack: string) => {
           const fs = srcFsPath.replace(/\?t=[a-f0-9]+/, '')
 
           return (
-            <div
-              className="cursor-pointer"
-              key={line}
-              onClick={openInEditor.bind(null, `${APP_DEV_CWD}/src${fs}`)}
-            >
+            <div className="cursor-pointer" key={line} onClick={openInEditor.bind(null, `${APP_DEV_CWD}/src${fs}`)}>
               {line}
             </div>
           )

@@ -45,9 +45,7 @@ export interface WebGLImageViewerRef {
 }
 
 export interface DOMImageViewerProps {
-  ref?: React.RefObject<
-    import('react-zoom-pan-pinch').ReactZoomPanPinchRef | null
-  >
+  ref?: React.RefObject<import('react-zoom-pan-pinch').ReactZoomPanPinchRef | null>
   onZoomChange?: (isZoomed: boolean, scale: number) => any
   minZoom: number
   maxZoom: number

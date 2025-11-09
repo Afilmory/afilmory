@@ -67,13 +67,9 @@ export function createLivePhotoMap(objects: _Object[]): Map<string, _Object>
  * @param objects 存储对象列表
  * @returns Live Photo 映射表
  */
-export function createLivePhotoMap(
-  objects: StorageObject[],
-): Map<string, StorageObject>
+export function createLivePhotoMap(objects: StorageObject[]): Map<string, StorageObject>
 
-export function createLivePhotoMap(
-  objects: _Object[] | StorageObject[],
-): Map<string, _Object | StorageObject> {
+export function createLivePhotoMap(objects: _Object[] | StorageObject[]): Map<string, _Object | StorageObject> {
   const livePhotoMap = new Map<string, _Object | StorageObject>()
 
   // 分离照片和视频文件

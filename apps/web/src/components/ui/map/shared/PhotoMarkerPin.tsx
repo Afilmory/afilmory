@@ -1,22 +1,11 @@
-import {
-  GlassButton,
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-  LazyImage,
-} from '@afilmory/ui'
+import { GlassButton, HoverCard, HoverCardContent, HoverCardTrigger, LazyImage } from '@afilmory/ui'
 import { m } from 'motion/react'
 import { Marker } from 'react-map-gl/maplibre'
 import { Link } from 'react-router'
 
 import type { PhotoMarkerPinProps } from './types'
 
-export const PhotoMarkerPin = ({
-  marker,
-  isSelected = false,
-  onClick,
-  onClose,
-}: PhotoMarkerPinProps) => {
+export const PhotoMarkerPin = ({ marker, isSelected = false, onClick, onClose }: PhotoMarkerPinProps) => {
   const handleClick = () => {
     onClick?.(marker)
   }
@@ -27,11 +16,7 @@ export const PhotoMarkerPin = ({
   }
 
   return (
-    <Marker
-      key={marker.id}
-      longitude={marker.longitude}
-      latitude={marker.latitude}
-    >
+    <Marker key={marker.id} longitude={marker.longitude} latitude={marker.latitude}>
       <HoverCard
         open={isSelected ? true : undefined} // 当选中时强制打开
         openDelay={isSelected ? 0 : 400} // 选中时立即打开
@@ -52,9 +37,7 @@ export const PhotoMarkerPin = ({
             onClick={handleClick}
           >
             {/* Selection ring - 只有选中时显示 */}
-            {isSelected && (
-              <div className="bg-blue/30 absolute inset-0 -m-2 animate-pulse rounded-full" />
-            )}
+            {isSelected && <div className="bg-blue/30 absolute inset-0 -m-2 animate-pulse rounded-full" />}
 
             {/* Photo background preview */}
             <div className="absolute inset-0 overflow-hidden rounded-full">
@@ -102,18 +85,13 @@ export const PhotoMarkerPin = ({
           align="center"
           sideOffset={8}
           // 当选中时阻止点击外部关闭
-          onPointerDownOutside={
-            isSelected ? (e) => e.preventDefault() : undefined
-          }
+          onPointerDownOutside={isSelected ? (e) => e.preventDefault() : undefined}
           onEscapeKeyDown={isSelected ? (e) => e.preventDefault() : undefined}
         >
           <div className="relative">
             {/* 选中时显示关闭按钮 */}
             {isSelected && (
-              <GlassButton
-                className="absolute top-3 right-3 z-10 size-8"
-                onClick={handleClose}
-              >
+              <GlassButton className="absolute top-3 right-3 z-10 size-8" onClick={handleClose}>
                 <i className="i-mingcute-close-line text-lg" />
               </GlassButton>
             )}
@@ -155,9 +133,7 @@ export const PhotoMarkerPin = ({
                   <div className="text-text-secondary flex items-center gap-2 text-xs">
                     <i className="i-mingcute-calendar-line text-sm" />
                     <span>
-                      {new Date(
-                        marker.photo.exif.DateTimeOriginal,
-                      ).toLocaleDateString('zh-CN', {
+                      {new Date(marker.photo.exif.DateTimeOriginal).toLocaleDateString('zh-CN', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
@@ -190,9 +166,7 @@ export const PhotoMarkerPin = ({
                     <div className="flex items-center gap-2">
                       <i className="i-mingcute-mountain-2-line text-sm" />
                       <span className="font-mono">
-                        <span>
-                          {marker.altitudeRef === 'Below Sea Level' ? '-' : ''}
-                        </span>
+                        <span>{marker.altitudeRef === 'Below Sea Level' ? '-' : ''}</span>
                         <span>{Math.abs(marker.altitude).toFixed(1)}m</span>
                       </span>
                     </div>

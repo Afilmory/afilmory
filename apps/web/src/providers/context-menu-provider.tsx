@@ -1,11 +1,3 @@
-import { Fragment, memo, useCallback, useEffect, useRef } from 'react'
-
-import type { FollowMenuItem } from '~/atoms/context-menu'
-import {
-  MenuItemSeparator,
-  MenuItemType,
-  useContextMenuState,
-} from '~/atoms/context-menu'
 import {
   ContextMenu,
   ContextMenuCheckboxItem,
@@ -19,6 +11,10 @@ import {
   ContextMenuTrigger,
 } from '@afilmory/ui'
 import { clsxm as cn } from '@afilmory/utils'
+import { Fragment, memo, useCallback, useEffect, useRef } from 'react'
+
+import type { FollowMenuItem } from '~/atoms/context-menu'
+import { MenuItemSeparator, MenuItemType, useContextMenuState } from '~/atoms/context-menu'
 import { nextFrame, preventDefault } from '~/lib/dom'
 
 export const ContextMenuProvider: Component = ({ children }) => (
@@ -65,10 +61,7 @@ const Handler = () => {
         {contextMenuState.open &&
           contextMenuState.menuItems.map((item, index) => {
             const prevItem = contextMenuState.menuItems[index - 1]
-            if (
-              prevItem instanceof MenuItemSeparator &&
-              item instanceof MenuItemSeparator
-            ) {
+            if (prevItem instanceof MenuItemSeparator && item instanceof MenuItemSeparator) {
               return null
             }
 
@@ -117,18 +110,12 @@ const Item = memo(({ item }: { item: FollowMenuItem }) => {
         <Sub>
           <Wrapper
             ref={itemRef}
-            disabled={
-              item.disabled || (item.click === undefined && !hasSubmenu)
-            }
+            disabled={item.disabled || (item.click === undefined && !hasSubmenu)}
             onClick={onClick}
             className="flex items-center gap-2"
             checked={item.checked}
           >
-            {!!item.icon && (
-              <span className="absolute left-2 flex items-center justify-center">
-                {item.icon}
-              </span>
-            )}
+            {!!item.icon && <span className="absolute left-2 flex items-center justify-center">{item.icon}</span>}
             <span className={cn(item.icon && 'pl-6')}>{item.label}</span>
           </Wrapper>
           {hasSubmenu && (

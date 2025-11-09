@@ -22,12 +22,7 @@
       "type": "fill",
       "source": "carto",
       "source-layer": "landcover",
-      "filter": [
-        "any",
-        ["==", "class", "wood"],
-        ["==", "class", "grass"],
-        ["==", "subclass", "recreation_ground"]
-      ],
+      "filter": ["any", ["==", "class", "wood"], ["==", "class", "grass"], ["==", "subclass", "recreation_ground"]],
       "paint": {
         "fill-color": {
           "stops": [
@@ -442,12 +437,7 @@
       "source-layer": "transportation",
       "minzoom": 5,
       "maxzoom": 24,
-      "filter": [
-        "all",
-        ["==", "class", "motorway"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "tunnel"]
-      ],
+      "filter": ["all", ["==", "class", "motorway"], ["!=", "ramp", 1], ["==", "brunnel", "tunnel"]],
       "layout": { "line-cap": "butt", "line-join": "round" },
       "paint": {
         "line-width": {
@@ -631,12 +621,7 @@
       "source-layer": "transportation",
       "minzoom": 10,
       "maxzoom": 24,
-      "filter": [
-        "all",
-        ["==", "class", "motorway"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "tunnel"]
-      ],
+      "filter": ["all", ["==", "class", "motorway"], ["!=", "ramp", 1], ["==", "brunnel", "tunnel"]],
       "layout": { "line-cap": "butt", "line-join": "round" },
       "paint": {
         "line-width": {
@@ -1456,12 +1441,7 @@
       "source-layer": "transportation",
       "minzoom": 5,
       "maxzoom": 24,
-      "filter": [
-        "all",
-        ["==", "class", "motorway"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
+      "filter": ["all", ["==", "class", "motorway"], ["!=", "ramp", 1], ["==", "brunnel", "bridge"]],
       "layout": { "line-cap": "butt", "line-join": "round" },
       "paint": {
         "line-width": {
@@ -1650,12 +1630,7 @@
       "source-layer": "transportation",
       "minzoom": 10,
       "maxzoom": 24,
-      "filter": [
-        "all",
-        ["==", "class", "motorway"],
-        ["!=", "ramp", 1],
-        ["==", "brunnel", "bridge"]
-      ],
+      "filter": ["all", ["==", "class", "motorway"], ["!=", "ramp", 1], ["==", "brunnel", "bridge"]],
       "layout": { "line-cap": "butt", "line-join": "round" },
       "paint": {
         "line-width": {

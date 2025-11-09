@@ -1,13 +1,7 @@
-import { m, useAnimationControls } from 'motion/react'
-import {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react'
-
 import { clsxm } from '@afilmory/utils'
+import { m, useAnimationControls } from 'motion/react'
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+
 import type { ImageLoaderManager } from '~/lib/image-loader-manager'
 
 import type { LoadingIndicatorRef } from './LoadingIndicator'
@@ -59,26 +53,17 @@ export const LivePhotoVideo = ({
   }, [isPlayingLivePhoto, onPlayingChange])
 
   useEffect(() => {
-    if (
-      !isCurrentImage ||
-      livePhotoVideoLoaded ||
-      isConvertingVideo ||
-      !videoRef.current
-    ) {
+    if (!isCurrentImage || livePhotoVideoLoaded || isConvertingVideo || !videoRef.current) {
       return
     }
     setIsConvertingVideo(true)
     const processVideo = async () => {
       try {
-        await imageLoaderManager.processLivePhotoVideo(
-          videoUrl,
-          videoRef.current!,
-          {
-            onLoadingStateUpdate: (state) => {
-              loadingIndicatorRef.current?.updateLoadingState(state)
-            },
+        await imageLoaderManager.processLivePhotoVideo(videoUrl, videoRef.current!, {
+          onLoadingStateUpdate: (state) => {
+            loadingIndicatorRef.current?.updateLoadingState(state)
           },
-        )
+        })
 
         setLivePhotoVideoLoaded(true)
       } catch (videoError) {
@@ -88,14 +73,7 @@ export const LivePhotoVideo = ({
       }
     }
     processVideo()
-  }, [
-    isCurrentImage,
-    livePhotoVideoLoaded,
-    isConvertingVideo,
-    videoUrl,
-    imageLoaderManager,
-    loadingIndicatorRef,
-  ])
+  }, [isCurrentImage, livePhotoVideoLoaded, isConvertingVideo, videoUrl, imageLoaderManager, loadingIndicatorRef])
 
   useEffect(() => {
     if (!isCurrentImage) {
@@ -122,12 +100,7 @@ export const LivePhotoVideo = ({
         video.play()
       }
     }, 0)
-  }, [
-    livePhotoVideoLoaded,
-    isPlayingLivePhoto,
-    isConvertingVideo,
-    videoAnimateController,
-  ])
+  }, [livePhotoVideoLoaded, isPlayingLivePhoto, isConvertingVideo, videoAnimateController])
 
   const stop = useCallback(async () => {
     if (!isPlayingLivePhoto) return
@@ -156,14 +129,7 @@ export const LivePhotoVideo = ({
       hasAutoPlayedRef.current = true
       play()
     }
-  }, [
-    shouldAutoPlayOnce,
-    isCurrentImage,
-    livePhotoVideoLoaded,
-    isPlayingLivePhoto,
-    isConvertingVideo,
-    play,
-  ])
+  }, [shouldAutoPlayOnce, isCurrentImage, livePhotoVideoLoaded, isPlayingLivePhoto, isConvertingVideo, play])
 
   useImperativeHandle(ref, () => ({
     play,
@@ -178,10 +144,7 @@ export const LivePhotoVideo = ({
   return (
     <m.video
       ref={videoRef}
-      className={clsxm(
-        'pointer-events-none absolute inset-0 z-10 h-full w-full object-contain',
-        className,
-      )}
+      className={clsxm('pointer-events-none absolute inset-0 z-10 h-full w-full object-contain', className)}
       style={{
         opacity: isPlayingLivePhoto ? 1 : 0,
         transition: 'opacity 0.2s ease-in-out',

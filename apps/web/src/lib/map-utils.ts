@@ -1,11 +1,6 @@
 import type { PhotoManifestItem, PickedExif } from '@afilmory/builder'
 
-import type {
-  GPSCoordinates,
-  MapBounds,
-  MapViewState,
-  PhotoMarker,
-} from '~/types/map'
+import type { GPSCoordinates, MapBounds, MapViewState, PhotoMarker } from '~/types/map'
 import { GPSDirection } from '~/types/map'
 
 /**
@@ -43,14 +38,10 @@ export function convertExifGPSToDecimal(exif: PickedExif | null): {
 
     // Get GPS direction references
     const latitudeRef =
-      exif.GPSLatitudeRef === 'S' || exif.GPSLatitudeRef === 'South'
-        ? GPSDirection.South
-        : GPSDirection.North
+      exif.GPSLatitudeRef === 'S' || exif.GPSLatitudeRef === 'South' ? GPSDirection.South : GPSDirection.North
 
     const longitudeRef =
-      exif.GPSLongitudeRef === 'W' || exif.GPSLongitudeRef === 'West'
-        ? GPSDirection.West
-        : GPSDirection.East
+      exif.GPSLongitudeRef === 'W' || exif.GPSLongitudeRef === 'West' ? GPSDirection.West : GPSDirection.East
 
     // Apply reference direction to coordinates only if they're positive
     // Some EXIF tools already provide properly signed coordinates
@@ -68,10 +59,7 @@ export function convertExifGPSToDecimal(exif: PickedExif | null): {
 
     if (exif.GPSAltitude && typeof exif.GPSAltitude === 'number') {
       altitude = exif.GPSAltitude
-      altitudeRef =
-        exif.GPSAltitudeRef === 'Below Sea Level'
-          ? 'Below Sea Level'
-          : 'Above Sea Level'
+      altitudeRef = exif.GPSAltitudeRef === 'Below Sea Level' ? 'Below Sea Level' : 'Above Sea Level'
 
       // Apply altitude reference
       if (altitudeRef === 'Below Sea Level') {
@@ -102,9 +90,7 @@ export function convertExifGPSToDecimal(exif: PickedExif | null): {
 /**
  * GPS coordinate validation function
  */
-export function isValidGPSCoordinates(
-  coords: GPSCoordinates | null,
-): coords is GPSCoordinates {
+export function isValidGPSCoordinates(coords: GPSCoordinates | null): coords is GPSCoordinates {
   if (!coords) return false
 
   const { latitude, longitude } = coords
@@ -124,9 +110,7 @@ export function isValidGPSCoordinates(
 /**
  * Convert PhotoManifestItem to PhotoMarker if it has GPS coordinates in EXIF
  */
-export function convertPhotoToMarkerFromEXIF(
-  photo: PhotoManifestItem,
-): PhotoMarker | null {
+export function convertPhotoToMarkerFromEXIF(photo: PhotoManifestItem): PhotoMarker | null {
   const { exif } = photo
 
   if (!exif) {
@@ -139,14 +123,7 @@ export function convertPhotoToMarkerFromEXIF(
     return null
   }
 
-  const {
-    latitude,
-    longitude,
-    latitudeRef,
-    longitudeRef,
-    altitude,
-    altitudeRef,
-  } = gpsData
+  const { latitude, longitude, latitudeRef, longitudeRef, altitude, altitudeRef } = gpsData
 
   return {
     id: photo.id,
@@ -163,9 +140,7 @@ export function convertPhotoToMarkerFromEXIF(
 /**
  * Convert array of PhotoManifestItem to PhotoMarker array using EXIF data
  */
-export function convertPhotosToMarkersFromEXIF(
-  photos: PhotoManifestItem[],
-): PhotoMarker[] {
+export function convertPhotosToMarkersFromEXIF(photos: PhotoManifestItem[]): PhotoMarker[] {
   return photos
     .map((photo) => convertPhotoToMarkerFromEXIF(photo))
     .filter((marker): marker is PhotoMarker => marker !== null)
@@ -204,9 +179,7 @@ export function calculateMapBounds(markers: PhotoMarker[]): MapBounds | null {
 /**
  * Get initial view state that fits all markers
  */
-export function getInitialViewStateForMarkers(
-  markers: PhotoMarker[],
-): MapViewState {
+export function getInitialViewStateForMarkers(markers: PhotoMarker[]): MapViewState {
   const bounds = calculateMapBounds(markers)
 
   if (!bounds) {

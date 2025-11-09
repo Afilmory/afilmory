@@ -11,16 +11,12 @@ export function localesPlugin(): Plugin {
     name: 'locales-merge',
     enforce: 'post',
     generateBundle(_options, bundle) {
-      const namespaces = fs
-        .readdirSync(MONOREPO_ROOT_PATH)
-        .filter((dir) => dir !== '.DS_Store')
+      const namespaces = fs.readdirSync(MONOREPO_ROOT_PATH).filter((dir) => dir !== '.DS_Store')
       const languageResources = {} as any
 
       namespaces.forEach((namespace) => {
         const namespacePath = path.join(MONOREPO_ROOT_PATH, namespace)
-        const files = fs
-          .readdirSync(namespacePath)
-          .filter((file) => file.endsWith('.json'))
+        const files = fs.readdirSync(namespacePath).filter((file) => file.endsWith('.json'))
 
         files.forEach((file) => {
           const lang = path.basename(file, '.json')

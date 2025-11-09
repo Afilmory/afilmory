@@ -20,12 +20,6 @@ export function useSwitch(): SwitchContextType {
   return ctx
 }
 
-export function SwitchProvider({
-  value,
-  children,
-}: {
-  value: SwitchContextType
-  children: React.ReactNode
-}) {
+export function SwitchProvider({ value, children }: { value: SwitchContextType; children: React.ReactNode }) {
   return <SwitchContext value={value}>{children}</SwitchContext>
 }

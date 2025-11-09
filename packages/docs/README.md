@@ -33,6 +33,7 @@ pnpm build
 ```
 
 This runs three steps:
+
 1. `build:client` - Builds the client-side React application
 2. `build:static` - Generates static HTML files via SSR
 3. `output` - Processes and finalizes the build output
@@ -79,7 +80,7 @@ The documentation follows a file-system based routing convention:
 
 You can use standard Markdown with JSX components:
 
-```mdx
+````mdx
 ---
 title: Page Title
 createdAt: 2025-01-20T10:00:00Z
@@ -90,16 +91,16 @@ lastModified: 2025-01-20T10:00:00Z
 
 Regular markdown content here.
 
-<div className="bg-blue-100 p-4 rounded">
-  Custom JSX component
-</div>
+<div className="bg-blue-100 p-4 rounded">Custom JSX component</div>
 
 ## Code Examples
 
 ```typescript
-const example = "syntax highlighted code";
+const example = 'syntax highlighted code'
 ```
-```
+````
+
+````
 
 ### Frontmatter
 
@@ -112,7 +113,7 @@ createdAt: 2025-01-20     # Creation date
 lastModified: 2025-01-20  # Last modification date
 description: Page description  # Optional page description
 ---
-```
+````
 
 ## Development Guide
 
@@ -140,22 +141,23 @@ export function InfoBox({ children }: { children: React.ReactNode }) {
 
 ```mdx
 <!-- In your MDX file -->
-import { InfoBox } from '../src/components/InfoBox';
 
-<InfoBox>
-  This is a custom info box component.
-</InfoBox>
+import { InfoBox } from '../src/components/InfoBox'
+
+<InfoBox>This is a custom info box component.</InfoBox>
 ```
 
 ### Styling
 
 The project uses:
+
 - **Tailwind CSS** for utility-first styling
 - **Apple UIKit colors** via `tailwindcss-uikit-colors`
 - **Typography plugin** for prose styling
 - **Custom scrollbar** styling
 
 Use semantic color classes:
+
 ```css
 /* Preferred */
 .text-text-primary .bg-fill-secondary
@@ -188,6 +190,7 @@ Key configuration in `vite.config.ts`:
 ### Supported Languages
 
 Code highlighting supports:
+
 - JavaScript/TypeScript
 - JSX/TSX
 - MDX

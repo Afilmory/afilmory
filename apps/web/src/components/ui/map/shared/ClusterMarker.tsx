@@ -1,8 +1,6 @@
+import { HoverCard, HoverCardContent, HoverCardTrigger, LazyImage } from '@afilmory/ui'
 import { m } from 'motion/react'
 import { Marker } from 'react-map-gl/maplibre'
-
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@afilmory/ui'
-import { LazyImage } from '@afilmory/ui'
 
 import { ClusterPhotoGrid } from '../ClusterPhotoGrid'
 import type { ClusterMarkerProps } from './types'
@@ -67,16 +65,9 @@ export const ClusterMarker = ({
                     const position = positions[index]
 
                     return (
-                      <div
-                        key={photoMarker.photo.id}
-                        className="absolute opacity-30"
-                        style={position}
-                      >
+                      <div key={photoMarker.photo.id} className="absolute opacity-30" style={position}>
                         <LazyImage
-                          src={
-                            photoMarker.photo.thumbnailUrl ||
-                            photoMarker.photo.originalUrl
-                          }
+                          src={photoMarker.photo.thumbnailUrl || photoMarker.photo.originalUrl}
                           alt={photoMarker.photo.title || photoMarker.photo.id}
                           thumbHash={photoMarker.photo.thumbHash}
                           className="h-full w-full object-cover"

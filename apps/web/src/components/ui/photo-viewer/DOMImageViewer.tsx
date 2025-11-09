@@ -1,12 +1,8 @@
+import { clsxm } from '@afilmory/utils'
 import type { FC } from 'react'
 import { useCallback, useEffect, useRef } from 'react'
-import type {
-  ReactZoomPanPinchRef,
-  ReactZoomPanPinchState,
-} from 'react-zoom-pan-pinch'
+import type { ReactZoomPanPinchRef, ReactZoomPanPinchState } from 'react-zoom-pan-pinch'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
-
-import { clsxm } from '@afilmory/utils'
 
 import type { DOMImageViewerProps } from './types'
 
@@ -27,10 +23,7 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
 
   // 监听缩放变化
   const onTransformed = useCallback(
-    (
-      transformRef: ReactZoomPanPinchRef,
-      state: Omit<ReactZoomPanPinchState, 'previousScale'>,
-    ) => {
+    (transformRef: ReactZoomPanPinchRef, state: Omit<ReactZoomPanPinchState, 'previousScale'>) => {
       // 计算实际缩放倍率（相对于原图尺寸）
       const { instance } = transformRef
       const wrapper = instance.wrapperComponent
@@ -38,10 +31,7 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
       if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
         const containerWidth = wrapper?.clientWidth || 1
         const containerHeight = wrapper?.clientHeight || 1
-        const fit = Math.min(
-          containerWidth / img.naturalWidth,
-          containerHeight / img.naturalHeight,
-        )
+        const fit = Math.min(containerWidth / img.naturalWidth, containerHeight / img.naturalHeight)
         const actualScale = state.scale * fit
         const isZoomed = Math.abs(actualScale - fit) > 0.01
         onZoomChange?.(isZoomed, actualScale)
@@ -74,10 +64,7 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
       const pointerY = event.clientY - containerRect.top
       const containerWidth = wrapper.clientWidth || 1
       const containerHeight = wrapper.clientHeight || 1
-      const fit = Math.min(
-        containerWidth / img.naturalWidth,
-        containerHeight / img.naturalHeight,
-      )
+      const fit = Math.min(containerWidth / img.naturalWidth, containerHeight / img.naturalHeight)
       const scale0 = instance.transformState.scale
       const x0 = instance.transformState.positionX
       const y0 = instance.transformState.positionY
@@ -99,10 +86,7 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
   )
 
   return (
-    <div
-      className="absolute inset-0 h-full w-full"
-      onDoubleClick={handleDoubleClick}
-    >
+    <div className="absolute inset-0 h-full w-full" onDoubleClick={handleDoubleClick}>
       <TransformWrapper
         ref={activeRef}
         initialScale={1}

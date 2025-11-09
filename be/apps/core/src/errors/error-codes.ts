@@ -5,15 +5,23 @@ export enum ErrorCode {
   COMMON_NOT_FOUND = 3,
   COMMON_CONFLICT = 4,
   COMMON_RATE_LIMITED = 5,
+  COMMON_INTERNAL_SERVER_ERROR = 6,
 
   // Auth
   AUTH_UNAUTHORIZED = 10,
   AUTH_FORBIDDEN = 11,
+  AUTH_TENANT_NOT_FOUND = 12,
+  AUTH_TENANT_NOT_FOUND_GUARD = 13,
 
   // Tenant
   TENANT_NOT_FOUND = 20,
   TENANT_SUSPENDED = 21,
   TENANT_INACTIVE = 22,
+  TENANT_SLUG_RESERVED = 23,
+
+  // Image Processing
+  IMAGE_PROCESSING_FAILED = 30,
+  PHOTO_MANIFEST_GENERATION_FAILED = 31,
 }
 
 export interface ErrorDescriptor {
@@ -42,6 +50,10 @@ export const ERROR_CODE_DESCRIPTORS: Record<ErrorCode, ErrorDescriptor> = {
     httpStatus: 429,
     message: 'Too many requests',
   },
+  [ErrorCode.COMMON_INTERNAL_SERVER_ERROR]: {
+    httpStatus: 500,
+    message: 'Internal server error',
+  },
   [ErrorCode.AUTH_UNAUTHORIZED]: {
     httpStatus: 401,
     message: 'Unauthorized',
@@ -49,6 +61,14 @@ export const ERROR_CODE_DESCRIPTORS: Record<ErrorCode, ErrorDescriptor> = {
   [ErrorCode.AUTH_FORBIDDEN]: {
     httpStatus: 403,
     message: 'Forbidden',
+  },
+  [ErrorCode.AUTH_TENANT_NOT_FOUND]: {
+    httpStatus: 400,
+    message: 'Tenant context not found',
+  },
+  [ErrorCode.AUTH_TENANT_NOT_FOUND_GUARD]: {
+    httpStatus: 400,
+    message: 'Tenant context not found (guard)',
   },
   [ErrorCode.TENANT_NOT_FOUND]: {
     httpStatus: 404,
@@ -61,5 +81,18 @@ export const ERROR_CODE_DESCRIPTORS: Record<ErrorCode, ErrorDescriptor> = {
   [ErrorCode.TENANT_INACTIVE]: {
     httpStatus: 403,
     message: 'Tenant is not active',
+  },
+  [ErrorCode.TENANT_SLUG_RESERVED]: {
+    httpStatus: 400,
+    message: 'Tenant slug is reserved',
+  },
+
+  [ErrorCode.IMAGE_PROCESSING_FAILED]: {
+    httpStatus: 500,
+    message: 'Image processing failed',
+  },
+  [ErrorCode.PHOTO_MANIFEST_GENERATION_FAILED]: {
+    httpStatus: 500,
+    message: 'Photo manifest generation failed',
   },
 }

@@ -5,11 +5,7 @@ import { workdir } from '@afilmory/builder/path.js'
 import type { _Object } from '@aws-sdk/client-s3'
 
 import { logger } from '../logger/index.js'
-import type {
-  AfilmoryManifest,
-  CameraInfo,
-  LensInfo,
-} from '../types/manifest.js'
+import type { AfilmoryManifest, CameraInfo, LensInfo } from '../types/manifest.js'
 import type { PhotoManifestItem } from '../types/photo.js'
 import { migrateManifestFileIfNeeded } from './migrate.js'
 import { CURRENT_MANIFEST_VERSION } from './version.js'
@@ -22,9 +18,8 @@ export async function loadExistingManifest(): Promise<AfilmoryManifest> {
     const manifestContent = await fs.readFile(manifestPath, 'utf-8')
     manifest = JSON.parse(manifestContent) as AfilmoryManifest
   } catch {
-    logger.fs.error(
-      '🔍 未找到 manifest 文件/解析失败，创建新的 manifest 文件...',
-    )
+    logger.fs.error('🔍 未找到 manifest 文件/解析失败，创建新的 manifest 文件...')
+    await saveManifest([])
     return {
       version: CURRENT_MANIFEST_VERSION,
       data: [],
@@ -50,10 +45,7 @@ export async function loadExistingManifest(): Promise<AfilmoryManifest> {
 }
 
 // 检查照片是否需要更新（基于最后修改时间）
-export function needsUpdate(
-  existingItem: PhotoManifestItem | undefined,
-  s3Object: _Object,
-): boolean {
+export function needsUpdate(existingItem: PhotoManifestItem | undefined, s3Object: _Object): boolean {
   if (!existingItem) return true
   if (!s3Object.LastModified) return true
 
@@ -70,9 +62,7 @@ export async function saveManifest(
   lenses: LensInfo[] = [],
 ): Promise<void> {
   // 按日期排序（最新的在前）
-  const sortedManifest = [...items].sort(
-    (a, b) => new Date(b.dateTaken).getTime() - new Date(a.dateTaken).getTime(),
-  )
+  const sortedManifest = [...items].sort((a, b) => new Date(b.dateTaken).getTime() - new Date(a.dateTaken).getTime())
 
   await fs.mkdir(path.dirname(manifestPath), { recursive: true })
   await fs.writeFile(
@@ -94,21 +84,17 @@ export async function saveManifest(
 }
 
 // 检测并处理已删除的图片
-export async function handleDeletedPhotos(
-  items: PhotoManifestItem[],
-): Promise<number> {
+export async function handleDeletedPhotos(items: PhotoManifestItem[]): Promise<number> {
   logger.main.info('🔍 检查已删除的图片...')
   if (items.length === 0) {
     // Clear all thumbnails
-    await fs.rm(path.join(workdir, 'public/thumbnails'), { recursive: true })
+    await fs.rm(path.join(workdir, 'public/thumbnails'), { recursive: true, force: true })
     logger.main.info('🔍 没有图片，清空缩略图...')
     return 0
   }
 
   let deletedCount = 0
-  const allThumbnails = await fs.readdir(
-    path.join(workdir, 'public/thumbnails'),
-  )
+  const allThumbnails = await fs.readdir(path.join(workdir, 'public/thumbnails'))
 
   // If thumbnails not in manifest, delete it
   const manifestKeySet = new Set(items.map((item) => item.id))

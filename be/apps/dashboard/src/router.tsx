@@ -5,15 +5,20 @@ import { ErrorElement } from './components/common/ErrorElement'
 import { NotFound } from './components/common/NotFound'
 import { routes } from './generated-routes'
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <App />,
+      children: routes,
+      errorElement: <ErrorElement />,
+    },
+    {
+      path: '*',
+      element: <NotFound />,
+    },
+  ],
   {
-    path: '/',
-    element: <App />,
-    children: routes,
-    errorElement: <ErrorElement />,
+    basename: Reflect.get(window, '__AFILMORY_DASHBOARD_BASENAME__') as string,
   },
-  {
-    path: '*',
-    element: <NotFound />,
-  },
-])
+)

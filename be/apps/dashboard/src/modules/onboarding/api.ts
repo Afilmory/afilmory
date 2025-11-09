@@ -1,6 +1,6 @@
 import { coreApi } from '~/lib/api-client'
 
-import type { OnboardingSettingKey } from './constants'
+import type { OnboardingSettingKey, OnboardingSiteSettingKey } from './constants'
 
 export type OnboardingStatusResponse = {
   initialized: boolean
@@ -15,10 +15,9 @@ export type OnboardingInitPayload = {
   tenant: {
     name: string
     slug: string
-    domain?: string
   }
   settings?: Array<{
-    key: OnboardingSettingKey
+    key: OnboardingSettingKey | OnboardingSiteSettingKey
     value: unknown
   }>
 }
@@ -30,13 +29,21 @@ export type OnboardingInitResponse = {
   superAdminUserId: string
 }
 
-export const getOnboardingStatus = async () =>
-  await coreApi<OnboardingStatusResponse>('/onboarding/status', {
+export async function getOnboardingStatus() {
+  return await coreApi<OnboardingStatusResponse>('/onboarding/status', {
     method: 'GET',
   })
+}
 
-export const postOnboardingInit = async (payload: OnboardingInitPayload) =>
-  await coreApi<OnboardingInitResponse>('/onboarding/init', {
+export async function getOnboardingSiteSchema() {
+  return await coreApi('/onboarding/site-schema', {
+    method: 'GET',
+  })
+}
+
+export async function postOnboardingInit(payload: OnboardingInitPayload) {
+  return await coreApi<OnboardingInitResponse>('/onboarding/init', {
     method: 'POST',
     body: payload,
   })
+}

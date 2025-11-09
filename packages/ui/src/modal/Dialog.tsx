@@ -10,9 +10,7 @@ type DialogContextType = {
   isOpen: boolean
 }
 
-const DialogContext = React.createContext<DialogContextType | undefined>(
-  undefined,
-)
+const DialogContext = React.createContext<DialogContextType | undefined>(undefined)
 
 function useDialog(): DialogContextType {
   const context = React.use(DialogContext)
@@ -25,9 +23,7 @@ function useDialog(): DialogContextType {
 type DialogProps = React.ComponentProps<typeof DialogPrimitive.Root>
 
 function Dialog({ children, ...props }: DialogProps) {
-  const [isOpen, setIsOpen] = React.useState(
-    props?.open ?? props?.defaultOpen ?? false,
-  )
+  const [isOpen, setIsOpen] = React.useState(props?.open ?? props?.defaultOpen ?? false)
 
   React.useEffect(() => {
     if (props?.open !== undefined) setIsOpen(props.open)
@@ -43,11 +39,7 @@ function Dialog({ children, ...props }: DialogProps) {
 
   return (
     <DialogContext value={React.useMemo(() => ({ isOpen }), [isOpen])}>
-      <DialogPrimitive.Root
-        data-slot="dialog"
-        {...props}
-        onOpenChange={handleOpenChange}
-      >
+      <DialogPrimitive.Root data-slot="dialog" {...props} onOpenChange={handleOpenChange}>
         {children}
       </DialogPrimitive.Root>
     </DialogContext>
@@ -69,13 +61,7 @@ function DialogPortal(props: DialogPortalProps) {
 type DialogCloseProps = React.ComponentProps<typeof DialogPrimitive.Close>
 
 function DialogClose(props: DialogCloseProps) {
-  return (
-    <DialogPrimitive.Close
-      data-slot="dialog-close"
-      {...props}
-      className={clsxm('contents', props.className)}
-    />
-  )
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} className={clsxm('contents', props.className)} />
 }
 
 type DialogOverlayProps = React.ComponentProps<typeof DialogPrimitive.Overlay>
@@ -95,9 +81,7 @@ function DialogOverlay({ className, ...props }: DialogOverlayProps) {
 
 type FlipDirection = 'top' | 'bottom' | 'left' | 'right'
 
-export type DialogContentProps = React.ComponentProps<
-  typeof DialogPrimitive.Content
-> &
+export type DialogContentProps = React.ComponentProps<typeof DialogPrimitive.Content> &
   HTMLMotionProps<'div'> & {
     from?: FlipDirection
     transition?: Transition
@@ -162,10 +146,7 @@ function DialogContent({
             >
               {children}
               <DialogPrimitive.Close className="focus:bg-fill data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-3 right-2 flex size-6 items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none">
-                <i
-                  className="i-mingcute-close-line h-4 w-4"
-                  aria-hidden="true"
-                />
+                <i className="i-mingcute-close-line h-4 w-4" aria-hidden="true" />
                 <span className="sr-only">Close</span>
               </DialogPrimitive.Close>
             </motion.div>
@@ -182,10 +163,7 @@ function DialogHeader({ className, ...props }: DialogHeaderProps) {
   return (
     <div
       data-slot="dialog-header"
-      className={clsxm(
-        'flex flex-col space-y-1.5 text-center sm:text-left',
-        className,
-      )}
+      className={clsxm('flex flex-col space-y-1.5 text-center sm:text-left', className)}
       {...props}
     />
   )
@@ -197,10 +175,7 @@ function DialogFooter({ className, ...props }: DialogFooterProps) {
   return (
     <div
       data-slot="dialog-footer"
-      className={clsxm(
-        'flex flex-col-reverse sm:flex-row sm:justify-end gap-2',
-        className,
-      )}
+      className={clsxm('flex flex-col-reverse sm:flex-row sm:justify-end gap-2', className)}
       {...props}
     />
   )
@@ -212,18 +187,13 @@ function DialogTitle({ className, ...props }: DialogTitleProps) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={clsxm(
-        'text-lg font-semibold leading-none tracking-tight',
-        className,
-      )}
+      className={clsxm('text-lg font-semibold leading-none tracking-tight', className)}
       {...props}
     />
   )
 }
 
-type DialogDescriptionProps = React.ComponentProps<
-  typeof DialogPrimitive.Description
->
+type DialogDescriptionProps = React.ComponentProps<typeof DialogPrimitive.Description>
 
 function DialogDescription({ className, ...props }: DialogDescriptionProps) {
   return (

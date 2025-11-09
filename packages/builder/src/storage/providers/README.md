@@ -40,18 +40,19 @@ const s3Config: StorageConfig = {
 ```typescript
 const githubConfig: StorageConfig = {
   provider: 'github',
-  owner: 'your-username',      // GitHub 用户名或组织名
-  repo: 'photo-gallery',       // 仓库名称
-  branch: 'main',              // 分支名称（可选，默认 'main'）
-  token: 'ghp_xxxxxxxxxxxx',   // GitHub 访问令牌（可选）
-  path: 'photos',              // 照片存储路径（可选）
-  useRawUrl: true,             // 使用 raw.githubusercontent.com（默认 true）
+  owner: 'your-username', // GitHub 用户名或组织名
+  repo: 'photo-gallery', // 仓库名称
+  branch: 'main', // 分支名称（可选，默认 'main'）
+  token: 'ghp_xxxxxxxxxxxx', // GitHub 访问令牌（可选）
+  path: 'photos', // 照片存储路径（可选）
+  useRawUrl: true, // 使用 raw.githubusercontent.com（默认 true）
 }
 ```
 
 ### 设置步骤
 
 1. **创建 GitHub 仓库**
+
    ```bash
    # 创建新仓库（或使用现有仓库）
    git clone https://github.com/your-username/photo-gallery.git
@@ -66,6 +67,7 @@ const githubConfig: StorageConfig = {
    - 赋予 "Contents" 权限（读写）
 
 3. **配置环境变量**
+
    ```bash
    export GITHUB_TOKEN="ghp_xxxxxxxxxxxx"
    ```
@@ -157,7 +159,7 @@ GitHub 存储提供商会处理以下错误：
 ```typescript
 const localConfig: StorageConfig = {
   provider: 'local',
-  basePath: './photos',              // 本地照片存储路径（相对或绝对路径）
+  basePath: './photos', // 本地照片存储路径（相对或绝对路径）
   baseUrl: 'http://localhost:3000/photos', // 可选：用于生成公共 URL
   /**
    * 可选：将 basePath 下的文件复制到发布目录，用于静态托管
@@ -167,8 +169,8 @@ const localConfig: StorageConfig = {
    * 如果你使用了下面的配置，你可以将 baseUrl 配置为 '/originals/' 以匹配前端访问路径。
    */
   distPath: './apps/web/public/originals',
-  excludeRegex: '\\.(tmp|cache)$',   // 可选：排除文件的正则表达式
-  maxFileLimit: 1000,                // 可选：最大文件数量限制
+  excludeRegex: '\\.(tmp|cache)$', // 可选：排除文件的正则表达式
+  maxFileLimit: 1000, // 可选：最大文件数量限制
 }
 ```
 
@@ -176,7 +178,7 @@ const localConfig: StorageConfig = {
 
 - **相对路径**: 相对于项目根目录，如 `./photos`、`../images`
 - **绝对路径**: 完整的文件系统路径，如 `/home/user/photos`、`C:\\Photos`
- - **distPath 解析**: 若配置了 `distPath`，同样支持相对/绝对路径；相对路径将以项目根目录为基准进行解析。
+- **distPath 解析**: 若配置了 `distPath`，同样支持相对/绝对路径；相对路径将以项目根目录为基准进行解析。
 
 ### 使用示例
 
@@ -276,13 +278,13 @@ photos/
 
 ### 与其他提供商的对比
 
-| 特性 | S3 | GitHub |
-|------|----|----|
-| 存储空间 | 按需付费 | 1GB 免费 |
-| CDN | 额外付费 | 免费全球 CDN |
-| API 限制 | 很高 | 有限制 |
-| 适用场景 | 生产环境 | 小型项目、演示 |
-| 设置复杂度 | 中等 | 简单 |
+| 特性       | S3       | GitHub         |
+| ---------- | -------- | -------------- |
+| 存储空间   | 按需付费 | 1GB 免费       |
+| CDN        | 额外付费 | 免费全球 CDN   |
+| API 限制   | 很高     | 有限制         |
+| 适用场景   | 生产环境 | 小型项目、演示 |
+| 设置复杂度 | 中等     | 简单           |
 
 选择存储提供商时，请根据你的具体需求和预算进行选择。
 
@@ -312,6 +314,8 @@ const eagleConfig: EagleConfig = {
     { type: 'tag', name: 'Published' },
   ],
   exclude: [{ type: 'tag', name: 'Private' }],
+  folderAsTag: true,
+  omitTagNamesInMetadata: ['Temp'],
 }
 ```
 

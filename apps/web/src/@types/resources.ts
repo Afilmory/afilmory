@@ -26,7 +26,4 @@ export const resources = {
   'zh-TW': {
     app: zhTw,
   },
-} satisfies Record<
-  MainSupportedLanguages,
-  Record<(typeof ns)[number], Record<string, string>>
->
+} satisfies Record<MainSupportedLanguages, Record<(typeof ns)[number], Record<string, string>>>

@@ -1,10 +1,4 @@
-export type UiFieldComponentType =
-  | 'text'
-  | 'secret'
-  | 'textarea'
-  | 'select'
-  | 'slot'
-  | 'switch'
+export type UiFieldComponentType = 'text' | 'secret' | 'textarea' | 'select' | 'slot' | 'switch'
 
 interface UiFieldComponentBase<Type extends UiFieldComponentType> {
   readonly type: Type
@@ -30,7 +24,7 @@ export interface UiTextareaComponent extends UiFieldComponentBase<'textarea'> {
 
 export interface UiSelectComponent extends UiFieldComponentBase<'select'> {
   readonly placeholder?: string
-  readonly options?: ReadonlyArray<string>
+  readonly options?: readonly string[]
   readonly allowCustom?: boolean
 }
 
@@ -39,8 +33,7 @@ export interface UiSwitchComponent extends UiFieldComponentBase<'switch'> {
   readonly falseLabel?: string
 }
 
-export interface UiSlotComponent<Key extends string = string>
-  extends UiFieldComponentBase<'slot'> {
+export interface UiSlotComponent<Key extends string = string> extends UiFieldComponentBase<'slot'> {
   readonly name: string
   readonly fields?: ReadonlyArray<{
     key: Key
@@ -91,10 +84,7 @@ export interface UiSectionNode<Key extends string = string> extends BaseUiNode {
   readonly children: ReadonlyArray<UiNode<Key>>
 }
 
-export type UiNode<Key extends string = string> =
-  | UiSectionNode<Key>
-  | UiGroupNode<Key>
-  | UiFieldNode<Key>
+export type UiNode<Key extends string = string> = UiSectionNode<Key> | UiGroupNode<Key> | UiFieldNode<Key>
 
 export interface UiSchema<Key extends string = string> {
   readonly version: string
@@ -103,17 +93,11 @@ export interface UiSchema<Key extends string = string> {
   readonly sections: ReadonlyArray<UiSectionNode<Key>>
 }
 
-export interface UiSchemaResponse<
-  Key extends string = string,
-  Value = string | null,
-> {
+export interface UiSchemaResponse<Key extends string = string, Value = string | null> {
   readonly schema: UiSchema<Key>
   readonly values?: Partial<Record<Key, Value>>
 }
 
 export type SchemaFormValue = string | number | boolean | null
 
-export type SchemaFormState<Key extends string = string> = Record<
-  Key,
-  SchemaFormValue | undefined
->
+export type SchemaFormState<Key extends string = string> = Record<Key, SchemaFormValue | undefined>

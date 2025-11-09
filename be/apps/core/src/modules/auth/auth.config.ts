@@ -1,42 +1,38 @@
-import { env } from '@afilmory/env'
 import { injectable } from 'tsyringe'
 
+import { SystemSettingService } from '../system-setting/system-setting.service'
+
+export interface SocialProviderOptions {
+  clientId: string
+  clientSecret: string
+  redirectPath?: string | null
+}
+
 export interface SocialProvidersConfig {
-  google?: { clientId: string; clientSecret: string; redirectUri?: string }
-  github?: { clientId: string; clientSecret: string; redirectUri?: string }
-  zoom?: { clientId: string; clientSecret: string; redirectUri?: string }
+  google?: SocialProviderOptions
+  github?: SocialProviderOptions
 }
 
 export interface AuthModuleOptions {
   prefix: string
   useDrizzle: boolean
   socialProviders: SocialProvidersConfig
+  baseDomain: string
 }
 
 @injectable()
 export class AuthConfig {
-  getOptions(): AuthModuleOptions {
+  constructor(private readonly systemSettings: SystemSettingService) {}
+
+  async getOptions(): Promise<AuthModuleOptions> {
     const prefix = '/auth'
-    const socialProviders: SocialProvidersConfig = {}
-
-    if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
-      socialProviders.google = {
-        clientId: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET,
-      }
-    }
-
-    if (env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET) {
-      socialProviders.github = {
-        clientId: env.GITHUB_CLIENT_ID,
-        clientSecret: env.GITHUB_CLIENT_SECRET,
-      }
-    }
+    const { socialProviders, baseDomain } = await this.systemSettings.getAuthModuleConfig()
 
     return {
       prefix,
       useDrizzle: true,
       socialProviders,
+      baseDomain,
     }
   }
 }

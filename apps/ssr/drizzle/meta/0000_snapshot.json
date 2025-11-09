@@ -105,9 +105,7 @@
         "views_ref_key_unique": {
           "name": "views_ref_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "ref_key"
-          ]
+          "columns": ["ref_key"]
         }
       },
       "policies": {},

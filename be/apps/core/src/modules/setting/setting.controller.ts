@@ -1,13 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@afilmory/framework'
+import { Body, Controller, Delete, Get, Param, Post } from '@afilmory/framework'
+import { BizException, ErrorCode } from 'core/errors'
 import { Roles } from 'core/guards/roles.decorator'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'
 
 import { SettingKeys } from './setting.constant'
-import { DeleteSettingDto, GetSettingDto, GetSettingsQueryDto, SetSettingDto } from './setting.dto'
+import type { GetSettingsBodyDto } from './setting.dto'
+import { DeleteSettingDto, GetSettingDto, SetSettingDto } from './setting.dto'
 import { SettingService } from './setting.service'
 
 @Controller('settings')
-@Roles('admin')
+@Roles('superadmin')
 export class SettingController {
   constructor(private readonly settingService: SettingService) {}
 
@@ -18,17 +20,30 @@ export class SettingController {
   }
 
   @Get('/:key')
+  @BypassResponseTransform()
   async get(@Param() { key }: GetSettingDto) {
     const value = await this.settingService.get(key, {})
     return { key, value }
   }
 
   @Get('/')
-  async getMany(@Query() query: GetSettingsQueryDto) {
-    const keys = query?.keys ?? []
-    const targetKeys = keys.length > 0 ? keys : Array.from(SettingKeys)
-    const values = await this.settingService.getMany(targetKeys, {})
-    return { keys: targetKeys, values }
+  @BypassResponseTransform()
+  async getAll() {
+    const values = await this.settingService.getMany(Array.from(SettingKeys), {})
+
+    return { values }
+  }
+
+  @Post('/batch')
+  @BypassResponseTransform()
+  async getMany(@Body() { keys }: GetSettingsBodyDto) {
+    if (!keys) {
+      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
+        message: 'settings keys is required',
+      })
+    }
+    const values = await this.settingService.getMany(keys, {})
+    return { values }
   }
 
   @Post('/')

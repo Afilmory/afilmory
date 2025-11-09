@@ -7,10 +7,7 @@ import { useRootPortal } from '../portal/provider'
 
 const DialogContext = React.createContext<{ open: boolean }>({ open: false })
 
-const Dialog = ({
-  children,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) => {
+const Dialog = ({ children, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) => {
   const [open, setOpen] = React.useState(props.open || false)
 
   React.useEffect(() => {
@@ -38,10 +35,7 @@ const Dialog = ({
 const DialogTrigger = DialogPrimitive.Trigger
 const DialogClose = DialogPrimitive.Close
 
-const DialogPortal = ({
-  children,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) => {
+const DialogPortal = ({ children, ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) => {
   const { open } = React.use(DialogContext)
   const to = useRootPortal()
 
@@ -59,12 +53,7 @@ const DialogOverlay = ({
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> & {
   ref?: React.RefObject<React.ElementRef<typeof DialogPrimitive.Overlay> | null>
 }) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={clsxm('fixed inset-0 z-100000000', className)}
-    asChild
-    {...props}
-  >
+  <DialogPrimitive.Overlay ref={ref} className={clsxm('fixed inset-0 z-100000000', className)} asChild {...props}>
     <m.div
       className="bg-black/50 backdrop-blur-sm"
       initial={{ opacity: 0 }}
@@ -88,10 +77,7 @@ const DialogContent = ({
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      className={clsxm(
-        'fixed left-[50%] top-[50%] z-100000000 w-full max-w-lg',
-        className,
-      )}
+      className={clsxm('fixed left-[50%] top-[50%] z-100000000 w-full max-w-lg', className)}
       asChild
       {...props}
     >
@@ -131,31 +117,13 @@ const DialogContent = ({
 )
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={clsxm(
-      'flex flex-col space-y-1.5 text-center sm:text-left',
-      className,
-    )}
-    {...props}
-  />
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={clsxm('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />
 )
 DialogHeader.displayName = 'DialogHeader'
 
-const DialogFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={clsxm(
-      'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
-      className,
-    )}
-    {...props}
-  />
+const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={clsxm('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)} {...props} />
 )
 DialogFooter.displayName = 'DialogFooter'
 
@@ -168,10 +136,7 @@ const DialogTitle = ({
 }) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={clsxm(
-      'text-lg font-semibold leading-none tracking-tight text-white',
-      className,
-    )}
+    className={clsxm('text-lg font-semibold leading-none tracking-tight text-white', className)}
     {...props}
   />
 )
@@ -182,16 +147,8 @@ const DialogDescription = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description> & {
-  ref?: React.RefObject<React.ElementRef<
-    typeof DialogPrimitive.Description
-  > | null>
-}) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={clsxm('text-sm text-white/70', className)}
-    {...props}
-  />
-)
+  ref?: React.RefObject<React.ElementRef<typeof DialogPrimitive.Description> | null>
+}) => <DialogPrimitive.Description ref={ref} className={clsxm('text-sm text-white/70', className)} {...props} />
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
 export {

@@ -82,9 +82,7 @@ const filterAndSortPhotos = (
       bDateStr = b.lastModified
     }
 
-    return sortOrder === 'asc'
-      ? aDateStr.localeCompare(bDateStr)
-      : bDateStr.localeCompare(aDateStr)
+    return sortOrder === 'asc' ? aDateStr.localeCompare(bDateStr) : bDateStr.localeCompare(aDateStr)
   })
 
   return sortedPhotos
@@ -105,32 +103,12 @@ export const getFilteredPhotos = () => {
 }
 
 export const usePhotos = () => {
-  const {
-    sortOrder,
-    selectedTags,
-    selectedCameras,
-    selectedLenses,
-    selectedRatings,
-    tagFilterMode,
-  } = useAtomValue(gallerySettingAtom)
+  const { sortOrder, selectedTags, selectedCameras, selectedLenses, selectedRatings, tagFilterMode } =
+    useAtomValue(gallerySettingAtom)
 
   const masonryItems = useMemo(() => {
-    return filterAndSortPhotos(
-      selectedTags,
-      selectedCameras,
-      selectedLenses,
-      selectedRatings,
-      sortOrder,
-      tagFilterMode,
-    )
-  }, [
-    sortOrder,
-    selectedTags,
-    selectedCameras,
-    selectedLenses,
-    selectedRatings,
-    tagFilterMode,
-  ])
+    return filterAndSortPhotos(selectedTags, selectedCameras, selectedLenses, selectedRatings, sortOrder, tagFilterMode)
+  }, [sortOrder, selectedTags, selectedCameras, selectedLenses, selectedRatings, tagFilterMode])
 
   return masonryItems
 }

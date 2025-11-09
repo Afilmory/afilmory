@@ -1,4 +1,4 @@
-import type { BuilderConfig, StorageConfig } from '@afilmory/builder'
+import type { BuilderConfig, PhotoManifestItem, StorageConfig } from '@afilmory/builder'
 import type { PhotoAssetConflictPayload, PhotoAssetManifest } from '@afilmory/db'
 
 export enum ConflictResolutionStrategy {
@@ -29,10 +29,14 @@ export interface DataSyncAction {
   applied: boolean
   resolution?: ConflictResolutionStrategy
   reason?: string
+  conflictId?: string | null
+  conflictPayload?: ConflictPayload | null
   snapshots?: {
     before?: SyncObjectSnapshot | null
     after?: SyncObjectSnapshot | null
   }
+  manifestBefore?: PhotoManifestItem | null
+  manifestAfter?: PhotoManifestItem | null
 }
 
 export interface DataSyncResultSummary {
@@ -51,7 +55,7 @@ export interface DataSyncResult {
 }
 
 export interface DataSyncOptions {
-  builderConfig: BuilderConfig
+  builderConfig?: BuilderConfig
   storageConfig?: StorageConfig
   dryRun: boolean
 }
@@ -75,3 +79,54 @@ export interface ResolveConflictOptions {
   storageConfig?: StorageConfig
   dryRun?: boolean
 }
+
+export type DataSyncProgressStage = 'missing-in-db' | 'orphan-in-db' | 'metadata-conflicts' | 'status-reconciliation'
+
+export interface DataSyncStageTotals {
+  'missing-in-db': number
+  'orphan-in-db': number
+  'metadata-conflicts': number
+  'status-reconciliation': number
+}
+
+export type DataSyncProgressEvent =
+  | {
+      type: 'start'
+      payload: {
+        summary: DataSyncResultSummary
+        totals: DataSyncStageTotals
+        options: Pick<DataSyncOptions, 'dryRun'>
+      }
+    }
+  | {
+      type: 'stage'
+      payload: {
+        stage: DataSyncProgressStage
+        status: 'start' | 'complete'
+        processed: number
+        total: number
+        summary: DataSyncResultSummary
+      }
+    }
+  | {
+      type: 'action'
+      payload: {
+        stage: DataSyncProgressStage
+        index: number
+        total: number
+        action: DataSyncAction
+        summary: DataSyncResultSummary
+      }
+    }
+  | {
+      type: 'complete'
+      payload: DataSyncResult
+    }
+  | {
+      type: 'error'
+      payload: {
+        message: string
+      }
+    }
+
+export type DataSyncProgressEmitter = (event: DataSyncProgressEvent) => Promise<void> | void

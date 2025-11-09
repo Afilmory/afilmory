@@ -16,21 +16,15 @@ type ContextMenuState =
       abortController: AbortController
     }
 
-export const [
-  contextMenuAtom,
-  useContextMenuState,
-  useContextMenuValue,
-  useSetContextMenu,
-] = createAtomHooks(atom<ContextMenuState>({ open: false }))
+export const [contextMenuAtom, useContextMenuState, useContextMenuValue, useSetContextMenu] = createAtomHooks(
+  atom<ContextMenuState>({ open: false }),
+)
 
 const useShowWebContextMenu = () => {
   const setContextMenu = useSetContextMenu()
 
   const showWebContextMenu = useCallback(
-    async (
-      menuItems: Array<FollowMenuItem>,
-      e: MouseEvent | React.MouseEvent,
-    ) => {
+    async (menuItems: Array<FollowMenuItem>, e: MouseEvent | React.MouseEvent) => {
       const abortController = new AbortController()
       const resolvers = Promise.withResolvers<void>()
       setContextMenu({
@@ -59,10 +53,7 @@ export type MenuItemInput = MenuItemText | MenuItemSeparator | NilValue
 
 function filterNullableMenuItems(items: MenuItemInput[]): FollowMenuItem[] {
   return items
-    .filter(
-      (item) =>
-        item !== null && item !== undefined && item !== false && item !== '',
-    )
+    .filter((item) => item !== null && item !== undefined && item !== false && item !== '')
     .filter((item) => !item.hide)
     .map((item) => {
       if (item instanceof MenuItemSeparator) {
@@ -88,10 +79,7 @@ export const useShowContextMenu = () => {
   const showWebContextMenu = useShowWebContextMenu()
 
   const showContextMenu = useCallback(
-    async (
-      inputMenu: Array<MenuItemInput>,
-      e: MouseEvent | React.MouseEvent,
-    ) => {
+    async (inputMenu: Array<MenuItemInput>, e: MouseEvent | React.MouseEvent) => {
       const menuItems = filterNullableMenuItems(inputMenu)
       e.preventDefault()
       e.stopPropagation()
@@ -172,9 +160,7 @@ export class MenuItemText extends BaseMenuItemText {
   constructor(protected config: MenuItemTextConfig) {
     super(config)
 
-    this.__submenu = this.config.submenu
-      ? filterNullableMenuItems(this.config.submenu)
-      : []
+    this.__submenu = this.config.submenu ? filterNullableMenuItems(this.config.submenu) : []
   }
 
   public get submenu() {

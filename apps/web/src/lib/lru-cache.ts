@@ -12,10 +12,7 @@ export class LRUCache<K, V> {
   private cache: Map<K, V>
   private cleanupFn?: (value: V, key: K, reason: string) => void
 
-  constructor(
-    maxSize = 10,
-    cleanupFn?: (value: V, key: K, reason: string) => void,
-  ) {
+  constructor(maxSize = 10, cleanupFn?: (value: V, key: K, reason: string) => void) {
     this.maxSize = maxSize
     this.cache = new Map()
     this.cleanupFn = cleanupFn
@@ -36,11 +33,7 @@ export class LRUCache<K, V> {
     // If key already exists, clean up old value and delete it first
     if (this.cache.has(key)) {
       const oldValue = this.cache.get(key)!
-      this._cleanup(
-        oldValue,
-        key,
-        `Replacing existing cache entry for ${String(key)}`,
-      )
+      this._cleanup(oldValue, key, `Replacing existing cache entry for ${String(key)}`)
       this.cache.delete(key)
     } else if (this.cache.size >= this.maxSize) {
       // Remove least recently used (first item)
@@ -55,9 +48,7 @@ export class LRUCache<K, V> {
     // Add new item (most recently used)
     this.cache.set(key, value)
 
-    console.info(
-      `LRU Cache: Added ${String(key)}, cache size: ${this.cache.size}/${this.maxSize}`,
-    )
+    console.info(`LRU Cache: Added ${String(key)}, cache size: ${this.cache.size}/${this.maxSize}`)
   }
 
   /**
@@ -134,9 +125,7 @@ export class LRUCache<K, V> {
  * 创建一个专门用于 blob URL 的 LRU 缓存
  * 自动在项目被移除时调用 URL.revokeObjectURL
  */
-export function createBlobUrlCache<T extends { url?: string }>(
-  maxSize = 10,
-): LRUCache<string, T> {
+export function createBlobUrlCache<T extends { url?: string }>(maxSize = 10): LRUCache<string, T> {
   return new LRUCache<string, T>(maxSize, (value, key, reason) => {
     if (value.url) {
       try {

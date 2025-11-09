@@ -17,10 +17,7 @@ export type MigrationContext = {
   to: ManifestVersion
 }
 
-export type ManifestMigrator = (
-  raw: AfilmoryManifest,
-  ctx: MigrationContext,
-) => AfilmoryManifest
+export type ManifestMigrator = (raw: AfilmoryManifest, ctx: MigrationContext) => AfilmoryManifest
 
 export type MigrationStep = {
   from: ManifestVersion | string
@@ -85,16 +82,12 @@ export function migrateManifest(
     const step = MIGRATION_STEPS.find((s) => s.from === current)
     if (!step) {
       // No concrete step for this source version; do a simple version bump once.
-      logger.main.info(
-        `🔄 迁移占位：${String(current)} -> ${target}（无匹配步骤，直接提升版本）`,
-      )
+      logger.main.info(`🔄 迁移占位：${String(current)} -> ${target}（无匹配步骤，直接提升版本）`)
       return noOpBumpVersion(working, target)
     }
 
     const ctx: MigrationContext = { from: step.from, to: step.to }
-    logger.main.info(
-      `🔁 执行迁移步骤：${String(step.from)} -> ${String(step.to)}`,
-    )
+    logger.main.info(`🔁 执行迁移步骤：${String(step.from)} -> ${String(step.to)}`)
     working = step.exec(working, ctx)
     current = (working?.version as any) ?? step.to
   }
@@ -103,9 +96,7 @@ export function migrateManifest(
   return working as AfilmoryManifest
 }
 
-export async function migrateManifestFileIfNeeded(
-  parsed: AfilmoryManifest,
-): Promise<AfilmoryManifest | null> {
+export async function migrateManifestFileIfNeeded(parsed: AfilmoryManifest): Promise<AfilmoryManifest | null> {
   try {
     if (parsed?.version === CURRENT_MANIFEST_VERSION) return null
     const migrated = migrateManifest(parsed, CURRENT_MANIFEST_VERSION)

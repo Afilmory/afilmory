@@ -1,20 +1,13 @@
-import type {
-  CompressedHistogramData,
-  HistogramData,
-} from '@afilmory/builder/types/photo.js'
+import type { CompressedHistogramData, HistogramData } from '@afilmory/builder/types/photo.js'
 
 /**
  * 将压缩的直方图解压缩并插值到 256 点位
  * @param compressed 压缩的直方图数据
  * @returns 解压缩后的直方图数据
  */
-export function decompressHistogram(
-  compressed: CompressedHistogramData,
-): HistogramData {
+export function decompressHistogram(compressed: CompressedHistogramData): HistogramData {
   const decompressChannel = (data: number[]): number[] => {
-    const decompressed: number[] = Array.from({ length: 256 }).fill(
-      0,
-    ) as number[]
+    const decompressed: number[] = Array.from({ length: 256 }).fill(0) as number[]
 
     for (let i = 0; i < 256; i++) {
       const compressedIndex = Math.floor(i / 4) // 对应的压缩索引

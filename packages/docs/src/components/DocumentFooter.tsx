@@ -69,10 +69,7 @@ export function DocumentFooter({ createdAt, lastModified }: DocumentMetaProps) {
                       background: 'transparent',
                     }}
                   >
-                    <time
-                      dateTime={createdAt}
-                      className="text-text-secondary rounded px-2 py-1 font-mono text-xs"
-                    >
+                    <time dateTime={createdAt} className="text-text-secondary rounded px-2 py-1 font-mono text-xs">
                       {formatDate(createdAt)}
                     </time>
                   </td>
@@ -97,10 +94,7 @@ export function DocumentFooter({ createdAt, lastModified }: DocumentMetaProps) {
                       background: 'transparent',
                     }}
                   >
-                    <time
-                      dateTime={lastModified}
-                      className="text-text-secondary rounded px-2 py-1 font-mono text-xs"
-                    >
+                    <time dateTime={lastModified} className="text-text-secondary rounded px-2 py-1 font-mono text-xs">
                       {formatDate(lastModified)}
                     </time>
                   </td>
@@ -130,9 +124,7 @@ export function DocumentFooter({ createdAt, lastModified }: DocumentMetaProps) {
               key={option.value}
               onClick={() => setTheme(option.value)}
               className={`relative z-10 rounded-full p-2 transition-colors ${
-                theme === option.value
-                  ? 'text-text'
-                  : 'text-text-secondary hover:text-text'
+                theme === option.value ? 'text-text' : 'text-text-secondary hover:text-text'
               }`}
               aria-label={`Switch to ${option.label} theme`}
               title={option.label}

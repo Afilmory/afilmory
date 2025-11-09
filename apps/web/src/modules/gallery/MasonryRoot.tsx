@@ -87,9 +87,7 @@ export const MasonryRoot = () => {
       if (!isMobile) {
         const { maxColumns } = auto
         // 当屏幕宽度超过一定阈值时，通过计算动态列宽来限制最大列数
-        const colCount = Math.floor(
-          (availableWidth + gutter) / (autoWidth + gutter),
-        )
+        const colCount = Math.floor((availableWidth + gutter) / (autoWidth + gutter))
 
         if (colCount > maxColumns) {
           return (availableWidth - (maxColumns - 1) * gutter) / maxColumns
@@ -150,14 +148,11 @@ export const MasonryRoot = () => {
         </div>
       )}
 
-      <div className="p-1 lg:px-0 lg:pb-0 [&_*]:!select-none">
+      <div className="p-1 **:select-none! lg:px-0 lg:pb-0">
         {isMobile && <MasonryHeaderMasonryItem className="mb-1" />}
         <Masonry<MasonryItemType>
           ref={masonryRef}
-          items={useMemo(
-            () => (isMobile ? photos : [MasonryHeaderItem.default, ...photos]),
-            [photos, isMobile],
-          )}
+          items={useMemo(() => (isMobile ? photos : [MasonryHeaderItem.default, ...photos]), [photos, isMobile])}
           render={useCallback(
             (props) => (
               <MasonryItem
@@ -222,11 +217,7 @@ export const MasonryItem = memo(
     const shouldAnimate = !hasAnimated && index < FIRST_SCREEN_ITEMS_COUNT
 
     // 计算动画延迟
-    const delay = shouldAnimate
-      ? data instanceof MasonryHeaderItem
-        ? 0
-        : Math.min(index * 0.05, 0.3)
-      : 0
+    const delay = shouldAnimate ? (data instanceof MasonryHeaderItem ? 0 : Math.min(index * 0.05, 0.3)) : 0
 
     // Framer Motion 动画变体
     const itemVariants = {
@@ -259,22 +250,14 @@ export const MasonryItem = memo(
           animate="visible"
           onAnimationComplete={shouldAnimate ? onAnimationComplete : undefined}
         >
-          <MasonryPhotoItem
-            data={data as PhotoManifest}
-            width={width}
-            index={index}
-          />
+          <MasonryPhotoItem data={data as PhotoManifest} width={width} index={index} />
         </m.div>
       )
     }
   },
 )
 
-const FloatingActionBar = ({
-  showFloatingActions,
-}: {
-  showFloatingActions: boolean
-}) => {
+const FloatingActionBar = ({ showFloatingActions }: { showFloatingActions: boolean }) => {
   const isMobile = useMobile()
 
   const variants = isMobile

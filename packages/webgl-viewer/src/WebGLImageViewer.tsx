@@ -5,14 +5,7 @@
  */
 
 import * as React from 'react'
-import {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
 import {
   defaultAlignmentAnimation,
@@ -135,9 +128,7 @@ export const WebGLImageViewer = ({
       // 如果提供了尺寸，传递给loadImage进行优化
       const preknownWidth = config.width > 0 ? config.width : undefined
       const preknownHeight = config.height > 0 ? config.height : undefined
-      webGLImageViewerEngine
-        .loadImage(src, preknownWidth, preknownHeight)
-        .catch(console.error)
+      webGLImageViewerEngine.loadImage(src, preknownWidth, preknownHeight).catch(console.error)
       viewerRef.current = webGLImageViewerEngine
       setTileOutlineEnabled(webGLImageViewerEngine.isTileOutlineEnabled())
     } catch (error) {
@@ -204,7 +195,4 @@ WebGLImageViewer.displayName = 'WebGLImageViewer'
 
 // 导出类型定义
 
-export {
-  type WebGLImageViewerProps,
-  type WebGLImageViewerRef,
-} from './interface'
+export { type WebGLImageViewerProps, type WebGLImageViewerRef } from './interface'

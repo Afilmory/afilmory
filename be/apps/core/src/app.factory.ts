@@ -2,7 +2,8 @@ import 'reflect-metadata'
 
 import { env } from '@afilmory/env'
 import type { HonoHttpApplication } from '@afilmory/framework'
-import { createApplication, createZodValidationPipe } from '@afilmory/framework'
+import { createApplication, createLogger, createZodValidationPipe, HttpException } from '@afilmory/framework'
+import { BizException } from 'core/errors'
 
 import { PgPoolProvider } from './database/database.provider'
 import { AllExceptionsFilter } from './filters/all-exceptions.filter'
@@ -27,10 +28,14 @@ const GlobalValidationPipe = createZodValidationPipe({
   stopAtFirstError: true,
 })
 
+const honoErrorLogger = createLogger('HonoErrorHandler')
+
 export async function createConfiguredApp(options: BootstrapOptions = {}): Promise<HonoHttpApplication> {
   const app = await createApplication(AppModules, {
     globalPrefix: options.globalPrefix ?? '/api',
   })
+
+  const container = app.getContainer()
 
   app.useGlobalFilters(new AllExceptionsFilter())
   app.useGlobalInterceptors(new LoggingInterceptor())
@@ -39,7 +44,6 @@ export async function createConfiguredApp(options: BootstrapOptions = {}): Promi
   app.useGlobalPipes(new GlobalValidationPipe())
 
   // Warm up DB connection during bootstrap
-  const container = app.getContainer()
   const poolProvider = container.resolve(PgPoolProvider)
   await poolProvider.warmup()
 
@@ -48,6 +52,56 @@ export async function createConfiguredApp(options: BootstrapOptions = {}): Promi
   await redisProvider.warmup()
 
   registerOpenApiRoutes(app.getInstance(), { globalPrefix: options.globalPrefix ?? '/api' })
+
+  const hono = app.getInstance()
+  hono.onError((error, context) => {
+    if (error instanceof BizException) {
+      return new Response(JSON.stringify(error.toResponse()), {
+        status: error.getHttpStatus(),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    }
+
+    if (error instanceof HttpException) {
+      return new Response(JSON.stringify(error.getResponse()), {
+        status: error.getStatus(),
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    }
+
+    if (typeof error === 'object' && error !== null && 'statusCode' in error) {
+      const statusCode =
+        typeof (error as { statusCode?: number }).statusCode === 'number'
+          ? (error as { statusCode?: number }).statusCode!
+          : 500
+
+      return new Response(JSON.stringify(error), {
+        status: statusCode,
+        headers: {
+          'content-type': 'application/json',
+        },
+      })
+    }
+
+    honoErrorLogger.error(`Unhandled error ${context.req.method} ${context.req.url}`, error)
+
+    return new Response(
+      JSON.stringify({
+        statusCode: 500,
+        message: 'Internal server error',
+      }),
+      {
+        status: 500,
+        headers: {
+          'content-type': 'application/json',
+        },
+      },
+    )
+  })
 
   return app
 }

@@ -103,8 +103,7 @@ body {
 
   /* Box shadow */
   --box-shadow-context-menu:
-    rgba(0, 0, 0, 0.067) 0px 3px 8px, rgba(0, 0, 0, 0.067) 0px 2px 5px,
-    rgba(0, 0, 0, 0.067) 0px 1px 1px;
+    rgba(0, 0, 0, 0.067) 0px 3px 8px, rgba(0, 0, 0, 0.067) 0px 2px 5px, rgba(0, 0, 0, 0.067) 0px 1px 1px;
 
   /* Font */
   --text-large-title: 1.625rem;
@@ -140,15 +139,12 @@ body {
   /* Font families */
   --font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
   --font-serif:
-    'Noto Serif CJK SC', 'Noto Serif SC', var(--font-serif),
-    'Source Han Serif SC', 'Source Han Serif', source-han-serif-sc, SongTi SC,
-    SimSum, 'Hiragino Sans GB', system-ui, -apple-system, Segoe UI, Roboto,
-    Helvetica, 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
+    'Noto Serif CJK SC', 'Noto Serif SC', var(--font-serif), 'Source Han Serif SC', 'Source Han Serif',
+    source-han-serif-sc, SongTi SC, SimSum, 'Hiragino Sans GB', system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+    'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
   --font-mono:
-    'OperatorMonoSSmLig Nerd Font', 'Cascadia Code PL',
-    'FantasqueSansMono Nerd Font', 'operator mono', JetBrainsMono,
-    'Fira code Retina', 'Fira code', Consolas, Monaco, 'Hannotate SC',
-    monospace, -apple-system;
+    'OperatorMonoSSmLig Nerd Font', 'Cascadia Code PL', 'FantasqueSansMono Nerd Font', 'operator mono', JetBrainsMono,
+    'Fira code Retina', 'Fira code', Consolas, Monaco, 'Hannotate SC', monospace, -apple-system;
 
   /* Custom screens */
   --screen-light-mode: (prefers-color-scheme: light);
@@ -253,3 +249,6 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@source inline('i-simple-icons-github');
+@source inline('i-simple-icons-google');

@@ -2,22 +2,13 @@
 
 import { useControlledState } from '@afilmory/hooks'
 import * as SwitchPrimitives from '@radix-ui/react-switch'
-import type {
-  HTMLMotionProps,
-  LegacyAnimationControls,
-  TargetAndTransition,
-  VariantLabels,
-} from 'motion/react'
+import type { HTMLMotionProps, LegacyAnimationControls, TargetAndTransition, VariantLabels } from 'motion/react'
 import { m as motion } from 'motion/react'
 import * as React from 'react'
 
 import { SwitchProvider, useSwitch } from './switch.context'
 
-type SwitchProps = Omit<
-  React.ComponentProps<typeof SwitchPrimitives.Root>,
-  'asChild'
-> &
-  HTMLMotionProps<'button'>
+type SwitchProps = Omit<React.ComponentProps<typeof SwitchPrimitives.Root>, 'asChild'> & HTMLMotionProps<'button'>
 
 function Switch(props: SwitchProps) {
   const [isPressed, setIsPressed] = React.useState(false)
@@ -64,30 +55,18 @@ function Switch(props: SwitchProps) {
   )
 }
 
-type SwitchThumbProps = Omit<
-  React.ComponentProps<typeof SwitchPrimitives.Thumb>,
-  'asChild'
-> &
+type SwitchThumbProps = Omit<React.ComponentProps<typeof SwitchPrimitives.Thumb>, 'asChild'> &
   HTMLMotionProps<'div'> & {
-    pressedAnimation?:
-      | TargetAndTransition
-      | VariantLabels
-      | boolean
-      | LegacyAnimationControls
+    pressedAnimation?: TargetAndTransition | VariantLabels | boolean | LegacyAnimationControls
   }
 
-function SwitchThumb({
-  pressedAnimation,
-  transition,
-  ...props
-}: SwitchThumbProps) {
+function SwitchThumb({ pressedAnimation, transition, ...props }: SwitchThumbProps) {
   const { isPressed, isChecked, captureBaselineRef } = useSwitch()
   const thumbRef = React.useRef<HTMLDivElement | null>(null)
   const prevRectRef = React.useRef<DOMRect | null>(null)
 
   const resolvedTransition = React.useMemo(
-    () =>
-      transition ?? ({ type: 'spring', stiffness: 300, damping: 25 } as const),
+    () => transition ?? ({ type: 'spring', stiffness: 300, damping: 25 } as const),
     [transition],
   )
 
@@ -109,21 +88,15 @@ function SwitchThumb({
 
       if (deltaX !== 0 || deltaY !== 0) {
         const durationMs =
-          typeof (resolvedTransition as any)?.duration === 'number'
-            ? (resolvedTransition as any).duration * 1000
-            : 200
-        const easing =
-          (resolvedTransition as any)?.ease || 'cubic-bezier(0.22, 1, 0.36, 1)'
+          typeof (resolvedTransition as any)?.duration === 'number' ? (resolvedTransition as any).duration * 1000 : 200
+        const easing = (resolvedTransition as any)?.ease || 'cubic-bezier(0.22, 1, 0.36, 1)'
 
         // Defer to next frame to ensure layout settles in scroll containers
         requestAnimationFrame(() => {
-          el.animate(
-            [
-              { transform: `translate(${deltaX}px, ${deltaY}px)` },
-              { transform: 'translate(0, 0)' },
-            ],
-            { duration: durationMs, easing },
-          )
+          el.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: 'translate(0, 0)' }], {
+            duration: durationMs,
+            easing,
+          })
         })
       }
     }
@@ -168,10 +141,7 @@ type SwitchIconProps = HTMLMotionProps<'div'> & {
 function SwitchIcon({ position, transition, ...props }: SwitchIconProps) {
   const { isChecked } = useSwitch()
 
-  const resolvedTransition = React.useMemo(
-    () => transition ?? ({ type: 'spring', bounce: 0 } as const),
-    [transition],
-  )
+  const resolvedTransition = React.useMemo(() => transition ?? ({ type: 'spring', bounce: 0 } as const), [transition])
 
   const isAnimated = React.useMemo(() => {
     if (position === 'right') return !isChecked

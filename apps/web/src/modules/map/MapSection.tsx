@@ -4,12 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 
-import {
-  GenericMap,
-  MapBackButton,
-  MapInfoPanel,
-  MapLoadingState,
-} from '~/components/ui/map'
+import { GenericMap, MapBackButton, MapInfoPanel, MapLoadingState } from '~/components/ui/map'
 import {
   calculateMapBounds,
   convertExifGPSToDecimal,
@@ -80,8 +75,7 @@ const MapSectionContent = () => {
         setMarkers(photoMarkers)
         console.info(`Found ${photoMarkers.length} photos with GPS coordinates`)
       } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error('Failed to load photo markers')
+        const error = err instanceof Error ? err : new Error('Failed to load photo markers')
         setError(error)
         console.error('Failed to load photo markers:', error)
       } finally {
@@ -144,12 +138,8 @@ const MapSectionContent = () => {
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-center">
           <div className="mb-4 text-4xl">❌</div>
-          <div className="text-lg font-medium text-red-900 dark:text-red-100">
-            {t('explory.map.error.title')}
-          </div>
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {t('explory.map.error.description')}
-          </p>
+          <div className="text-lg font-medium text-red-900 dark:text-red-100">{t('explory.map.error.title')}</div>
+          <p className="text-sm text-red-600 dark:text-red-400">{t('explory.map.error.description')}</p>
         </div>
       </div>
     )
@@ -173,9 +163,7 @@ const MapSectionContent = () => {
         <GenericMap
           markers={markers}
           initialViewState={initialViewState}
-          autoFitBounds={
-            isInitialLoad && latitude === null && longitude === null
-          }
+          autoFitBounds={isInitialLoad && latitude === null && longitude === null}
           selectedMarkerId={photoId}
           onMarkerClick={handleMarkerClick}
           className="h-full w-full"

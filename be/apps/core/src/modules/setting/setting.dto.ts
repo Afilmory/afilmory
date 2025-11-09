@@ -30,12 +30,10 @@ export class GetSettingDto extends createZodDto(
   }),
 ) {}
 
-export class GetSettingsQueryDto extends createZodDto(
-  z
-    .object({
-      keys: keysInputSchema.optional(),
-    })
-    .transform((payload) => ({ keys: payload.keys ?? [] })),
+export class GetSettingsBodyDto extends createZodDto(
+  z.object({
+    keys: keysInputSchema.optional(),
+  }),
 ) {}
 
 export class SetSettingDto extends createZodDto(normalizeEntries.transform((entries) => ({ entries }))) {}

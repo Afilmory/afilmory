@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
@@ -21,15 +17,9 @@
     "noEmit": true,
     "jsx": "preserve",
     "paths": {
-      "~/*": [
-        "./src/*"
-      ],
-      "@pkg": [
-        "./package.json"
-      ]
-    },
+      "~/*": ["./src/*"],
+      "@pkg": ["./package.json"]
+    }
   },
-  "include": [
-    "./src/**/*",
-  ]
+  "include": ["./src/**/*"]
 }

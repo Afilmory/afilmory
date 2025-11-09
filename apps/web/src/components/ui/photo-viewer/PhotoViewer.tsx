@@ -6,14 +6,7 @@ import 'swiper/css/navigation'
 import { Thumbhash } from '@afilmory/ui'
 import { Spring } from '@afilmory/utils'
 import { AnimatePresence, m } from 'motion/react'
-import {
-  Fragment,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { Fragment, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Swiper as SwiperType } from 'swiper'
 import { Keyboard, Navigation, Virtual } from 'swiper/modules'
@@ -193,12 +186,7 @@ export const PhotoViewer = ({
             transition={Spring.presets.snappy}
             className="fixed inset-0"
           >
-            {currentThumbHash && (
-              <Thumbhash
-                thumbHash={currentThumbHash}
-                className="size-fill scale-110"
-              />
-            )}
+            {currentThumbHash && <Thumbhash thumbHash={currentThumbHash} className="size-fill scale-110" />}
           </m.div>
         )}
       </AnimatePresence>
@@ -210,17 +198,14 @@ export const PhotoViewer = ({
             className="fixed inset-0 z-50 flex items-center justify-center"
             style={{
               touchAction: isMobile ? 'manipulation' : 'none',
-              pointerEvents:
-                !isViewerContentVisible || isEntryAnimating ? 'none' : 'auto',
+              pointerEvents: !isViewerContentVisible || isEntryAnimating ? 'none' : 'auto',
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: isViewerContentVisible ? 1 : 0 }}
             exit={{ opacity: 0 }}
             transition={Spring.presets.snappy}
           >
-            <div
-              className={`flex size-full ${isMobile ? 'flex-col' : 'flex-row'}`}
-            >
+            <div className={`flex size-full ${isMobile ? 'flex-col' : 'flex-row'}`}>
               <div className="z-1 flex min-h-0 min-w-0 flex-1 flex-col">
                 <m.div
                   className="group relative flex min-h-0 min-w-0 flex-1"
@@ -277,17 +262,14 @@ export const PhotoViewer = ({
                     </div>
                   </m.div>
 
-                  {!isMobile && injectConfig.useApi && (
+                  {!isMobile && (injectConfig.useApi || injectConfig.useCloud) && (
                     <ReactionButton
                       photoId={currentPhoto.id}
                       className="absolute right-4 bottom-4"
                       style={{
                         opacity: isViewerContentVisible ? 1 : 0,
                         transition: 'opacity 180ms ease',
-                        pointerEvents:
-                          !isViewerContentVisible || isEntryAnimating
-                            ? 'none'
-                            : 'auto',
+                        pointerEvents: !isViewerContentVisible || isEntryAnimating ? 'none' : 'auto',
                       }}
                     />
                   )}
@@ -318,14 +300,9 @@ export const PhotoViewer = ({
                   >
                     {photos.map((photo, index) => {
                       const isCurrentImage = index === currentIndex
-                      const hideCurrentImage =
-                        isEntryAnimating && isCurrentImage
+                      const hideCurrentImage = isEntryAnimating && isCurrentImage
                       return (
-                        <SwiperSlide
-                          key={photo.id}
-                          className="flex items-center justify-center"
-                          virtualIndex={index}
-                        >
+                        <SwiperSlide key={photo.id} className="flex items-center justify-center" virtualIndex={index}>
                           <m.div
                             initial={{ opacity: 0.5, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -333,9 +310,7 @@ export const PhotoViewer = ({
                             transition={Spring.presets.smooth}
                             className="relative flex h-full w-full items-center justify-center"
                             style={{
-                              visibility: hideCurrentImage
-                                ? 'hidden'
-                                : 'visible',
+                              visibility: hideCurrentImage ? 'hidden' : 'visible',
                             }}
                           >
                             <ProgressiveImage
@@ -344,28 +319,14 @@ export const PhotoViewer = ({
                               src={photo.originalUrl}
                               thumbnailSrc={photo.thumbnailUrl}
                               alt={photo.title}
-                              width={
-                                isCurrentImage ? currentPhoto.width : undefined
-                              }
-                              height={
-                                isCurrentImage ? currentPhoto.height : undefined
-                              }
+                              width={isCurrentImage ? currentPhoto.width : undefined}
+                              height={isCurrentImage ? currentPhoto.height : undefined}
                               className="h-full w-full object-contain"
-                              enablePan={
-                                isCurrentImage
-                                  ? !isMobile || isImageZoomed
-                                  : true
-                              }
+                              enablePan={isCurrentImage ? !isMobile || isImageZoomed : true}
                               enableZoom={true}
-                              shouldRenderHighRes={
-                                isViewerContentVisible && isOpen
-                              }
-                              onZoomChange={
-                                isCurrentImage ? handleZoomChange : undefined
-                              }
-                              onBlobSrcChange={
-                                isCurrentImage ? handleBlobSrcChange : undefined
-                              }
+                              shouldRenderHighRes={isViewerContentVisible && isOpen}
+                              onZoomChange={isCurrentImage ? handleZoomChange : undefined}
+                              onBlobSrcChange={isCurrentImage ? handleBlobSrcChange : undefined}
                               // Live Photo props
                               isLivePhoto={photo.isLivePhoto}
                               livePhotoVideoUrl={photo.livePhotoVideoUrl}
@@ -425,9 +386,7 @@ export const PhotoViewer = ({
                       currentPhoto={currentPhoto}
                       exifData={currentPhoto.exif}
                       visible={isViewerContentVisible}
-                      onClose={
-                        isMobile ? () => setShowExifPanel(false) : undefined
-                      }
+                      onClose={isMobile ? () => setShowExifPanel(false) : undefined}
                     />
                   )}
                 </AnimatePresenceOnlyMobile>
@@ -454,11 +413,7 @@ export const PhotoViewer = ({
   )
 }
 
-const AnimatePresenceOnlyMobile = ({
-  children,
-}: {
-  children: React.ReactNode
-}) => {
+const AnimatePresenceOnlyMobile = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useMobile()
   if (!isMobile) return children
   return <AnimatePresence>{children}</AnimatePresence>

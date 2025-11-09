@@ -11,11 +11,9 @@ interface CalloutProps {
 
 const typeStyles: Record<CalloutType, string> = {
   info: 'bg-blue-50/80 border border-blue-200/60 text-blue-900 backdrop-blur-sm',
-  warning:
-    'bg-amber-50/80 border border-amber-200/60 text-amber-900 backdrop-blur-sm',
+  warning: 'bg-amber-50/80 border border-amber-200/60 text-amber-900 backdrop-blur-sm',
   error: 'bg-red-50/80 border border-red-200/60 text-red-900 backdrop-blur-sm',
-  success:
-    'bg-green-50/80 border border-green-200/60 text-green-900 backdrop-blur-sm',
+  success: 'bg-green-50/80 border border-green-200/60 text-green-900 backdrop-blur-sm',
 }
 
 const iconColors: Record<CalloutType, string> = {
@@ -32,11 +30,7 @@ const typeIcons: Record<CalloutType, React.ReactNode> = {
   success: <CheckCircle className="h-6 w-6" />,
 }
 
-export function Callout({
-  type = 'info',
-  children,
-  className = '',
-}: CalloutProps) {
+export function Callout({ type = 'info', children, className = '' }: CalloutProps) {
   return (
     <div
       className={`
@@ -58,10 +52,7 @@ export function Callout({
           style={{ lineHeight: '1.25rem' }}
         >
           {' '}
-          <span
-            className={`flex-shrink-0 ${iconColors[type]} flex items-center`}
-            style={{ height: '1.25rem' }}
-          >
+          <span className={`flex-shrink-0 ${iconColors[type]} flex items-center`} style={{ height: '1.25rem' }}>
             {typeIcons[type]}
           </span>
           {children}

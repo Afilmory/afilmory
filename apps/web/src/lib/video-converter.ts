@@ -18,19 +18,19 @@ interface ConversionResult {
 }
 
 // Global video cache instance using the generic LRU cache with custom cleanup
-const videoCache: LRUCache<string, ConversionResult> = new LRUCache<
-  string,
-  ConversionResult
->(10, (value, key, reason) => {
-  if (value.videoUrl) {
-    try {
-      URL.revokeObjectURL(value.videoUrl)
-      console.info(`Video cache: Revoked blob URL - ${reason}`)
-    } catch (error) {
-      console.warn(`Failed to revoke video blob URL (${reason}):`, error)
+const videoCache: LRUCache<string, ConversionResult> = new LRUCache<string, ConversionResult>(
+  10,
+  (value, key, reason) => {
+    if (value.videoUrl) {
+      try {
+        URL.revokeObjectURL(value.videoUrl)
+        console.info(`Video cache: Revoked blob URL - ${reason}`)
+      } catch (error) {
+        console.warn(`Failed to revoke video blob URL (${reason}):`, error)
+      }
     }
-  }
-})
+  },
+)
 
 function convertMOVtoMP4(
   videoUrl: string,

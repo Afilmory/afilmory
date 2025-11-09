@@ -2,7 +2,7 @@
 title: Docker
 description: Guide to deploying Afilmory via Docker.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-08-31T11:08:35+08:00
+lastModified: 2025-10-28T19:48:05+08:00
 ---
 
 # Docker Deployment
@@ -12,7 +12,6 @@ lastModified: 2025-08-31T11:08:35+08:00
 ## TL;DR
 
 Fork https://github.com/Afilmory/docker, customize configuration and build image.
-
 
 ## 🚀 Quick Start
 
@@ -33,7 +32,7 @@ Before building your Docker image, you'll need to configure the following files:
 ```json
 {
   "name": "Your Photo Gallery",
-  "title": "Your Photo Gallery", 
+  "title": "Your Photo Gallery",
   "description": "Capturing beautiful moments in life",
   "url": "https://your-domain.com",
   "accentColor": "#fb7185",
@@ -51,28 +50,30 @@ Before building your Docker image, you'll need to configure the following files:
 }
 ```
 
-**`builder.config.json`**
+**`builder.config.ts`**
 
-```json
-{
-  "repo": {
-    "enable": false,
-    "url": "https://github.com/username/gallery-public"
+```ts
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  repo: {
+    enable: false,
+    url: 'https://github.com/username/gallery-public',
   },
-  "storage": {
-    "provider": "s3",
-    "bucket": "your-photos-bucket",
-    "region": "us-east-1",
-    "prefix": "photos/",
-    "customDomain": "cdn.yourdomain.com"
+  storage: {
+    provider: 's3',
+    bucket: 'your-photos-bucket',
+    region: 'us-east-1',
+    prefix: 'photos/',
+    customDomain: 'cdn.yourdomain.com',
   },
-  "performance": {
-    "worker": {
-      "enabled": true,
-      "maxWorkers": 4
-    }
-  }
-}
+  performance: {
+    worker: {
+      enabled: true,
+      maxWorkers: 4,
+    },
+  },
+}))
 ```
 
 **`.env`**
@@ -119,7 +120,7 @@ RUN apk update && apk add --no-cache git perl
 
 RUN git clone https://github.com/Afilmory/Afilmory --depth 1 .
 COPY config.json ./
-COPY builder.config.json ./
+COPY builder.config.ts ./
 COPY .env ./
 
 ARG S3_ACCESS_KEY_ID
@@ -179,7 +180,7 @@ services:
       - NODE_ENV=production
     volumes:
       - ./config.json:/app/config.json:ro
-      - ./builder.config.json:/app/builder.config.json:ro
+      - ./builder.config.ts:/app/builder.config.ts:ro
       - ./.env:/app/.env:ro
     depends_on:
       - postgres
@@ -226,7 +227,7 @@ docker run -d \
   -p 3000:3000 \
   --env-file .env \
   -v $(pwd)/config.json:/app/config.json:ro \
-  -v $(pwd)/builder.config.json:/app/builder.config.json:ro \
+  -v $(pwd)/builder.config.ts:/app/builder.config.ts:ro \
   afilmory
 ```
 
@@ -234,9 +235,10 @@ docker run -d \
 
 ### Storage Providers
 
-Afilmory supports multiple storage providers. Configure them in `builder.config.json`:
+Afilmory supports multiple storage providers. Configure them in `builder.config.ts`:
 
 **S3-Compatible Storage:**
+
 ```json
 {
   "storage": {
@@ -250,6 +252,7 @@ Afilmory supports multiple storage providers. Configure them in `builder.config.
 ```
 
 **GitHub Storage:**
+
 ```json
 {
   "storage": {
@@ -280,4 +283,3 @@ For optimal performance in Docker environments:
   }
 }
 ```
-

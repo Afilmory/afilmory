@@ -5,24 +5,43 @@ import type { Constructor } from '../interfaces'
 
 export interface ControllerMetadata {
   prefix: string
+  bypassGlobalPrefix: boolean
 }
 
-export function Controller(prefix = ''): ClassDecorator {
+export interface ControllerOptions {
+  prefix?: string
+  bypassGlobalPrefix?: boolean
+}
+
+function normalizeControllerOptions(prefixOrOptions: string | ControllerOptions | undefined): ControllerMetadata {
+  if (typeof prefixOrOptions === 'string' || prefixOrOptions === undefined) {
+    return {
+      prefix: prefixOrOptions ?? '',
+      bypassGlobalPrefix: false,
+    }
+  }
+
+  return {
+    prefix: prefixOrOptions.prefix ?? '',
+    bypassGlobalPrefix: prefixOrOptions.bypassGlobalPrefix ?? false,
+  }
+}
+
+export function Controller(prefixOrOptions: string | ControllerOptions = ''): ClassDecorator {
+  const metadata = normalizeControllerOptions(prefixOrOptions)
+
   return (target) => {
-    Reflect.defineMetadata(
-      CONTROLLER_METADATA,
-      {
-        prefix,
-      } satisfies ControllerMetadata,
-      target as unknown as Constructor,
-    )
+    Reflect.defineMetadata(CONTROLLER_METADATA, metadata satisfies ControllerMetadata, target as unknown as Constructor)
 
     injectable()(target as unknown as Constructor)
   }
 }
 
 export function getControllerMetadata(target: Constructor): ControllerMetadata {
-  return (Reflect.getMetadata(CONTROLLER_METADATA, target) || {
-    prefix: '',
-  }) as ControllerMetadata
+  const metadata = Reflect.getMetadata(CONTROLLER_METADATA, target) as Partial<ControllerMetadata> | undefined
+
+  return {
+    prefix: metadata?.prefix ?? '',
+    bypassGlobalPrefix: metadata?.bypassGlobalPrefix ?? false,
+  }
 }

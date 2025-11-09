@@ -1,11 +1,9 @@
+import { Button } from '@afilmory/ui'
+import { clsxm, Spring } from '@afilmory/utils'
 import type en from '@locales/app/en.json'
 import { AnimatePresence, m, useAnimation } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-
-import { Button } from '@afilmory/ui'
-import { clsxm } from '@afilmory/utils'
-import { Spring } from '@afilmory/utils'
 
 type TranslationKeys = keyof typeof en
 
@@ -98,19 +96,10 @@ export const FloatingActionButton = ({
           exit={{ opacity: 0, scale: 0.8 }}
           transition={Spring.presets.snappy}
         >
-          <svg
-            width="0"
-            height="0"
-            className="absolute"
-            style={{ visibility: 'hidden' }}
-          >
+          <svg width="0" height="0" className="absolute" style={{ visibility: 'hidden' }}>
             <defs>
               <filter id="goo">
-                <feGaussianBlur
-                  in="SourceGraphic"
-                  stdDeviation="8"
-                  result="blur"
-                />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
                 <feColorMatrix
                   in="blur"
                   mode="matrix"
@@ -130,12 +119,7 @@ export const FloatingActionButton = ({
             variants={staggerVariants}
           >
             {actions.map((action, i) => (
-              <m.div
-                key={action.id}
-                custom={i}
-                variants={itemVariants}
-                className="absolute bottom-0"
-              >
+              <m.div key={action.id} custom={i} variants={itemVariants} className="absolute bottom-0">
                 <GlassButton
                   title={t(action.title)}
                   onClick={() => {
@@ -148,18 +132,13 @@ export const FloatingActionButton = ({
               </m.div>
             ))}
 
-            <GlassButton
-              onClick={() => setIsOpen(!isOpen)}
-              className="relative z-10"
-            >
+            <GlassButton onClick={() => setIsOpen(!isOpen)} className="relative z-10">
               <AnimatePresence initial={false} mode="wait">
                 <m.i
                   key={isOpen ? 'close' : 'settings'}
                   className={clsxm(
                     'absolute text-2xl text-white',
-                    isOpen
-                      ? 'i-mingcute-close-line'
-                      : 'i-mingcute-settings-3-line',
+                    isOpen ? 'i-mingcute-close-line' : 'i-mingcute-settings-3-line',
                   )}
                   initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
                   animate={{ opacity: 1, scale: 1, rotate: 0 }}

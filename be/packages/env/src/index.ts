@@ -22,8 +22,8 @@ export const env = createEnv({
     GITHUB_CLIENT_SECRET: z.string().optional(),
 
     CONFIG_ENCRYPTION_KEY: z.string().min(1),
-    DEFAULT_TENANT_SLUG: z.string().min(1).default('default'),
-    DEFAULT_SUPERADMIN_EMAIL: z.string().email().default('root@local.host'),
+
+    DEFAULT_SUPERADMIN_EMAIL: z.email().default('root@local.host'),
     DEFAULT_SUPERADMIN_USERNAME: z
       .string()
       .min(1)

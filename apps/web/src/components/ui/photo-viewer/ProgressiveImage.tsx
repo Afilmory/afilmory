@@ -1,3 +1,4 @@
+import { clsxm } from '@afilmory/utils'
 import { WebGLImageViewer } from '@afilmory/webgl-viewer'
 import { AnimatePresence, m } from 'motion/react'
 import { useCallback, useRef } from 'react'
@@ -6,7 +7,6 @@ import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import { useMediaQuery } from 'usehooks-ts'
 
 import { useShowContextMenu } from '~/atoms/context-menu'
-import { clsxm } from '@afilmory/utils'
 import { canUseWebGL } from '~/lib/feature'
 
 import { SlidingNumber } from '../number/SlidingNumber'
@@ -96,8 +96,7 @@ export const ProgressiveImage = ({
     livePhotoRef,
   )
 
-  const handleWebGLLoadingStateChange =
-    useWebGLLoadingState(loadingIndicatorRef)
+  const handleWebGLLoadingStateChange = useWebGLLoadingState(loadingIndicatorRef)
 
   const handleThumbnailLoad = useCallback(() => {
     setState.setIsThumbnailLoaded(true)
@@ -197,17 +196,13 @@ export const ProgressiveImage = ({
         />
       )}
 
-      {shouldUseHDR && highResLoaded && blobSrc && isActiveImage && !error && (
-        <HDRBadge />
-      )}
+      {shouldUseHDR && highResLoaded && blobSrc && isActiveImage && !error && <HDRBadge />}
 
       {/* 备用图片（当 WebGL 不可用时） - 只在非错误状态时显示 */}
       {!canUseWebGL && highResLoaded && blobSrc && isActiveImage && !error && (
         <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-black/20">
           <i className="i-mingcute-warning-line mb-2 text-4xl" />
-          <span className="text-center text-sm text-white">
-            {t('photo.webgl.unavailable')}
-          </span>
+          <span className="text-center text-sm text-white">{t('photo.webgl.unavailable')}</span>
         </div>
       )}
 

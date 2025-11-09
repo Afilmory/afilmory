@@ -21,10 +21,7 @@ interface TransmuxOptions {
  * Convert MOV to MP4 using transmux (re-muxing without re-encoding)
  * This preserves original video quality while changing container format
  */
-export async function transmuxMovToMp4(
-  videoUrl: string,
-  options: TransmuxOptions = {},
-): Promise<ConversionResult> {
+export async function transmuxMovToMp4(videoUrl: string, options: TransmuxOptions = {}): Promise<ConversionResult> {
   try {
     return await transmuxMovToMp4Simple(videoUrl, options)
   } catch (error) {

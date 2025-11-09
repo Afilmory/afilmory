@@ -1,4 +1,4 @@
-import type { ReactEventHandler } from "react"
+import type { ReactEventHandler } from 'react'
 
 export const stopPropagation: ReactEventHandler<any> = (e) => e.stopPropagation()
 

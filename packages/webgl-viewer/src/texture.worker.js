@@ -37,14 +37,8 @@ self.onmessage = async (e) => {
         // Create initial LOD texture
         const lodLevel = 1 // Initial LOD level
         const lodConfig = WORKER_SIMPLE_LOD_LEVELS[lodLevel]
-        const finalWidth = Math.max(
-          1,
-          Math.round(originalImage.width * lodConfig.scale),
-        )
-        const finalHeight = Math.max(
-          1,
-          Math.round(originalImage.height * lodConfig.scale),
-        )
+        const finalWidth = Math.max(1, Math.round(originalImage.width * lodConfig.scale))
+        const finalHeight = Math.max(1, Math.round(originalImage.height * lodConfig.scale))
 
         const initialLODBitmap = await createImageBitmap(originalImage, {
           resizeWidth: finalWidth,
@@ -82,16 +76,10 @@ self.onmessage = async (e) => {
         return
       }
 
-      const { x, y, lodLevel, lodConfig, imageWidth, imageHeight, key } =
-        payload
+      const { x, y, lodLevel, lodConfig, imageWidth, imageHeight, key } = payload
 
       try {
-        const { cols, rows } = getTileGridSize(
-          imageWidth,
-          imageHeight,
-          lodLevel,
-          lodConfig,
-        )
+        const { cols, rows } = getTileGridSize(imageWidth, imageHeight, lodLevel, lodConfig)
 
         // Calculate tile region in the original image
         const sourceWidth = imageWidth / cols
@@ -102,14 +90,8 @@ self.onmessage = async (e) => {
         const actualSourceWidth = Math.min(sourceWidth, imageWidth - sourceX)
         const actualSourceHeight = Math.min(sourceHeight, imageHeight - sourceY)
 
-        const targetWidth = Math.min(
-          TILE_SIZE,
-          Math.ceil(actualSourceWidth * lodConfig.scale),
-        )
-        const targetHeight = Math.min(
-          TILE_SIZE,
-          Math.ceil(actualSourceHeight * lodConfig.scale),
-        )
+        const targetWidth = Math.min(TILE_SIZE, Math.ceil(actualSourceWidth * lodConfig.scale))
+        const targetHeight = Math.min(TILE_SIZE, Math.ceil(actualSourceHeight * lodConfig.scale))
 
         if (targetWidth <= 0 || targetHeight <= 0) {
           return
@@ -135,10 +117,7 @@ self.onmessage = async (e) => {
         )
 
         const imageBitmap = canvas.transferToImageBitmap()
-        self.postMessage(
-          { type: 'tile-created', payload: { key, imageBitmap, lodLevel } },
-          [imageBitmap],
-        )
+        self.postMessage({ type: 'tile-created', payload: { key, imageBitmap, lodLevel } }, [imageBitmap])
       } catch (error) {
         console.error('Error creating tile in worker:', error)
         self.postMessage({ type: 'tile-error', payload: { key, error } })

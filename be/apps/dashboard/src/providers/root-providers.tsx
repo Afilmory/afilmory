@@ -13,8 +13,7 @@ import { ContextMenuProvider } from './context-menu-provider'
 import { EventProvider } from './event-provider'
 import { StableRouterProvider } from './stable-router-provider'
 
-const loadFeatures = () =>
-  import('../framer-lazy-feature').then((res) => res.default)
+const loadFeatures = () => import('../framer-lazy-feature').then((res) => res.default)
 export const RootProviders: FC<PropsWithChildren> = ({ children }) => (
   <LazyMotion features={loadFeatures} strict>
     <MotionConfig transition={Spring.presets.smooth}>

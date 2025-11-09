@@ -74,6 +74,8 @@ Designed with adapter pattern, supporting multiple storage backends:
 
 - **S3-Compatible Storage** - AWS S3, MinIO, Alibaba Cloud OSS, etc.
 - **GitHub Storage** - Using GitHub repository as image storage
+- **Eagle Storage** - Using Eagle app library as image storage
+- **Local File System** - Local storage for development and testing
 
 ## 🚀 Quick Start
 
@@ -164,7 +166,7 @@ pnpm build
 ### Notes
 
 - Ensure your S3 bucket already contains photo files
-- If using remote repository, configure `builder.config.json` first
+- If using remote repository, configure `builder.config.ts` first
 
 ## 🔧 Advanced Usage
 

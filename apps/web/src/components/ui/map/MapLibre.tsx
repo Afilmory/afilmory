@@ -1,10 +1,10 @@
 // Styles
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-import { siteConfig } from '@config'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Map from 'react-map-gl/maplibre'
 
+import { siteConfig } from '~/config'
 import { getMapStyle } from '~/lib/map/style'
 import { calculateMapBounds } from '~/lib/map-utils'
 import type { PhotoMarker } from '~/types/map'
@@ -72,9 +72,7 @@ export const Maplibre = ({
   const handleMarkerClose = useCallback(() => {
     if (selectedMarkerId && onMarkerClick) {
       // Find the currently selected marker and call onMarkerClick to deselect it
-      const selectedMarker = markers.find(
-        (marker) => marker.id === selectedMarkerId,
-      )
+      const selectedMarker = markers.find((marker) => marker.id === selectedMarkerId)
       if (selectedMarker) {
         onMarkerClick(selectedMarker)
       }
@@ -82,10 +80,7 @@ export const Maplibre = ({
   }, [selectedMarkerId, onMarkerClick, markers])
 
   // Clustered markers
-  const clusteredMarkers = useMemo(
-    () => clusterMarkers(markers, currentZoom),
-    [markers, currentZoom],
-  )
+  const clusteredMarkers = useMemo(() => clusterMarkers(markers, currentZoom), [markers, currentZoom])
 
   // 计算合适的缩放级别
   const calculateZoomLevel = useCallback((latDiff: number, lngDiff: number) => {
@@ -101,13 +96,7 @@ export const Maplibre = ({
 
   // 自动适配到包含所有照片的区域 - 只在初次加载时执行
   const fitMapToBounds = useCallback(() => {
-    if (
-      !autoFitBounds ||
-      markers.length === 0 ||
-      !isMapLoaded ||
-      hasInitialFitCompleted
-    )
-      return
+    if (!autoFitBounds || markers.length === 0 || !isMapLoaded || hasInitialFitCompleted) return
 
     const bounds = calculateMapBounds(markers)
     if (!bounds) return
@@ -169,9 +158,7 @@ export const Maplibre = ({
       fallbackToViewState(bounds)
     }
 
-    function fallbackToViewState(
-      bounds: ReturnType<typeof calculateMapBounds>,
-    ) {
+    function fallbackToViewState(bounds: ReturnType<typeof calculateMapBounds>) {
       if (!bounds) return
 
       const latDiff = bounds.maxLat - bounds.minLat
@@ -188,14 +175,7 @@ export const Maplibre = ({
       setViewState(newViewState)
       setCurrentZoom(zoom)
     }
-  }, [
-    markers,
-    autoFitBounds,
-    isMapLoaded,
-    mapRef,
-    calculateZoomLevel,
-    hasInitialFitCompleted,
-  ])
+  }, [markers, autoFitBounds, isMapLoaded, mapRef, calculateZoomLevel, hasInitialFitCompleted])
 
   // 当地图加载完成时触发适配
   const handleMapLoad = useCallback(() => {

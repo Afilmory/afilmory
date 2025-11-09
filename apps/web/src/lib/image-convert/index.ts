@@ -16,10 +16,7 @@ import type { ConversionResult, ImageConverterStrategy } from './type'
 export class ImageConverterManager {
   private strategies = new Map<string, ImageConverterStrategy>()
   private readonly conversionPipeline: ImageConversionPipeline
-  private readonly pendingConversions = new Map<
-    string,
-    Promise<ConversionResult>
-  >()
+  private readonly pendingConversions = new Map<string, Promise<ConversionResult>>()
 
   constructor(options: PipelineOptions = {}) {
     this.conversionPipeline = new ImageConversionPipeline({
@@ -46,9 +43,7 @@ export class ImageConverterManager {
    */
   removeStrategy(strategyName: string): boolean {
     let removed = false
-    const strategy = Array.from(this.strategies.values()).find(
-      (s) => s.getName() === strategyName,
-    )
+    const strategy = Array.from(this.strategies.values()).find((s) => s.getName() === strategyName)
 
     if (strategy) {
       strategy.getSupportedFormats().forEach((format) => {
@@ -75,9 +70,7 @@ export class ImageConverterManager {
   /**
    * 使用 file-type 直接查找适合的转换策略
    */
-  async findSuitableStrategy(
-    blob: Blob,
-  ): Promise<ImageConverterStrategy | null> {
+  async findSuitableStrategy(blob: Blob): Promise<ImageConverterStrategy | null> {
     try {
       // 使用 file-type 检测文件格式
       const { fileTypeFromBlob } = await import('file-type')
@@ -97,14 +90,10 @@ export class ImageConverterManager {
         // 验证策略是否确实需要转换这个文件
         const shouldConvert = await strategy.shouldConvert(blob)
         if (shouldConvert) {
-          console.info(
-            `Found suitable conversion strategy: ${strategy.getName()}`,
-          )
+          console.info(`Found suitable conversion strategy: ${strategy.getName()}`)
           return strategy
         } else {
-          console.info(
-            `Strategy ${strategy.getName()} detected but conversion not needed`,
-          )
+          console.info(`Strategy ${strategy.getName()} detected but conversion not needed`)
           return null
         }
       }
@@ -120,11 +109,7 @@ export class ImageConverterManager {
   /**
    * 执行图像转换
    */
-  async convertImage(
-    blob: Blob,
-    originalUrl: string,
-    callbacks?: LoadingCallbacks,
-  ): Promise<ConversionResult | null> {
+  async convertImage(blob: Blob, originalUrl: string, callbacks?: LoadingCallbacks): Promise<ConversionResult | null> {
     const strategy = await this.findSuitableStrategy(blob)
 
     if (!strategy) {
@@ -142,9 +127,7 @@ export class ImageConverterManager {
 
     const existingTask = this.pendingConversions.get(taskKey)
     if (existingTask) {
-      console.info(
-        `Joining pending conversion task for ${strategy.getName()} (${originalUrl})`,
-      )
+      console.info(`Joining pending conversion task for ${strategy.getName()} (${originalUrl})`)
       return await existingTask
     }
 
@@ -197,10 +180,7 @@ export class ImageConverterManager {
     this.conversionPipeline.setMaxConcurrent(maxConcurrent)
   }
 
-  private getConversionTaskKey(
-    strategy: ImageConverterStrategy,
-    originalUrl: string,
-  ): string {
+  private getConversionTaskKey(strategy: ImageConverterStrategy, originalUrl: string): string {
     return `${strategy.getName()}::${originalUrl}`
   }
 }

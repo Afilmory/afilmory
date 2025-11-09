@@ -4,8 +4,7 @@ import postgres from 'postgres'
 
 import * as schema from '../schemas'
 
-const createDrizzle = (client: postgres.Sql) =>
-  drizzle({ client, schema, logger: true })
+const createDrizzle = (client: postgres.Sql) => drizzle({ client, schema, logger: true })
 
 export class DbManager {
   private client: postgres.Sql

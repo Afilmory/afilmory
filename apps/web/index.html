@@ -2,27 +2,18 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="<%- description %>" />
 
     <!-- PWA iOS Safari 配置 -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="<%- title %>" />
 
     <title><%- title %></title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet" />
     <style>
       html {
         font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
@@ -30,6 +21,7 @@
     </style>
     <script id="config">
       window.__CONFIG__ = {}
+      window.__SITE_CONFIG__ = {}
     </script>
     <script id="manifest"></script>
   </head>
@@ -110,8 +102,7 @@
                 letter-spacing: -0.025em;
                 color: rgba(255, 255, 255, 0.85);
                 margin: 0;
-                animation: titleFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s
-                  both;
+                animation: titleFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
               "
             >
               <%- title %>
@@ -123,8 +114,7 @@
                 margin: 0;
                 font-weight: 400;
                 letter-spacing: 0.01em;
-                animation: subtitleFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s
-                  both;
+                animation: subtitleFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
               "
             >
               <%- description %>
@@ -132,12 +122,7 @@
           </div>
 
           <!-- 加载动画 -->
-          <div
-            style="
-              margin-top: 1rem;
-              animation: loaderFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
-            "
-          >
+          <div style="margin-top: 1rem; animation: loaderFade 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both">
             <!-- 点状加载器 -->
             <div style="display: flex; gap: 0.5rem; align-items: center">
               <div

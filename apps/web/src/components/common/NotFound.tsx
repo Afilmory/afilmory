@@ -8,9 +8,7 @@ export const NotFound = () => {
   return (
     <div className="prose center dark:prose-invert m-auto size-full flex-col">
       <main className="flex grow flex-col items-center justify-center">
-        <p className="font-semibold">
-          You have come to a desert of knowledge where there is nothing.
-        </p>
+        <p className="font-semibold">You have come to a desert of knowledge where there is nothing.</p>
         <p>
           Current path: <code>{location.pathname}</code>
         </p>

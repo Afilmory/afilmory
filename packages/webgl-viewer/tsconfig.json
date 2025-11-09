@@ -3,13 +3,8 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "target": "ESNext",
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "types": [
-      "vite/client"
-    ],
+    "lib": ["ESNext", "DOM"],
+    "types": ["vite/client"],
     "jsx": "react-jsx"
   }
 }

@@ -26,9 +26,7 @@ export const EventProvider: FC = () => {
       })
 
       const isMobile = window.innerWidth < 1024
-      document.documentElement.dataset.viewport = isMobile
-        ? 'mobile'
-        : 'desktop'
+      document.documentElement.dataset.viewport = isMobile ? 'mobile' : 'desktop'
     }, 16)
 
     readViewport()

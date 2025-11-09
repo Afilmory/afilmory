@@ -383,7 +383,7 @@ describe('Redis Event System', () => {
 
   it('uses selector option for async emit decorator results', async () => {
     const emitter = {
-      emit: vi.fn().mockResolvedValue(undefined),
+      emit: vi.fn().mockResolvedValue(),
     }
 
     ContainerRef.set({
@@ -418,7 +418,7 @@ describe('Redis Event System', () => {
 
   it('uses selector option for sync emit decorator results', async () => {
     const emitter = {
-      emit: vi.fn().mockResolvedValue(undefined),
+      emit: vi.fn().mockResolvedValue(),
     }
 
     ContainerRef.set({
@@ -723,8 +723,8 @@ describe('Redis Event System', () => {
   it('guards repeated lifecycle calls in EventModule bootstrapper', async () => {
     const redis = new FakeRedis()
     const emitter = {
-      start: vi.fn().mockResolvedValue(undefined),
-      stop: vi.fn().mockResolvedValue(undefined),
+      start: vi.fn().mockResolvedValue(),
+      stop: vi.fn().mockResolvedValue(),
     }
 
     const DynamicModule = EventModule.forRootAsync({

@@ -7,9 +7,7 @@ export const useControlled = <T>(
   defaultValue: T,
   onChange?: (v: T, ...args: any[]) => void,
 ): [T, (value: T) => void] => {
-  const [stateValue, setStateValue] = useState(
-    value !== undefined ? value : defaultValue,
-  )
+  const [stateValue, setStateValue] = useState(value !== undefined ? value : defaultValue)
   const isControlled = value !== undefined
   const onChangeRef = useRefValue(onChange)
 

@@ -1,4 +1,4 @@
-export type BetterAuthUserRole = 'user' | 'admin' | 'superadmin'
+export type BetterAuthUserRole = 'guest' | 'user' | 'admin' | 'superadmin'
 
 export interface BetterAuthUser {
   id: string

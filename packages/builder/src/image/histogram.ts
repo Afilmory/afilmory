@@ -1,8 +1,4 @@
-import type {
-  HistogramData,
-  ToneAnalysis,
-  ToneType,
-} from '@afilmory/builder/types/photo.js'
+import type { HistogramData, ToneAnalysis, ToneType } from '@afilmory/builder/types/photo.js'
 import type sharp from 'sharp'
 
 import { getGlobalLoggers } from '../photo'
@@ -13,9 +9,7 @@ import { getGlobalLoggers } from '../photo'
  * @param imageLogger 日志记录器
  * @returns 直方图数据
  */
-async function calculateHistogram(
-  sharpInstance: sharp.Sharp,
-): Promise<HistogramData | null> {
+async function calculateHistogram(sharpInstance: sharp.Sharp): Promise<HistogramData | null> {
   const log = getGlobalLoggers().image
 
   try {
@@ -145,9 +139,7 @@ function analyzeTone(histogram: HistogramData): ToneAnalysis {
       highlightRatio: Math.round(highlightRatio * 100) / 100,
     }
 
-    log?.success(
-      `影调分析完成：${toneType} (亮度：${brightness}, 对比度：${contrast})`,
-    )
+    log?.success(`影调分析完成：${toneType} (亮度：${brightness}, 对比度：${contrast})`)
 
     return result
   } catch (error) {
@@ -170,9 +162,7 @@ function analyzeTone(histogram: HistogramData): ToneAnalysis {
  * @param imageLogger 日志记录器
  * @returns 影调分析结果
  */
-export async function calculateHistogramAndAnalyzeTone(
-  sharpInstance: sharp.Sharp,
-): Promise<ToneAnalysis | null> {
+export async function calculateHistogramAndAnalyzeTone(sharpInstance: sharp.Sharp): Promise<ToneAnalysis | null> {
   const histogram = await calculateHistogram(sharpInstance)
   if (!histogram) {
     return null

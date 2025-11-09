@@ -2,10 +2,7 @@ import type * as DialogPrimitive from '@radix-ui/react-dialog'
 import type { HTMLMotionProps } from 'motion/react'
 import type { FC } from 'react'
 
-export type DialogContentProps = React.ComponentProps<
-  typeof DialogPrimitive.Content
-> &
-  HTMLMotionProps<'div'>
+export type DialogContentProps = React.ComponentProps<typeof DialogPrimitive.Content> & HTMLMotionProps<'div'>
 
 export type ModalComponentProps = {
   modalId: string

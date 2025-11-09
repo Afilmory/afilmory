@@ -13,8 +13,7 @@ export const springScrollTo = (
   axis: 'x' | 'y' = 'y',
 ) => {
   // const scrollTop = scrollerElement?.scrollTop
-  const currentValue =
-    axis === 'x' ? scrollerElement?.scrollLeft : scrollerElement?.scrollTop
+  const currentValue = axis === 'x' ? scrollerElement?.scrollLeft : scrollerElement?.scrollTop
 
   let isStop = false
   const stopSpringScrollHandler = () => {

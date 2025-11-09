@@ -13,9 +13,7 @@ async function convertWebpToJpg(inputPath, outputPath) {
     await sharp(inputPath)
       .jpeg({ quality: 90 }) // 设置 JPG 质量为 90
       .toFile(outputPath)
-    console.info(
-      `✅ 转换成功：${basename(inputPath)} -> ${basename(outputPath)}`,
-    )
+    console.info(`✅ 转换成功：${basename(inputPath)} -> ${basename(outputPath)}`)
   } catch (error) {
     console.error(`❌ 转换失败：${basename(inputPath)}`, error.message)
   }

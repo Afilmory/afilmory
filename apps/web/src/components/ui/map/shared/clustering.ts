@@ -8,10 +8,7 @@ import type { ClusterPoint } from './types'
  * @param zoom Current zoom level
  * @returns Array of cluster points
  */
-export function clusterMarkers(
-  markers: PhotoMarker[],
-  zoom: number,
-): ClusterPoint[] {
+export function clusterMarkers(markers: PhotoMarker[], zoom: number): ClusterPoint[] {
   if (markers.length === 0) return []
 
   // At high zoom levels, don't cluster
@@ -43,8 +40,7 @@ export function clusterMarkers(
       if (processed.has(other.id)) continue
 
       const distance = Math.sqrt(
-        Math.pow(marker.longitude - other.longitude, 2) +
-          Math.pow(marker.latitude - other.latitude, 2),
+        Math.pow(marker.longitude - other.longitude, 2) + Math.pow(marker.latitude - other.latitude, 2),
       )
 
       if (distance < threshold) {
@@ -65,10 +61,8 @@ export function clusterMarkers(
       })
     } else {
       // Cluster
-      const centerLng =
-        nearby.reduce((sum, m) => sum + m.longitude, 0) / nearby.length
-      const centerLat =
-        nearby.reduce((sum, m) => sum + m.latitude, 0) / nearby.length
+      const centerLng = nearby.reduce((sum, m) => sum + m.longitude, 0) / nearby.length
+      const centerLat = nearby.reduce((sum, m) => sum + m.latitude, 0) / nearby.length
 
       clusters.push({
         type: 'Feature',

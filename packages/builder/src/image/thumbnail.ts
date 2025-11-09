@@ -61,9 +61,7 @@ export async function thumbnailExists(photoId: string): Promise<boolean> {
 }
 
 // 读取现有缩略图并生成 blurhash
-async function processExistingThumbnail(
-  photoId: string,
-): Promise<ThumbnailResult | null> {
+async function processExistingThumbnail(photoId: string): Promise<ThumbnailResult | null> {
   const { thumbnailPath, thumbnailUrl } = getThumbnailPaths(photoId)
 
   const thumbnailLog = getGlobalLoggers().thumbnail
@@ -81,10 +79,7 @@ async function processExistingThumbnail(
 }
 
 // 生成新的缩略图
-async function generateNewThumbnail(
-  imageBuffer: Buffer,
-  photoId: string,
-): Promise<ThumbnailResult> {
+async function generateNewThumbnail(imageBuffer: Buffer, photoId: string): Promise<ThumbnailResult> {
   const { thumbnailPath, thumbnailUrl } = getThumbnailPaths(photoId)
 
   const log = getGlobalLoggers().thumbnail

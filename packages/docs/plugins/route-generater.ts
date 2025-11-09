@@ -132,9 +132,7 @@ async function generateRouteFromFile(
 ): Promise<RouteConfig | null> {
   try {
     // 移除 contents 前缀和文件扩展名
-    let routePath = file
-      .replace(new RegExp(`^${contentsDir}/`), '')
-      .replace(/\.(md|mdx)$/, '')
+    let routePath = file.replace(new RegExp(`^${contentsDir}/`), '').replace(/\.(md|mdx)$/, '')
 
     // 处理 index 文件
     if (routePath === indexFile) {
@@ -156,9 +154,7 @@ async function generateRouteFromFile(
     return {
       path: routePath,
       component: componentPath,
-      title:
-        (typeof meta.title === 'string' ? meta.title : undefined) ||
-        generateTitleFromPath(routePath),
+      title: (typeof meta.title === 'string' ? meta.title : undefined) || generateTitleFromPath(routePath),
       meta,
     }
   } catch (error) {
@@ -215,9 +211,7 @@ function generateTitleFromPath(path: string): string {
 }
 
 function generateRouteFileContent(routes: RouteConfig[]): string {
-  const imports = routes
-    .map((route, index) => `import Route${index} from '${route.component}'`)
-    .join('\n')
+  const imports = routes.map((route, index) => `import Route${index} from '${route.component}'`).join('\n')
 
   const routeObjects = routes
     .map(

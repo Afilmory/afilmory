@@ -8,18 +8,12 @@ type OnboardingHeaderProps = {
   step: OnboardingStep
 }
 
-export const OnboardingHeader: FC<OnboardingHeaderProps> = ({
-  currentStepIndex,
-  totalSteps,
-  step,
-}) => (
+export const OnboardingHeader: FC<OnboardingHeaderProps> = ({ currentStepIndex, totalSteps, step }) => (
   <header className="p-8 pb-6">
-    <div className="rounded-lg inline-flex items-center gap-2 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent">
+    <div className="bg-accent/10 text-accent inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium">
       Step {currentStepIndex + 1} of {totalSteps}
     </div>
-    <h1 className="mt-4 text-3xl font-bold text-text">{step.title}</h1>
-    <p className="mt-2 max-w-2xl text-sm text-text-secondary">
-      {step.description}
-    </p>
+    <h1 className="text-text mt-4 text-3xl font-bold">{step.title}</h1>
+    <p className="text-text-secondary mt-2 max-w-2xl text-sm">{step.description}</p>
   </header>
 )

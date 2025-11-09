@@ -68,9 +68,7 @@ export interface MapContextValue {
     latitude: number
   } | null
   /** Set popup info */
-  setPopupInfo: (
-    info: { marker: PhotoMarker; longitude: number; latitude: number } | null,
-  ) => void
+  setPopupInfo: (info: { marker: PhotoMarker; longitude: number; latitude: number } | null) => void
 }
 
 /**

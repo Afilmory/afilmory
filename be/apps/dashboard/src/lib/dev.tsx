@@ -1,5 +1,5 @@
 declare const APP_DEV_CWD: string
-export const attachOpenInEditor = (stack: string) => {
+export function attachOpenInEditor(stack: string) {
   const lines = stack.split('\n')
   return lines.map((line) => {
     // A line like this: at App (http://localhost:5173/src/App.tsx?t=1720527056591:41:9)
@@ -22,10 +22,7 @@ export const attachOpenInEditor = (stack: string) => {
           <div
             className="cursor-pointer"
             key={line}
-            onClick={openInEditor.bind(
-              null,
-              realFsPath.replace(/\?v=[a-f0-9]+/, ''),
-            )}
+            onClick={openInEditor.bind(null, realFsPath.replace(/\?v=[a-f0-9]+/, ''))}
           >
             {line}
           </div>
@@ -38,11 +35,7 @@ export const attachOpenInEditor = (stack: string) => {
           const fs = srcFsPath.replace(/\?t=[a-f0-9]+/, '')
 
           return (
-            <div
-              className="cursor-pointer"
-              key={line}
-              onClick={openInEditor.bind(null, `${APP_DEV_CWD}/src${fs}`)}
-            >
+            <div className="cursor-pointer" key={line} onClick={openInEditor.bind(null, `${APP_DEV_CWD}/src${fs}`)}>
               {line}
             </div>
           )
@@ -54,6 +47,6 @@ export const attachOpenInEditor = (stack: string) => {
   })
 }
 // http://localhost:5173/src/App.tsx?t=1720527056591:41:9
-const openInEditor = (file: string) => {
+function openInEditor(file: string) {
   fetch(`/__open-in-editor?file=${encodeURIComponent(`${file}`)}`)
 }

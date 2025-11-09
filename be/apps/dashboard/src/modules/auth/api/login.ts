@@ -16,7 +16,7 @@ export interface LoginResponse extends SessionResponse {
  * @param data - Login credentials with email and password
  * @returns Session response with user and session data
  */
-export const login = async (data: LoginRequest): Promise<LoginResponse> => {
+export async function login(data: LoginRequest): Promise<LoginResponse> {
   // better-auth returns Response object, we need to parse it
   const response = await coreApi<Response>('/auth/sign-in/email', {
     method: 'POST',

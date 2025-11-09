@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Post } from '@afilmory/framework'
+import { SkipTenant } from 'core/decorators/skip-tenant.decorator'
 import { BizException, ErrorCode } from 'core/errors'
+import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'
 
 import { OnboardingInitDto } from './onboarding.dto'
 import { OnboardingService } from './onboarding.service'
@@ -12,6 +14,13 @@ export class OnboardingController {
   async getStatus() {
     const initialized = await this.service.isInitialized()
     return { initialized }
+  }
+
+  @Get('/site-schema')
+  @BypassResponseTransform()
+  @SkipTenant()
+  async getSiteSchema() {
+    return await this.service.getSiteSchema()
   }
 
   @Post('/init')

@@ -49,7 +49,24 @@ export default defineConfig({
       '/api': {
         target: API_TARGET,
         changeOrigin: true,
+        xfwd: true,
         // keep path as-is so /api -> backend /api
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const originalHost = req.headers.host
+            if (originalHost) {
+              const normalizedHost = Array.isArray(originalHost) ? originalHost[0] : originalHost
+              // Preserve SPA host for tenant resolution regardless of changeOrigin behaviour
+              proxyReq.setHeader('host', normalizedHost)
+              proxyReq.setHeader('x-forwarded-host', normalizedHost)
+            }
+
+            const originHeader = req.headers.origin
+            if (originHeader) {
+              proxyReq.setHeader('origin', Array.isArray(originHeader) ? originHeader[0] : originHeader)
+            }
+          })
+        },
       },
     },
   },

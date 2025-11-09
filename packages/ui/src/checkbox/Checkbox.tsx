@@ -1,37 +1,25 @@
 'use client'
 
+import { clsxm } from '@afilmory/utils'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
 import type { HTMLMotionProps } from 'motion/react'
 import { m as motion } from 'motion/react'
 import * as React from 'react'
-
-import { clsxm } from '@afilmory/utils'
 
 type CheckboxProps = React.ComponentProps<typeof CheckboxPrimitive.Root> &
   HTMLMotionProps<'button'> & {
     indeterminate?: boolean
   }
 
-function Checkbox({
-  className,
-  onCheckedChange,
-  indeterminate,
-  ...props
-}: CheckboxProps) {
-  const [isChecked, setIsChecked] = React.useState(
-    props?.checked ?? props?.defaultChecked ?? false,
-  )
+function Checkbox({ className, onCheckedChange, indeterminate, ...props }: CheckboxProps) {
+  const [isChecked, setIsChecked] = React.useState(props?.checked ?? props?.defaultChecked ?? false)
 
   React.useEffect(() => {
     if (props?.checked !== undefined) setIsChecked(props.checked)
   }, [props?.checked])
 
   // Determine the actual state including indeterminate
-  const checkboxState = indeterminate
-    ? 'indeterminate'
-    : isChecked
-      ? 'checked'
-      : 'unchecked'
+  const checkboxState = indeterminate ? 'indeterminate' : isChecked ? 'checked' : 'unchecked'
 
   const handleCheckedChange = React.useCallback(
     (checked: boolean) => {
@@ -42,11 +30,7 @@ function Checkbox({
   )
 
   return (
-    <CheckboxPrimitive.Root
-      {...props}
-      onCheckedChange={handleCheckedChange}
-      asChild
-    >
+    <CheckboxPrimitive.Root {...props} onCheckedChange={handleCheckedChange} asChild>
       <motion.button
         data-slot="checkbox"
         className={clsxm(

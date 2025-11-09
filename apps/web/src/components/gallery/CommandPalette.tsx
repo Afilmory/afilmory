@@ -51,34 +51,19 @@ const fuzzyMatch = (text: string, query: string): boolean => {
 }
 
 // Search photos utility
-const searchPhotos = (
-  photos: ReturnType<typeof photoLoader.getPhotos>,
-  query: string,
-) => {
+const searchPhotos = (photos: ReturnType<typeof photoLoader.getPhotos>, query: string) => {
   const lowerQuery = query.trim().toLowerCase()
   if (!lowerQuery) return []
 
   return photos.filter((photo) => {
     const matchesTitle = photo.title?.toLowerCase().includes(lowerQuery)
-    const matchesDescription = photo.description
-      ?.toLowerCase()
-      .includes(lowerQuery)
-    const matchesTags = photo.tags?.some((tag) =>
-      tag.toLowerCase().includes(lowerQuery),
-    )
+    const matchesDescription = photo.description?.toLowerCase().includes(lowerQuery)
+    const matchesTags = photo.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery))
     const matchesCamera =
-      photo.exif?.Make?.toLowerCase().includes(lowerQuery) ||
-      photo.exif?.Model?.toLowerCase().includes(lowerQuery)
-    const matchesLens =
-      photo.exif?.LensModel?.toLowerCase().includes(lowerQuery)
+      photo.exif?.Make?.toLowerCase().includes(lowerQuery) || photo.exif?.Model?.toLowerCase().includes(lowerQuery)
+    const matchesLens = photo.exif?.LensModel?.toLowerCase().includes(lowerQuery)
 
-    return (
-      matchesTitle ||
-      matchesDescription ||
-      matchesTags ||
-      matchesCamera ||
-      matchesLens
-    )
+    return matchesTitle || matchesDescription || matchesTags || matchesCamera || matchesLens
   })
 }
 
@@ -155,9 +140,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
           action: () => {
             setGallerySetting((prev) => ({
               ...prev,
-              selectedTags: isActive
-                ? prev.selectedTags.filter((t) => t !== tag)
-                : [...prev.selectedTags, tag],
+              selectedTags: isActive ? prev.selectedTags.filter((t) => t !== tag) : [...prev.selectedTags, tag],
             }))
           },
           keywords: ['tag', 'filter', tag],
@@ -168,9 +151,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
     // Filter commands - Cameras
     if (allCameras.length > 0) {
       allCameras.forEach((camera) => {
-        const isActive = gallerySetting.selectedCameras.includes(
-          camera.displayName,
-        )
+        const isActive = gallerySetting.selectedCameras.includes(camera.displayName)
         cmds.push({
           id: `camera-${camera.displayName}`,
           type: 'filter',
@@ -186,13 +167,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
                 : [...prev.selectedCameras, camera.displayName],
             }))
           },
-          keywords: [
-            'camera',
-            'filter',
-            camera.displayName,
-            camera.make,
-            camera.model,
-          ],
+          keywords: ['camera', 'filter', camera.displayName, camera.make, camera.model],
         })
       })
     }
@@ -200,9 +175,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
     // Filter commands - Lenses
     if (allLenses.length > 0) {
       allLenses.forEach((lens) => {
-        const isActive = gallerySetting.selectedLenses.includes(
-          lens.displayName,
-        )
+        const isActive = gallerySetting.selectedLenses.includes(lens.displayName)
         cmds.push({
           id: `lens-${lens.displayName}`,
           type: 'filter',
@@ -229,14 +202,11 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
       cmds.push({
         id: 'tag-filter-mode-toggle',
         type: 'action',
-        title: isUnionMode
-          ? t('action.tag.match.any')
-          : t('action.tag.match.all'),
+        title: isUnionMode ? t('action.tag.match.any') : t('action.tag.match.all'),
         subtitle: t('action.tag.match.label'),
         icon: 'i-mingcute-switch-line',
         badge: isUnionMode ? t('action.tag.mode.or') : t('action.tag.mode.and'),
-        action: () =>
-          updateTagFilterMode(isUnionMode ? 'intersection' : 'union'),
+        action: () => updateTagFilterMode(isUnionMode ? 'intersection' : 'union'),
         keywords: ['tag', 'filter', 'mode', 'toggle'],
       })
     }
@@ -298,42 +268,23 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
           type: 'photo',
           title: photo.title || photo.id,
           subtitle: photo.description || `${photo.exif?.Model || 'Photo'}`,
-          icon: (
-            <img
-              src={photo.thumbnailUrl}
-              alt={photo.title || 'Photo'}
-              className="h-6 w-6 rounded object-cover"
-            />
-          ),
+          icon: <img src={photo.thumbnailUrl} alt={photo.title || 'Photo'} className="h-6 w-6 rounded object-cover" />,
           action: () => {
             const allPhotos = photoLoader.getPhotos()
             const photoIndex = allPhotos.findIndex((p) => p.id === photo.id)
             if (photoIndex !== -1) {
               openViewer(photoIndex)
-              navigate(`/${photo.id}`)
+              navigate(`/photos/${photo.id}`)
               onClose()
             }
           },
-          keywords: [
-            photo.title,
-            photo.description,
-            ...(photo.tags || []),
-          ].filter(Boolean) as string[],
+          keywords: [photo.title, photo.description, ...(photo.tags || [])].filter(Boolean) as string[],
         })
       })
     }
 
     return cmds
-  }, [
-    t,
-    gallerySetting,
-    query,
-    navigate,
-    onClose,
-    setGallerySetting,
-    openViewer,
-    updateTagFilterMode,
-  ])
+  }, [t, gallerySetting, query, navigate, onClose, setGallerySetting, openViewer, updateTagFilterMode])
 
   // Filter commands based on query
   const filteredCommands = useMemo(() => {
@@ -372,9 +323,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
       switch (e.key) {
         case 'ArrowDown': {
           e.preventDefault()
-          setSelectedIndex((prev) =>
-            Math.min(prev + 1, filteredCommands.length - 1),
-          )
+          setSelectedIndex((prev) => Math.min(prev + 1, filteredCommands.length - 1))
           break
         }
         case 'ArrowUp': {
@@ -396,9 +345,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
 
   // Scroll selected item into view
   useEffect(() => {
-    const selectedElement = listRef.current?.children[
-      selectedIndex
-    ] as HTMLElement
+    const selectedElement = listRef.current?.children[selectedIndex] as HTMLElement
     if (selectedElement) {
       selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
     }
@@ -412,10 +359,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-9999 flex items-end justify-center lg:items-start lg:pt-[15vh]"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-9999 flex items-end justify-center lg:items-start lg:pt-[15vh]" onClick={onClose}>
       {/* Backdrop with blur */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-xl transition-all duration-200" />
 
@@ -502,16 +446,11 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
         </div>
 
         {/* Commands List */}
-        <div
-          ref={listRef}
-          className="max-h-[60vh] overflow-y-auto overscroll-contain py-2"
-        >
+        <div ref={listRef} className="max-h-[60vh] overflow-y-auto overscroll-contain py-2">
           {filteredCommands.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <i className="i-mingcute-search-line text-text-quaternary mb-3 text-4xl" />
-              <p className="text-text-secondary text-sm">
-                {t('action.search.no-results')}
-              </p>
+              <p className="text-text-secondary text-sm">{t('action.search.no-results')}</p>
             </div>
           ) : (
             filteredCommands.map((cmd, index) => (
@@ -529,32 +468,23 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
                 <div
                   className={clsxm(
                     'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg transition-all duration-200',
-                    cmd.active
-                      ? 'bg-accent/10 text-accent'
-                      : 'bg-background/95 text-text-secondary',
+                    cmd.active ? 'bg-accent/10 text-accent' : 'bg-background/95 text-text-secondary',
                   )}
                   style={
                     cmd.active
                       ? {
-                          boxShadow:
-                            'inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent)',
+                          boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent)',
                         }
                       : undefined
                   }
                 >
-                  {typeof cmd.icon === 'string' ? (
-                    <i className={cmd.icon} />
-                  ) : (
-                    cmd.icon
-                  )}
+                  {typeof cmd.icon === 'string' ? <i className={cmd.icon} /> : cmd.icon}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 overflow-hidden">
                   <div className="flex items-center gap-2">
-                    <span className="text-text truncate text-sm font-medium">
-                      {cmd.title}
-                    </span>
+                    <span className="text-text truncate text-sm font-medium">{cmd.title}</span>
                     {cmd.badge !== undefined && (
                       <span className="bg-fill-tertiary text-text-secondary rounded-full px-2 py-0.5 text-xs">
                         {cmd.badge}
@@ -566,11 +496,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
                       </span>
                     )}
                   </div>
-                  {cmd.subtitle && (
-                    <p className="text-text-secondary truncate text-xs">
-                      {cmd.subtitle}
-                    </p>
-                  )}
+                  {cmd.subtitle && <p className="text-text-secondary truncate text-xs">{cmd.subtitle}</p>}
                 </div>
               </button>
             ))
@@ -582,21 +508,15 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
           <div className="text-text-secondary flex items-center justify-between text-xs">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
-                <kbd className="border-accent/20 bg-accent/5 rounded border px-1.5 py-0.5 font-mono">
-                  ↑↓
-                </kbd>
+                <kbd className="border-accent/20 bg-accent/5 rounded border px-1.5 py-0.5 font-mono">↑↓</kbd>
                 Navigate
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="border-accent/20 bg-accent/5 rounded border px-1.5 py-0.5 font-mono">
-                  ↵
-                </kbd>
+                <kbd className="border-accent/20 bg-accent/5 rounded border px-1.5 py-0.5 font-mono">↵</kbd>
                 Select
               </span>
             </div>
-            {filteredCommands.length > 0 && (
-              <span>{filteredCommands.length} results</span>
-            )}
+            {filteredCommands.length > 0 && <span>{filteredCommands.length} results</span>}
           </div>
         </div>
       </div>

@@ -1,24 +1,10 @@
 import type { RefObject } from 'react'
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { PhotoManifest } from '~/types/photo'
 
-import type {
-  AnimationFrameRect,
-  PhotoViewerTransition,
-  PhotoViewerTransitionState,
-} from './types'
-import {
-  computeViewerImageFrame,
-  escapeAttributeValue,
-  getBorderRadius,
-} from './utils'
+import type { AnimationFrameRect, PhotoViewerTransition, PhotoViewerTransitionState } from './types'
+import { computeViewerImageFrame, escapeAttributeValue, getBorderRadius } from './utils'
 
 interface UsePhotoViewerTransitionsParams {
   isOpen: boolean
@@ -56,10 +42,8 @@ export const usePhotoViewerTransitions = ({
   const hiddenTriggerPrevVisibilityRef = useRef<string | null>(null)
   const viewerImageFrameRef = useRef<AnimationFrameRect | null>(null)
 
-  const [entryTransition, setEntryTransition] =
-    useState<PhotoViewerTransition | null>(null)
-  const [exitTransition, setExitTransition] =
-    useState<PhotoViewerTransition | null>(null)
+  const [entryTransition, setEntryTransition] = useState<PhotoViewerTransition | null>(null)
+  const [exitTransition, setExitTransition] = useState<PhotoViewerTransition | null>(null)
   const [isViewerContentVisible, setIsViewerContentVisible] = useState(false)
 
   const restoreTriggerElementVisibility = useCallback(() => {
@@ -91,10 +75,7 @@ export const usePhotoViewerTransitions = ({
     }
 
     const selector = `[data-photo-id="${escapeAttributeValue(currentPhoto.id)}"]`
-    const liveTriggerEl =
-      typeof document === 'undefined'
-        ? null
-        : document.querySelector<HTMLElement>(selector)
+    const liveTriggerEl = typeof document === 'undefined' ? null : document.querySelector<HTMLElement>(selector)
 
     if (liveTriggerEl && liveTriggerEl.isConnected) {
       cachedTriggerRef.current = liveTriggerEl
@@ -150,31 +131,15 @@ export const usePhotoViewerTransitions = ({
     }
 
     const fromRect = triggerEl.getBoundingClientRect()
-    const viewportRect =
-      viewerBoundsRef.current ??
-      containerRef.current?.getBoundingClientRect() ??
-      null
-    const targetFrame = computeViewerImageFrame(
-      currentPhoto,
-      viewportRect,
-      isMobile,
-    )
+    const viewportRect = viewerBoundsRef.current ?? containerRef.current?.getBoundingClientRect() ?? null
+    const targetFrame = computeViewerImageFrame(currentPhoto, viewportRect, isMobile)
 
-    if (
-      !fromRect.width ||
-      !fromRect.height ||
-      !targetFrame.width ||
-      !targetFrame.height
-    ) {
+    if (!fromRect.width || !fromRect.height || !targetFrame.width || !targetFrame.height) {
       setIsViewerContentVisible(true)
       return
     }
 
-    const imageSrc =
-      currentBlobSrc ||
-      currentPhoto.thumbnailUrl ||
-      currentPhoto.originalUrl ||
-      null
+    const imageSrc = currentBlobSrc || currentPhoto.thumbnailUrl || currentPhoto.originalUrl || null
 
     if (!imageSrc) {
       setIsViewerContentVisible(true)
@@ -184,9 +149,7 @@ export const usePhotoViewerTransitions = ({
     hideTriggerElement(triggerEl)
 
     const triggerBorderRadius = getBorderRadius(
-      triggerEl instanceof HTMLImageElement && triggerEl.parentElement
-        ? triggerEl.parentElement
-        : triggerEl,
+      triggerEl instanceof HTMLImageElement && triggerEl.parentElement ? triggerEl.parentElement : triggerEl,
     )
 
     setIsViewerContentVisible(true)
@@ -268,15 +231,8 @@ export const usePhotoViewerTransitions = ({
       return
     }
 
-    const viewportRect =
-      viewerBoundsRef.current ??
-      containerRef.current?.getBoundingClientRect() ??
-      null
-    const computedFrame = computeViewerImageFrame(
-      currentPhoto,
-      viewportRect,
-      isMobile,
-    )
+    const viewportRect = viewerBoundsRef.current ?? containerRef.current?.getBoundingClientRect() ?? null
+    const computedFrame = computeViewerImageFrame(currentPhoto, viewportRect, isMobile)
     const viewerFrame = viewerImageFrameRef.current ?? {
       left: computedFrame.left,
       top: computedFrame.top,
@@ -295,16 +251,10 @@ export const usePhotoViewerTransitions = ({
     viewerImageFrameRef.current = viewerFrame
 
     const borderRadius = getBorderRadius(
-      triggerEl instanceof HTMLImageElement && triggerEl.parentElement
-        ? triggerEl.parentElement
-        : triggerEl,
+      triggerEl instanceof HTMLImageElement && triggerEl.parentElement ? triggerEl.parentElement : triggerEl,
     )
 
-    const imageSrc =
-      currentPhoto.thumbnailUrl ||
-      currentBlobSrc ||
-      currentPhoto.originalUrl ||
-      null
+    const imageSrc = currentPhoto.thumbnailUrl || currentBlobSrc || currentPhoto.originalUrl || null
 
     if (!imageSrc) {
       wasOpenRef.current = false
@@ -377,11 +327,9 @@ export const usePhotoViewerTransitions = ({
   }, [restoreTriggerElementVisibility])
 
   const isEntryAnimating = Boolean(entryTransition)
-  const shouldRenderBackdrop =
-    isOpen || Boolean(exitTransition) || Boolean(entryTransition)
+  const shouldRenderBackdrop = isOpen || Boolean(exitTransition) || Boolean(entryTransition)
 
-  const thumbHash =
-    typeof currentPhoto?.thumbHash === 'string' ? currentPhoto.thumbHash : null
+  const thumbHash = typeof currentPhoto?.thumbHash === 'string' ? currentPhoto.thumbHash : null
   const shouldRenderThumbhash = shouldRenderBackdrop && Boolean(thumbHash)
 
   return {

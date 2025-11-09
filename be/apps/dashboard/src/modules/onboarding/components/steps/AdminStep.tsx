@@ -6,10 +6,7 @@ import type { AdminFormState, OnboardingErrors } from '../../types'
 type AdminStepProps = {
   admin: AdminFormState
   errors: OnboardingErrors
-  onChange: <Field extends keyof AdminFormState>(
-    field: Field,
-    value: AdminFormState[Field],
-  ) => void
+  onChange: <Field extends keyof AdminFormState>(field: Field, value: AdminFormState[Field]) => void
 }
 
 export const AdminStep: FC<AdminStepProps> = ({ admin, errors, onChange }) => (
@@ -63,9 +60,7 @@ export const AdminStep: FC<AdminStepProps> = ({ admin, errors, onChange }) => (
           id="admin-confirm"
           type="password"
           value={admin.confirmPassword}
-          onInput={(event) =>
-            onChange('confirmPassword', event.currentTarget.value)
-          }
+          onInput={(event) => onChange('confirmPassword', event.currentTarget.value)}
           placeholder="Repeat password"
           autoComplete="new-password"
           error={!!errors['admin.confirmPassword']}
@@ -74,10 +69,9 @@ export const AdminStep: FC<AdminStepProps> = ({ admin, errors, onChange }) => (
       </div>
     </div>
 
-    <p className="text-xs text-text-tertiary">
-      After onboarding completes a global super administrator will also be
-      generated. Those credentials are written to the backend logs for security
-      reasons.
+    <p className="text-text-tertiary text-xs">
+      After onboarding completes a global super administrator will also be generated. Those credentials are written to
+      the backend logs for security reasons.
     </p>
   </form>
 )

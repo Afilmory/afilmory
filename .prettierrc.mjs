@@ -1,10 +1,12 @@
 export default {
-  printWidth: 80,
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+  arrowParens: 'always',
+  printWidth: 120,
   tabWidth: 2,
   useTabs: false,
-  singleQuote: true,
-  trailingComma: "all",
-  arrowParens: "always",
-  semi: false,
-  endOfLine: "lf",
-};
+  bracketSpacing: true,
+  bracketSameLine: false,
+  jsxBracketSameLine: false,
+}

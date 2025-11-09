@@ -1,9 +1,10 @@
-import type { OnboardingSettingKey } from './constants'
+import type { SchemaFormState } from '~/modules/schema-form/types'
+
+import type { OnboardingSettingKey, OnboardingSiteSettingKey } from './constants'
 
 export type TenantFormState = {
   name: string
   slug: string
-  domain: string
 }
 
 export type AdminFormState = {
@@ -20,5 +21,7 @@ export type SettingFormState = Record<
     value: string
   }
 >
+
+export type SiteFormState = SchemaFormState<OnboardingSiteSettingKey>
 
 export type OnboardingErrors = Record<string, string>

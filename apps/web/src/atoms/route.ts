@@ -26,18 +26,11 @@ export const [routeAtom, , , , getReadonlyRoute, setRoute] = createAtomHooks(
 )
 
 const noop = []
-export const useReadonlyRouteSelector = <T>(
-  selector: (route: RouteAtom) => T,
-  deps: any[] = noop,
-): T =>
-  useAtomValue(
-    useMemo(() => selectAtom(routeAtom, (route) => selector(route)), deps),
-  )
+export const useReadonlyRouteSelector = <T>(selector: (route: RouteAtom) => T, deps: any[] = noop): T =>
+  useAtomValue(useMemo(() => selectAtom(routeAtom, (route) => selector(route)), deps))
 
 // Vite HMR will create new router instance, but RouterProvider always stable
 
-const [, , , , navigate, setNavigate] = createAtomHooks(
-  atom<{ fn: NavigateFunction | null }>({ fn() {} }),
-)
+const [, , , , navigate, setNavigate] = createAtomHooks(atom<{ fn: NavigateFunction | null }>({ fn() {} }))
 const getStableRouterNavigate = () => navigate().fn
 export { getStableRouterNavigate, setNavigate }

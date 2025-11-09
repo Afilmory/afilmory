@@ -13,14 +13,14 @@ export const App: FC = () => {
   )
 }
 
-const AppLayer = () => {
+function AppLayer() {
   usePageRedirect()
 
   const appIsReady = true
   return appIsReady ? <Outlet /> : <AppSkeleton />
 }
 
-const AppSkeleton = () => {
+function AppSkeleton() {
   return null
 }
 export default App

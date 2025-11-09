@@ -1,10 +1,7 @@
 import type { CompositionEventHandler } from 'react'
 import { useCallback, useEffect, useRef } from 'react'
 
-type InputElementAttributes = React.DetailedHTMLProps<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  HTMLInputElement
->
+type InputElementAttributes = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>
 type TextareaElementAttributes = React.DetailedHTMLProps<
   React.TextareaHTMLAttributes<HTMLTextAreaElement>,
   HTMLTextAreaElement

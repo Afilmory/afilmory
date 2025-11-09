@@ -1,4 +1,3 @@
-
 import { injectConfig } from '~/config'
 import { client } from '~/lib/client'
 

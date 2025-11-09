@@ -13,9 +13,7 @@ const docsRoot = join(__dirname, '..')
 async function build() {
   try {
     // Import the static module using file URL to handle path resolution
-    const staticModulePath = pathToFileURL(
-      join(docsRoot, 'dist/static/main-static.js'),
-    ).href
+    const staticModulePath = pathToFileURL(join(docsRoot, 'dist/static/main-static.js')).href
     const staticModule = await import(staticModulePath)
 
     // Read the base HTML template
@@ -29,12 +27,7 @@ async function build() {
       // Replace placeholders in template
       const pageHtml = templateHtml
         .replace('<!--app-html-->', html)
-        .replace(
-          '<!--app-title-->',
-          `${
-            (route.meta?.title as string) || route.title || 'Docs'
-          } | Afilmory Docs`,
-        )
+        .replace('<!--app-title-->', `${(route.meta?.title as string) || route.title || 'Docs'} | Afilmory Docs`)
         .replace('<!--app-head-->', generateMetaTags(route))
 
       // Determine output path

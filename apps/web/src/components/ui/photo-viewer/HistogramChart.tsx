@@ -54,10 +54,7 @@ const calculateHistogram = (imageData: ImageData): CompressedHistogramData => {
   }
 }
 
-const drawHistogram = (
-  canvas: HTMLCanvasElement,
-  histogram: CompressedHistogramData,
-) => {
+const drawHistogram = (canvas: HTMLCanvasElement, histogram: CompressedHistogramData) => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
@@ -78,12 +75,7 @@ const drawHistogram = (
   ctx.clearRect(0, 0, width, height)
 
   // 找到最大值用于归一化
-  const maxVal = Math.max(
-    ...histogram.luminance,
-    ...histogram.red,
-    ...histogram.green,
-    ...histogram.blue,
-  )
+  const maxVal = Math.max(...histogram.luminance, ...histogram.red, ...histogram.green, ...histogram.blue)
 
   if (maxVal === 0) return
 
@@ -142,9 +134,7 @@ const drawHistogram = (
       } else if (color.startsWith('rgb')) {
         // 如果是 rgb 格式，转换为 rgba
         topColor = color.replace('rgb', 'rgba').replace(')', `, ${alpha})`)
-        bottomColor = color
-          .replace('rgb', 'rgba')
-          .replace(')', `, ${alpha * 0.1})`)
+        bottomColor = color.replace('rgb', 'rgba').replace(')', `, ${alpha * 0.1})`)
       } else {
         // 其他格式直接使用
         topColor = color
@@ -194,9 +184,7 @@ export const HistogramChart: FC<{
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const previousHistogramRef = useRef<CompressedHistogramData | null>(null)
   const animationRef = useRef<number | null>(null)
-  const [histogram, setHistogram] = useState<CompressedHistogramData | null>(
-    null,
-  )
+  const [histogram, setHistogram] = useState<CompressedHistogramData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const { t } = useTranslation()
@@ -220,10 +208,7 @@ export const HistogramChart: FC<{
 
       // 为了更好的性能，缩放图片到合适的大小
       const maxSize = 300
-      const scale = Math.min(
-        maxSize / img.naturalWidth,
-        maxSize / img.naturalHeight,
-      )
+      const scale = Math.min(maxSize / img.naturalWidth, maxSize / img.naturalHeight)
       const scaledWidth = Math.floor(img.naturalWidth * scale)
       const scaledHeight = Math.floor(img.naturalHeight * scale)
 
@@ -282,14 +267,12 @@ export const HistogramChart: FC<{
       const w = frequency
       const d = damping
       const exp = Math.exp(-d * tSec)
-      const value =
-        1 - exp * (Math.cos(w * tSec) + (d / w) * Math.sin(w * tSec))
+      const value = 1 - exp * (Math.cos(w * tSec) + (d / w) * Math.sin(w * tSec))
       // Clamp to [0, 1] to avoid overshoot drawing artifacts
       return Math.max(0, Math.min(1, value))
     }
 
-    const lerpArray = (from: number[], to: number[], p: number) =>
-      from.map((v, i) => v + (to[i] - v) * p)
+    const lerpArray = (from: number[], to: number[], p: number) => from.map((v, i) => v + (to[i] - v) * p)
 
     const frame = (now: number) => {
       const elapsedMs = now - startAt
@@ -334,9 +317,7 @@ export const HistogramChart: FC<{
       {error && (
         <div className="bg-material-ultra-thin absolute inset-0 flex items-center justify-center rounded-sm backdrop-blur-xl">
           <div className="text-center">
-            <div className="text-text-secondary text-xs">
-              {t('photo.error.loading')}
-            </div>
+            <div className="text-text-secondary text-xs">{t('photo.error.loading')}</div>
           </div>
         </div>
       )}

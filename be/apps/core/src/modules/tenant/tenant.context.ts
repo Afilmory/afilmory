@@ -1,6 +1,5 @@
-import { BizException, ErrorCode } from 'core/errors'
 import { HttpContext } from '@afilmory/framework'
-import type { HttpContextValues } from '@afilmory/framework'
+import { BizException, ErrorCode } from 'core/errors'
 
 import type { TenantContext } from './tenant.types'
 

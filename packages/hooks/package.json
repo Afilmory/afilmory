@@ -10,14 +10,14 @@
   "peerDependencies": {
     "react": "^19.1.1"
   },
+  "dependencies": {
+    "jotai": "^2.15.0",
+    "usehooks-ts": "^3.1.0"
+  },
   "devDependencies": {
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
-  },
-  "dependencies": {
-    "jotai": "^2.15.0",
-    "usehooks-ts": "^3.1.0"
   }
 }

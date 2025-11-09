@@ -1,11 +1,10 @@
 import { clsxm, Spring } from '@afilmory/utils'
-import { Dialog } from '@radix-ui/react-dialog'
-import { useAtomValue, useStore } from 'jotai'
+import { useAtomValue } from 'jotai'
 import { AnimatePresence } from 'motion/react'
 import { useEffect, useMemo, useState } from 'react'
 import { useEventCallback } from 'usehooks-ts'
 
-import { DialogContent } from './Dialog'
+import { Dialog, DialogContent } from './Dialog'
 import type { ModalItem } from './ModalManager'
 import { Modal, modalItemsAtom } from './ModalManager'
 import { modalStore } from './store'
@@ -70,11 +69,7 @@ function ModalWrapper({ item }: { item: ModalItem }) {
         {...contentProps}
         {...item.modalContent}
       >
-        <Component
-          modalId={item.id}
-          dismiss={dismiss}
-          {...(item.props as any)}
-        />
+        <Component modalId={item.id} dismiss={dismiss} {...(item.props as any)} />
       </DialogContent>
     </Dialog>
   )

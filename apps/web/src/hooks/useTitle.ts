@@ -1,5 +1,6 @@
-import { siteConfig } from '@config'
 import { useEffect, useRef } from 'react'
+
+import { siteConfig } from '~/config'
 
 const titleTemplate = `%s | ${siteConfig.name}`
 export const useTitle = (title?: Nullable<string>) => {

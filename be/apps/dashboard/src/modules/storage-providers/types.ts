@@ -1,4 +1,4 @@
-export type StorageProviderType = 's3' | 'github' | 'local' | 'eagle'
+export type StorageProviderType = 's3' | 'github'
 
 export interface StorageProvider {
   id: string

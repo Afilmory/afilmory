@@ -1,20 +1,14 @@
-import { siteConfig } from '@config'
+import { clsxm } from '@afilmory/utils'
 import { repository } from '@pkg'
 import * as AvatarPrimitive from '@radix-ui/react-avatar'
 import { useTranslation } from 'react-i18next'
 
+import { siteConfig } from '~/config'
 import { usePhotos } from '~/hooks/usePhotoViewer'
-import { clsxm } from '@afilmory/utils'
 
 import { ActionGroup } from './ActionGroup'
 
-export const MasonryHeaderMasonryItem = ({
-  style,
-  className,
-}: {
-  style?: React.CSSProperties
-  className?: string
-}) => {
+export const MasonryHeaderMasonryItem = ({ style, className }: { style?: React.CSSProperties; className?: string }) => {
   const { t } = useTranslation()
   const { i18n } = useTranslation()
   const visiblePhotoCount = usePhotos().length
@@ -32,10 +26,7 @@ export const MasonryHeaderMasonryItem = ({
           <div className="relative">
             {siteConfig.author.avatar && (
               <AvatarPrimitive.Root>
-                <AvatarPrimitive.Image
-                  src={siteConfig.author.avatar}
-                  className="size-16 rounded-full"
-                />
+                <AvatarPrimitive.Image src={siteConfig.author.avatar} className="size-16 rounded-full" />
                 <AvatarPrimitive.Fallback>
                   <div className="bg-material-medium size-16 rounded-full" />
                 </AvatarPrimitive.Fallback>
@@ -44,9 +35,7 @@ export const MasonryHeaderMasonryItem = ({
             <div
               className={clsxm(
                 'from-accent to-accent/80 inline-flex items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg',
-                siteConfig.author.avatar
-                  ? 'size-8 rounded absolute bottom-0 -right-3'
-                  : 'size-16 mb-4',
+                siteConfig.author.avatar ? 'size-8 rounded absolute bottom-0 -right-3' : 'size-16 mb-4',
               )}
             >
               <i className="i-mingcute-camera-2-line text-2xl text-white" />
@@ -54,9 +43,7 @@ export const MasonryHeaderMasonryItem = ({
           </div>
         </div>
 
-        <h2 className="mt-1 mb-1 text-2xl font-semibold text-gray-900 dark:text-white">
-          {siteConfig.name}
-        </h2>
+        <h2 className="mt-1 mb-1 text-2xl font-semibold text-gray-900 dark:text-white">{siteConfig.name}</h2>
 
         {/* Social media links */}
         {siteConfig.social && (

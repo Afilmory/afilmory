@@ -5,26 +5,56 @@ import { useLocation, useNavigate } from 'react-router'
 
 import { useSetAuthUser } from '~/atoms/auth'
 import type { SessionResponse } from '~/modules/auth/api/session'
-import {
-  AUTH_SESSION_QUERY_KEY,
-  fetchSession,
-} from '~/modules/auth/api/session'
-import { signOut } from '~/modules/auth/auth-client'
+import { AUTH_SESSION_QUERY_KEY, fetchSession } from '~/modules/auth/api/session'
+import { signOutBySource } from '~/modules/auth/auth-client'
 import { getOnboardingStatus } from '~/modules/onboarding/api'
 
 const ONBOARDING_STATUS_QUERY_KEY = ['onboarding', 'status'] as const
 
 const DEFAULT_LOGIN_PATH = '/login'
 const DEFAULT_ONBOARDING_PATH = '/onboarding'
+const DEFAULT_REGISTER_PATH = '/register'
+const TENANT_MISSING_PATH = '/tenant-missing'
 const DEFAULT_AUTHENTICATED_PATH = '/'
 const SUPERADMIN_ROOT_PATH = '/superadmin'
 const SUPERADMIN_DEFAULT_PATH = '/superadmin/settings'
 
 const AUTH_FAILURE_STATUSES = new Set([401, 403, 419])
+const AUTH_TENANT_NOT_FOUND_ERROR_CODE = 12
+const TENANT_NOT_FOUND_ERROR_CODE = 20
+const TENANT_MISSING_ERROR_CODES = new Set([AUTH_TENANT_NOT_FOUND_ERROR_CODE, TENANT_NOT_FOUND_ERROR_CODE])
 
-const PUBLIC_PATHS = new Set([DEFAULT_LOGIN_PATH, DEFAULT_ONBOARDING_PATH])
+const PUBLIC_PATHS = new Set([DEFAULT_LOGIN_PATH, DEFAULT_ONBOARDING_PATH, DEFAULT_REGISTER_PATH, TENANT_MISSING_PATH])
 
-export const usePageRedirect = () => {
+type BizErrorPayload = { code?: number | string }
+type FetchErrorWithPayload = FetchError<BizErrorPayload> & {
+  response?: {
+    _data?: BizErrorPayload
+  }
+}
+
+function extractBizErrorCode(error: unknown): number | null {
+  if (!(error instanceof FetchError)) {
+    return null
+  }
+
+  const { data, response } = error as FetchErrorWithPayload
+  const payload = data ?? response?._data
+
+  const codeValue = payload?.code
+  if (typeof codeValue === 'number') {
+    return Number.isFinite(codeValue) ? codeValue : null
+  }
+
+  if (typeof codeValue === 'string') {
+    const parsed = Number.parseInt(codeValue, 10)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+
+  return null
+}
+
+export function usePageRedirect() {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -57,7 +87,7 @@ export const usePageRedirect = () => {
 
   const logout = useCallback(async () => {
     try {
-      await signOut()
+      await signOutBySource()
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
@@ -78,6 +108,24 @@ export const usePageRedirect = () => {
       queryClient.cancelQueries({ queryKey: AUTH_SESSION_QUERY_KEY })
     }
   }, [queryClient])
+
+  useEffect(() => {
+    const matchedTenantNotFound = [sessionQuery.error, onboardingQuery.error].some((error) => {
+      const code = extractBizErrorCode(error)
+      return code !== null && TENANT_MISSING_ERROR_CODES.has(code)
+    })
+
+    if (!matchedTenantNotFound) {
+      return
+    }
+
+    queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, null)
+    setAuthUser(null)
+
+    if (location.pathname !== TENANT_MISSING_PATH) {
+      navigate(TENANT_MISSING_PATH, { replace: true })
+    }
+  }, [location.pathname, navigate, onboardingQuery.error, queryClient, sessionQuery.error, setAuthUser])
 
   useEffect(() => {
     if (sessionQuery.isPending || onboardingQuery.isPending) {

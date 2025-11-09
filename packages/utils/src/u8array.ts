@@ -5,7 +5,5 @@ export const compressUint8Array = (uint8Array: Uint8Array) => {
 }
 
 export const decompressUint8Array = (compressed: string) => {
-  return Uint8Array.from(
-    compressed.match(/.{1,2}/g)!.map((byte) => Number.parseInt(byte, 16)),
-  )
+  return Uint8Array.from(compressed.match(/.{1,2}/g)!.map((byte) => Number.parseInt(byte, 16)))
 }

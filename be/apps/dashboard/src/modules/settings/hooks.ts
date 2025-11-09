@@ -5,22 +5,24 @@ import type { SettingEntryInput } from './types'
 
 export const SETTING_UI_SCHEMA_QUERY_KEY = ['settings', 'ui-schema'] as const
 
-export const useSettingUiSchemaQuery = () => {
+export function useSettingUiSchemaQuery() {
   return useQuery({
     queryKey: SETTING_UI_SCHEMA_QUERY_KEY,
     queryFn: getSettingUiSchema,
   })
 }
 
-export const useUpdateSettingsMutation = () => {
+export function useUpdateSettingsMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (entries: ReadonlyArray<SettingEntryInput>) => {
+    mutationFn: async (entries: readonly SettingEntryInput[]) => {
       await updateSettings(entries)
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: SETTING_UI_SCHEMA_QUERY_KEY })
+      void queryClient.invalidateQueries({
+        queryKey: SETTING_UI_SCHEMA_QUERY_KEY,
+      })
     },
   })
 }

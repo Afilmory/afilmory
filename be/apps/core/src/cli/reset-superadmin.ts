@@ -103,7 +103,7 @@ export async function handleResetSuperAdminPassword(options: ResetCliOptions): P
   const dbAccessor = container.resolve(DbAccessor)
 
   try {
-    const auth = authProvider.getAuth()
+    const auth = await authProvider.getAuth()
     const context = await auth.$context
     const rawPassword = options.password ?? generateRandomPassword()
     const { minPasswordLength, maxPasswordLength } = context.password.config

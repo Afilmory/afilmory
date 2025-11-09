@@ -8,6 +8,16 @@ import { injectable } from 'tsyringe'
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = createLogger('AllExceptionsFilter')
   catch(exception: unknown, host: ArgumentsHost) {
+    const store = host.getContext()
+    const ctx = store.hono
+
+    const error = exception instanceof Error ? exception : new Error(String(exception))
+
+    this.logger.error(`--- ${ctx.req.method} ${toUri(ctx.req.url)} --->\n`, error)
+
+    if (process.env.NODE_ENV === 'development') {
+      this.logger.error(error)
+    }
     if (exception instanceof BizException) {
       const response = exception.toResponse()
       return new Response(JSON.stringify(response), {
@@ -35,13 +45,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         },
       })
     }
-
-    const store = host.getContext()
-    const ctx = store.hono
-
-    const error = exception instanceof Error ? exception : new Error(String(exception))
-
-    this.logger.error(`--- ${ctx.req.method} ${toUri(ctx.req.url)} --->\n`, error)
 
     return new Response(
       JSON.stringify({

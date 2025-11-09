@@ -5,12 +5,7 @@ export const STORAGE_SETTING_KEYS = {
   activeProvider: 'builder.storage.activeProvider',
 } as const
 
-export const STORAGE_PROVIDER_TYPES: readonly StorageProviderType[] = [
-  's3',
-  'github',
-  'local',
-  'eagle',
-]
+export const STORAGE_PROVIDER_TYPES: readonly StorageProviderType[] = ['s3', 'github']
 
 export const STORAGE_PROVIDER_TYPE_OPTIONS: ReadonlyArray<{
   value: StorageProviderType
@@ -18,13 +13,11 @@ export const STORAGE_PROVIDER_TYPE_OPTIONS: ReadonlyArray<{
 }> = [
   { value: 's3', label: 'S3 / 兼容对象存储' },
   { value: 'github', label: 'GitHub 仓库' },
-  { value: 'local', label: '本地文件系统' },
-  { value: 'eagle', label: 'Eagle 素材库' },
 ]
 
 export const STORAGE_PROVIDER_FIELD_DEFINITIONS: Record<
   StorageProviderType,
-  ReadonlyArray<StorageProviderFieldDefinition>
+  readonly StorageProviderFieldDefinition[]
 > = {
   s3: [
     {
@@ -123,59 +116,6 @@ export const STORAGE_PROVIDER_FIELD_DEFINITIONS: Record<
       placeholder: 'true / false',
       description: '是否使用 raw.githubusercontent.com 生成公开访问链接。',
       helper: '使用自定义域名则可填写 false。',
-    },
-  ],
-  local: [
-    {
-      key: 'basePath',
-      label: '基础路径',
-      placeholder: './apps/web/public/photos',
-      description: '本地素材所在的绝对或相对路径。',
-    },
-    {
-      key: 'baseUrl',
-      label: '访问 URL',
-      placeholder: '/photos',
-      description: '用于生成公开访问链接的基础 URL。',
-    },
-    {
-      key: 'distPath',
-      label: '输出目录',
-      placeholder: './dist/photos',
-      description: '可选，构建时复制素材到的目标目录。',
-    },
-    {
-      key: 'excludeRegex',
-      label: '排除规则 (正则)',
-      placeholder: '\\.(tmp|bak)$',
-      description: '可选，排除不需要复制的文件。',
-      multiline: true,
-    },
-    {
-      key: 'maxFileLimit',
-      label: '最大文件数量',
-      placeholder: '1000',
-      description: '可选，限制扫描时的最大文件数量。',
-    },
-  ],
-  eagle: [
-    {
-      key: 'libraryPath',
-      label: 'Eagle Library 路径',
-      placeholder: '/Users/you/Library/Application Support/Eagle',
-      description: 'Eagle 应用素材库的安装路径。',
-    },
-    {
-      key: 'distPath',
-      label: '输出目录',
-      placeholder: './apps/web/public/originals',
-      description: '可选，原图导出的目标目录。',
-    },
-    {
-      key: 'baseUrl',
-      label: '访问 URL',
-      placeholder: '/originals',
-      description: '用于公开访问原图的基础 URL。',
     },
   ],
 }

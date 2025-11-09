@@ -11,10 +11,7 @@ const DEFAULT_LAYER_STYLE: LayerProps = {
   },
 }
 
-export const GeoJsonLayer = ({
-  data,
-  layerStyle = DEFAULT_LAYER_STYLE,
-}: GeoJsonLayerProps) => {
+export const GeoJsonLayer = ({ data, layerStyle = DEFAULT_LAYER_STYLE }: GeoJsonLayerProps) => {
   return (
     <Source type="geojson" data={data}>
       <Layer {...layerStyle} />

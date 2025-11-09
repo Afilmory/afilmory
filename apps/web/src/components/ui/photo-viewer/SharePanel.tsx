@@ -1,13 +1,12 @@
 import { RootPortal } from '@afilmory/ui'
 import { clsxm, Spring } from '@afilmory/utils'
-import { siteConfig } from '@config'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { AnimatePresence, m } from 'motion/react'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { injectConfig } from '~/config'
+import { injectConfig, siteConfig } from '~/config'
 import type { PhotoManifest } from '~/types/photo'
 
 interface SharePanelProps {
@@ -142,14 +141,9 @@ export const SharePanel = ({ photo, trigger, blobSrc }: SharePanelProps) => {
       const shareUrl = encodeURIComponent(window.location.href)
       const defaultTitle = t('photo.share.default.title')
       const shareTitle = encodeURIComponent(photo.title || defaultTitle)
-      const shareText = encodeURIComponent(
-        t('photo.share.text', { title: photo.title || defaultTitle }),
-      )
+      const shareText = encodeURIComponent(t('photo.share.text', { title: photo.title || defaultTitle }))
 
-      const finalUrl = url
-        .replace('{url}', shareUrl)
-        .replace('{title}', shareTitle)
-        .replace('{text}', shareText)
+      const finalUrl = url.replace('{url}', shareUrl).replace('{title}', shareTitle).replace('{text}', shareText)
 
       window.open(finalUrl, '_blank', 'width=600,height=400')
       setIsOpen(false)
@@ -187,9 +181,7 @@ export const SharePanel = ({ photo, trigger, blobSrc }: SharePanelProps) => {
 
   return (
     <DropdownMenuPrimitive.Root open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuPrimitive.Trigger asChild>
-        {trigger}
-      </DropdownMenuPrimitive.Trigger>
+      <DropdownMenuPrimitive.Trigger asChild>{trigger}</DropdownMenuPrimitive.Trigger>
 
       <AnimatePresence>
         {isOpen && (
@@ -223,14 +215,8 @@ export const SharePanel = ({ photo, trigger, blobSrc }: SharePanelProps) => {
                 />
                 {/* 标题区域 */}
                 <div className="relative mb-4 text-center">
-                  <h3 className="text-text font-semibold">
-                    {t('photo.share.title')}
-                  </h3>
-                  {photo.title && (
-                    <p className="text-text-secondary mt-1 line-clamp-1 text-sm">
-                      {photo.title}
-                    </p>
-                  )}
+                  <h3 className="text-text font-semibold">{t('photo.share.title')}</h3>
+                  {photo.title && <p className="text-text-secondary mt-1 line-clamp-1 text-sm">{photo.title}</p>}
                 </div>
 
                 {/* 社交媒体分享 - 第一排 */}
@@ -256,17 +242,9 @@ export const SharePanel = ({ photo, trigger, blobSrc }: SharePanelProps) => {
                             'shadow-lg',
                           )}
                         >
-                          <i
-                            className={clsxm(
-                              option.icon,
-                              'size-5',
-                              option.color,
-                            )}
-                          />
+                          <i className={clsxm(option.icon, 'size-5', option.color)} />
                         </div>
-                        <span className="text-text-secondary text-xs font-medium">
-                          {option.label}
-                        </span>
+                        <span className="text-text-secondary text-xs font-medium">{option.label}</span>
                       </button>
                     ))}
                   </div>
@@ -279,9 +257,7 @@ export const SharePanel = ({ photo, trigger, blobSrc }: SharePanelProps) => {
                       <h4 className="text-text-secondary text-xs font-medium tracking-wide uppercase">
                         {t('photo.share.embed.code')}
                       </h4>
-                      <p className="text-text-tertiary mt-1 text-xs">
-                        {t('photo.share.embed.description')}
-                      </p>
+                      <p className="text-text-tertiary mt-1 text-xs">{t('photo.share.embed.description')}</p>
                     </div>
                     <div className="relative">
                       <div className="border-accent/20 bg-accent/5 rounded-lg border p-3">
@@ -334,17 +310,9 @@ export const SharePanel = ({ photo, trigger, blobSrc }: SharePanelProps) => {
                         >
                           <div className="flex items-center gap-2">
                             <div className="bg-accent/10 flex size-7 items-center justify-center rounded-full transition-colors duration-200">
-                              <i
-                                className={clsxm(
-                                  option.icon,
-                                  'size-3.5',
-                                  option.color || 'text-text-secondary',
-                                )}
-                              />
+                              <i className={clsxm(option.icon, 'size-3.5', option.color || 'text-text-secondary')} />
                             </div>
-                            <span className="text-text text-xs font-medium">
-                              {option.label}
-                            </span>
+                            <span className="text-text text-xs font-medium">{option.label}</span>
                           </div>
                         </button>
                       ))}

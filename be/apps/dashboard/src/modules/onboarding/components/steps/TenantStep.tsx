@@ -8,16 +8,9 @@ type TenantStepProps = {
   errors: OnboardingErrors
   onNameChange: (value: string) => void
   onSlugChange: (value: string) => void
-  onDomainChange: (value: string) => void
 }
 
-export const TenantStep: FC<TenantStepProps> = ({
-  tenant,
-  errors,
-  onNameChange,
-  onSlugChange,
-  onDomainChange,
-}) => (
+export const TenantStep: FC<TenantStepProps> = ({ tenant, errors, onNameChange, onSlugChange }) => (
   <form className="space-y-6" onSubmit={(event) => event.preventDefault()}>
     <div className="grid gap-5 md:grid-cols-2">
       <div className="space-y-2">
@@ -47,23 +40,6 @@ export const TenantStep: FC<TenantStepProps> = ({
         </div>
         <FormError>{errors['tenant.slug']}</FormError>
       </div>
-    </div>
-
-    <div className="space-y-2">
-      <Label htmlFor="tenant-domain">Custom domain (optional)</Label>
-      <Input
-        id="tenant-domain"
-        value={tenant.domain}
-        onInput={(event) => onDomainChange(event.currentTarget.value)}
-        placeholder="gallery.afilmory.app"
-        error={!!errors['tenant.domain']}
-        autoComplete="off"
-      />
-      <FormError>{errors['tenant.domain']}</FormError>
-      <p className="text-xs text-text-tertiary">
-        Domains enable automatic routing for tenant-specific dashboards.
-        Configure DNS separately after initialization.
-      </p>
     </div>
   </form>
 )

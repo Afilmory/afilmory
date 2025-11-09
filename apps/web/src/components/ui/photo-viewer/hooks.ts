@@ -1,27 +1,16 @@
 import { LoadingState } from '@afilmory/webgl-viewer'
 import type { TFunction } from 'i18next'
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import {
-  MenuItemSeparator,
-  MenuItemText,
-} from '~/atoms/context-menu'
+import { MenuItemSeparator, MenuItemText } from '~/atoms/context-menu'
 import { isMobileDevice } from '~/lib/device-viewport'
 import { ImageLoaderManager } from '~/lib/image-loader-manager'
 
 import type { LivePhotoVideoHandle } from './LivePhotoVideo'
 import type { LoadingIndicatorRef } from './LoadingIndicator'
-import type {
-  ProgressiveImageState,
-} from './types'
+import type { ProgressiveImageState } from './types'
 import { SHOW_SCALE_INDICATOR_DURATION } from './types'
 
 export const useProgressiveImageState = (): [
@@ -215,11 +204,7 @@ export const useLivePhotoControls = (
   const handleLongPressStart = useCallback(() => {
     if (!isMobileDevice) return
     const playVideo = () => livePhotoRef.current?.play()
-    if (
-      !isLivePhoto ||
-      !livePhotoRef.current?.getIsVideoLoaded() ||
-      isLivePhotoPlaying
-    ) {
+    if (!isLivePhoto || !livePhotoRef.current?.getIsVideoLoaded() || isLivePhotoPlaying) {
       return
     }
     if (longPressTimerRef.current) {
@@ -241,17 +226,11 @@ export const useLivePhotoControls = (
   return { handleLongPressStart, handleLongPressEnd }
 }
 
-export const useWebGLLoadingState = (
-  loadingIndicatorRef: React.RefObject<LoadingIndicatorRef | null>,
-) => {
+export const useWebGLLoadingState = (loadingIndicatorRef: React.RefObject<LoadingIndicatorRef | null>) => {
   const { t } = useTranslation()
 
   const handleWebGLLoadingStateChange = useCallback(
-    (
-      isLoading: boolean,
-      state?: LoadingState,
-      quality?: 'high' | 'medium' | 'low' | 'unknown',
-    ) => {
+    (isLoading: boolean, state?: LoadingState, quality?: 'high' | 'medium' | 'low' | 'unknown') => {
       let message = ''
 
       if (state === LoadingState.CREATE_TEXTURE) {
@@ -273,11 +252,7 @@ export const useWebGLLoadingState = (
   return handleWebGLLoadingStateChange
 }
 
-export const createContextMenuItems = (
-  blobSrc: string,
-  alt: string,
-  t: TFunction<'app', undefined>,
-) => [
+export const createContextMenuItems = (blobSrc: string, alt: string, t: TFunction<'app', undefined>) => [
   new MenuItemText({
     label: t('photo.copy.image'),
     click: async () => {

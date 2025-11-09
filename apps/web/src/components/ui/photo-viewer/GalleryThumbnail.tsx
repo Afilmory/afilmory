@@ -55,13 +55,9 @@ export const GalleryThumbnail: FC<{
     if (scrollContainer) {
       const containerWidth = scrollContainerWidth
       const thumbnailLeft =
-        currentIndex *
-          (isMobile ? thumbnailSize.mobile : thumbnailSize.desktop) +
-        (isMobile ? thumbnailGapSize.mobile : thumbnailGapSize.desktop) *
-          currentIndex
-      const thumbnailWidth = isMobile
-        ? thumbnailSize.mobile
-        : thumbnailSize.desktop
+        currentIndex * (isMobile ? thumbnailSize.mobile : thumbnailSize.desktop) +
+        (isMobile ? thumbnailGapSize.mobile : thumbnailGapSize.desktop) * currentIndex
+      const thumbnailWidth = isMobile ? thumbnailSize.mobile : thumbnailSize.desktop
 
       const scrollLeft = thumbnailLeft - containerWidth / 2 + thumbnailWidth / 2
       nextFrame(() => {
@@ -84,8 +80,7 @@ export const GalleryThumbnail: FC<{
 
       // 优先使用触控板的横向滚动 (deltaX)
       // 如果没有横向滚动，则将垂直滚动 (deltaY) 转换为横向滚动
-      const scrollAmount =
-        Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+      const scrollAmount = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
       scrollContainer.scrollLeft += scrollAmount
     }
 
@@ -98,7 +93,7 @@ export const GalleryThumbnail: FC<{
 
   return (
     <m.div
-      className="pb-safe border-accent/20 z-10 shrink-0 border-t backdrop-blur-2xl"
+      className="pb-safe border-accent/20 bg-material-medium z-10 shrink-0 border-t backdrop-blur-2xl"
       initial={{ y: 100, opacity: 0 }}
       animate={{
         y: visible ? 0 : 48,
@@ -108,8 +103,6 @@ export const GalleryThumbnail: FC<{
       transition={Spring.presets.smooth}
       style={{
         pointerEvents: visible ? 'auto' : 'none',
-        backgroundImage:
-          'linear-gradient(to bottom right, color-mix(in srgb, var(--color-background) 98%, transparent), color-mix(in srgb, var(--color-background) 95%, transparent))',
         boxShadow:
           '0 -8px 32px color-mix(in srgb, var(--color-accent) 8%, transparent), 0 -4px 16px color-mix(in srgb, var(--color-accent) 6%, transparent), 0 -2px 8px rgba(0, 0, 0, 0.1)',
       }}
@@ -118,8 +111,7 @@ export const GalleryThumbnail: FC<{
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          background:
-            'linear-gradient(to top, color-mix(in srgb, var(--color-accent) 5%, transparent), transparent)',
+          background: 'linear-gradient(to top, color-mix(in srgb, var(--color-accent) 5%, transparent), transparent)',
         }}
       />
       <div
@@ -127,9 +119,7 @@ export const GalleryThumbnail: FC<{
         className="scrollbar-none relative z-10 flex overflow-x-auto"
         style={{
           gap: isMobile ? thumbnailGapSize.mobile : thumbnailGapSize.desktop,
-          padding: isMobile
-            ? thumbnailPaddingSize.mobile
-            : thumbnailPaddingSize.desktop,
+          padding: isMobile ? thumbnailPaddingSize.mobile : thumbnailPaddingSize.desktop,
         }}
       >
         {photos.map((photo, index) => (
@@ -155,17 +145,8 @@ export const GalleryThumbnail: FC<{
             }
             onClick={() => onIndexChange(index)}
           >
-            {photo.thumbHash && (
-              <Thumbhash
-                thumbHash={photo.thumbHash}
-                className="size-fill absolute inset-0"
-              />
-            )}
-            <img
-              src={photo.thumbnailUrl}
-              alt={photo.title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            {photo.thumbHash && <Thumbhash thumbHash={photo.thumbHash} className="size-fill absolute inset-0" />}
+            <img src={photo.thumbnailUrl} alt={photo.title} className="absolute inset-0 h-full w-full object-cover" />
           </button>
         ))}
       </div>

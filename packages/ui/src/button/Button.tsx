@@ -9,7 +9,7 @@ import { tv } from 'tailwind-variants'
 
 const buttonVariants = tv({
   base: [
-    'relative inline-flex items-center justify-center whitespace-nowrap rounded-md text-center font-medium transition-all duration-100 ease-in-out',
+    'relative inline-flex items-center justify-center whitespace-nowrap rounded text-center font-medium transition-all duration-100 ease-in-out',
     'disabled:pointer-events-none',
     focusRing,
   ],
@@ -17,19 +17,18 @@ const buttonVariants = tv({
     variant: {
       primary: [
         'border-transparent',
-        'text-white dark:text-white',
-        'bg-accent dark:bg-accent',
-        'hover:bg-accent/90 dark:hover:bg-accent/90',
-        'disabled:bg-accent/50 disabled:text-white/70',
-        'disabled:dark:bg-accent/30 disabled:dark:text-white/50',
+        'text-text',
+        'bg-accent',
+        'hover:bg-accent/90',
+        'disabled:bg-accent/50 disabled:text-text/70',
       ],
       secondary: [
-        'border border-gray-200 dark:border-gray-700',
-        'text-gray-700 dark:text-gray-200',
-        'bg-gray-50 dark:bg-gray-800',
-        'hover:bg-gray-100 dark:hover:bg-gray-750',
-        'disabled:bg-gray-50 disabled:text-gray-400',
-        'disabled:dark:bg-gray-800 disabled:dark:text-gray-500',
+        'border border-fill-tertiary dark:border-fill-tertiary',
+        'text-text',
+        'bg-fill-tertiary',
+        'hover:bg-fill-tertiary/10',
+        'disabled:bg-fill-tertiary/10',
+        'disabled:dark:bg-fill-tertiary/10',
       ],
       light: [
         'shadow-none',
@@ -76,9 +75,7 @@ const buttonVariants = tv({
   },
 })
 
-interface ButtonProps
-  extends React.ComponentPropsWithoutRef<'button'>,
-    VariantProps<typeof buttonVariants> {
+interface ButtonProps extends React.ComponentPropsWithoutRef<'button'>, VariantProps<typeof buttonVariants> {
   asChild?: boolean
   isLoading?: boolean
   loadingText?: string

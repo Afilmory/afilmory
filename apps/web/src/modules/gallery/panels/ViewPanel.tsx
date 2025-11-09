@@ -9,15 +9,11 @@ export const ViewPanel = () => {
 
   return (
     <div className="pb-safe lg:pb-safe-2 w-full lg:py-1">
-      <h3 className="mb-3 px-2 text-sm font-medium">
-        {t('action.view.settings')}
-      </h3>
+      <h3 className="mb-3 px-2 text-sm font-medium">{t('action.view.settings')}</h3>
 
       {/* 排序部分 */}
       <div className="mb-3 px-2">
-        <h4 className="text-text-secondary mb-3 text-xs font-medium">
-          {t('action.sort.mode')}
-        </h4>
+        <h4 className="text-text-secondary mb-3 text-xs font-medium">{t('action.sort.mode')}</h4>
         <SortPanel />
       </div>
 
@@ -32,9 +28,7 @@ export const ViewPanel = () => {
 
       {/* 列数部分 */}
       <div className="px-2">
-        <h4 className="text-text-secondary mb-3 text-xs font-medium">
-          {t('action.columns.setting')}
-        </h4>
+        <h4 className="text-text-secondary mb-3 text-xs font-medium">{t('action.columns.setting')}</h4>
         <ColumnsPanel />
       </div>
     </div>

@@ -152,7 +152,7 @@ UI Component Import Pattern:
 import { Input, Label, FormError, Button, ScrollArea } from '@afilmory/ui'
 
 // ❌ Avoid: Manual inline styling for common elements
-<input className="w-full rounded-lg border..." />
+;<input className="w-full rounded-lg border..." />
 ```
 
 Example (simple page using primitives):
@@ -189,7 +189,7 @@ This dashboard follows a **linear design language** with clean lines and subtle 
 
 Core Design Principles:
 
-- **Hierarchical rounding**: 
+- **Hierarchical rounding**:
   - Main page containers: Sharp edges with linear gradient borders
   - Interactive elements (inputs, buttons, cards): `rounded-lg` for approachable feel
 - **Linear gradient borders**: Use subtle gradient borders for main container separation
@@ -221,15 +221,9 @@ Example (using UI components):
 
 ```tsx
 import { Input, Label, FormError } from '@afilmory/ui'
-
-<div className="space-y-2">
+;<div className="space-y-2">
   <Label htmlFor="field-id">Field Label</Label>
-  <Input
-    id="field-id"
-    type="text"
-    placeholder="Enter value..."
-    error={!!errors.field}
-  />
+  <Input id="field-id" type="text" placeholder="Enter value..." error={!!errors.field} />
   <FormError>{errors.field}</FormError>
 </div>
 ```
@@ -238,10 +232,7 @@ Example (manual styling):
 
 ```tsx
 <div>
-  <label
-    htmlFor="field-id"
-    className="block text-sm font-medium text-text mb-2"
-  >
+  <label htmlFor="field-id" className="block text-sm font-medium text-text mb-2">
     Field Label
   </label>
   <input
@@ -264,15 +255,9 @@ Example (textarea using UI components):
 
 ```tsx
 import { Textarea, Label, FormError } from '@afilmory/ui'
-
-<div className="space-y-2">
+;<div className="space-y-2">
   <Label htmlFor="description">Description</Label>
-  <Textarea
-    id="description"
-    rows={3}
-    placeholder="Enter description..."
-    error={!!errors.description}
-  />
+  <Textarea id="description" rows={3} placeholder="Enter description..." error={!!errors.description} />
   <FormError>{errors.description}</FormError>
 </div>
 ```
@@ -346,10 +331,10 @@ Example (ghost button):
 
 Cards and Containers:
 
-- **Shape**: 
+- **Shape**:
   - **Main page containers** (e.g., OnboardingWizard): **NO rounded corners** - use sharp edges with linear gradient borders
   - **Inner content cards** (e.g., form sections, review cards): Use `rounded-lg` for visual hierarchy
-- **Borders**: 
+- **Borders**:
   - Main containers: Use linear gradient borders
   - Inner cards: Use `border border-fill-tertiary`
 - **Dividers**: Use horizontal gradient dividers for section separation
@@ -383,8 +368,7 @@ For pages with fixed-height containers (e.g., full-page modals, wizards), use th
 
 ```tsx
 import { ScrollArea } from '@afilmory/ui'
-
-<div className="flex h-[85vh] flex-col">
+;<div className="flex h-[85vh] flex-col">
   {/* Fixed header - won't scroll */}
   <div className="shrink-0">
     <Header />
@@ -394,9 +378,7 @@ import { ScrollArea } from '@afilmory/ui'
   {/* Scrollable content area */}
   <div className="flex-1 overflow-hidden">
     <ScrollArea rootClassName="h-full" viewportClassName="h-full">
-      <section className="p-12">
-        {/* Your content here */}
-      </section>
+      <section className="p-12">{/* Your content here */}</section>
     </ScrollArea>
   </div>
 
@@ -409,6 +391,7 @@ import { ScrollArea } from '@afilmory/ui'
 ```
 
 **Key points:**
+
 - Use `flex h-full flex-col` on the parent container
 - `shrink-0` on header and footer prevents them from compressing
 - `flex-1 overflow-hidden` on scroll container takes remaining space

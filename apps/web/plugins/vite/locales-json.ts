@@ -1,4 +1,3 @@
-
 import { set } from 'es-toolkit/compat'
 import type { Plugin } from 'vite'
 

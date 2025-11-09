@@ -12,9 +12,7 @@ class EventBusEvent extends Event {
   }
 }
 
-type IDispatcher<E> = <T extends keyof E>(
-  ...args: E[T] extends never ? [event: T] : [event: T, data: E[T]]
-) => void
+type IDispatcher<E> = <T extends keyof E>(...args: E[T] extends never ? [event: T] : [event: T, data: E[T]]) => void
 type AnyObject = Record<string, any>
 class EventBusStatic<E extends AnyObject> {
   constructor() {

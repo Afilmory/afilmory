@@ -1,8 +1,7 @@
 import { clsxm } from '@afilmory/utils'
 import type { FC, HTMLAttributes } from 'react'
 
-export interface FormHelperTextProps
-  extends HTMLAttributes<HTMLParagraphElement> {
+export interface FormHelperTextProps extends HTMLAttributes<HTMLParagraphElement> {
   /**
    * Helper text to display
    */
@@ -25,18 +24,11 @@ export interface FormHelperTextProps
  * </FormHelperText>
  * ```
  */
-export const FormHelperText: FC<FormHelperTextProps> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const FormHelperText: FC<FormHelperTextProps> = ({ children, className, ...props }) => {
   if (!children) return null
 
   return (
-    <p
-      className={clsxm('mt-2 text-xs text-text-tertiary', className)}
-      {...props}
-    >
+    <p className={clsxm('mt-2 text-xs text-text-tertiary', className)} {...props}>
       {children}
     </p>
   )

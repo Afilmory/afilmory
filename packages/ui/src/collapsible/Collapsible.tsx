@@ -59,20 +59,14 @@ type CollapsibleTriggerProps = {
   asChild?: boolean
 }
 
-export const CollapsibleTrigger: FC<CollapsibleTriggerProps> = ({
-  children,
-  className,
-}) => {
+export const CollapsibleTrigger: FC<CollapsibleTriggerProps> = ({ children, className }) => {
   const { toggle } = useCollapsibleContext()
 
   return (
     <button
       type="button"
       onClick={toggle}
-      className={clsxm(
-        'flex w-full items-center justify-between text-left transition-colors duration-200',
-        className,
-      )}
+      className={clsxm('flex w-full items-center justify-between text-left transition-colors duration-200', className)}
     >
       {children}
     </button>
@@ -84,10 +78,7 @@ type CollapsibleContentProps = {
   className?: string
 }
 
-export const CollapsibleContent: FC<CollapsibleContentProps> = ({
-  children,
-  className,
-}) => {
+export const CollapsibleContent: FC<CollapsibleContentProps> = ({ children, className }) => {
   const { isOpen } = useCollapsibleContext()
 
   return (
@@ -125,11 +116,7 @@ export const CollapsibleIcon: FC<CollapsibleIconProps> = ({ className }) => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={clsxm(
-        'shrink-0 transition-transform duration-200',
-        isOpen && 'rotate-180',
-        className,
-      )}
+      className={clsxm('shrink-0 transition-transform duration-200', isOpen && 'rotate-180', className)}
     >
       <path d="m6 9 6 6 6-6" />
     </svg>

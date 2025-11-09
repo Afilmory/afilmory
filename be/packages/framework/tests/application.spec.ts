@@ -525,6 +525,18 @@ class FactoryController {
 })
 class FactoryModule {}
 
+@injectable()
+@Controller({ prefix: 'static', bypassGlobalPrefix: true })
+class StaticController {
+  @Get('/asset')
+  asset() {
+    return 'static-asset'
+  }
+}
+
+@Module({ controllers: [StaticController] })
+class StaticModule {}
+
 const lifecycleEvents: string[] = []
 
 @injectable()
@@ -703,6 +715,21 @@ describe('HonoHttpApplication end-to-end', () => {
     })
     expect(json.rawBody).toEqual({ message: 'payload', tags: ['a'] })
     expect(callOrder).toContain('zod-body:BodyDto')
+  })
+
+  it('supports bypassing global prefix for specific controllers', async () => {
+    const app = await createApplication(StaticModule, { globalPrefix: '/api' })
+    const hono = app.getInstance()
+    const fetcher = (request: Request) => Promise.resolve(hono.fetch(request))
+
+    const success = await fetcher(createRequest('/static/asset'))
+    expect(success.status).toBe(200)
+    expect(await success.text()).toBe('static-asset')
+
+    const missing = await fetcher(createRequest('/api/static/asset'))
+    expect(missing.status).toBe(404)
+
+    await app.close('bypass-global-prefix')
   })
 
   it('surfaces validation errors for DTO payloads', async () => {
@@ -1003,7 +1030,7 @@ describe('HonoHttpApplication internals', () => {
 
     const ensureResponse = (
       app as unknown as {
-        ensureResponse: (ctx: Context, payload: unknown) => Response | unknown
+        ensureResponse: (ctx: Context, payload?: unknown) => Response | unknown
       }
     ).ensureResponse.bind(app)
 
@@ -1023,11 +1050,11 @@ describe('HonoHttpApplication internals', () => {
 
     const ensureResponse = (
       app as unknown as {
-        ensureResponse: (ctx: Context, payload: unknown) => Response | unknown
+        ensureResponse: (ctx: Context, payload?: unknown) => Response | unknown
       }
     ).ensureResponse.bind(app)
 
-    const result = ensureResponse(context, undefined)
+    const result = ensureResponse(context)
     expect(result).toBe(baseResponse)
     await app.close('undefined-payload')
   })
@@ -1129,7 +1156,7 @@ describe('HonoHttpApplication internals', () => {
   it('extracts middleware metadata and lifecycle targets across variants', async () => {
     const app = await createApplication(FactoryModule)
     const internals = app as unknown as {
-      extractMiddlewareLifecycleTarget: (value: unknown) => unknown
+      extractMiddlewareLifecycleTarget: (value?: unknown) => unknown
       extractMiddlewareMetadata: (source?: Constructor | Record<string, unknown>) => Record<string, unknown>
       resolveMiddlewareDefinition: (value: unknown, source?: Constructor | Record<string, unknown>) => unknown
       getEnhancerType: (token: unknown) => unknown
@@ -1143,11 +1170,11 @@ describe('HonoHttpApplication internals', () => {
     const instance = new InlineMiddleware()
     const definition = { handler: instance, path: '/explicit', priority: 2 }
 
-    expect(internals.extractMiddlewareLifecycleTarget(undefined)).toBeUndefined()
+    expect(internals.extractMiddlewareLifecycleTarget()).toBeUndefined()
     expect(internals.extractMiddlewareLifecycleTarget(instance)).toBe(instance)
     expect(internals.extractMiddlewareLifecycleTarget(definition)).toBe(instance)
 
-    expect(internals.extractMiddlewareMetadata(undefined)).toEqual({})
+    expect(internals.extractMiddlewareMetadata()).toEqual({})
     const suppliedMetadata = { path: '/supplied', priority: 4 }
     expect(internals.extractMiddlewareMetadata(suppliedMetadata)).toBe(suppliedMetadata)
     expect(internals.extractMiddlewareMetadata(InlineMiddleware)).toEqual({ path: '/decorated-inline', priority: 7 })
@@ -1368,11 +1395,11 @@ describe('HonoHttpApplication internals', () => {
     const app = await createApplication(FactoryModule)
     const buildPath = (
       app as unknown as {
-        buildPath: (prefix: string, routePath: string) => string
+        buildPath: (controller: { prefix: string; bypassGlobalPrefix: boolean }, routePath: string) => string
       }
     ).buildPath.bind(app)
 
-    expect(buildPath('', '')).toBe('/')
+    expect(buildPath({ prefix: '', bypassGlobalPrefix: false }, '')).toBe('/')
     await app.close('normalize-paths')
   })
 

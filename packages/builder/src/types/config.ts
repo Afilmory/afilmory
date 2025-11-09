@@ -1,3 +1,4 @@
+import type { BuilderPluginConfigEntry } from '../plugins/types.js'
 import type { StorageConfig } from '../storage/interfaces.js'
 
 export interface BuilderConfig {
@@ -29,4 +30,11 @@ export interface BuilderConfig {
       workerCount: number
     }
   }
+  plugins?: BuilderPluginConfigEntry[]
+}
+
+type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
+
+export type BuilderConfigInput = DeepPartial<Omit<BuilderConfig, 'plugins'>> & {
+  plugins?: BuilderPluginConfigEntry[]
 }

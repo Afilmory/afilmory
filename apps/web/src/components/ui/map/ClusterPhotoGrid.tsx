@@ -1,9 +1,9 @@
+import { LazyImage } from '@afilmory/ui'
+import { Spring } from '@afilmory/utils'
 import { m } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 
-import { LazyImage } from '@afilmory/ui'
-import { Spring } from '@afilmory/utils'
 import type { PhotoMarker } from '~/types/map'
 
 interface ClusterPhotoGridProps {
@@ -11,10 +11,7 @@ interface ClusterPhotoGridProps {
   onPhotoClick?: (photo: PhotoMarker) => void
 }
 
-export const ClusterPhotoGrid = ({
-  photos,
-  onPhotoClick,
-}: ClusterPhotoGridProps) => {
+export const ClusterPhotoGrid = ({ photos, onPhotoClick }: ClusterPhotoGridProps) => {
   // 最多显示 6 张照片
   const displayPhotos = photos.slice(0, 6)
   const remainingCount = Math.max(0, photos.length - 6)
@@ -24,12 +21,8 @@ export const ClusterPhotoGrid = ({
     <div className="space-y-3">
       {/* 标题 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-text text-sm font-semibold">
-          {t('explory.cluster.photos', { count: photos.length })}
-        </h3>
-        <div className="text-text-secondary text-xs">
-          {t('explory.cluster.click.details')}
-        </div>
+        <h3 className="text-text text-sm font-semibold">{t('explory.cluster.photos', { count: photos.length })}</h3>
+        <div className="text-text-secondary text-xs">{t('explory.cluster.click.details')}</div>
       </div>
 
       {/* 照片网格 */}
@@ -55,10 +48,7 @@ export const ClusterPhotoGrid = ({
               className="block h-full w-full"
             >
               <LazyImage
-                src={
-                  photoMarker.photo.thumbnailUrl ||
-                  photoMarker.photo.originalUrl
-                }
+                src={photoMarker.photo.thumbnailUrl || photoMarker.photo.originalUrl}
                 alt={photoMarker.photo.title || photoMarker.photo.id}
                 thumbHash={photoMarker.photo.thumbHash}
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -72,12 +62,7 @@ export const ClusterPhotoGrid = ({
               {/* 悬停图标 */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <div className="rounded-full bg-black/50 p-2 backdrop-blur-sm">
-                  <svg
-                    className="h-4 w-4 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -103,12 +88,8 @@ export const ClusterPhotoGrid = ({
             className="bg-fill-secondary flex aspect-square items-center justify-center rounded-lg"
           >
             <div className="text-center">
-              <div className="text-text text-lg font-bold">
-                +{remainingCount}
-              </div>
-              <div className="text-text-secondary text-xs">
-                {t('explory.cluster.more')}
-              </div>
+              <div className="text-text text-lg font-bold">+{remainingCount}</div>
+              <div className="text-text-secondary text-xs">{t('explory.cluster.more')}</div>
             </div>
           </m.div>
         )}
@@ -120,10 +101,8 @@ export const ClusterPhotoGrid = ({
           <div className="text-text-secondary flex items-center gap-2 text-xs">
             <i className="i-mingcute-location-line text-sm" />
             <span className="font-mono">
-              {Math.abs(photos[0].latitude).toFixed(4)}°
-              {photos[0].latitudeRef || 'N'},{' '}
-              {Math.abs(photos[0].longitude).toFixed(4)}°
-              {photos[0].longitudeRef || 'E'}
+              {Math.abs(photos[0].latitude).toFixed(4)}°{photos[0].latitudeRef || 'N'},{' '}
+              {Math.abs(photos[0].longitude).toFixed(4)}°{photos[0].longitudeRef || 'E'}
             </span>
           </div>
 

@@ -64,6 +64,7 @@ src/
 ### 🏗️ 架构设计
 
 #### **单一职责原则**
+
 - `types.ts`: 完整的TypeScript类型定义和接口
 - `constants.ts`: 所有配置常量和默认值
 - `utils.ts`: 纯函数工具集，包含数学计算、设备检测等
@@ -73,6 +74,7 @@ src/
 - `WebGLImageViewerEngine.ts`: 核心WebGL引擎，包含所有功能实现
 
 #### **完整功能实现**
+
 - ✅ WebGL渲染管线完整实现
 - ✅ 图像加载和纹理管理
 - ✅ 鼠标和触摸事件处理
@@ -85,16 +87,19 @@ src/
 ## 🎯 核心功能
 
 ### 交互支持
+
 - **鼠标操作**: 拖拽平移、滚轮缩放、双击切换
 - **触摸操作**: 单指拖拽、双指缩放、双击放大
 - **键盘操作**: 可扩展的键盘快捷键支持
 
 ### 动画系统
+
 - **平滑缓动**: 使用四次方缓出函数
 - **可配置时长**: 支持自定义动画时间
 - **性能优化**: 60fps渲染节流控制
 
 ### 约束系统
+
 - **边界限制**: 可选的图像边界约束
 - **缩放限制**: 可配置的最小/最大缩放比例
 - **智能居中**: 自动适应屏幕尺寸
@@ -103,13 +108,13 @@ src/
 
 ### 基础属性
 
-| 属性 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| `src` | `string` | **必需** | 图片源URL |
-| `className` | `string` | `""` | CSS类名 |
-| `initialScale` | `number` | `1` | 初始缩放比例 |
-| `minScale` | `number` | `0.1` | 最小缩放比例 |
-| `maxScale` | `number` | `10` | 最大缩放比例 |
+| 属性           | 类型     | 默认值   | 描述         |
+| -------------- | -------- | -------- | ------------ |
+| `src`          | `string` | **必需** | 图片源URL    |
+| `className`    | `string` | `""`     | CSS类名      |
+| `initialScale` | `number` | `1`      | 初始缩放比例 |
+| `minScale`     | `number` | `0.1`    | 最小缩放比例 |
+| `maxScale`     | `number` | `10`     | 最大缩放比例 |
 
 ### 交互配置
 
@@ -158,34 +163,32 @@ onImageCopied?: () => void
 const viewerRef = useRef<WebGLImageViewerRef>(null)
 
 // 可用方法
-viewerRef.current?.zoomIn(true)      // 放大（可选动画）
-viewerRef.current?.zoomOut(false)    // 缩小（可选动画）
-viewerRef.current?.resetView()       // 重置视图
-viewerRef.current?.getScale()        // 获取当前缩放比例
+viewerRef.current?.zoomIn(true) // 放大（可选动画）
+viewerRef.current?.zoomOut(false) // 缩小（可选动画）
+viewerRef.current?.resetView() // 重置视图
+viewerRef.current?.getScale() // 获取当前缩放比例
 ```
 
 ## 🎮 使用示例
 
 ### 基础使用
+
 ```tsx
-<WebGLImageViewer
-  src="https://example.com/image.jpg"
-  initialScale={1}
-  centerOnInit={true}
-/>
+<WebGLImageViewer src="https://example.com/image.jpg" initialScale={1} centerOnInit={true} />
 ```
 
 ### 高级配置
+
 ```tsx
 <WebGLImageViewer
   src="https://example.com/large-image.jpg"
   minScale={0.1}
   maxScale={20}
   wheel={{ step: 0.05 }}
-  doubleClick={{ 
-    mode: 'zoom', 
+  doubleClick={{
+    mode: 'zoom',
     step: 1.5,
-    animationTime: 300 
+    animationTime: 300,
   }}
   onZoomChange={(original, relative) => {
     console.log(`Zoom: ${relative.toFixed(2)}x`)
@@ -195,26 +198,18 @@ viewerRef.current?.getScale()        // 获取当前缩放比例
 ```
 
 ### 使用引用控制
+
 ```tsx
 function ControlledViewer() {
   const viewerRef = useRef<WebGLImageViewerRef>(null)
-  
+
   return (
     <>
-      <WebGLImageViewer
-        ref={viewerRef}
-        src="/image.jpg"
-      />
+      <WebGLImageViewer ref={viewerRef} src="/image.jpg" />
       <div>
-        <button onClick={() => viewerRef.current?.zoomIn(true)}>
-          放大
-        </button>
-        <button onClick={() => viewerRef.current?.zoomOut(true)}>
-          缩小
-        </button>
-        <button onClick={() => viewerRef.current?.resetView()}>
-          重置
-        </button>
+        <button onClick={() => viewerRef.current?.zoomIn(true)}>放大</button>
+        <button onClick={() => viewerRef.current?.zoomOut(true)}>缩小</button>
+        <button onClick={() => viewerRef.current?.resetView()}>重置</button>
       </div>
     </>
   )
@@ -234,23 +229,26 @@ function ControlledViewer() {
 ```tsx
 <WebGLImageViewer
   src="/image.jpg"
-  debug={true}  // 显示调试面板
+  debug={true} // 显示调试面板
 />
 ```
 
 ## ⚡ 性能特性
 
 ### 渲染优化
+
 - **硬件加速**: 基于WebGL的GPU渲染
 - **渲染节流**: 16ms节流控制，维持60fps
 - **智能更新**: 防抖更新减少不必要的重绘
 
 ### 内存管理
+
 - **自动清理**: 组件卸载时自动释放WebGL资源
 - **纹理优化**: 智能纹理尺寸计算
 - **事件清理**: 完整的事件监听器清理
 
 ### 移动端优化
+
 - **触摸优化**: 原生触摸事件处理
 - **高DPI支持**: 自动适配Retina等高密度屏幕
 - **性能监控**: 移动设备性能信息记录
@@ -258,14 +256,17 @@ function ControlledViewer() {
 ## 🔧 开发指南
 
 ### 构建项目
+
 ```bash
 npm run build
 ```
 
 ### 类型检查
+
 项目已完全实现TypeScript类型安全，所有API都有完整的类型定义。
 
 ### 添加功能
+
 1. 在 `types.ts` 中定义新的类型接口
 2. 在 `constants.ts` 中添加相关配置常量
 3. 在 `WebGLImageViewerEngine.ts` 中实现功能逻辑
@@ -275,7 +276,8 @@ npm run build
 
 ✅ **TypeScript编译**: 通过  
 ✅ **类型检查**: 完整  
-✅ **构建输出**: 
+✅ **构建输出**:
+
 - `dist/index.js` (39.49 kB, gzip: 11.06 kB)
 - `dist/index.d.ts` (16.41 kB, gzip: 5.87 kB)
 
@@ -287,4 +289,4 @@ npm run build
 
 ## 📄 许可证
 
-[MIT License](LICENSE) 
+[MIT License](LICENSE)

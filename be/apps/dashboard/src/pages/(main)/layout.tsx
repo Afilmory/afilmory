@@ -1,116 +1,16 @@
 import { ScrollArea } from '@afilmory/ui'
-import { Spring } from '@afilmory/utils'
-import { m } from 'motion/react'
-import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router'
+import { Outlet } from 'react-router'
 
-import { useAuthUserValue } from '~/atoms/auth'
-import { usePageRedirect } from '~/hooks/usePageRedirect'
+import { Header } from '~/components/common/Header'
 
-const navigationTabs = [
-  { label: 'Dashboard', path: '/' },
-  { label: 'Photos', path: '/photos' },
-  { label: 'Settings', path: '/settings' },
-  { label: 'Analytics', path: '/analytics' },
-] as const
-
-export const Component = () => {
-  const { logout } = usePageRedirect()
-  const user = useAuthUserValue()
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
-
-  const handleLogout = async () => {
-    if (isLoggingOut) return
-
-    setIsLoggingOut(true)
-    try {
-      await logout()
-    } catch (error) {
-      console.error('Logout failed:', error)
-      setIsLoggingOut(false)
-    }
-  }
-
+export function Component() {
   return (
     <div className="flex h-screen flex-col">
-      {/* Top Navigation - Vercel Style */}
-      <nav className="shrink-0 border-b border-border/50 bg-background-tertiary px-6 py-3">
-        <div className="flex items-center gap-6">
-          {/* Logo/Brand */}
-          <div className="text-base font-semibold text-text">Afilmory</div>
-
-          {/* Navigation Tabs - minimal pills */}
-          <div className="flex flex-1 items-center gap-1">
-            {navigationTabs.map((tab) => (
-              <NavLink key={tab.path} to={tab.path} end={tab.path === '/'}>
-                {({ isActive }) => (
-                  <m.div
-                    className="relative overflow-hidden rounded-md px-3 py-1.5"
-                    initial={false}
-                    animate={{
-                      backgroundColor: isActive
-                        ? 'color-mix(in srgb, var(--color-accent) 12%, transparent)'
-                        : 'transparent',
-                    }}
-                    whileHover={{
-                      backgroundColor: isActive
-                        ? 'color-mix(in srgb, var(--color-accent) 12%, transparent)'
-                        : 'color-mix(in srgb, var(--color-fill) 60%, transparent)',
-                    }}
-                    transition={Spring.presets.snappy}
-                  >
-                    <span
-                      className="relative z-10 text-[13px] font-medium transition-colors"
-                      style={{
-                        color: isActive
-                          ? 'var(--color-accent)'
-                          : 'var(--color-text-secondary)',
-                      }}
-                    >
-                      {tab.label}
-                    </span>
-                  </m.div>
-                )}
-              </NavLink>
-            ))}
-          </div>
-
-          {/* Right side actions */}
-          <div className="flex items-center gap-3">
-            {user && (
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <div className="text-[13px] font-medium text-text">
-                    {user.name || user.email}
-                  </div>
-                  <div className="text-[11px] capitalize text-text-tertiary">
-                    {user.role}
-                  </div>
-                </div>
-                {user.image && (
-                  <img
-                    src={user.image}
-                    alt={user.name || user.email}
-                    className="size-7 rounded-full"
-                  />
-                )}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="rounded-md bg-accent px-3 py-1.5 text-[13px] font-medium text-white transition-all duration-150 hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoggingOut ? 'Logging out...' : 'Logout'}
-            </button>
-          </div>
-        </div>
-      </nav>
+      {/* Top Navigation */}
+      <Header />
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-hidden bg-background">
+      <main className="bg-background flex-1 overflow-hidden">
         <ScrollArea rootClassName="h-full" viewportClassName="h-full">
           <div className="mx-auto max-w-7xl px-6 py-6">
             <Outlet />

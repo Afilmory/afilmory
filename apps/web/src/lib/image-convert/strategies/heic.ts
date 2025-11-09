@@ -28,11 +28,7 @@ export class HeicConverterStrategy implements ImageConverterStrategy {
     }
   }
 
-  async convert(
-    blob: Blob,
-    originalUrl: string,
-    callbacks?: LoadingCallbacks,
-  ): Promise<ConversionResult> {
+  async convert(blob: Blob, originalUrl: string, callbacks?: LoadingCallbacks): Promise<ConversionResult> {
     const { onLoadingStateUpdate } = callbacks || {}
 
     try {
@@ -71,10 +67,7 @@ export interface HeicConversionOptions {
 }
 
 // HEIC conversion cache using generic LRU cache
-const heicCache: LRUCache<string, ConversionResult> = new LRUCache<
-  string,
-  ConversionResult
->(
+const heicCache: LRUCache<string, ConversionResult> = new LRUCache<string, ConversionResult>(
   10, // Smaller cache size for images as they might be larger
   (value, key, reason) => {
     try {
@@ -169,9 +162,7 @@ export async function convertHeicImage(
     return result
   } catch (error) {
     console.error('HEIC conversion failed:', error)
-    throw new Error(
-      `Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    )
+    throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -210,10 +201,7 @@ export function getHeicCacheStats(): {
 /**
  * 根据 src 和选项移除特定的 HEIC 缓存项
  */
-export function removeHeicCacheBySrc(
-  src: string,
-  options: HeicConversionOptions = {},
-): boolean {
+export function removeHeicCacheBySrc(src: string, options: HeicConversionOptions = {}): boolean {
   const cacheKey = generateCacheKey(src, options)
   return heicCache.delete(cacheKey)
 }

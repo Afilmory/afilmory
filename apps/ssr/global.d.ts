@@ -13,10 +13,7 @@ declare global {
     } & Props
   >
 
-  export type NextPageExtractedParams<
-    P extends {},
-    Props = {},
-  > = PropsWithChildren<
+  export type NextPageExtractedParams<P extends {}, Props = {}> = PropsWithChildren<
     {
       params: P
       searchParams: Promise<Record<string, string | string[] | undefined>>

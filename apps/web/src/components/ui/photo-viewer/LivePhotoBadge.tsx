@@ -1,17 +1,14 @@
+import { clsxm } from '@afilmory/utils'
 import { AnimatePresence, m } from 'motion/react'
 import type { FC } from 'react'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { clsxm } from '@afilmory/utils'
 import { isMobileDevice } from '~/lib/device-viewport'
 
 import type { LivePhotoBadgeProps } from './types'
 
-export const LivePhotoBadge: FC<LivePhotoBadgeProps> = ({
-  livePhotoRef,
-  isLivePhotoPlaying,
-}) => {
+export const LivePhotoBadge: FC<LivePhotoBadgeProps> = ({ livePhotoRef, isLivePhotoPlaying }) => {
   const { t } = useTranslation()
 
   const handlePlay = useCallback(async () => {
@@ -47,12 +44,7 @@ export const LivePhotoBadge: FC<LivePhotoBadgeProps> = ({
         onClick={handleClick}
       >
         <i
-          className={clsxm(
-            'size-4',
-            isLivePhotoPlaying
-              ? 'i-mingcute-live-photo-fill'
-              : 'i-mingcute-live-photo-line',
-          )}
+          className={clsxm('size-4', isLivePhotoPlaying ? 'i-mingcute-live-photo-fill' : 'i-mingcute-live-photo-line')}
         />
         <span className="mr-1">{t('photo.live.badge')}</span>
       </div>
@@ -81,9 +73,7 @@ export const LivePhotoBadge: FC<LivePhotoBadgeProps> = ({
           isLivePhotoPlaying && 'opacity-0!',
         )}
       >
-        {isMobileDevice
-          ? t('photo.live.tooltip.mobile.zoom')
-          : t('photo.live.tooltip.desktop.zoom')}
+        {isMobileDevice ? t('photo.live.tooltip.mobile.zoom') : t('photo.live.tooltip.desktop.zoom')}
       </div>
     </>
   )

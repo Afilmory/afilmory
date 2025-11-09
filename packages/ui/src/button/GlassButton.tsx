@@ -1,13 +1,9 @@
+import { clsxm, Spring } from '@afilmory/utils'
 import type { HTMLMotionProps } from 'motion/react'
 import { m } from 'motion/react'
 import type { FC, PropsWithChildren } from 'react'
 
-import { clsxm } from '@afilmory/utils'
-import { Spring } from '@afilmory/utils'
-
-export const GlassButton: FC<HTMLMotionProps<'button'> & PropsWithChildren> = (
-  props,
-) => {
+export const GlassButton: FC<HTMLMotionProps<'button'> & PropsWithChildren> = (props) => {
   return (
     <m.button
       type="button"

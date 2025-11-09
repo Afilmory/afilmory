@@ -22,11 +22,7 @@ export interface FormErrorProps extends HTMLAttributes<HTMLParagraphElement> {
  * <FormError>{errors.email}</FormError>
  * ```
  */
-export const FormError: FC<FormErrorProps> = ({
-  children,
-  className,
-  ...props
-}) => {
+export const FormError: FC<FormErrorProps> = ({ children, className, ...props }) => {
   if (!children) return null
 
   return (

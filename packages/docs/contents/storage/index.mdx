@@ -2,7 +2,7 @@
 title: Storage providers
 description: Afilmory can work with multiple storage providers, including S3, Git, Eagle, and local file system
 createdAt: 2025-08-12T15:09:08+08:00
-lastModified: 2025-10-23T18:31:41+08:00
+lastModified: 2025-11-01T19:31:16+08:00
 ---
 
 # Storage Providers
@@ -15,18 +15,20 @@ Afilmory's flexible storage architecture allows you to store your photos across 
 
 S3-compatible storage is the recommended option for production deployments, offering scalability, CDN integration, and reliable performance.
 
-**Configuration in `builder.config.json`:**
+**Configuration in `builder.config.ts`:**
 
-```json
-{
-  "storage": {
-    "provider": "s3",
-    "bucket": "your-photos-bucket",
-    "region": "us-east-1",
-    "prefix": "photos/",
-    "customDomain": "cdn.yourdomain.com"
-  }
-}
+```ts
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 's3',
+    bucket: 'your-photos-bucket',
+    region: 'us-east-1',
+    prefix: 'photos/',
+    customDomain: 'cdn.yourdomain.com',
+  },
+}))
 ```
 
 **Environment Variables (`.env`):**
@@ -41,6 +43,7 @@ S3_SECRET_ACCESS_KEY=your_secret_access_key
 GitHub storage leverages Git repositories for photo storage, ideal for static sites, small galleries, or when you want version control for your photos.
 
 **Features:**
+
 - ✅ Free storage space (GitHub repository limit 1GB)
 - ✅ Global CDN support via raw.githubusercontent.com
 - ✅ Version control for your photos
@@ -48,19 +51,19 @@ GitHub storage leverages Git repositories for photo storage, ideal for static si
 - ⚠️ GitHub API rate limits apply
 - ⚠️ Not suitable for large files or frequent updates
 
-**Configuration in `builder.config.json`:**
+**Configuration in `builder.config.ts`:**
 
-```json
-{
-  "storage": {
-    "provider": "github",
-    "owner": "your-username",
-    "repo": "photo-storage",
-    "branch": "main",
-    "path": "photos",
-    "useRawUrl": true
-  }
-}
+```ts
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'github',
+    owner: 'your-username',
+    repo: 'photo-storage',
+    branch: 'main',
+    path: 'photos',
+    useRawUrl: true,
+  },
+}))
 ```
 
 **Environment Variables:**
@@ -72,6 +75,7 @@ GIT_TOKEN=ghp_your_github_personal_access_token
 **Setup Steps:**
 
 1. **Create GitHub Repository**
+
    ```bash
    git clone https://github.com/your-username/photo-gallery.git
    cd photo-gallery
@@ -92,30 +96,31 @@ GIT_TOKEN=ghp_your_github_personal_access_token
 Eagle storage integrates directly with an existing Eagle 4 desktop library, making it ideal for teams that already curate assets in Eagle and want to publish selected photos without additional uploads.
 
 **Features:**
+
 - ✅ No upload step: reads directly from the Eagle library
 - ✅ Flexible filtering: include or exclude by folder (with optional subfolders) and tags
 - ✅ Automatic publishing: copies originals to a public directory on demand
 - ⚠️ Requires absolute paths for `libraryPath` and `distPath`
 - ⚠️ Only Eagle 4.x is validated; other versions may require testing
 
-**Configuration in `builder.config.json`:**
+**Configuration in `builder.config.ts`:**
 
-```json
-{
-  "storage": {
-    "provider": "eagle",
-    "libraryPath": "/Users/alice/Pictures/Eagle.library",
-    "distPath": "/Users/alice/workspaces/afilmory/apps/web/public/originals",
-    "baseUrl": "/originals/",
-    "include": [
-      { "type": "folder", "name": "Published", "includeSubfolder": true },
-      { "type": "tag", "name": "Featured" }
+```ts
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'eagle',
+    libraryPath: '/Users/alice/Pictures/Eagle.library',
+    distPath: '/Users/alice/workspaces/afilmory/apps/web/public/originals',
+    baseUrl: '/originals/',
+    include: [
+      { type: 'folder', name: 'Published', includeSubfolder: true },
+      { type: 'tag', name: 'Featured' },
     ],
-    "exclude": [
-      { "type": "tag", "name": "Private" }
-    ]
-  }
-}
+    exclude: [{ type: 'tag', name: 'Private' }],
+    folderAsTag: true,
+    omitTagNamesInMetadata: ['Temp'],
+  },
+}))
 ```
 
 **Setup Steps:**
@@ -126,6 +131,7 @@ Eagle storage integrates directly with an existing Eagle 4 desktop library, maki
 4. **Refine filters (optional)**: use `include` and `exclude` rules to control which assets are exported.
 
 **Rule Notes:**
+
 - Leaving `include` empty processes every supported image in the library.
 - `exclude` overrides inclusion rules when both match a single asset.
 - `folder` rules use folder names (not full paths); enabling `includeSubfolder` recursively matches children.
@@ -136,6 +142,7 @@ Eagle storage integrates directly with an existing Eagle 4 desktop library, maki
 Local storage is suitable for development, testing, or self-hosted deployments where photos are stored on the same server.
 
 **Features:**
+
 - ✅ No external dependencies
 - ✅ Fast access speeds
 - ✅ Complete private control
@@ -144,34 +151,35 @@ Local storage is suitable for development, testing, or self-hosted deployments w
 - ⚠️ Requires proper file system permissions
 - ⚠️ Not suitable for distributed deployments
 
-**Configuration in `builder.config.json`:**
+**Configuration in `builder.config.ts`:**
 
 Self-hosted original image (manually serve to `basePath`):
 
-```json
-{
-  "storage": {
-    "provider": "local",
-    "basePath": "./photos",
-    "baseUrl": "http://example.com:3000/photos/"
-  }
-}
+```ts
+import { defineBuilderConfig } from '@afilmory/builder'
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'local',
+    basePath: './photos',
+    baseUrl: 'http://example.com:3000/photos/',
+  },
+}))
 ```
 
 Hosted with frontend (serve via app static assets):
 
 ```json
-{
-  "storage": {
-    "provider": "local",
-    "basePath": "./photos",
-    "distPath": "./apps/web/public/originals",
-    "baseUrl": "/originals/"
-  }
-}
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'local',
+    basePath: './photos',
+    distPath: './apps/web/public/originals',
+    baseUrl: '/originals/',
+  },
+}))
 ```
 
-  Use when you want originals deployed alongside your frontend’s static assets. On initialization/build, files from `basePath` are copied to `distPath` (overwriting same-named files).
+Use when you want originals deployed alongside your frontend’s static assets. On initialization/build, files from `basePath` are copied to `distPath` (overwriting same-named files).
 
 ## Photo Processing Workflow
 
@@ -273,13 +281,13 @@ For production, use S3-compatible storage with CDN:
 
 ### Storage Provider Comparison
 
-| Feature | S3 | GitHub | Local |
-|---------|----|----|--------|
-| Storage Space | Pay-as-you-go | 1GB free | Depends on disk |
-| CDN | Additional cost | Free global CDN | Manual setup |
-| API Limits | Very high | Limited | None |
-| Use Case | Production | Small projects, demos | Development, self-hosted |
-| Setup Complexity | Medium | Simple | Minimal |
+| Feature          | S3              | GitHub                | Local                    |
+| ---------------- | --------------- | --------------------- | ------------------------ |
+| Storage Space    | Pay-as-you-go   | 1GB free              | Depends on disk          |
+| CDN              | Additional cost | Free global CDN       | Manual setup             |
+| API Limits       | Very high       | Limited               | None                     |
+| Use Case         | Production      | Small projects, demos | Development, self-hosted |
+| Setup Complexity | Medium          | Simple                | Minimal                  |
 
 ## Security Considerations
 

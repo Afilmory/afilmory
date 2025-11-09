@@ -2,12 +2,10 @@ export type OnboardingSettingKey =
   | 'ai.openai.apiKey'
   | 'ai.openai.baseUrl'
   | 'ai.embedding.model'
-  | 'auth.google.clientId'
-  | 'auth.google.clientSecret'
-  | 'auth.github.clientId'
-  | 'auth.github.clientSecret'
   | 'http.cors.allowedOrigins'
   | 'services.amap.apiKey'
+
+export type OnboardingSiteSettingKey = 'site.name' | 'site.title' | 'site.description'
 
 export type SettingFieldDefinition = {
   key: OnboardingSettingKey
@@ -28,41 +26,6 @@ export type SettingSectionDefinition = {
 
 export const ONBOARDING_SETTING_SECTIONS: SettingSectionDefinition[] = [
   {
-    id: 'auth',
-    title: 'Authentication Providers',
-    description:
-      'Configure OAuth providers that will be available to your team. You can add them later from the settings panel as well.',
-    fields: [
-      {
-        key: 'auth.google.clientId',
-        label: 'Google Client ID',
-        description: 'Public identifier issued by Google OAuth.',
-        placeholder: '1234567890-abc.apps.googleusercontent.com',
-      },
-      {
-        key: 'auth.google.clientSecret',
-        label: 'Google Client Secret',
-        description:
-          'Keep this secret safe. Required together with the client ID to enable Google sign-in.',
-        placeholder: 'GOCSPX-xxxxxxxxxxxxxxxxxx',
-        sensitive: true,
-      },
-      {
-        key: 'auth.github.clientId',
-        label: 'GitHub Client ID',
-        description: 'Public identifier for your GitHub OAuth App.',
-        placeholder: 'Iv1.0123456789abcdef',
-      },
-      {
-        key: 'auth.github.clientSecret',
-        label: 'GitHub Client Secret',
-        description: 'Used to authorize GitHub OAuth callbacks.',
-        placeholder: 'e3a2f9c0f2bdc...',
-        sensitive: true,
-      },
-    ],
-  },
-  {
     id: 'ai',
     title: 'AI & Embeddings',
     description:
@@ -71,23 +34,20 @@ export const ONBOARDING_SETTING_SECTIONS: SettingSectionDefinition[] = [
       {
         key: 'ai.openai.apiKey',
         label: 'OpenAI API Key',
-        description:
-          'Used for generating captions, titles, and AI assistance across the platform.',
+        description: 'Used for generating captions, titles, and AI assistance across the platform.',
         placeholder: 'sk-proj-xxxxxxxxxxxxxxxx',
         sensitive: true,
       },
       {
         key: 'ai.openai.baseUrl',
         label: 'OpenAI Base URL',
-        description:
-          'Override the default api.openai.com endpoint if you proxy requests.',
+        description: 'Override the default api.openai.com endpoint if you proxy requests.',
         placeholder: 'https://api.openai.com/v1',
       },
       {
         key: 'ai.embedding.model',
         label: 'Embedding Model',
-        description:
-          'Model identifier to compute embeddings for search and semantic features.',
+        description: 'Model identifier to compute embeddings for search and semantic features.',
         placeholder: 'text-embedding-3-large',
       },
     ],
@@ -95,8 +55,7 @@ export const ONBOARDING_SETTING_SECTIONS: SettingSectionDefinition[] = [
   {
     id: 'map',
     title: 'Map Services',
-    description:
-      'Connect Gaode (Amap) maps to unlock geolocation previews for your photos.',
+    description: 'Connect Gaode (Amap) maps to unlock geolocation previews for your photos.',
     fields: [
       {
         key: 'services.amap.apiKey',
@@ -115,8 +74,7 @@ export const ONBOARDING_SETTING_SECTIONS: SettingSectionDefinition[] = [
       {
         key: 'http.cors.allowedOrigins',
         label: 'Allowed Origins',
-        description:
-          'Comma separated list of origins. Example: https://dashboard.afilmory.com, https://afilmory.app',
+        description: 'Comma separated list of origins. Example: https://dashboard.afilmory.com, https://afilmory.app',
         placeholder: 'https://dashboard.afilmory.com, https://afilmory.app',
         helper: 'Leave empty to keep the default wildcard policy during setup.',
         multiline: true,
@@ -125,14 +83,8 @@ export const ONBOARDING_SETTING_SECTIONS: SettingSectionDefinition[] = [
   },
 ]
 
-export const ONBOARDING_TOTAL_STEPS = 5 as const
-export const ONBOARDING_STEP_ORDER = [
-  'welcome',
-  'tenant',
-  'admin',
-  'settings',
-  'review',
-] as const
+export const ONBOARDING_TOTAL_STEPS = 6 as const
+export const ONBOARDING_STEP_ORDER = ['welcome', 'tenant', 'site', 'admin', 'settings', 'review'] as const
 
 export type OnboardingStepId = (typeof ONBOARDING_STEP_ORDER)[number]
 
@@ -151,7 +103,12 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'tenant',
     title: 'Tenant Profile',
-    description: 'Name your workspace and optional domain.',
+    description: 'Name your workspace and choose a slug.',
+  },
+  {
+    id: 'site',
+    title: 'Site Branding',
+    description: 'Set the public gallery information shown to your visitors.',
   },
   {
     id: 'admin',

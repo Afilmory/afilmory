@@ -21,13 +21,6 @@ class DrizzleTokenProvider {
 }
 
 @Module({
-  providers: [
-    DatabaseConfig,
-    PgPoolProvider,
-    DrizzleProvider,
-    DbAccessor,
-    PgPoolTokenProvider,
-    DrizzleTokenProvider,
-  ],
+  providers: [DatabaseConfig, PgPoolProvider, DrizzleProvider, DbAccessor, PgPoolTokenProvider, DrizzleTokenProvider],
 })
 export class DatabaseModule {}

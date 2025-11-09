@@ -16,15 +16,7 @@ import { ImageLoaderManager } from '~/lib/image-loader-manager'
 import { getImageFormat } from '~/lib/image-utils'
 import type { PhotoManifest } from '~/types/photo'
 
-export const MasonryPhotoItem = ({
-  data,
-  width,
-  index: _,
-}: {
-  data: PhotoManifest
-  width: number
-  index: number
-}) => {
+export const MasonryPhotoItem = ({ data, width, index: _ }: { data: PhotoManifest; width: number; index: number }) => {
   const photos = useContextPhotos()
   const photoViewer = usePhotoViewer()
   const { t } = useTranslation()
@@ -35,8 +27,7 @@ export const MasonryPhotoItem = ({
   const [isPlayingLivePhoto, setIsPlayingLivePhoto] = useState(false)
   const [livePhotoVideoLoaded, setLivePhotoVideoLoaded] = useState(false)
   const [isConvertingVideo, setIsConvertingVideo] = useState(false)
-  const [videoConvertionError, setVideoConversionError] =
-    useState<unknown>(null)
+  const [videoConvertionError, setVideoConversionError] = useState<unknown>(null)
 
   const imageRef = useRef<HTMLImageElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -55,9 +46,7 @@ export const MasonryPhotoItem = ({
     const photoIndex = photos.findIndex((photo) => photo.id === data.id)
     if (photoIndex !== -1) {
       const triggerEl =
-        imageRef.current?.parentElement instanceof HTMLElement
-          ? imageRef.current.parentElement
-          : imageRef.current
+        imageRef.current?.parentElement instanceof HTMLElement ? imageRef.current.parentElement : imageRef.current
 
       photoViewer.openViewer(photoIndex, triggerEl ?? undefined)
     }
@@ -131,10 +120,7 @@ export const MasonryPhotoItem = ({
       imageLoaderManagerRef.current = imageLoaderManager
 
       try {
-        await imageLoaderManager.processLivePhotoVideo(
-          data.livePhotoVideoUrl!,
-          videoRef.current!,
-        )
+        await imageLoaderManager.processLivePhotoVideo(data.livePhotoVideoUrl!, videoRef.current!)
 
         setLivePhotoVideoLoaded(true)
       } catch (videoError) {
@@ -154,22 +140,11 @@ export const MasonryPhotoItem = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    data.isLivePhoto,
-    data.livePhotoVideoUrl,
-    imageLoaded,
-    livePhotoVideoLoaded,
-  ])
+  }, [data.isLivePhoto, data.livePhotoVideoUrl, imageLoaded, livePhotoVideoLoaded])
 
   // Live Photo hover 处理（仅在桌面端）
   const handleMouseEnter = useCallback(() => {
-    if (
-      isMobileDevice ||
-      !data.isLivePhoto ||
-      !livePhotoVideoLoaded ||
-      isPlayingLivePhoto ||
-      isConvertingVideo
-    ) {
+    if (isMobileDevice || !data.isLivePhoto || !livePhotoVideoLoaded || isPlayingLivePhoto || isConvertingVideo) {
       return
     }
 
@@ -181,12 +156,7 @@ export const MasonryPhotoItem = ({
         video.play()
       }
     }, 200) // 200ms hover 延迟
-  }, [
-    data.isLivePhoto,
-    livePhotoVideoLoaded,
-    isPlayingLivePhoto,
-    isConvertingVideo,
-  ])
+  }, [data.isLivePhoto, livePhotoVideoLoaded, isPlayingLivePhoto, isConvertingVideo])
 
   const handleMouseLeave = useCallback(() => {
     if (hoverTimerRef.current) {
@@ -232,18 +202,14 @@ export const MasonryPhotoItem = ({
       onMouseLeave={handleMouseLeave}
     >
       {/* Blurhash 占位符 */}
-      {data.thumbHash && (
-        <Thumbhash thumbHash={data.thumbHash} className="absolute inset-0" />
-      )}
+      {data.thumbHash && <Thumbhash thumbHash={data.thumbHash} className="absolute inset-0" />}
 
       {!imageError && (
         <img
           ref={imageRef}
           src={data.thumbnailUrl}
           alt={data.title}
-          className={clsx(
-            'absolute inset-0 h-full w-full object-cover duration-300 group-hover:scale-105',
-          )}
+          className={clsx('absolute inset-0 h-full w-full object-cover duration-300 group-hover:scale-105')}
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
@@ -281,11 +247,7 @@ export const MasonryPhotoItem = ({
             'top-2 left-2',
             'flex-wrap gap-y-1',
           )}
-          title={
-            isMobileDevice
-              ? t('photo.live.tooltip.mobile.main')
-              : t('photo.live.tooltip.desktop.main')
-          }
+          title={isMobileDevice ? t('photo.live.tooltip.mobile.main') : t('photo.live.tooltip.desktop.main')}
         >
           {isConvertingVideo ? (
             <div className="flex items-center gap-1 px-1">
@@ -321,9 +283,7 @@ export const MasonryPhotoItem = ({
           <div className="absolute inset-x-0 bottom-0 p-4 pb-0 text-white">
             {/* 基本信息和标签 section */}
             <div className="mb-3 [&_*]:duration-300">
-              <h3 className="mb-2 truncate text-sm font-medium opacity-0 group-hover:opacity-100">
-                {data.title}
-              </h3>
+              <h3 className="mb-2 truncate text-sm font-medium opacity-0 group-hover:opacity-100">{data.title}</h3>
               {data.description && (
                 <p className="mb-2 line-clamp-2 text-sm text-white/80 opacity-0 group-hover:opacity-100">
                   {data.description}
@@ -362,9 +322,7 @@ export const MasonryPhotoItem = ({
                 {exifData.focalLength35mm && (
                   <div className="flex items-center gap-1.5 rounded-md bg-white/10 px-2 py-1 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
                     <StreamlineImageAccessoriesLensesPhotosCameraShutterPicturePhotographyPicturesPhotoLens className="text-white/70" />
-                    <span className="text-white/90">
-                      {exifData.focalLength35mm}mm
-                    </span>
+                    <span className="text-white/90">{exifData.focalLength35mm}mm</span>
                   </div>
                 )}
 
@@ -378,9 +336,7 @@ export const MasonryPhotoItem = ({
                 {exifData.shutterSpeed && (
                   <div className="flex items-center gap-1.5 rounded-md bg-white/10 px-2 py-1 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
                     <MaterialSymbolsShutterSpeed className="text-white/70" />
-                    <span className="text-white/90">
-                      {exifData.shutterSpeed}
-                    </span>
+                    <span className="text-white/90">{exifData.shutterSpeed}</span>
                   </div>
                 )}
 
