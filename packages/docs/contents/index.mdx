@@ -1,7 +1,7 @@
 ---
 title: Overview
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-10-28T19:48:05+08:00
+lastModified: 2025-11-10T22:36:14+08:00
 ---
 
 # Overview
@@ -120,24 +120,23 @@ This will automatically pull resources from the remote repository, avoiding rebu
 - `customDomain`: Custom domain
 - `excludeRegex`: Regular expression to exclude files (optional)
 
-#### Build Options (`options`)
+#### System Processing (`system.processing`)
 
 - `defaultConcurrency`: Default concurrency
 - `enableLivePhotoDetection`: Enable Live Photo detection
+- `digestSuffixLength`: Digest suffix length for deterministic IDs
+- `supportedFormats`: Optional allowlist of file extensions to process
+
+#### System Observability (`system.observability`)
+
 - `showProgress`: Show build progress
 - `showDetailedStats`: Show detailed statistics
-
-#### Performance Configuration (`performance`)
-
-- `worker.workerCount`: Number of worker processes
-- `worker.timeout`: Worker timeout (milliseconds)
-- `worker.useClusterMode`: Enable cluster mode
-
-#### Logging Configuration (`logging`)
-
-- `verbose`: Verbose logging
-- `level`: Log level (`info` | `warn` | `error` | `debug`)
-- `outputToFile`: Output to file
+- `logging.verbose`: Verbose logging
+- `logging.level`: Log level (`info` | `warn` | `error` | `debug`)
+- `logging.outputToFile`: Output to file
+- `performance.worker.workerCount`: Number of worker processes
+- `performance.worker.timeout`: Worker timeout (milliseconds)
+- `performance.worker.useClusterMode`: Enable cluster mode
 
 ## 📋 CLI Commands
 

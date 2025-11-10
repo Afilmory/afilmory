@@ -20,12 +20,18 @@ export default function githubRepoSyncPlugin(options: GitHubRepoSyncPluginOption
     name: 'afilmory:github-repo-sync',
     hooks: {
       beforeBuild: async (context) => {
-        if (!context.config.repo.enable) {
+        const userConfig = context.config.user
+        if (!userConfig) {
+          context.logger.main.warn('⚠️ 未配置用户级设置，跳过远程仓库同步')
+          return
+        }
+
+        if (!userConfig.repo.enable) {
           return
         }
 
         const { logger } = context
-        const { repo } = context.config
+        const { repo } = userConfig
 
         if (!repo.url) {
           logger.main.warn('⚠️ 未配置远程仓库地址，跳过同步')
@@ -65,7 +71,13 @@ export default function githubRepoSyncPlugin(options: GitHubRepoSyncPluginOption
         logger.main.success('✅ 远程仓库同步完成')
       },
       afterBuild: async (context) => {
-        if (!autoPush || !context.config.repo.enable) {
+        const userConfig = context.config.user
+        if (!userConfig) {
+          context.logger.main.warn('⚠️ 未配置用户级设置，跳过推送')
+          return
+        }
+
+        if (!autoPush || !userConfig.repo.enable) {
           return
         }
 
@@ -85,7 +97,7 @@ export default function githubRepoSyncPlugin(options: GitHubRepoSyncPluginOption
         await pushUpdatesToRemoteRepo({
           assetsGitDir,
           logger: context.logger,
-          repoConfig: context.config.repo,
+          repoConfig: userConfig.repo,
         })
       },
     },

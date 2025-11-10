@@ -2,8 +2,8 @@ import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } fr
 import { injectable } from 'tsyringe'
 
 import { shouldSkipTenant } from '../decorators/skip-tenant.decorator'
-import type { TenantResolutionOptions } from '../modules/tenant/tenant-context-resolver.service'
-import { TenantContextResolver } from '../modules/tenant/tenant-context-resolver.service'
+import type { TenantResolutionOptions } from '../modules/platform/tenant/tenant-context-resolver.service'
+import { TenantContextResolver } from '../modules/platform/tenant/tenant-context-resolver.service'
 import { TENANT_RESOLUTION_OPTIONS } from './tenant-resolver.decorator'
 
 const DEFAULT_OPTIONS: Required<TenantResolutionOptions> = {

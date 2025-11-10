@@ -8,6 +8,12 @@ const SETTINGS_TABS = [
     end: true,
   },
   {
+    id: 'storage',
+    label: '素材存储',
+    path: '/settings/storage',
+    end: true,
+  },
+  {
     id: 'account',
     label: '账号与登录',
     path: '/settings/account',

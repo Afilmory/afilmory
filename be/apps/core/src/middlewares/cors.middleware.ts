@@ -1,14 +1,13 @@
 import type { HttpMiddleware, OnModuleDestroy, OnModuleInit } from '@afilmory/framework'
 import { EventEmitterService, Middleware } from '@afilmory/framework'
+import { logger } from 'core/helpers/logger.helper'
+import { SettingService } from 'core/modules/configuration/setting/setting.service'
+import { AppStateService } from 'core/modules/infrastructure/app-state/app-state.service'
+import { getTenantContext } from 'core/modules/platform/tenant/tenant.context'
+import { TenantContextResolver } from 'core/modules/platform/tenant/tenant-context-resolver.service'
 import type { Context } from 'hono'
 import { cors } from 'hono/cors'
 import { injectable } from 'tsyringe'
-
-import { logger } from '../helpers/logger.helper'
-import { AppStateService } from '../modules/app-state/app-state.service'
-import { SettingService } from '../modules/setting/setting.service'
-import { getTenantContext } from '../modules/tenant/tenant.context'
-import { TenantContextResolver } from '../modules/tenant/tenant-context-resolver.service'
 
 type AllowedOrigins = '*' | string[]
 

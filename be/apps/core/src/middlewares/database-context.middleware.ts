@@ -6,7 +6,7 @@ import {
   PgPoolProvider,
   runWithDbContext,
 } from 'core/database/database.provider'
-import { getTenantContext } from 'core/modules/tenant/tenant.context'
+import { getTenantContext } from 'core/modules/platform/tenant/tenant.context'
 import type { Context, Next } from 'hono'
 import { injectable } from 'tsyringe'
 

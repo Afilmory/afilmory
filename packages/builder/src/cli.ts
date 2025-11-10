@@ -70,39 +70,50 @@ async function main() {
   // 显示配置信息
   if (args.has('--config')) {
     const config = cliBuilder.getConfig()
+    const userConfig = config.user
+    const storage = userConfig?.storage
+    if (!storage) {
+      logger.main.error('未配置存储提供商，请先在配置文件中设置 storage 字段')
+      return
+    }
     logger.main.info('🔧 当前配置：')
-    logger.main.info(`   存储提供商：${config.storage.provider}`)
+    logger.main.info(`   存储提供商：${storage.provider}`)
 
-    switch (config.storage.provider) {
+    switch (storage.provider) {
       case 's3': {
-        logger.main.info(`   存储桶：${config.storage.bucket}`)
-        logger.main.info(`   区域：${config.storage.region || '未设置'}`)
-        logger.main.info(`   端点：${config.storage.endpoint || '默认'}`)
-        logger.main.info(`   自定义域名：${config.storage.customDomain || '未设置'}`)
-        logger.main.info(`   前缀：${config.storage.prefix || '无'}`)
+        logger.main.info(`   存储桶：${storage.bucket}`)
+        logger.main.info(`   区域：${storage.region || '未设置'}`)
+        logger.main.info(`   端点：${storage.endpoint || '默认'}`)
+        logger.main.info(`   自定义域名：${storage.customDomain || '未设置'}`)
+        logger.main.info(`   前缀：${storage.prefix || '无'}`)
         break
       }
       case 'github': {
-        logger.main.info(`   仓库所有者：${config.storage.owner}`)
-        logger.main.info(`   仓库名称：${config.storage.repo}`)
-        logger.main.info(`   分支：${config.storage.branch || 'main'}`)
-        logger.main.info(`   路径：${config.storage.path || '无'}`)
-        logger.main.info(`   使用原始 URL：${config.storage.useRawUrl || '否'}`)
+        logger.main.info(`   仓库所有者：${storage.owner}`)
+        logger.main.info(`   仓库名称：${storage.repo}`)
+        logger.main.info(`   分支：${storage.branch || 'main'}`)
+        logger.main.info(`   路径：${storage.path || '无'}`)
+        logger.main.info(`   使用原始 URL：${storage.useRawUrl || '否'}`)
         break
       }
     }
-    logger.main.info(`   默认并发数：${config.options.defaultConcurrency}`)
-    logger.main.info(`   Live Photo 检测：${config.options.enableLivePhotoDetection ? '启用' : '禁用'}`)
-    logger.main.info(`   照片后缀摘要长度：${config.options.digestSuffixLength}`)
-    logger.main.info(`   Worker 数：${config.performance.worker.workerCount}`)
-    logger.main.info(`   Worker 超时：${config.performance.worker.timeout}ms`)
-    logger.main.info(`   集群模式：${config.performance.worker.useClusterMode ? '启用' : '禁用'}`)
+    logger.main.info(`   默认并发数：${config.system.processing.defaultConcurrency}`)
+    logger.main.info(`   Live Photo 检测：${config.system.processing.enableLivePhotoDetection ? '启用' : '禁用'}`)
+    logger.main.info(`   照片后缀摘要长度：${config.system.processing.digestSuffixLength}`)
+    logger.main.info(`   Worker 数：${config.system.observability.performance.worker.workerCount}`)
+    logger.main.info(`   Worker 超时：${config.system.observability.performance.worker.timeout}ms`)
+    logger.main.info(`   集群模式：${config.system.observability.performance.worker.useClusterMode ? '启用' : '禁用'}`)
     logger.main.info('')
+    if (!userConfig) {
+      logger.main.warn('未配置用户级设置（repo/storage）')
+      return
+    }
+
     logger.main.info('📦 远程仓库配置：')
-    logger.main.info(`   启用状态：${config.repo.enable ? '启用' : '禁用'}`)
-    if (config.repo.enable) {
-      logger.main.info(`   仓库地址：${config.repo.url || '未设置'}`)
-      logger.main.info(`   推送权限：${config.repo.token ? '已配置' : '未配置'}`)
+    logger.main.info(`   启用状态：${userConfig.repo.enable ? '启用' : '禁用'}`)
+    if (userConfig.repo.enable) {
+      logger.main.info(`   仓库地址：${userConfig.repo.url || '未设置'}`)
+      logger.main.info(`   推送权限：${userConfig.repo.token ? '已配置' : '未配置'}`)
     }
     return
   }
@@ -120,10 +131,10 @@ async function main() {
   }
 
   const config = cliBuilder.getConfig()
-  const concurrencyLimit = config.performance.worker.workerCount
-  const finalConcurrency = concurrencyLimit ?? config.options.defaultConcurrency
-  const processingMode = config.performance.worker.useClusterMode ? '多进程集群' : '并发线程池'
-  const processingModeKey = config.performance.worker.useClusterMode ? 'cluster' : 'worker'
+  const concurrencyLimit = config.system.observability.performance.worker.workerCount
+  const finalConcurrency = concurrencyLimit ?? config.system.processing.defaultConcurrency
+  const processingMode = config.system.observability.performance.worker.useClusterMode ? '多进程集群' : '并发线程池'
+  const processingModeKey = config.system.observability.performance.worker.useClusterMode ? 'cluster' : 'worker'
 
   const useTui = process.stdout.isTTY && !disableUi
   let tui: BuilderTUI | null = null

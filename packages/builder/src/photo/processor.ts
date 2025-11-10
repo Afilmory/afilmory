@@ -49,7 +49,7 @@ export async function processPhoto(
   }
 
   const storageManager = builder.getStorageManager()
-  const storageConfig = builder.getConfig().storage
+  const storageConfig = builder.getStorageConfig()
   const photoLoggers = createPhotoProcessingLoggers(workerId, logger)
 
   return await runWithPhotoExecutionContext(

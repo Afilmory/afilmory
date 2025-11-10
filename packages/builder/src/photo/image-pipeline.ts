@@ -125,8 +125,11 @@ export async function processImageWithSharp(imageBuffer: Buffer, photoKey: strin
  */
 async function generatePhotoId(s3Key: string): Promise<string> {
   const { builder } = getPhotoExecutionContext()
-  const { options } = builder.getConfig()
-  const { digestSuffixLength } = options
+  const {
+    system: {
+      processing: { digestSuffixLength },
+    },
+  } = builder.getConfig()
   if (!digestSuffixLength || digestSuffixLength <= 0) {
     return path.basename(s3Key, path.extname(s3Key))
   }

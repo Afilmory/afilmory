@@ -1,13 +1,12 @@
 import type { HttpMiddleware } from '@afilmory/framework'
 import { HttpContext, Middleware } from '@afilmory/framework'
+import { logger } from 'core/helpers/logger.helper'
+import type { AuthSession } from 'core/modules/platform/auth/auth.provider'
+import { AuthProvider } from 'core/modules/platform/auth/auth.provider'
+import { getTenantContext } from 'core/modules/platform/tenant/tenant.context'
+import { TenantContextResolver } from 'core/modules/platform/tenant/tenant-context-resolver.service'
 import type { Context, Next } from 'hono'
 import { injectable } from 'tsyringe'
-
-import { logger } from '../helpers/logger.helper'
-import type { AuthSession } from '../modules/auth/auth.provider'
-import { AuthProvider } from '../modules/auth/auth.provider'
-import { getTenantContext } from '../modules/tenant/tenant.context'
-import { TenantContextResolver } from '../modules/tenant/tenant-context-resolver.service'
 
 @Middleware({ priority: -1 })
 @injectable()

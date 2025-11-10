@@ -92,7 +92,8 @@ export default function thumbnailStoragePlugin(options: ThumbnailStoragePluginOp
     [THUMBNAIL_PLUGIN_SYMBOL]: true,
     hooks: {
       onInit: ({ builder, config, logger }) => {
-        const storageConfig = (options.storageConfig ?? config.storage) as StorageConfig
+        const fallbackStorage = config.user?.storage ?? builder.getStorageConfig()
+        const storageConfig = (options.storageConfig ?? fallbackStorage) as StorageConfig
         const directory = normalizeDirectory(options.directory)
         const contentType = options.contentType ?? DEFAULT_CONTENT_TYPE
 

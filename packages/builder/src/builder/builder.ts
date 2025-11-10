@@ -14,8 +14,9 @@ import type {
   BuilderPluginEventPayloads,
 } from '../plugins/types.js'
 import type { StorageProviderFactory } from '../storage/factory.js'
+import type { StorageConfig } from '../storage/index.js'
 import { StorageFactory, StorageManager } from '../storage/index.js'
-import type { BuilderConfig } from '../types/config.js'
+import type { BuilderConfig, UserBuilderSettings } from '../types/config.js'
 import type { AfilmoryManifest, CameraInfo, LensInfo } from '../types/manifest.js'
 import type { PhotoManifestItem, ProcessPhotoResult } from '../types/photo.js'
 import { ClusterPool } from '../worker/cluster-pool.js'
@@ -123,7 +124,8 @@ export class AfilmoryBuilder {
 
       logger.main.info(`现有 manifest 包含 ${existingManifestItems.length} 张照片`)
 
-      logger.main.info('使用存储提供商：', this.config.storage.provider)
+      const storageConfig = this.getStorageConfig()
+      logger.main.info('使用存储提供商：', storageConfig.provider)
 
       const storageManager = this.getStorageManager()
 
@@ -138,7 +140,7 @@ export class AfilmoryBuilder {
 
       // 检测 Live Photo 配对（如果启用）
       const livePhotoMap = await this.detectLivePhotos(allObjects)
-      if (this.config.options.enableLivePhotoDetection) {
+      if (this.config.system.processing.enableLivePhotoDetection) {
         logger.main.info(`检测到 ${livePhotoMap.size} 个 Live Photo`)
       }
 
@@ -205,8 +207,8 @@ export class AfilmoryBuilder {
         isForceThumbnails: options.isForceThumbnails,
       }
 
-      const concurrency = options.concurrencyLimit ?? this.config.options.defaultConcurrency
-      const { useClusterMode } = this.config.performance.worker
+      const concurrency = options.concurrencyLimit ?? this.config.system.processing.defaultConcurrency
+      const { useClusterMode } = this.config.system.observability.performance.worker
       const shouldUseCluster = useClusterMode && tasksToProcess.length >= concurrency * 2
       const { progressListener } = options
 
@@ -296,14 +298,14 @@ export class AfilmoryBuilder {
         let results: ProcessPhotoResult[]
 
         logger.main.info(
-          `开始${shouldUseCluster ? '多进程' : '并发'}处理任务，${shouldUseCluster ? '进程' : 'Worker'}数：${concurrency}${shouldUseCluster ? `，每进程并发：${this.config.performance.worker.workerConcurrency}` : ''}`,
+          `开始${shouldUseCluster ? '多进程' : '并发'}处理任务，${shouldUseCluster ? '进程' : 'Worker'}数：${concurrency}${shouldUseCluster ? `，每进程并发：${this.config.system.observability.performance.worker.workerConcurrency}` : ''}`,
         )
 
         if (shouldUseCluster) {
           const clusterPool = new ClusterPool<ProcessPhotoResult>({
             concurrency,
             totalTasks: tasksToProcess.length,
-            workerConcurrency: this.config.performance.worker.workerConcurrency,
+            workerConcurrency: this.config.system.observability.performance.worker.workerConcurrency,
             workerEnv: {
               FORCE_MODE: processorOptions.isForceMode.toString(),
               FORCE_MANIFEST: processorOptions.isForceManifest.toString(),
@@ -456,7 +458,7 @@ export class AfilmoryBuilder {
         lenses,
       })
 
-      if (this.config.options.showDetailedStats) {
+      if (this.config.system.observability.showDetailedStats) {
         this.logBuildResults(
           manifest,
           {
@@ -510,7 +512,7 @@ export class AfilmoryBuilder {
   private async detectLivePhotos(
     allObjects: Awaited<ReturnType<StorageManager['listAllFiles']>>,
   ): Promise<Map<string, (typeof allObjects)[0]>> {
-    if (!this.config.options.enableLivePhotoDetection) {
+    if (!this.config.system.processing.enableLivePhotoDetection) {
       return new Map()
     }
 
@@ -518,12 +520,13 @@ export class AfilmoryBuilder {
   }
 
   private logBuildStart(): void {
-    switch (this.config.storage.provider) {
+    const storage = this.getStorageConfig()
+    switch (storage.provider) {
       case 's3': {
-        const endpoint = this.config.storage.endpoint || '默认 AWS S3'
-        const customDomain = this.config.storage.customDomain || '未设置'
-        const { bucket } = this.config.storage
-        const prefix = this.config.storage.prefix || '无前缀'
+        const endpoint = storage.endpoint || '默认 AWS S3'
+        const customDomain = storage.customDomain || '未设置'
+        const { bucket } = storage
+        const prefix = storage.prefix || '无前缀'
 
         logger.main.info('🚀 开始从存储获取照片列表...')
         logger.main.info(`🔗 使用端点：${endpoint}`)
@@ -533,7 +536,7 @@ export class AfilmoryBuilder {
         break
       }
       case 'github': {
-        const { owner, repo, branch, path } = this.config.storage
+        const { owner, repo, branch, path } = storage
         logger.main.info('🚀 开始从存储获取照片列表...')
         logger.main.info(`👤 仓库所有者：${owner}`)
         logger.main.info(`🏷️ 仓库名称：${repo}`)
@@ -580,7 +583,7 @@ export class AfilmoryBuilder {
   registerStorageProvider(provider: string, factory: StorageProviderFactory): void {
     StorageFactory.registerProvider(provider, factory)
 
-    if (this.config.storage.provider === provider) {
+    if (this.getStorageConfig().provider === provider) {
       this.storageManager = null
       this.ensureStorageManager()
     }
@@ -641,7 +644,7 @@ export class AfilmoryBuilder {
       local: () => import('@afilmory/builder/plugins/storage/local.js'),
     }
 
-    const storageProvider = this.config.storage.provider
+    const storageProvider = this.getStorageConfig().provider
     const storagePlugin = storagePluginByProvider[storageProvider]
     if (storagePlugin) {
       const expectedName = `afilmory:storage:${storageProvider}`
@@ -651,11 +654,11 @@ export class AfilmoryBuilder {
       addReference(storagePlugin)
     }
 
-    for (const ref of this.config.plugins ?? []) {
+    for (const ref of this.config.plugins) {
       addReference(ref)
     }
 
-    if (this.config.repo.enable && !hasPluginWithName('afilmory:github-repo-sync')) {
+    if (this.getUserSettings().repo.enable && !hasPluginWithName('afilmory:github-repo-sync')) {
       addReference(() => import('@afilmory/builder/plugins/github-repo-sync.js'))
     }
 
@@ -664,10 +667,25 @@ export class AfilmoryBuilder {
 
   private ensureStorageManager(): StorageManager {
     if (!this.storageManager) {
-      this.storageManager = new StorageManager(this.config.storage)
+      this.storageManager = new StorageManager(this.getStorageConfig())
     }
 
     return this.storageManager
+  }
+
+  private getUserSettings(): UserBuilderSettings {
+    if (!this.config.user) {
+      throw new Error('User configuration is missing. 请配置 system/user 设置。')
+    }
+    return this.config.user
+  }
+
+  getStorageConfig(): StorageConfig {
+    const {storage} = this.getUserSettings()
+    if (!storage) {
+      throw new Error('Storage configuration is missing. 请配置 system/user storage 设置。')
+    }
+    return storage
   }
 
   /**

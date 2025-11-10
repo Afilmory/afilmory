@@ -112,25 +112,23 @@ This will automatically pull resources from the remote repository, avoiding rebu
 - `customDomain`: Custom domain
 - `excludeRegex`: Regular expression to exclude files (optional)
 
-#### Build Options (`options`)
+#### System Processing (`system.processing`)
 
 - `defaultConcurrency`: Default concurrency
-- `digestSuffixLength`: The length of the SHA-256 digest appended to the photo ID.
+- `digestSuffixLength`: The length of the SHA-256 digest appended to the photo ID
 - `enableLivePhotoDetection`: Enable Live Photo detection
+- `supportedFormats`: Optional allowlist of file extensions to process
+
+#### System Observability (`system.observability`)
+
 - `showProgress`: Show build progress
 - `showDetailedStats`: Show detailed statistics
-
-#### Performance Configuration (`performance`)
-
-- `worker.workerCount`: Number of worker processes
-- `worker.timeout`: Worker timeout (milliseconds)
-- `worker.useClusterMode`: Enable cluster mode
-
-#### Logging Configuration (`logging`)
-
-- `verbose`: Verbose logging
-- `level`: Log level (`info` | `warn` | `error` | `debug`)
-- `outputToFile`: Output to file
+- `logging.verbose`: Verbose logging
+- `logging.level`: Log level (`info` | `warn` | `error` | `debug`)
+- `logging.outputToFile`: Output to file
+- `performance.worker.workerCount`: Number of worker processes
+- `performance.worker.timeout`: Worker timeout (milliseconds)
+- `performance.worker.useClusterMode`: Enable cluster mode
 
 ## 📋 CLI Commands
 

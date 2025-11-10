@@ -741,19 +741,37 @@ export class HonoHttpApplication {
         const match = error.message.match(regexp)
         if (match) {
           const [, dependency, position, constructor] = match
-          throw new ReferenceError(
-            `Cannot inject the dependency ${colors.yellow(dependency)} at position #${position} of "${colors.yellow(constructor)}" constructor.` +
-              `\n` +
-              `Please check if the dependency is registered in the container. Check import the dependency not the type.` +
-              `\n${colors.red(`- import type { ${dependency} } from "./service";`)}\n${colors.green(
-                `+ import { ${dependency} } from "./service";`,
-              )}`,
-          )
+          const baseMessage = `Cannot inject the dependency ${colors.yellow(dependency)} at position #${position} of "${colors.yellow(constructor)}" constructor.`
+          const guidance =
+            `\nPlease ensure ${colors.yellow(dependency)} (and its own dependencies) are registered as providers or the module that declares them is imported.` +
+            `\nIf you are importing only the TypeScript type, switch to a runtime import:` +
+            `\n${colors.red(`- import type { ${dependency} } from "./service";`)}\n${colors.green(
+              `+ import { ${dependency} } from "./service";`,
+            )}`
+          const rootCause = this.formatInjectionRootCause(error)
+          const detailedMessage =
+            baseMessage +
+            guidance +
+            (rootCause ? `\n\n${colors.bold('Container details:')}\n${colors.gray(rootCause)}` : '')
+
+          throw new ReferenceError(detailedMessage, { cause: error })
         }
       }
       throw error
       /* c8 ignore end */
     }
+  }
+
+  private formatInjectionRootCause(error: Error): string {
+    const message = error.message ?? ''
+    if (!message) {
+      return ''
+    }
+    return message
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line, index, arr) => line.length > 0 && (index === 0 || line !== arr[index - 1]))
+      .join('\n')
   }
 
   private registerSingleton<T>(token: Constructor<T>): void {

@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm'
 import { createConfiguredApp } from '../app.factory'
 import { DbAccessor, PgPoolProvider } from '../database/database.provider'
 import { logger } from '../helpers/logger.helper'
-import { AuthProvider } from '../modules/auth/auth.provider'
+import { AuthProvider } from '../modules/platform/auth/auth.provider'
 import { RedisProvider } from '../redis/redis.provider'
 
 const RESET_FLAG = '--reset-superadmin-password'

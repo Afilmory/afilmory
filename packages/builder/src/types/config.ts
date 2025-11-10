@@ -1,40 +1,67 @@
 import type { BuilderPluginConfigEntry } from '../plugins/types.js'
 import type { StorageConfig } from '../storage/interfaces.js'
 
-export interface BuilderConfig {
-  repo: {
-    enable: boolean
-    url: string
-    token?: string
-  }
-  storage: StorageConfig
-  options: {
-    defaultConcurrency: number
-    supportedFormats?: Set<string>
-    enableLivePhotoDetection: boolean
-    showProgress: boolean
-    showDetailedStats: boolean
-    digestSuffixLength?: number
-  }
-  logging: {
-    verbose: boolean
-    level: 'info' | 'warn' | 'error' | 'debug'
-    outputToFile: boolean
-    logFilePath?: string
-  }
-  performance: {
-    worker: {
-      timeout: number
-      useClusterMode: boolean
-      workerConcurrency: number
-      workerCount: number
-    }
-  }
-  plugins?: BuilderPluginConfigEntry[]
+export interface BuilderRepoSettings {
+  enable: boolean
+  url: string
+  token?: string
 }
 
-type DeepPartial<T> = T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T
+export interface LoggingConfig {
+  verbose: boolean
+  level: 'info' | 'warn' | 'error' | 'debug'
+  outputToFile: boolean
+  logFilePath?: string
+}
 
-export type BuilderConfigInput = DeepPartial<Omit<BuilderConfig, 'plugins'>> & {
+export interface WorkerPerformanceConfig {
+  timeout: number
+  useClusterMode: boolean
+  workerConcurrency: number
+  workerCount: number
+}
+
+export interface SystemProcessingSettings {
+  defaultConcurrency: number
+  enableLivePhotoDetection: boolean
+  supportedFormats?: Set<string>
+  digestSuffixLength?: number
+}
+
+export interface SystemObservabilitySettings {
+  showProgress: boolean
+  showDetailedStats: boolean
+  logging: LoggingConfig
+  performance: {
+    worker: WorkerPerformanceConfig
+  }
+}
+
+export interface SystemBuilderSettings {
+  processing: SystemProcessingSettings
+  observability: SystemObservabilitySettings
+}
+
+export interface UserBuilderSettings {
+  repo: BuilderRepoSettings
+  storage: StorageConfig | null
+}
+
+export interface BuilderConfig {
+  system: SystemBuilderSettings
+  user: UserBuilderSettings | null
+  plugins: BuilderPluginConfigEntry[]
+}
+
+type DeepPartial<T> = T extends object
+  ? {
+      [P in keyof T]?: DeepPartial<T[P]>
+    }
+  : T
+
+export type BuilderConfigInput = DeepPartial<Omit<UserBuilderSettings, 'storage'>> & {
+  storage?: StorageConfig | null
+  user?: DeepPartial<UserBuilderSettings>
+  system?: DeepPartial<SystemBuilderSettings>
   plugins?: BuilderPluginConfigEntry[]
 }

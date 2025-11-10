@@ -22,7 +22,7 @@ export default function eagleStoragePlugin(options: EagleStoragePluginOptions = 
        * This only applies when the configured storage provider is 'eagle'.
        */
       beforeAddManifestItem: async ({ config, payload, logger, runShared }) => {
-        const { storage } = config
+        const { storage } = config.user ?? {}
         if (!storage || storage.provider !== 'eagle') return
 
         const eagleConfig = storage

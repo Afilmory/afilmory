@@ -31,7 +31,7 @@ WORKDIR /app
 
 RUN apk add --no-cache perl
 COPY --from=builder /workspace/be/apps/core/dist ./dist
-COPY --from=builder /workspace/be/apps/core/drizzle ./drizzle
+COPY --from=builder /workspace/be/packages/db/migrations ./migrations
 
 RUN if [ -f dist/package.json ]; then \
   cd dist && \
