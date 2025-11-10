@@ -97,7 +97,7 @@ export const DEFAULT_SETTING_DEFINITIONS = {
     schema: z.string().trim(),
   },
   [BUILDER_USER_CONFIG_SETTING_KEY]: {
-    isSensitive: false,
+    isSensitive: true,
     schema: z.string().trim(),
   },
   'site.name': {

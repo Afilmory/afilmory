@@ -14,6 +14,11 @@ export interface StorageProvidersPayload {
   activeProviderId: string | null
 }
 
+export interface StorageSettingEntry {
+  key: string
+  value: string
+}
+
 export interface StorageProviderFieldDefinition {
   key: string
   label: string

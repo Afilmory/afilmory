@@ -8,6 +8,7 @@ import { RedisAccessor } from 'core/redis/redis.provider'
 
 import { DatabaseModule } from '../database/database.module'
 import { RedisModule } from '../redis/redis.module'
+import { BuilderSettingModule } from './configuration/builder-setting/builder-setting.module'
 import { SettingModule } from './configuration/setting/setting.module'
 import { SiteSettingModule } from './configuration/site-setting/site-setting.module'
 import { StorageSettingModule } from './configuration/storage-setting/storage-setting.module'
@@ -43,6 +44,7 @@ function createEventModuleOptions(redis: RedisAccessor) {
     AuthModule,
     CacheModule,
     SettingModule,
+    BuilderSettingModule,
     StorageSettingModule,
     SiteSettingModule,
     SystemSettingModule,

@@ -8,9 +8,9 @@ const SETTINGS_TABS = [
     end: true,
   },
   {
-    id: 'storage',
-    label: '素材存储',
-    path: '/settings/storage',
+    id: 'builder',
+    label: '构建器',
+    path: '/settings/builder',
     end: true,
   },
   {

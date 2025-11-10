@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { getSettings, updateSettings } from '~/modules/settings'
-
+import { getStorageSettings, updateStorageSettings } from './api'
 import { STORAGE_SETTING_KEYS } from './constants'
 import type { StorageProvider, StorageProvidersPayload } from './types'
 import {
@@ -17,7 +16,7 @@ export function useStorageProvidersQuery() {
   return useQuery({
     queryKey: STORAGE_PROVIDERS_QUERY_KEY,
     queryFn: async () => {
-      const response = await getSettings([STORAGE_SETTING_KEYS.providers, STORAGE_SETTING_KEYS.activeProvider])
+      const response = await getStorageSettings([STORAGE_SETTING_KEYS.providers, STORAGE_SETTING_KEYS.activeProvider])
 
       const rawProviders = response.values[STORAGE_SETTING_KEYS.providers] ?? '[]'
       const providers = parseStorageProviders(rawProviders).map((provider) => normalizeStorageProviderConfig(provider))
@@ -46,7 +45,7 @@ export function useUpdateStorageProvidersMutation() {
 
       const resolvedProviders = restoreProviderSecrets(currentProviders, previousProviders ?? [])
 
-      await updateSettings([
+      await updateStorageSettings([
         {
           key: STORAGE_SETTING_KEYS.providers,
           value: serializeStorageProviders(resolvedProviders),
