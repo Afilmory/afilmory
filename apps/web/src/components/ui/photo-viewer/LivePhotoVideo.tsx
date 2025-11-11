@@ -48,21 +48,10 @@ export const LivePhotoVideo = ({
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const videoAnimateController = useAnimationControls()
-  const presentationTimestampRef = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     onPlayingChange?.(isPlayingLivePhoto)
   }, [isPlayingLivePhoto, onPlayingChange])
-
-  // Extract and track presentationTimestamp for Motion Photo
-  useEffect(() => {
-    if (videoSource.type === 'motion-photo' && videoSource.presentationTimestamp) {
-      // Convert microseconds to seconds
-      presentationTimestampRef.current = videoSource.presentationTimestamp / 1_000_000
-    } else {
-      presentationTimestampRef.current = undefined
-    }
-  }, [videoSource])
 
   useEffect(() => {
     if (!isCurrentImage || livePhotoVideoLoaded || isConvertingVideo || !videoRef.current) {
@@ -158,22 +147,6 @@ export const LivePhotoVideo = ({
     stop()
   }, [stop])
 
-  // Handle Motion Photo presentation timestamp
-  const handleTimeUpdate = useCallback(() => {
-    const video = videoRef.current
-    const timestamp = presentationTimestampRef.current
-
-    // Only handle Motion Photo with valid timestamp
-    if (!video || timestamp === undefined || videoSource.type !== 'motion-photo') {
-      return
-    }
-
-    // Stop playback when reaching or passing the presentation timestamp
-    if (video.currentTime >= timestamp) {
-      stop()
-    }
-  }, [videoSource, stop])
-
   return (
     <m.video
       ref={videoRef}
@@ -184,7 +157,6 @@ export const LivePhotoVideo = ({
       }}
       muted
       playsInline
-      onTimeUpdate={handleTimeUpdate}
       onEnded={handleVideoEnded}
       initial={{ opacity: 0 }}
       animate={videoAnimateController}
