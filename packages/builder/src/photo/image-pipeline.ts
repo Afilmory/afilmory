@@ -18,6 +18,7 @@ import type { S3ObjectLike } from '../types/s3.js'
 import { shouldProcessPhoto } from './cache-manager.js'
 import { processExifData, processThumbnailAndBlurhash, processToneAnalysis } from './data-processors.js'
 import { getPhotoExecutionContext } from './execution-context.js'
+import { detectGainMap } from './gainmap-detector.js'
 import { extractPhotoInfo } from './info-extractor.js'
 import { processLivePhoto } from './live-photo-handler.js'
 import { getGlobalLoggers } from './logger-adapter.js'
@@ -178,13 +179,18 @@ export async function executePhotoProcessingPipeline(
     // 4. 处理 EXIF 数据
     const exifData = await processExifData(imageBuffer, imageData.rawBuffer, photoKey, existingItem, options)
 
-    // 5. 检测 Motion Photo（从图片中提取嵌入视频的元数据）
+    // 5. 检测 HDR GainMap（Ultra HDR 图片）
+    const hasGainMap = detectGainMap({
+      exifData: exifData as Record<string, unknown> | null,
+    })
+
+    // 6. 检测 Motion Photo（从图片中提取嵌入视频的元数据）
     const motionPhotoMetadata = detectMotionPhoto({
       rawImageBuffer: imageData.rawBuffer,
       exifData: exifData as Record<string, unknown> | null,
     })
 
-    // 6. 处理 Live Photo（独立的视频文件）
+    // 7. 处理 Live Photo（独立的视频文件）
     const livePhotoResult = await processLivePhoto(photoKey, livePhotoMap, storageManager)
 
     // 检测冲突：不允许同时存在 Motion Photo 和 Live Photo
@@ -202,7 +208,6 @@ export async function executePhotoProcessingPipeline(
 
     // 9. 构建照片清单项
     const aspectRatio = metadata.width / metadata.height
-
     const photoItem: PhotoManifestItem = {
       id: photoId,
       title: photoInfo.title,
@@ -224,20 +229,23 @@ export async function executePhotoProcessingPipeline(
       video:
         motionPhotoMetadata?.isMotionPhoto && motionPhotoMetadata.motionPhotoOffset !== undefined
           ? {
-              type: 'motion-photo',
-              offset: motionPhotoMetadata.motionPhotoOffset,
-              size: motionPhotoMetadata.motionPhotoVideoSize,
-              presentationTimestamp: motionPhotoMetadata.presentationTimestampUs,
-            }
+            type: 'motion-photo',
+            offset: motionPhotoMetadata.motionPhotoOffset,
+            size: motionPhotoMetadata.motionPhotoVideoSize,
+            presentationTimestamp: motionPhotoMetadata.presentationTimestampUs,
+          }
           : livePhotoResult.isLivePhoto
             ? {
-                type: 'live-photo',
-                videoUrl: livePhotoResult.livePhotoVideoUrl!,
-                s3Key: livePhotoResult.livePhotoVideoS3Key!,
-              }
+              type: 'live-photo',
+              videoUrl: livePhotoResult.livePhotoVideoUrl!,
+              s3Key: livePhotoResult.livePhotoVideoS3Key!,
+            }
             : undefined,
       // HDR 相关字段
-      isHDR: exifData?.MPImageType === 'Gain Map Image',
+      isHDR:
+        exifData?.MPImageType === 'Gain Map Image' ||
+        exifData?.UniformResourceName === 'urn:iso:std:iso:ts:21496:-1' ||
+        hasGainMap,
     }
 
     loggers.image.success(`✅ 处理完成：${photoKey}`)

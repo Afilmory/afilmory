@@ -155,9 +155,20 @@ export interface PickedExif {
 
   // HDR 相关
   MPImageType?: Tags['MPImageType']
+  UniformResourceName?: string
 
   // 评分
   Rating?: number
+
+  // Motion Photo (XMP) related fields
+  MotionPhoto?: Tags['MotionPhoto']
+  MotionPhotoVersion?: Tags['MotionPhotoVersion']
+  MotionPhotoPresentationTimestampUs?: Tags['MotionPhotoPresentationTimestampUs']
+  ContainerDirectory?: Tags['ContainerDirectory']
+  MicroVideo?: Tags['MicroVideo']
+  MicroVideoVersion?: Tags['MicroVideoVersion']
+  MicroVideoOffset?: Tags['MicroVideoOffset']
+  MicroVideoPresentationTimestampUs?: Tags['MicroVideoPresentationTimestampUs']
 }
 
 export interface ThumbnailResult {

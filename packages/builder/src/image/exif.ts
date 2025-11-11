@@ -124,6 +124,16 @@ const pickKeys: Array<keyof Tags | (string & {})> = [
   'GPSLongitudeRef',
   // HDR相关字段
   'MPImageType',
+  'UniformResourceName',
+  // Motion Photo 相关字段
+  'MotionPhoto',
+  'MotionPhotoVersion',
+  'MotionPhotoPresentationTimestampUs',
+  'ContainerDirectory',
+  'MicroVideo',
+  'MicroVideoVersion',
+  'MicroVideoOffset',
+  'MicroVideoPresentationTimestampUs',
 ]
 function handleExifData(exifData: Tags, metadata: Metadata): PickedExif {
   const date = {

@@ -1,4 +1,5 @@
 import type { ConsolaInstance } from 'consola'
+import type { ContainerDirectoryItem } from 'exiftool-vendored'
 
 export interface MotionPhotoMetadata {
   isMotionPhoto: boolean
@@ -13,7 +14,6 @@ interface MotionPhotoDetectParams {
   logger?: ConsolaInstance
 }
 
-const MAX_XMP_SCAN_BYTES = 512 * 1024 // 512KB should cover standard XMP blocks
 const MIN_VIDEO_SIZE_BYTES = 8 * 1024 // 8KB minimal sanity check
 const MP4_FTYP = Buffer.from('ftyp')
 
@@ -40,64 +40,6 @@ const toNumber = (value: unknown): number | null => {
   return null
 }
 
-const extractXmpSegment = (buffer: Buffer): string | null => {
-  const scanSize = Math.min(buffer.length, MAX_XMP_SCAN_BYTES)
-  if (scanSize === 0) {
-    return null
-  }
-
-  const header = buffer.toString('utf8', 0, scanSize)
-  const startIndex = header.indexOf('<x:xmpmeta')
-  if (startIndex === -1) {
-    return null
-  }
-
-  const endIndex = header.indexOf('</x:xmpmeta>')
-  if (endIndex === -1) {
-    return null
-  }
-
-  return header.slice(startIndex, endIndex + '</x:xmpmeta>'.length)
-}
-
-const extractXmpBoolean = (xmp: string, tagName: string): boolean | null => {
-  const regex = new RegExp(`<[^:>]*:${tagName}>([^<]+)</[^>]+>`, 'i')
-  const match = xmp.match(regex)
-  if (!match) return null
-  return toBoolean(match[1])
-}
-
-const extractXmpNumber = (xmp: string, tagName: string): number | null => {
-  const regex = new RegExp(`<[^:>]*:${tagName}>([^<]+)</[^>]+>`, 'i')
-  const match = xmp.match(regex)
-  if (!match) return null
-  return toNumber(match[1])
-}
-
-const escapeRegExp = (value: string) => value.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-const buildAttrPattern = (attrName: string) => {
-  const escaped = escapeRegExp(attrName)
-  if (attrName.includes(':')) {
-    return escaped
-  }
-  return `(?:[\\w-]+:)?${escaped}`
-}
-
-const extractXmpAttributeBoolean = (xmp: string, attrName: string): boolean | null => {
-  const regex = new RegExp(`${buildAttrPattern(attrName)}="([^"]+)"`, 'i')
-  const match = xmp.match(regex)
-  if (!match) return null
-  return toBoolean(match[1])
-}
-
-const extractXmpAttributeNumber = (xmp: string, attrName: string): number | null => {
-  const regex = new RegExp(`${buildAttrPattern(attrName)}="([^"]+)"`, 'i')
-  const match = xmp.match(regex)
-  if (!match) return null
-  return toNumber(match[1])
-}
-
 const validateMp4Buffer = (buffer: Buffer): boolean => {
   if (buffer.length < MIN_VIDEO_SIZE_BYTES) {
     return false
@@ -109,8 +51,8 @@ const validateMp4Buffer = (buffer: Buffer): boolean => {
 }
 
 /**
- * Detects Motion Photo metadata from image buffer without extracting the video file.
- * Returns offset and size information for frontend to extract video on-demand.
+ * Detects Motion Photo metadata using Android Motion Photo format 1.0 specification.
+ * Supports both standard ContainerDirectory format and legacy MicroVideo format.
  */
 export const detectMotionPhoto = ({
   rawImageBuffer,
@@ -120,126 +62,79 @@ export const detectMotionPhoto = ({
   try {
     const rawLength = rawImageBuffer.length
 
-    const exifIndicatesMotion = toBoolean(exifData?.MotionPhoto) || toBoolean(exifData?.MicroVideo)
-    let detectedMotion = exifIndicatesMotion
+    // Check Motion Photo flags (standard and legacy)
+    const isMotionPhotoFlag = toBoolean(exifData?.MotionPhoto) || toBoolean(exifData?.MicroVideo)
 
-    let presentationTimestampUs = toNumber(
+    const presentationTimestampUs = toNumber(
       exifData?.MotionPhotoPresentationTimestampUs ?? exifData?.MicroVideoPresentationTimestampUs,
     )
 
-    const offsetCandidates = new Set<number>()
-    const addOffsetCandidate = (value: number | null | undefined) => {
-      if (value === null || value === undefined) return
-      if (!Number.isFinite(value)) return
-      const numeric = Number(value)
-      if (numeric <= 0) return
-      offsetCandidates.add(numeric)
-    }
-
-    addOffsetCandidate(toNumber(exifData?.MicroVideoOffset))
-
-    const xmpSegment = extractXmpSegment(rawImageBuffer)
-    if (xmpSegment) {
-      if (!detectedMotion) {
-        const motionFlags = [
-          extractXmpBoolean(xmpSegment, 'MotionPhoto'),
-          extractXmpBoolean(xmpSegment, 'GCamera:MotionPhoto'),
-          extractXmpBoolean(xmpSegment, 'MicroVideo'),
-          extractXmpBoolean(xmpSegment, 'GCamera:MicroVideo'),
-          extractXmpAttributeBoolean(xmpSegment, 'MotionPhoto'),
-          extractXmpAttributeBoolean(xmpSegment, 'GCamera:MotionPhoto'),
-          extractXmpAttributeBoolean(xmpSegment, 'MicroVideo'),
-          extractXmpAttributeBoolean(xmpSegment, 'GCamera:MicroVideo'),
-        ].filter((flag) => flag !== null) as boolean[]
-
-        if (motionFlags.some(Boolean)) {
-          detectedMotion = true
-          logger?.info('[motion-photo] XMP detected MotionPhoto flags')
-        }
-      }
-
-      ;[
-        extractXmpNumber(xmpSegment, 'MicroVideoOffset'),
-        extractXmpNumber(xmpSegment, 'GCamera:MicroVideoOffset'),
-        extractXmpAttributeNumber(xmpSegment, 'MicroVideoOffset'),
-        extractXmpAttributeNumber(xmpSegment, 'GCamera:MicroVideoOffset'),
-      ].forEach((candidate) => addOffsetCandidate(candidate))
-
-      if (presentationTimestampUs === null) {
-        presentationTimestampUs =
-          extractXmpNumber(xmpSegment, 'MotionPhotoPresentationTimestampUs') ??
-          extractXmpNumber(xmpSegment, 'MicroVideoPresentationTimestampUs') ??
-          extractXmpAttributeNumber(xmpSegment, 'MotionPhotoPresentationTimestampUs') ??
-          extractXmpAttributeNumber(xmpSegment, 'MicroVideoPresentationTimestampUs') ??
-          null
-      }
-    }
-
-    if (!detectedMotion && offsetCandidates.size === 0) {
-      return null
-    }
-
-    let resolvedOffset: number | null = null
+    let videoOffset: number | null = null
     let videoSize: number | null = null
 
-    const candidateList = Array.from(offsetCandidates)
-    for (const candidate of candidateList) {
-      const possibleStarts = new Set<number>()
-      possibleStarts.add(candidate)
-      if (candidate < rawLength) {
-        possibleStarts.add(rawLength - candidate)
-      }
+    // Try standard format (Motion Photo 1.0 with ContainerDirectory)
+    const containerDirectory = exifData?.ContainerDirectory as ContainerDirectoryItem[] | undefined
+    if (containerDirectory && Array.isArray(containerDirectory)) {
+      logger?.info('[motion-photo] Found ContainerDirectory, using standard format')
 
-      for (const start of possibleStarts) {
-        if (start <= 0 || start >= rawLength - MIN_VIDEO_SIZE_BYTES) {
-          continue
-        }
+      // Find video item
+      for (const entry of containerDirectory) {
+        const item = entry.Item
+        if (!item) continue
 
-        const chunk = rawImageBuffer.subarray(start)
-        if (validateMp4Buffer(chunk)) {
-          resolvedOffset = start
-          videoSize = chunk.length
-          if (start !== candidate && logger?.debug) {
-            logger.debug(`[motion-photo] Interpreted offset ${candidate} as start ${start} from file end`)
+        if (item.Semantic === 'MotionPhoto' && item.Length) {
+          // Video is stored at the end of file, Length bytes from the end
+          const offset = rawLength - item.Length
+          if (offset > 0 && offset < rawLength - MIN_VIDEO_SIZE_BYTES) {
+            const chunk = rawImageBuffer.subarray(offset)
+            if (validateMp4Buffer(chunk)) {
+              videoOffset = offset
+              videoSize = item.Length
+              logger?.success(
+                `[motion-photo] Found video via ContainerDirectory: offset=${offset}, size=${item.Length}`,
+              )
+            } else {
+              logger?.warn(`[motion-photo] Invalid MP4 at ContainerDirectory offset ${offset}`)
+            }
           }
-          break
         }
-      }
-
-      if (resolvedOffset !== null) {
-        break
       }
     }
 
-    // Fallback: scan for MP4 signature
-    if (resolvedOffset === null) {
-      const searchWindowStart = Math.max(0, rawLength - 8 * 1024 * 1024)
-      let cursor = rawImageBuffer.indexOf(MP4_FTYP, searchWindowStart)
-      while (cursor !== -1) {
-        const potentialStart = cursor - 4
-        if (potentialStart > 0 && potentialStart < rawLength - MIN_VIDEO_SIZE_BYTES) {
-          const chunk = rawImageBuffer.subarray(potentialStart)
+    // Fallback to legacy format (MicroVideo with MicroVideoOffset)
+    if (videoOffset === null && isMotionPhotoFlag) {
+      const legacyOffset = toNumber(exifData?.MicroVideoOffset)
+      if (legacyOffset !== null) {
+        logger?.info('[motion-photo] Using legacy MicroVideoOffset format')
+
+        // Try both interpretations: from start and from end
+        const candidates = [legacyOffset, rawLength - legacyOffset].filter(
+          (offset) => offset > 0 && offset < rawLength - MIN_VIDEO_SIZE_BYTES,
+        )
+
+        for (const offset of candidates) {
+          const chunk = rawImageBuffer.subarray(offset)
           if (validateMp4Buffer(chunk)) {
-            resolvedOffset = potentialStart
+            videoOffset = offset
             videoSize = chunk.length
-            logger?.info(`[motion-photo] Located MP4 via fallback scan at offset ${potentialStart}`)
+            logger?.success(`[motion-photo] Found video via legacy offset: ${offset}`)
             break
           }
         }
-        cursor = rawImageBuffer.indexOf(MP4_FTYP, cursor + 1)
       }
     }
 
-    if (resolvedOffset === null || videoSize === null) {
-      logger?.warn(`[motion-photo] Unable to locate MP4 after trying offsets ${candidateList.join(', ') || 'none'}`)
+    // No motion photo found
+    if (videoOffset === null || videoSize === null) {
+      if (isMotionPhotoFlag) {
+        logger?.warn('[motion-photo] MotionPhoto flag set but no valid video found')
+      }
       return null
     }
 
-    logger?.success(`[motion-photo] Detected Motion Photo at offset ${resolvedOffset}, video size ${videoSize} bytes`)
-
     return {
       isMotionPhoto: true,
-      motionPhotoOffset: resolvedOffset,
+      motionPhotoOffset: videoOffset,
       motionPhotoVideoSize: videoSize,
       presentationTimestampUs: presentationTimestampUs ?? undefined,
     }
