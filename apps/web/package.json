@@ -11,6 +11,7 @@
     "analyze": "analyzer=1 vite build",
     "build": "tsx scripts/build.ts",
     "build:serve": "BUILD_FOR_SERVER_SERVE=1 vite build",
+    "deploy:cloudflare": "pnpm build && pnpx wrangler pages deploy",
     "dev": "tsx scripts/dev.ts",
     "format": "prettier --write \"src/**/*.ts\" ",
     "lint": "eslint --fix",

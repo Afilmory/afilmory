@@ -2,9 +2,23 @@
 title: Cloudflare Pages
 description: Guide to deploying Afilmory via Cloudflare Pages.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-14T21:52:55+08:00
+lastModified: 2025-11-20T15:32:02+08:00
 ---
 
 # Cloudflare Pages Deployment
 
-🚧 WIP
+## Prerequisites
+
+You need to upload your images to an OSS (Object Storage Service) like AWS S3 or Cloudflare R2 before deploying.
+
+## Deploy
+
+Run the following command to build and deploy your application to Cloudflare Pages:
+
+```bash
+pnpm --filter=@afilmory/web deploy:cloudflare
+```
+
+## Learn more
+
+- [Commands - Wrangler](https://developers.cloudflare.com/workers/wrangler/commands/#deploy-1)
