@@ -1,4 +1,3 @@
-import { photoLoader } from '@afilmory/data'
 import { ScrollArea, ScrollElementContext } from '@afilmory/ui'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useEffect, useRef } from 'react'
@@ -67,13 +66,6 @@ const useStateRestoreFromUrl = () => {
     triggerOnceRef.current = true
     isRestored = true
 
-    if (photoId) {
-      const photo = photoLoader.getPhotos().find((photo) => photo.id === photoId)
-      if (photo) {
-        openViewer(photoLoader.getPhotos().indexOf(photo))
-      }
-    }
-
     const tagsFromSearchParams = searchParams.get('tags')?.split(',')
     const camerasFromSearchParams = searchParams.get('cameras')?.split(',')
     const lensesFromSearchParams = searchParams.get('lenses')?.split(',')
@@ -95,6 +87,15 @@ const useStateRestoreFromUrl = () => {
         selectedRatings: ratingsFromSearchParams ?? prev.selectedRatings,
         tagFilterMode: tagModeFromSearchParams || prev.tagFilterMode,
       }))
+    }
+
+    if (photoId) {
+      const filteredPhotos = getFilteredPhotos()
+      const targetIndex = filteredPhotos.findIndex((photo) => photo.id === photoId)
+
+      if (targetIndex !== -1) {
+        openViewer(targetIndex)
+      }
     }
   }, [openViewer, photoId, searchParams, setGallerySetting])
 }
