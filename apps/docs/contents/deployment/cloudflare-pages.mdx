@@ -2,7 +2,7 @@
 title: Cloudflare Pages
 description: Guide to deploying Afilmory via Cloudflare Pages.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-20T15:32:02+08:00
+lastModified: 2025-11-20T23:04:22+08:00
 ---
 
 # Cloudflare Pages Deployment
@@ -19,6 +19,16 @@ Run the following command to build and deploy your application to Cloudflare Pag
 pnpm --filter=@afilmory/web deploy:cloudflare
 ```
 
+## Limitations
+
+Deploying the `web` app directly to Cloudflare Pages results in a static site. This means you will lose server-side features provided by the `ssr` application (Next.js), such as:
+
+- **Dynamic Open Graph (OG) Images**: Social media preview cards will not be generated dynamically.
+- **Share/Iframe Support**: Specific sharing functionality that relies on server-side rendering may not work as expected.
+
+To support these features on Cloudflare, you would need to deploy the `ssr` application using a Cloudflare Workers adapter for Next.js (e.g., `@opennextjs/cloudflare`), which adds significant complexity to the deployment process.
+
 ## Learn more
 
 - [Commands - Wrangler](https://developers.cloudflare.com/workers/wrangler/commands/#deploy-1)
+- [Deploy a Next.js project on Workers - Cloudflare Docs](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)
