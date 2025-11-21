@@ -8,10 +8,40 @@ import { usePhotos } from '~/hooks/usePhotoViewer'
 
 import { ActionGroup } from './ActionGroup'
 
+function resolveSocialUrl(
+  value: string,
+  { baseUrl, stripAt }: { baseUrl: string; stripAt?: boolean },
+): string | undefined {
+  const trimmed = value.trim()
+
+  if (!trimmed) {
+    return undefined
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed
+  }
+
+  const normalized = stripAt ? trimmed.replace(/^@/, '') : trimmed
+  if (!normalized) {
+    return undefined
+  }
+  return `${baseUrl}${normalized}`
+}
+
 export const MasonryHeaderMasonryItem = ({ style, className }: { style?: React.CSSProperties; className?: string }) => {
   const { t } = useTranslation()
   const { i18n } = useTranslation()
   const visiblePhotoCount = usePhotos().length
+  const githubUrl =
+    siteConfig.social && siteConfig.social.github
+      ? resolveSocialUrl(siteConfig.social.github, { baseUrl: 'https://github.com/' })
+      : undefined
+  const twitterUrl =
+    siteConfig.social && siteConfig.social.twitter
+      ? resolveSocialUrl(siteConfig.social.twitter, { baseUrl: 'https://twitter.com/', stripAt: true })
+      : undefined
+
   return (
     <div
       className={clsxm(
@@ -48,9 +78,9 @@ export const MasonryHeaderMasonryItem = ({ style, className }: { style?: React.C
         {/* Social media links */}
         {siteConfig.social && (
           <div className="mt-1 mb-3 flex items-center justify-center gap-3">
-            {siteConfig.social.github && (
+            {githubUrl && (
               <a
-                href={`https://github.com/${siteConfig.social.github}`}
+                href={githubUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-text-secondary flex items-center justify-center p-2 duration-200 hover:text-[#E7E8E8]"
@@ -59,9 +89,9 @@ export const MasonryHeaderMasonryItem = ({ style, className }: { style?: React.C
                 <i className="i-mingcute-github-fill text-sm" />
               </a>
             )}
-            {siteConfig.social.twitter && (
+            {twitterUrl && (
               <a
-                href={`https://twitter.com/${siteConfig.social.twitter.replace('@', '')}`}
+                href={twitterUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-text-secondary flex items-center justify-center p-2 duration-200 hover:text-[#1da1f2]"
