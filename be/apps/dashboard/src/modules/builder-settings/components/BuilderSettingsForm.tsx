@@ -4,7 +4,7 @@ import { m } from 'motion/react'
 import { startTransition, useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { MainPageLayout, useMainPageLayout } from '~/components/layouts/MainPageLayout'
 
 import { SchemaFormRenderer } from '../../schema-form/SchemaFormRenderer'

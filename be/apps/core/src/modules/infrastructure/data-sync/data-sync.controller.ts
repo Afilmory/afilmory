@@ -29,7 +29,7 @@ export class DataSyncController {
       context,
       handler: async ({ sendEvent }) => {
         const progressHandler: DataSyncProgressEmitter = async (event) => {
-          sendEvent(event)
+          await sendEvent(event)
         }
 
         try {
@@ -47,7 +47,7 @@ export class DataSyncController {
           const message = error instanceof Error ? error.message : 'Unknown error'
 
           this.logger.error('Failed to run data sync', error)
-          sendEvent({ type: 'error', payload: { message } })
+          await sendEvent({ type: 'error', payload: { message } })
         }
       },
     })

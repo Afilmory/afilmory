@@ -124,7 +124,6 @@ export function PhotoLibraryActionBar() {
           onClick={handleUploadClick}
           className="flex items-center gap-1 text-xs sm:text-sm"
         >
-          <DynamicIcon name="upload" className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t(photoLibraryActionKeys.upload)}</span>
           <span className="sm:hidden">{t(photoLibraryActionKeys.uploadShort)}</span>
         </Button>

@@ -6,6 +6,8 @@ export const STORAGE_SETTING_KEYS = {
   activeProvider: string
 }
 
+export const MANAGED_STORAGE_ACTIVE_ID = 'managed'
+
 export const storageProvidersI18nKeys = {
   blocker: {
     title: 'storage.providers.blocker.title',

@@ -77,94 +77,19 @@ Designed with adapter pattern, supporting multiple storage backends:
 - **Eagle Storage** - Using Eagle app library as image storage
 - **Local File System** - Local storage for development and testing
 
-## 🚀 Quick Start
+## 🚀 Self-Host
 
-### Docker Deployment
+### Option A: Docker (recommended)
 
-[Docker Deployment](https://github.com/Afilmory/docker)
+[Docker deployment guide](https://github.com/Afilmory/docker) ships prebuilt images with minimal setup.
 
-## ⚙️ Configuration Options
+### Option B: Manual install
 
-#### Remote Repository Configuration (`repo`)
+1. Copy `config.example.json` to `config.json` and fill in your site name, description, and social links.
+2. Prepare access to your photo storage (S3/B2/GitHub/local). The builder will read photos and generate thumbnails plus `photos-manifest.json`.
+3. Run the builder to generate assets, then start the site.
 
-To achieve incremental builds in CI, it is necessary to configure a cache repository, which will pull the cache before each build and upload the build results after the build.
-
-```json
-{
-  "repo": {
-    "enable": true,
-    "url": "https://github.com/username/gallery-assets"
-  }
-}
-```
-
-This will automatically pull resources from the remote repository, avoiding rebuilds each time.
-
-**In order to achieve uploading to the git repository, you need to provide a `GIT_TOKEN` and write it in the `.env` file.**
-
-#### Storage Configuration (`storage`)
-
-- `provider`: Storage provider (`s3` | `github`)
-- `bucket`: S3 bucket name
-- `region`: S3 region
-- `endpoint`: S3 endpoint (optional)
-- `prefix`: File prefix
-- `customDomain`: Custom domain
-- `excludeRegex`: Regular expression to exclude files (optional)
-
-#### System Processing (`system.processing`)
-
-- `defaultConcurrency`: Default concurrency
-- `digestSuffixLength`: The length of the SHA-256 digest appended to the photo ID
-- `enableLivePhotoDetection`: Enable Live Photo detection
-- `supportedFormats`: Optional allowlist of file extensions to process
-
-#### System Observability (`system.observability`)
-
-- `showProgress`: Show build progress
-- `showDetailedStats`: Show detailed statistics
-- `logging.verbose`: Verbose logging
-- `logging.level`: Log level (`info` | `warn` | `error` | `debug`)
-- `logging.outputToFile`: Output to file
-- `performance.worker.workerCount`: Number of worker processes
-- `performance.worker.timeout`: Worker timeout (milliseconds)
-- `performance.worker.useClusterMode`: Enable cluster mode
-
-## 📋 CLI Commands
-
-### Build Commands
-
-```bash
-# View help
-pnpm run build:manifest -- --help
-
-# Incremental update (default)
-pnpm run build:manifest
-
-# Force full update
-pnpm run build:manifest -- --force
-
-# Only regenerate thumbnails
-pnpm run build:manifest -- --force-thumbnails
-
-# Only regenerate manifest
-pnpm run build:manifest -- --force-manifest
-```
-
-### Development Commands
-
-```bash
-# Start development server
-pnpm dev
-
-# Build production version
-pnpm build
-```
-
-### Notes
-
-- Ensure your S3 bucket already contains photo files
-- If using remote repository, configure `builder.config.ts` first
+Looking for developer commands, environment variables, and builder config details? See `DEVELOPMENT.md`.
 
 ## 🔧 Advanced Usage
 
@@ -205,7 +130,7 @@ Attribution Network License (ANL) v1.0 © 2025 Afilmory Team. See [LICENSE](LICE
 
 ## 🔗 Related Links
 
-- [Live Demo](https://gallery.innei.in)
+- [Live Demo](https://afilmory.innei.in)
 - [Personal Website](https://innei.in)
 - [GitHub](https://github.com/innei)
 

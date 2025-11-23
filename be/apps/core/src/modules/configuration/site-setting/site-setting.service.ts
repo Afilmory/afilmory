@@ -1,6 +1,7 @@
 import { authUsers } from '@afilmory/db'
 import { DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
+import { normalizeStringToUndefined } from 'core/helpers/normalize.helper'
 import { requireTenantContext } from 'core/modules/platform/tenant/tenant.context'
 import { asc, eq, sql } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
@@ -129,7 +130,7 @@ export class SiteSettingService {
       })
     }
 
-    const name = normalizeString(input.name)
+    const name = normalizeStringToUndefined(input.name)
     if (!name) {
       throw new BizException(ErrorCode.COMMON_VALIDATION, { message: '作者名称不能为空' })
     }
@@ -168,18 +169,18 @@ export class SiteSettingService {
       return null
     }
 
-    const fallbackName = normalizeString(siteName) ?? siteName
+    const fallbackName = normalizeStringToUndefined(siteName) ?? siteName
     const normalizedName =
-      normalizeString(user.displayUsername) ??
-      normalizeString(user.username) ??
-      normalizeString(user.name) ??
+      normalizeStringToUndefined(user.displayUsername) ??
+      normalizeStringToUndefined(user.username) ??
+      normalizeStringToUndefined(user.name) ??
       fallbackName
 
     const author: SiteConfigAuthor = {
       name: normalizedName,
     }
 
-    const avatar = normalizeString(user.image)
+    const avatar = normalizeStringToUndefined(user.image)
     if (avatar) {
       author.avatar = avatar
     }
@@ -214,7 +215,7 @@ export class SiteSettingService {
   }
 
   private normalizeAvatarInput(value: string | null | undefined): string | null {
-    const normalized = normalizeString(value)
+    const normalized = normalizeStringToUndefined(value)
     if (!normalized) {
       return null
     }
@@ -352,23 +353,15 @@ const DEFAULT_SITE_CONFIG: SiteConfig = {
 type SiteSettingValueMap = Partial<Record<SiteSettingKey, string | null>>
 
 function assignString(value: string | null | undefined, updater: (value: string) => void) {
-  const normalized = normalizeString(value)
+  const normalized = normalizeStringToUndefined(value)
   if (normalized === undefined) {
     return
   }
   updater(normalized)
 }
 
-function normalizeString(value: string | null | undefined): string | undefined {
-  if (typeof value !== 'string') {
-    return undefined
-  }
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : undefined
-}
-
 function normalizeOptionalString(value: string | null | undefined): string | null {
-  const normalized = normalizeString(value)
+  const normalized = normalizeStringToUndefined(value)
   return normalized ?? null
 }
 
@@ -386,7 +379,7 @@ function toSiteAuthorProfile(user: AuthorUserRecord): SiteAuthorProfile {
 }
 
 function parseJsonStringArray(value: string | null | undefined): string[] | undefined {
-  const normalized = normalizeString(value)
+  const normalized = normalizeStringToUndefined(value)
   if (!normalized) {
     return undefined
   }
@@ -405,7 +398,7 @@ function parseJsonStringArray(value: string | null | undefined): string[] | unde
 }
 
 function parseBooleanString(value: string | null | undefined): boolean | undefined {
-  const normalized = normalizeString(value)
+  const normalized = normalizeStringToUndefined(value)
   if (!normalized) {
     return undefined
   }
@@ -439,8 +432,8 @@ function buildSocialConfig(values: SiteSettingValueMap): SiteConfig['social'] | 
 }
 
 function buildFeedConfig(values: SiteSettingValueMap): SiteConfig['feed'] | undefined {
-  const feedId = normalizeString(values['site.feed.folo.challenge.feedId'])
-  const userId = normalizeString(values['site.feed.folo.challenge.userId'])
+  const feedId = normalizeStringToUndefined(values['site.feed.folo.challenge.feedId'])
+  const userId = normalizeStringToUndefined(values['site.feed.folo.challenge.userId'])
 
   if (!feedId && !userId) {
     return undefined
@@ -457,7 +450,7 @@ function buildFeedConfig(values: SiteSettingValueMap): SiteConfig['feed'] | unde
 }
 
 function normalizeMapProjection(value: string | null | undefined): SiteConfig['mapProjection'] | undefined {
-  const normalized = normalizeString(value)
+  const normalized = normalizeStringToUndefined(value)
   if (!normalized) {
     return undefined
   }

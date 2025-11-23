@@ -5,7 +5,7 @@ import { m } from 'motion/react'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { MainPageLayout } from '~/components/layouts/MainPageLayout'
 
 import { useDashboardOverviewQuery } from '../hooks'

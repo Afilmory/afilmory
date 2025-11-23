@@ -1,0 +1,37 @@
+---
+title: Builder
+description: Overview of the photo pipeline and how to choose the right entrypoint for your run.
+createdAt: 2025-11-14T22:10:00+08:00
+lastModified: 2025-11-23T20:44:02+08:00
+order: 40
+---
+
+# Builder
+
+Builder is the unified pipeline (in `packages/builder`) that turns raw assets into the manifest and thumbnails the SPA consumes. It mirrors the “overview → entrypoint → options” cadence used by Vercel’s AI Gateway docs.
+
+## What you get
+
+- 600 px JPEG thumbnail per photo + ThumbHash (`thumbHash`).
+- `photos-manifest.json` sorted by capture time, plus `cameras[]`/`lenses[]` dictionaries.
+- EXIF (incl. Fujifilm/Sony recipes), GPS, tone analysis, HDR, Motion Photo, and Live Photo markers.
+- Optional plugins to sync or rewrite outputs (e.g., upload thumbnails, repo cache).
+
+## How to run it
+
+- **Quick switches:** per-run CLI flags (incremental, force, force-manifest, force-thumbnails, no-ui).
+- **Defaults:** `builder.config.ts` for storage, concurrency, logging, plugins.
+
+## Choose your path
+
+- [CLI & run modes](/builder/cli) — flags, concurrency, cluster vs worker.
+- [Configuration](/builder/config) — storage providers, system overrides, sample config.
+- [Processing flow](/builder/pipeline) — incremental rules, ordering, manifest write-back.
+- [Plugins](/builder/plugins) — lifecycle hooks, authoring your own plugin, examples.
+- [Built-in plugins](/builder/built-ins) — shipped plugins ready to use.
+- [SaaS Mode](/saas) — running Afilmory as a multi-tenant service.
+
+## Prerequisites
+
+- Node.js (workspace default) and **Perl** (required by `exiftool-vendored`).
+- A valid `builder.config.ts` with at least one storage provider.

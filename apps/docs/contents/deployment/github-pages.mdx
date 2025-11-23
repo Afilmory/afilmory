@@ -1,10 +1,159 @@
 ---
-title: Github Pages
-description: Guide to deploying Afilmory via Github Pages.
+title: GitHub Pages
+description: Deploy your gallery to GitHub Pages for free static hosting.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-14T21:52:55+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 52
 ---
 
-# Github Pages Deployment
+# GitHub Pages Deployment
 
-🚧 WIP
+GitHub Pages provides free static hosting for your gallery. It's the simplest deployment option with zero server maintenance.
+
+## Prerequisites
+
+- GitHub repository
+- Photos processed with builder
+- Static build ready
+
+## Deployment Steps
+
+### Step 1: Build Your Gallery
+
+Generate thumbnails, manifest, and static build:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Generate thumbnails and manifest
+pnpm run build:manifest
+
+# Build static site
+pnpm --filter web build
+```
+
+### Step 2: Prepare Files for Deployment
+
+You need to deploy:
+
+- `apps/web/dist/` - Built application
+- `apps/web/public/thumbnails/` - Thumbnails
+- `apps/web/src/data/photos-manifest.json` - Manifest
+
+### Step 3: Deploy to GitHub Pages
+
+#### Option A: gh-pages Branch (Simplest)
+
+Push the `dist` folder to a `gh-pages` branch:
+
+```bash
+# From project root
+git subtree push --prefix apps/web/dist origin gh-pages
+```
+
+Or manually:
+
+```bash
+cd apps/web/dist
+git init
+git add .
+git commit -m "Deploy to GitHub Pages"
+git branch -M gh-pages
+git remote add origin https://github.com/username/repo.git
+git push -u origin gh-pages
+```
+
+#### Option B: GitHub Actions (Automated)
+
+Create `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:manifest
+      - run: pnpm --filter web build
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./apps/web/dist
+```
+
+### Step 4: Configure GitHub Pages
+
+1. Go to repository Settings → Pages
+2. Select source: Branch `gh-pages` / Root `/`
+3. Save settings
+4. Your site will be available at `https://username.github.io/repo/`
+
+## Custom Domain
+
+To use a custom domain:
+
+1. Add a `CNAME` file in `apps/web/dist/` with your domain:
+   ```
+   gallery.yourdomain.com
+   ```
+
+2. Configure DNS:
+   - Add a CNAME record pointing to `username.github.io`
+   - Or add A records for GitHub Pages IPs
+
+3. In repository Settings → Pages, enter your custom domain
+
+4. GitHub will automatically provision SSL
+
+## Updating Your Gallery
+
+After adding new photos:
+
+1. Run builder: `pnpm run build:manifest`
+2. Rebuild: `pnpm --filter web build`
+3. Redeploy: Push `dist` folder to `gh-pages` branch again
+
+Or let GitHub Actions handle it automatically on push to main.
+
+## Limitations
+
+- **Static only**: No server-side rendering or dynamic features
+- **Repository size**: Keep repository under 1GB for best performance
+- **Build time**: GitHub Actions has time limits for free accounts
+
+## Troubleshooting
+
+**Site not updating:**
+- Clear browser cache
+- Check GitHub Pages build status
+- Verify files are in `gh-pages` branch
+
+**404 errors:**
+- Ensure `dist` folder structure is correct
+- Check base path configuration
+- Verify GitHub Pages source branch
+
+**Build failures:**
+- Check GitHub Actions logs
+- Verify all dependencies are in `package.json`
+- Ensure storage credentials are set (if using remote storage)

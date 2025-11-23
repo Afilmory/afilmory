@@ -7,6 +7,13 @@ import {
   BILLING_PLAN_PRODUCTS_SETTING_KEY,
 } from 'core/modules/platform/billing/billing-plan.constants'
 import type { BillingPlanId, BillingPlanQuota } from 'core/modules/platform/billing/billing-plan.types'
+import {
+  DEFAULT_STORAGE_PLAN_CATALOG,
+  STORAGE_PLAN_CATALOG_SETTING_KEY,
+  STORAGE_PLAN_PRICING_SETTING_KEY,
+  STORAGE_PLAN_PRODUCTS_SETTING_KEY,
+} from 'core/modules/platform/billing/storage-plan.constants'
+import type { StoragePlanCatalog } from 'core/modules/platform/billing/storage-plan.types'
 import { z } from 'zod'
 
 const nonEmptyString = z.string().trim().min(1)
@@ -113,6 +120,36 @@ export const SYSTEM_SETTING_DEFINITIONS = {
     schema: z.record(z.string(), z.any()),
     defaultValue: {},
     isSensitive: false,
+  },
+  storagePlanCatalog: {
+    key: STORAGE_PLAN_CATALOG_SETTING_KEY,
+    schema: z.record(z.string(), z.any()),
+    defaultValue: DEFAULT_STORAGE_PLAN_CATALOG satisfies StoragePlanCatalog,
+    isSensitive: false,
+  },
+  storagePlanProducts: {
+    key: STORAGE_PLAN_PRODUCTS_SETTING_KEY,
+    schema: z.record(z.string(), z.any()),
+    defaultValue: {},
+    isSensitive: false,
+  },
+  storagePlanPricing: {
+    key: STORAGE_PLAN_PRICING_SETTING_KEY,
+    schema: z.record(z.string(), z.any()),
+    defaultValue: {},
+    isSensitive: false,
+  },
+  managedStorageProvider: {
+    key: 'system.storage.managed.provider',
+    schema: z.string().trim().min(1).nullable(),
+    defaultValue: null as string | null,
+    isSensitive: false,
+  },
+  managedStorageProviders: {
+    key: 'system.storage.managed.providers',
+    schema: z.string(),
+    defaultValue: '[]',
+    isSensitive: true,
   },
 } as const
 

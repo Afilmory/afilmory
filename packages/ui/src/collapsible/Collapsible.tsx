@@ -10,7 +10,7 @@ type CollapsibleContextValue = {
 
 const CollapsibleContext = createContext<CollapsibleContextValue | null>(null)
 
-const useCollapsibleContext = () => {
+export const useCollapsibleContext = () => {
   const context = use(CollapsibleContext)
   if (!context) {
     throw new Error('Collapsible components must be used within Collapsible')

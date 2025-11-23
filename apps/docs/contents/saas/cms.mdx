@@ -1,0 +1,43 @@
+---
+title: CMS & Live Updates
+description: How SaaS mode lets users change photos and metadata and see updates instantly without rebuilding.
+createdAt: 2025-11-23T20:26:00+08:00
+lastModified: 2025-11-23T20:44:02+08:00
+order: 61
+---
+
+# CMS & Live Updates
+
+In SaaS mode, photo data lives in the backend (PostgreSQL + object storage), not in a static `photos-manifest.json`. This lets tenants edit content and see changes immediately—no builder rerun required.
+
+## How it works
+
+- **Database-backed manifest**: photo assets and metadata are stored in Postgres tables (e.g., `photoAssets`).
+- **Runtime injection**: when the SPA is served, the core service injects `window.__MANIFEST__` and `window.__CONFIG__` from live DB data rather than a static file.
+- **Storage-agnostic originals**: originals can still live in S3/B2/GitHub/local; URLs are generated per request.
+- **Per-tenant isolation**: queries are scoped by tenant context (resolved from host/custom domain).
+
+## Editing flow (dashboard/CMS)
+
+1. Tenant admin signs in to the dashboard.
+2. Upload photos or edit titles/tags/descriptions; the backend writes to Postgres and storage.
+3. Next page load (or client refetch) reads fresh data; no rebuild or redeploy needed.
+
+## When to run the builder
+
+- For large bulk imports or heavy processing (thumbnails, EXIF extraction), use the builder to generate and sync assets into storage/DB.
+- For incremental CMS edits (titles, tags, descriptions, enabling/disabling items), the live backend path is enough.
+
+## Caching behavior
+
+- Responses are generated per request; edge caches should be configured to respect short TTLs or bypass for authenticated sessions.
+- If you front the core with a CDN, ensure `__MANIFEST__` injection responses are not cached across tenants.
+
+## Permissions
+
+- Changes are gated by tenant roles; superadmin can also manage tenants and content via `/api/super-admin/tenants` and dashboard UI.
+
+## Gotchas
+
+- Custom domains still map to the tenant; ensure DNS is verified so edits appear at the custom hostname.
+- If you switch storage providers, re-run the builder or a migration to sync thumbnails/manifest fields to the new backend.

@@ -1,6 +1,6 @@
 import { ScrollArea } from '@afilmory/ui'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 
 import { STAGE_CONFIG, STAGE_ORDER, SUMMARY_FIELDS } from './constants'
 import type { ProcessingLogEntry, ProcessingState } from './types'

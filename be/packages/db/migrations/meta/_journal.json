@@ -36,6 +36,34 @@
       "when": 1763315183401,
       "tag": "0004_aromatic_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1763626275917,
+      "tag": "0005_flawless_wild_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1763656041992,
+      "tag": "0006_quick_titania",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1763656042992,
+      "tag": "0007_managed_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1763656043992,
+      "tag": "0008_managed_storage_usage_operation",
+      "breakpoints": true
     }
   ]
 }

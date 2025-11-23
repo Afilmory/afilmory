@@ -1,7 +1,7 @@
 import { Button } from '@afilmory/ui'
 import { useShallow } from 'zustand/shallow'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 
 import { ProcessingPanel } from '../ProcessingPanel'
 import { usePhotoUploadStore } from '../store'

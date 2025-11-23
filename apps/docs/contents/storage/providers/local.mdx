@@ -1,0 +1,134 @@
+---
+title: Local Storage
+description: Use local file system paths for development and self-hosting.
+createdAt: 2025-11-14T22:10:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 35
+---
+
+# Local Storage
+
+Local storage is the fastest option for development and perfect for single-node self-hosting. It requires no external dependencies and works directly with your file system.
+
+## Configuration
+
+Configure local storage in `builder.config.ts`:
+
+```typescript
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'local',
+    basePath: './photos', // Where your photos are stored
+    distPath: './apps/web/public/originals', // Optional: copy originals
+    baseUrl: '/originals/', // How originals are served
+    excludeRegex: '\\.(tmp|cache|DS_Store)$',
+  },
+}))
+```
+
+## Path Configuration
+
+### basePath
+
+The directory containing your photos:
+
+```typescript
+basePath: './photos' // Relative to project root
+basePath: '/Users/username/Pictures' // Absolute path
+```
+
+Can be relative to the project root or an absolute path.
+
+### distPath (Optional)
+
+If set, originals are copied to this directory during build:
+
+```typescript
+distPath: './apps/web/public/originals'
+```
+
+This is useful when you want to serve originals alongside the web app.
+
+### baseUrl
+
+The URL path where originals are served:
+
+```typescript
+baseUrl: '/originals/'
+```
+
+Should match how `distPath` is served in your web application.
+
+## Use Cases
+
+**Development:**
+- Fastest iteration during development
+- No network dependencies
+- Easy to test with local photos
+
+**Self-hosting:**
+- When storage and app run on the same machine
+- No external storage costs
+- Full control over file organization
+
+## File Organization
+
+Organize your photos in the `basePath` directory:
+
+```
+photos/
+├── 2024/
+│   ├── vacation/
+│   │   ├── IMG_001.jpg
+│   │   └── IMG_002.jpg
+│   └── events/
+└── 2023/
+```
+
+The builder will process all photos recursively.
+
+## Excluding Files
+
+Use `excludeRegex` to skip unwanted files:
+
+```typescript
+excludeRegex: '\\.(tmp|cache|DS_Store|Thumbs\\.db)$'
+```
+
+This prevents processing temporary files, system files, and caches.
+
+## Serving Originals
+
+If you want to serve original photos:
+
+1. Set `distPath` to a public directory
+2. Set `baseUrl` to match your web server's path
+3. The builder will copy originals during build
+4. Ensure your web server serves the `distPath` directory
+
+## Best Practices
+
+**For development:**
+- Use relative paths for portability
+- Keep photos organized in subdirectories
+- Use `excludeRegex` to skip system files
+
+**For production:**
+- Use absolute paths for clarity
+- Ensure proper file permissions
+- Consider using a storage provider for better scalability
+
+## Troubleshooting
+
+**Path not found:**
+- Verify `basePath` is correct (absolute or relative)
+- Check file permissions
+- Ensure the directory exists
+
+**Files not copied:**
+- Verify `distPath` is writable
+- Check that `baseUrl` matches your web server configuration
+- Ensure the destination directory exists
+

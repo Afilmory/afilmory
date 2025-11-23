@@ -2,7 +2,6 @@ import { isTenantSlugReserved } from '@afilmory/utils'
 import { BizException, ErrorCode } from 'core/errors'
 import { ROOT_TENANT_SLUG } from 'core/modules/platform/tenant/tenant.constants'
 import { getTenantContext, isPlaceholderTenantContext } from 'core/modules/platform/tenant/tenant.context'
-import type { Context } from 'hono'
 
 import type { StaticDashboardService } from './static-dashboard.service'
 import { STATIC_DASHBOARD_BASENAME } from './static-dashboard.service'
@@ -11,25 +10,6 @@ const TENANT_MISSING_ENTRY_PATH = `${STATIC_DASHBOARD_BASENAME}/tenant-missing.h
 const TENANT_RESTRICTED_ENTRY_PATH = `${STATIC_DASHBOARD_BASENAME}/tenant-restricted.html`
 
 export const StaticControllerUtils = {
-  resolveRequestHost(context: Context): string | null {
-    const forwardedHost = context.req.header('x-forwarded-host')?.trim()
-    if (forwardedHost) {
-      return forwardedHost
-    }
-
-    const host = context.req.header('host')?.trim()
-    if (host) {
-      return host
-    }
-
-    try {
-      const url = new URL(context.req.url)
-      return url.host
-    } catch {
-      return null
-    }
-  },
-
   cloneResponseWithStatus(response: Response, status: number): Response {
     const headers = new Headers(response.headers)
     return new Response(response.body, {

@@ -9,8 +9,8 @@ export interface CreateProgressSseResponseOptions<TEvent> {
 }
 
 export interface SseHandlerHelpers<TEvent> {
-  sendEvent: (event: TEvent) => void
-  sendChunk: (chunk: string) => void
+  sendEvent: (event: TEvent) => Promise<void>
+  sendChunk: (chunk: string) => Promise<void>
   abortSignal: AbortSignal
 }
 
@@ -46,15 +46,15 @@ export function createProgressSseResponse<TEvent>({
       stopHeartbeat()
     })
 
-    const sendEvent = (event: TEvent) => {
-      return stream.writeSSE({
+    const sendEvent = async (event: TEvent) => {
+      await stream.writeSSE({
         event: eventName,
         data: JSON.stringify(event),
       })
     }
 
-    const sendChunk = (chunk: string) => {
-      void stream.write(chunk)
+    const sendChunk = async (chunk: string) => {
+      await stream.write(chunk)
     }
 
     await stream.write(': connected\n\n')
@@ -73,9 +73,7 @@ export function createProgressSseResponse<TEvent>({
 
     try {
       await handler({
-        sendEvent: (event) => {
-          void sendEvent(event)
-        },
+        sendEvent,
         sendChunk,
         abortSignal,
       })

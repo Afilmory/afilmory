@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Patch } from '@afilmory/framework'
+import { photoAssets } from '@afilmory/db'
+import { Body, Controller, Get, Param, Patch, Query } from '@afilmory/framework'
+import { DbAccessor } from 'core/database/database.provider'
 import { Roles } from 'core/guards/roles.decorator'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'
 import { BillingPlanService } from 'core/modules/platform/billing/billing-plan.service'
 import { BillingUsageService } from 'core/modules/platform/billing/billing-usage.service'
 import { TenantService } from 'core/modules/platform/tenant/tenant.service'
+import { desc, eq } from 'drizzle-orm'
 
 import type { BillingPlanId } from '../billing/billing-plan.types'
 import { UpdateTenantBanDto, UpdateTenantPlanDto } from './super-admin.dto'
@@ -16,7 +19,26 @@ export class SuperAdminTenantController {
     private readonly tenantService: TenantService,
     private readonly billingPlanService: BillingPlanService,
     private readonly billingUsageService: BillingUsageService,
+    private readonly db: DbAccessor,
   ) {}
+
+  @Get('/:tenantId/photos')
+  async getTenantPhotos(@Param('tenantId') tenantId: string, @Query('limit') limit = '20') {
+    const photos = await this.db
+      .get()
+      .select()
+      .from(photoAssets)
+      .where(eq(photoAssets.tenantId, tenantId))
+      .limit(Number(limit))
+      .orderBy(desc(photoAssets.createdAt))
+
+    return {
+      photos: photos.map((p) => ({
+        ...p,
+        publicUrl: p.manifest.data.thumbnailUrl,
+      })),
+    }
+  }
 
   @Get('/')
   async listTenants() {

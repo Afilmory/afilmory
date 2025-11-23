@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   fetchSuperAdminSettings,
+  fetchSuperAdminTenantPhotos,
   fetchSuperAdminTenants,
   updateSuperAdminSettings,
   updateSuperAdminTenantBan,
@@ -10,6 +11,7 @@ import {
 import type {
   SuperAdminSettingsResponse,
   SuperAdminTenantListResponse,
+  SuperAdminTenantPhotosResponse,
   UpdateSuperAdminSettingsPayload,
   UpdateTenantBanPayload,
   UpdateTenantPlanPayload,
@@ -72,5 +74,13 @@ export function useUpdateTenantBanMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_TENANTS_QUERY_KEY })
     },
+  })
+}
+
+export function useSuperAdminTenantPhotosQuery(tenantId: string | undefined) {
+  return useQuery<SuperAdminTenantPhotosResponse>({
+    queryKey: [...SUPER_ADMIN_TENANTS_QUERY_KEY, tenantId, 'photos'],
+    queryFn: () => fetchSuperAdminTenantPhotos(tenantId!),
+    enabled: !!tenantId,
   })
 }

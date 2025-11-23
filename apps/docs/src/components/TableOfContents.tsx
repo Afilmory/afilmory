@@ -1,8 +1,10 @@
 import { ScrollArea } from '@radix-ui/react-scroll-area'
+import clsx from 'clsx'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { TocItem } from '../toc-data'
 import { getTocByPath } from '../toc-data'
+import { springScrollToElement } from '../utils/scroller'
 
 // Custom hook to track active TOC item position for the thumb indicator
 function useTocThumb(containerRef: React.RefObject<HTMLDivElement | null>, activeId: string | null) {
@@ -29,6 +31,7 @@ interface TableOfContentsProps {
   currentPath: string
   onItemClick?: () => void
   handleScroll?: (top: number) => void
+  scrollerElement?: HTMLElement
 }
 
 interface TocItemProps {
@@ -50,7 +53,16 @@ function getLineOffset(depth: number): number {
   return depth >= 3 ? 12 : 0
 }
 
-function TocItemComponent({ item, activeId, level, onItemClick, handleScroll }: TocItemProps) {
+interface TocItemProps {
+  item: TocItem
+  activeId: string | null
+  level: number
+  onItemClick?: () => void
+  handleScroll?: (top: number) => void
+  scrollerElement?: HTMLElement
+}
+
+function TocItemComponent({ item, activeId, level, onItemClick, handleScroll, scrollerElement }: TocItemProps) {
   const isActive = activeId === item.id
   const hasChildren = item.children && item.children.length > 0
 
@@ -58,10 +70,10 @@ function TocItemComponent({ item, activeId, level, onItemClick, handleScroll }: 
     <li>
       <a
         href={`#${item.id}`}
-        className={`
-          relative block py-1.5 text-sm transition-colors
-          ${isActive ? 'text-accent font-medium' : 'text-text-tertiary hover:text-text-primary'}
-        `}
+        className={clsx(
+          'relative block py-1.5 text-sm transition-colors',
+          isActive ? 'text-accent font-medium' : 'text-text-tertiary hover:text-text-primary',
+        )}
         style={{
           paddingInlineStart: `${getItemOffset(level)}px`,
         }}
@@ -69,9 +81,14 @@ function TocItemComponent({ item, activeId, level, onItemClick, handleScroll }: 
           e.preventDefault()
           const element = document.querySelector(`#${item.id}`)
           if (element && element instanceof HTMLElement) {
-            const elementTop = element.offsetTop
-            console.info('Navigating to:', element, 'Top:', elementTop)
-            handleScroll?.(elementTop - 74)
+            if (scrollerElement) {
+              // 使用 springScrollToElement 进行平滑滚动
+              springScrollToElement(element, -74, scrollerElement)
+            } else if (handleScroll) {
+              // 回退到使用 handleScroll
+              const elementTop = element.offsetTop
+              handleScroll(elementTop - 74)
+            }
           }
           onItemClick?.()
         }}
@@ -89,6 +106,7 @@ function TocItemComponent({ item, activeId, level, onItemClick, handleScroll }: 
               level={level + 1}
               onItemClick={onItemClick}
               handleScroll={handleScroll}
+              scrollerElement={scrollerElement}
             />
           ))}
         </ul>
@@ -97,7 +115,7 @@ function TocItemComponent({ item, activeId, level, onItemClick, handleScroll }: 
   )
 }
 
-export function TableOfContents({ currentPath, onItemClick, handleScroll }: TableOfContentsProps) {
+export function TableOfContents({ currentPath, onItemClick, handleScroll, scrollerElement }: TableOfContentsProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const pos = useTocThumb(containerRef, activeId)
@@ -273,6 +291,7 @@ export function TableOfContents({ currentPath, onItemClick, handleScroll }: Tabl
                 level={1}
                 onItemClick={onItemClick}
                 handleScroll={handleScroll}
+                scrollerElement={scrollerElement}
               />
             ))}
           </ul>

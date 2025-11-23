@@ -7,14 +7,16 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
 import { useSetPhotoSyncAutoRun } from '~/atoms/photo-sync'
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { MainPageLayout, useMainPageLayout } from '~/components/layouts/MainPageLayout'
 import { useBlock } from '~/hooks/useBlock'
+import { useManagedStoragePlansQuery } from '~/modules/storage-plans'
 
-import { storageProvidersI18nKeys } from '../constants'
+import { MANAGED_STORAGE_ACTIVE_ID, storageProvidersI18nKeys } from '../constants'
 import { useStorageProviderSchemaQuery, useStorageProvidersQuery, useUpdateStorageProvidersMutation } from '../hooks'
 import type { StorageProvider } from '../types'
-import { createEmptyProvider, reorderProvidersByActive } from '../utils'
+import { createEmptyProvider } from '../utils'
+import { ManagedStorageEntryCard } from './ManagedStorageEntryCard'
 import { ProviderCard } from './ProviderCard'
 import { ProviderEditModal } from './ProviderEditModal'
 
@@ -33,6 +35,7 @@ export function StorageProvidersManager() {
     error: schemaError,
   } = useStorageProviderSchemaQuery()
   const updateMutation = useUpdateStorageProvidersMutation()
+  const managedPlansQuery = useManagedStoragePlansQuery()
   const { setHeaderActionState } = useMainPageLayout()
   const navigate = useNavigate()
   const setPhotoSyncAutoRun = useSetPhotoSyncAutoRun()
@@ -90,7 +93,9 @@ export function StorageProvidersManager() {
     return new Map(providerForm.types.map((type) => [type.value, type.label]))
   }, [providerForm])
 
-  const orderedProviders = reorderProvidersByActive(providers, activeProviderId)
+  const managedPlanAvailable = Boolean(managedPlansQuery.data?.currentPlan)
+  const managedActive = activeProviderId === MANAGED_STORAGE_ACTIVE_ID
+  const effectiveActiveId = managedActive ? null : activeProviderId
 
   const markDirty = () => setIsDirty(true)
 
@@ -139,14 +144,14 @@ export function StorageProvidersManager() {
     markDirty()
   }
 
-  const handleSetActive = (providerId: string) => {
+  const handleSetActive = (providerId: string | null) => {
     setActiveProviderId(providerId)
     markDirty()
   }
 
   const handleSave = () => {
     const resolvedActiveId =
-      activeProviderId && providers.some((provider) => provider.id === activeProviderId) ? activeProviderId : null
+      activeProviderId === MANAGED_STORAGE_ACTIVE_ID ? MANAGED_STORAGE_ACTIVE_ID : activeProviderId
 
     updateMutation.mutate(
       {
@@ -178,7 +183,12 @@ export function StorageProvidersManager() {
   }
 
   const disableSave =
-    isLoading || isError || !schemaReady || !isDirty || updateMutation.isPending || providers.length === 0
+    isLoading ||
+    isError ||
+    !schemaReady ||
+    !isDirty ||
+    updateMutation.isPending ||
+    (providers.length === 0 && activeProviderId !== MANAGED_STORAGE_ACTIVE_ID)
   useEffect(() => {
     setHeaderActionState((prev) => {
       const nextState = {
@@ -255,7 +265,14 @@ export function StorageProvidersManager() {
         transition={Spring.presets.smooth}
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
-        {orderedProviders.map((provider, index) => (
+        <ManagedStorageEntryCard
+          isActive={managedActive}
+          canToggle={managedPlanAvailable}
+          onMakeActive={() => handleSetActive(MANAGED_STORAGE_ACTIVE_ID)}
+          onMakeInactive={() => handleSetActive(null)}
+        />
+
+        {providers.map((provider, index) => (
           <m.div
             key={provider.id}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -264,11 +281,15 @@ export function StorageProvidersManager() {
           >
             <ProviderCard
               provider={provider}
-              isActive={provider.id === activeProviderId}
+              isActive={provider.id === effectiveActiveId}
               onEdit={() => handleEditProvider(provider)}
               onToggleActive={() => {
-                setActiveProviderId((prev) => (prev === provider.id ? null : provider.id))
-                markDirty()
+                if (provider.id === effectiveActiveId) {
+                  setActiveProviderId(null)
+                  markDirty()
+                  return
+                }
+                handleSetActive(provider.id)
               }}
               typeLabel={providerTypeLabels.get(provider.type)}
             />
@@ -294,20 +315,6 @@ export function StorageProvidersManager() {
           </m.div>
         )}
       </m.div>
-
-      {/* Status Message */}
-      {hasProviders && (
-        <m.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ...Spring.presets.smooth, delay: 0.2 }}
-          className="mt-4 text-center"
-        >
-          <p className="text-text-tertiary text-xs">
-            <span>{getStatusMessage()}</span>
-          </p>
-        </m.div>
-      )}
 
       {/* Security Notice */}
       <m.div
@@ -341,23 +348,4 @@ export function StorageProvidersManager() {
       </m.div>
     </>
   )
-
-  function getStatusMessage() {
-    if (updateMutation.isError && updateMutation.error) {
-      const reason = updateMutation.error instanceof Error ? updateMutation.error.message : t('common.unknown-error')
-      return t(storageProvidersI18nKeys.status.error, { reason })
-    }
-    if (updateMutation.isSuccess && !isDirty) {
-      return t(storageProvidersI18nKeys.status.saved)
-    }
-    if (isDirty) {
-      return t(storageProvidersI18nKeys.status.dirty, { total: providers.length })
-    }
-    const activeName =
-      orderedProviders.find((p) => p.id === activeProviderId)?.name || t(storageProvidersI18nKeys.card.untitled)
-    return t(storageProvidersI18nKeys.status.summary, {
-      total: providers.length,
-      active: activeName,
-    })
-  }
 }

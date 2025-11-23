@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { MainPageLayout } from '~/components/layouts/MainPageLayout'
 
 import { useDashboardAnalyticsQuery } from '../hooks'

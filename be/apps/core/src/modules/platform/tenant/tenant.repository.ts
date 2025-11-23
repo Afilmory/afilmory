@@ -31,7 +31,12 @@ export class TenantRepository {
     return { tenant }
   }
 
-  async createTenant(payload: { name: string; slug: string; planId?: BillingPlanId }): Promise<TenantAggregate> {
+  async createTenant(payload: {
+    name: string
+    slug: string
+    planId?: BillingPlanId
+    storagePlanId?: string | null
+  }): Promise<TenantAggregate> {
     const db = this.dbAccessor.get()
     const tenantId = generateId()
     const tenantRecord: typeof tenants.$inferInsert = {
@@ -39,6 +44,7 @@ export class TenantRepository {
       name: payload.name,
       slug: payload.slug,
       planId: payload.planId ?? 'free',
+      storagePlanId: payload.storagePlanId ?? null,
       status: 'active',
     }
 

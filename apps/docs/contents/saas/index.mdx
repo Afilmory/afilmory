@@ -1,0 +1,40 @@
+---
+title: SaaS Mode
+description: Why run Afilmory as a multi-tenant SaaS, what it can do, and where to start.
+createdAt: 2025-11-23T20:20:00+08:00
+lastModified: 2025-11-23T20:44:02+08:00
+order: 60
+---
+
+# SaaS Mode
+
+Run Afilmory as a hosted, multi-tenant service: one backend, many workspaces, each with its own domain, storage, and billing plan.
+
+## Why SaaS?
+
+- **Multi-tenant**: host many galleries on one deployment; tenants isolated by slug/domain.
+- **Custom domains**: each tenant can bind its own domain via DNS verification (CNAME/TXT).
+- **Central auth**: single OAuth callback domain with per-tenant sessions.
+- **Plans & quotas**: built-in billing/usage enforcement (Creem integration); override per-tenant.
+- **Live data**: backend injects manifest/config into the SPA at request time.
+
+## What you can do
+
+- Offer hosted galleries with signup/tenant creation.
+- Attach different storage backends per environment (S3/B2/GitHub/local) and share the builder pipeline.
+- Manage tenants, plans, suspension/bans from the superadmin dashboard.
+- Serve both subdomains (`<slug>.<baseDomain>`) and verified custom domains.
+
+## Architecture at a glance
+
+- **Core API + SPA host** (`@afilmory/core`): resolves tenant by host, injects `__MANIFEST__`/`__CONFIG__`, serves built SPA/dashboard.
+- **OAuth Gateway** (`@afilmory/oauth-gateway`): single callback domain that forwards provider responses to the right tenant.
+- **PostgreSQL + Redis**: persistence and cache/task infra.
+- **Object storage**: where originals live; configured via system settings/builder.
+- **Billing**: plan definitions, overrides, usage tracking; enforcement at request level.
+
+See details in [Architecture](/saas/architecture), how content stays fresh in [CMS & Live Updates](/saas/cms), and rollout steps in [Deployment](/saas/deployment).
+
+## Licensing note
+
+The SaaS build includes paid-feature plumbing (Creem, plan enforcement). The open-source license does **not** grant commercial rights. For commercial use or partnerships, contact the project owner.

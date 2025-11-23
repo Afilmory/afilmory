@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm build:client && pnpm build:static && pnpm output",
-    "build:client": "tsc -b && vite build",
+    "build:client": "vite build",
     "build:static": "vite build --ssr src/main-static.tsx --outDir dist/static",
     "create:doc": "tsx ../../scripts/create-doc.ts",
     "dev": "vite",
@@ -14,6 +14,7 @@
     "preview": "pnpm dlx serve dist"
   },
   "dependencies": {
+    "@afilmory/ui": "workspace:*",
     "@mdx-js/react": "^3.1.1",
     "@mdx-js/rollup": "^3.1.1",
     "@pastel-palette/colors": "1.0.0-canary.3",
@@ -22,6 +23,8 @@
     "@radix-ui/react-scroll-area": "1.2.10",
     "@tailwindcss/vite": "4.1.17",
     "@types/mdast": "^4.0.4",
+    "clsx": "2.1.1",
+    "cmdk": "1.1.1",
     "lucide-react": "^0.553.0",
     "mdast": "^3.0.0",
     "motion": "12.23.24",

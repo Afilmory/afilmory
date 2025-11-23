@@ -1,0 +1,53 @@
+---
+title: CLI & Run Modes
+description: Per-run flags, concurrency behavior, and cluster vs worker execution.
+createdAt: 2025-11-23T19:00:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 2
+---
+
+# CLI & Run Modes
+
+The builder CLI lives in `packages/builder/src/cli.ts` and is invoked via `pnpm run build:manifest`. Use flags for one-off overrides; everything else comes from config.
+
+## Commands
+
+```bash
+# Incremental (default)
+pnpm run build:manifest
+
+# Full rebuild
+pnpm run build:manifest -- --force
+
+# Refresh manifest fields (keep thumbnails unless missing)
+pnpm run build:manifest -- --force-manifest
+
+# Regenerate thumbnails only
+pnpm run build:manifest -- --force-thumbnails
+
+# Show resolved config
+pnpm run build:manifest -- --config
+
+# Disable TUI, use plain logs
+pnpm run build:manifest -- --no-ui
+```
+
+## Concurrency & execution model
+
+- `system.processing.defaultConcurrency` provides the baseline per worker.
+- `observability.performance.worker.workerCount` sets how many workers/threads (or cluster workers) run in parallel. If unset, defaults to `os.cpus().length * 2`.
+- Cluster mode turns on when `useClusterMode: true` **and** the task queue is large enough; otherwise it falls back to a worker pool.
+- `workerConcurrency` controls how many photos a single worker handles concurrently.
+
+## Incremental logic (per file)
+
+- `--force`: process everything.
+- New file: processed.
+- Updated `LastModified` or `--force-manifest`: rebuild manifest entry (EXIF + tone).
+- Missing thumbnail or `--force-thumbnails`: regenerate thumbnail + ThumbHash.
+- Otherwise reuse existing manifest item and thumbnail.
+
+## Exit codes & help
+
+- `--help` prints all flags and exits 0.
+- The CLI exits non‑zero on failures (e.g., missing storage config, missing Perl, processing errors).

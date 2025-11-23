@@ -29,3 +29,14 @@ export type UpdateSiteAuthorPayload = {
   username?: string | null
   avatar?: string | null
 }
+
+export type TenantDomain = {
+  id: string
+  tenantId: string
+  domain: string
+  status: 'pending' | 'verified' | 'disabled'
+  verificationToken: string
+  verifiedAt: string | null
+  createdAt: string
+  updatedAt: string
+}

@@ -5,7 +5,7 @@ import { extname, isAbsolute, join, normalize, relative, resolve } from 'node:pa
 import { Readable } from 'node:stream'
 
 import type { PrettyLogger } from '@afilmory/framework'
-import { createLogger } from '@afilmory/framework'
+import { createLogger, HttpContext } from '@afilmory/framework'
 import { DOMParser } from 'linkedom'
 import { lookup as lookupMimeType } from 'mime-types'
 
@@ -34,10 +34,6 @@ export interface StaticAssetServiceOptions {
   staticAssetHostResolver?: (requestHost?: string | null) => Promise<string | null>
 }
 
-export interface StaticAssetRequestOptions {
-  requestHost?: string | null
-}
-
 export interface ResolvedStaticAsset {
   absolutePath: string
   relativePath: string
@@ -61,11 +57,7 @@ export abstract class StaticAssetService {
     this.staticAssetHostResolver = options.staticAssetHostResolver
   }
 
-  async handleRequest(
-    fullPath: string,
-    headOnly: boolean,
-    options?: StaticAssetRequestOptions,
-  ): Promise<Response | null> {
+  async handleRequest(fullPath: string, headOnly: boolean): Promise<Response | null> {
     const staticRoot = await this.resolveStaticRoot()
     if (!staticRoot) {
       return null
@@ -78,7 +70,7 @@ export abstract class StaticAssetService {
       return null
     }
 
-    return await this.createResponse(target, headOnly, options)
+    return await this.createResponse(target, headOnly)
   }
 
   protected get routeSegment(): string {
@@ -364,13 +356,9 @@ export abstract class StaticAssetService {
     return relativePath !== '' && !relativePath.startsWith('..') && !isAbsolute(relativePath)
   }
 
-  private async createResponse(
-    file: ResolvedStaticAsset,
-    headOnly: boolean,
-    options?: StaticAssetRequestOptions,
-  ): Promise<Response> {
+  private async createResponse(file: ResolvedStaticAsset, headOnly: boolean): Promise<Response> {
     if (this.isHtml(file.relativePath)) {
-      return await this.createHtmlResponse(file, headOnly, options)
+      return await this.createHtmlResponse(file, headOnly)
     }
 
     const mimeType = lookupMimeType(file.absolutePath) || 'application/octet-stream'
@@ -390,13 +378,9 @@ export abstract class StaticAssetService {
     return new Response(body, { headers, status: 200 })
   }
 
-  private async createHtmlResponse(
-    file: ResolvedStaticAsset,
-    headOnly: boolean,
-    options?: StaticAssetRequestOptions,
-  ): Promise<Response> {
+  private async createHtmlResponse(file: ResolvedStaticAsset, headOnly: boolean): Promise<Response> {
     const html = await readFile(file.absolutePath, 'utf-8')
-    const transformed = await this.transformIndexHtml(html, file, options)
+    const transformed = await this.transformIndexHtml(html, file)
     const headers = new Headers()
     headers.set('content-type', 'text/html; charset=utf-8')
     headers.set('content-length', `${Buffer.byteLength(transformed, 'utf-8')}`)
@@ -410,16 +394,12 @@ export abstract class StaticAssetService {
     return new Response(transformed, { headers, status: 200 })
   }
 
-  private async transformIndexHtml(
-    html: string,
-    file: ResolvedStaticAsset,
-    options?: StaticAssetRequestOptions,
-  ): Promise<string> {
+  private async transformIndexHtml(html: string, file: ResolvedStaticAsset): Promise<string> {
     try {
       const document = DOM_PARSER.parseFromString(html, 'text/html') as unknown as StaticAssetDocument
       await this.decorateDocument(document, file)
       if (this.shouldRewriteAssetReferences(file)) {
-        const staticAssetHost = await this.getStaticAssetHost(options?.requestHost)
+        const staticAssetHost = await this.getStaticAssetHost(this.resolveRequestHost())
         this.rewriteStaticAssetReferences(document, staticAssetHost)
       }
       return document.documentElement.outerHTML
@@ -456,6 +436,29 @@ export abstract class StaticAssetService {
       return '__default__'
     }
     return requestHost.trim().toLowerCase()
+  }
+
+  private resolveRequestHost(): string | null {
+    const context = HttpContext.getValue('hono')
+    if (!context) {
+      return null
+    }
+    const forwardedHost = context.req.header('x-forwarded-host')?.trim()
+    if (forwardedHost) {
+      return forwardedHost
+    }
+
+    const host = context.req.header('host')?.trim()
+    if (host) {
+      return host
+    }
+
+    try {
+      const url = new URL(context.req.url)
+      return url.hostname
+    } catch {
+      return null
+    }
   }
 
   private shouldTreatAsImmutable(relativePath: string): boolean {

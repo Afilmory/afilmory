@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
 import { viewportAtom } from '~/atoms/viewport'
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { stopPropagation } from '~/lib/dom'
 
 import type { PhotoAssetListItem } from '../../types'

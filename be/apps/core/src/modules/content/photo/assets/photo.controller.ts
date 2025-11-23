@@ -38,11 +38,11 @@ type MultipartParseOptions = {
   abortSignal: AbortSignal
 }
 
-function formatBytesToMb (bytes: number): number {
+function formatBytesToMb(bytes: number): number {
   return Number((bytes / BYTES_PER_MB).toFixed(2))
 }
 
-function formatBytesForDisplay (bytes: number): string {
+function formatBytesForDisplay(bytes: number): string {
   return `${formatBytesToMb(bytes)} MB`
 }
 
@@ -71,7 +71,11 @@ export class PhotoController {
   @Delete('assets')
   async deleteAssets(@Body() body: DeleteAssetsDto) {
     const ids = Array.isArray(body?.ids) ? body.ids : []
-    const deleteFromStorage = body?.deleteFromStorage === true
+    const deleteFromStorageRequested = body?.deleteFromStorage === true
+    const isManagedStorage = await this.photoAssetService.isManagedStorage()
+    // managed storage always delete from storage
+    const deleteFromStorage = isManagedStorage ? true : deleteFromStorageRequested
+
     await this.photoAssetService.deleteAssets(ids, { deleteFromStorage })
     return { ids, deleted: true, deleteFromStorage }
   }
@@ -101,7 +105,7 @@ export class PhotoController {
 
           await this.photoAssetService.uploadAssets(inputs, {
             progress: async (event) => {
-              sendEvent(event)
+              await sendEvent(event)
             },
             abortSignal,
           })
@@ -109,7 +113,7 @@ export class PhotoController {
           const message = error instanceof Error ? error.message : '上传失败'
 
           this.logger.error(error)
-          sendEvent({ type: 'error', payload: { message } })
+          await sendEvent({ type: 'error', payload: { message } })
         }
       },
     })

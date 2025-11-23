@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 import { StaticControllerUtils } from './static-controller.utils'
 import { StaticDashboardService } from './static-dashboard.service'
-import { STATIC_SHARE_ENTRY_PATH,StaticShareService } from './static-share.service'
+import { STATIC_SHARE_ENTRY_PATH, StaticShareService } from './static-share.service'
 
 const shareQuerySchema = z.object({
   id: z.string().min(1, 'Photo ID(s) required'),
@@ -28,9 +28,7 @@ export class StaticShareController {
       return await StaticControllerUtils.renderTenantMissingPage(this.staticDashboardService)
     }
 
-    const response = await this.staticShareService.handleRequest(STATIC_SHARE_ENTRY_PATH, false, {
-      requestHost: StaticControllerUtils.resolveRequestHost(context),
-    })
+    const response = await this.staticShareService.handleRequest(STATIC_SHARE_ENTRY_PATH, false)
 
     if (!response || response.status === 404) {
       throw new BizException(ErrorCode.COMMON_NOT_FOUND, {

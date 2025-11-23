@@ -1,16 +1,159 @@
 ---
 title: Deployment
-description: Guide to deploying Afilmory in production environments, including Docker and configuration options.
+description: Deploy your gallery to static hosting, SSR platforms, or Docker.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-14T21:52:55+08:00
+lastModified: 2025-11-23T20:44:02+08:00
+order: 50
 ---
 
 # Deployment
 
-Deploying Afilmory can be accomplished through various methods, you can choose the one that best fits your needs. Below are the common deployment methods:
+Afilmory supports multiple deployment options, from simple static hosting to full server-side rendering. Choose the method that best fits your needs.
 
-- [Docker Deployment](/deployment/docker)
-- [Github Action Deployment](/deployment/github-action)
-- [Github Pages Deployment](/deployment/github-pages)
-- [Vercel Deployment](/deployment/vercel)
-- [Cloudflare Pages Deployment](/deployment/cloudflare-pages)
+**Recommendation:** For most users, deploy with our Docker image (see [Docker guide](/deployment/docker)) to get SSR-grade SEO and proper social sharing OG images. The pure SPA build cannot surface new photos until you rebuild. If you need real-time updates and a full CMS/backoffice, use the SaaS stack ([SaaS Deployment](/saas/deployment))—one install can host many tenants. Official SaaS demo: https://afilmory.art/.
+
+## Deployment Options
+
+### Static Hosting
+
+Deploy as a static site to any CDN or static host. No server required.
+
+**Best for:**
+- Simple deployments
+- Cost-effective hosting
+- Maximum performance with CDN caching
+
+**Platforms:**
+- [GitHub Pages](/deployment/github-pages)
+- [Cloudflare Pages](/deployment/cloudflare-pages)
+
+### Server-Side Rendering (SSR)
+
+Deploy the Next.js wrapper for enhanced SEO and social sharing.
+
+**Best for:**
+- Better SEO and search visibility
+- Rich social media previews
+- Dynamic meta tag generation
+
+**Platforms:**
+- [Vercel](/deployment/vercel) (recommended)
+
+### Docker
+
+Bundle everything in a container for self-hosting or cloud deployment.
+
+**Best for:**
+- Self-hosting
+- Consistent deployments
+- Full control over environment
+
+**Guide:**
+- [Docker](/deployment/docker)
+
+### Multi-tenant SaaS
+
+- See the dedicated chapter: [SaaS Mode](/saas) and [SaaS Deployment](/saas/deployment)
+
+## Deployment Workflow
+
+### 1. Build Assets
+
+Generate thumbnails and manifest:
+
+```bash
+pnpm run build:manifest
+```
+
+### 2. Build Application
+
+**For static hosting:**
+
+```bash
+pnpm --filter web build
+```
+
+**For SSR:**
+
+```bash
+pnpm --filter @afilmory/ssr build
+```
+
+### 3. Deploy
+
+Follow the platform-specific guide for your chosen deployment method.
+
+## What to Deploy
+
+### Static Hosting
+
+Deploy these files and directories:
+
+- `apps/web/dist/` - Built application
+- `apps/web/public/thumbnails/` - Thumbnails
+- `apps/web/src/data/photos-manifest.json` - Manifest
+
+### SSR
+
+Deploy the Next.js build output:
+
+- `.next/` - Next.js build output
+- `public/` - Static assets
+- Server configuration (varies by platform)
+
+### Docker
+
+Use the provided Dockerfile or create your own based on the [Docker guide](/deployment/docker).
+
+## Environment Variables
+
+Set these in your deployment platform:
+
+**Storage credentials:**
+- `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (for S3)
+- `B2_KEY_ID`, `B2_KEY` (for B2)
+- `GIT_TOKEN` (for GitHub storage)
+
+**Optional:**
+- `GIT_TOKEN`, `BUILDER_REPO_URL`, `BUILDER_REPO_BRANCH` (for repo cache)
+
+See your storage provider's documentation for required variables.
+
+## Continuous Deployment
+
+Most platforms support automatic deployments:
+
+- **GitHub Pages**: Push to `gh-pages` branch
+- **Cloudflare Pages**: Connect repository for auto-deploy
+- **Vercel**: Connect repository for auto-deploy on push
+
+Configure your platform to:
+1. Install dependencies (`pnpm install`)
+2. Run builder (`pnpm run build:manifest`)
+3. Build application (`pnpm --filter web build` or `pnpm --filter @afilmory/ssr build`)
+4. Deploy output
+
+## Custom Domains
+
+All platforms support custom domains:
+
+1. Add your domain in the platform's settings
+2. Configure DNS records as instructed
+3. SSL certificates are automatically provisioned
+
+## Troubleshooting
+
+**Build failures:**
+- Check storage credentials are set correctly
+- Verify all dependencies are installed
+- Review build logs for specific errors
+
+**Missing photos:**
+- Ensure thumbnails and manifest are included in deployment
+- Verify storage is accessible from deployment platform
+- Check file paths are correct
+
+**Performance issues:**
+- Use CDN for static assets
+- Enable caching headers
+- Optimize thumbnail sizes

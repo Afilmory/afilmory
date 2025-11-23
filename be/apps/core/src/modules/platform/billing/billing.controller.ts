@@ -7,6 +7,7 @@ import type { BillingPlanSummary } from './billing-plan.service'
 import { BillingPlanService } from './billing-plan.service'
 import type { BillingUsageOverview } from './billing-usage.service'
 import { BillingUsageService } from './billing-usage.service'
+import { StoragePlanService } from './storage-plan.service'
 
 const usageQuerySchema = z.object({
   limit: z.coerce.number().positive().int().optional().default(10),
@@ -19,6 +20,7 @@ export class BillingController {
   constructor(
     @inject(BillingUsageService) private readonly billingUsageService: BillingUsageService,
     @inject(BillingPlanService) private readonly billingPlanService: BillingPlanService,
+    @inject(StoragePlanService) private readonly storagePlanService: StoragePlanService,
   ) {}
 
   @Get('usage')
@@ -33,5 +35,10 @@ export class BillingController {
       this.billingPlanService.getPublicPlanSummaries(),
     ])
     return { plan, availablePlans }
+  }
+
+  @Get('storage')
+  async getStoragePlans() {
+    return await this.storagePlanService.getOverviewForCurrentTenant()
   }
 }

@@ -1,17 +1,16 @@
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@afilmory/ui'
+import { Button, Modal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@afilmory/ui'
 import { Spring } from '@afilmory/utils'
 import { RefreshCcwIcon } from 'lucide-react'
 import { m } from 'motion/react'
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
-import { BILLING_USAGE_EVENT_CONFIG } from '~/modules/photos/constants'
-import type { BillingUsageEventType } from '~/modules/photos/types'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 
 import { useSuperAdminTenantsQuery, useUpdateTenantBanMutation, useUpdateTenantPlanMutation } from '../hooks'
 import type { BillingPlanDefinition, SuperAdminTenantSummary } from '../types'
+import { TenantDetailModal } from './TenantDetailModal'
+import { TenantUsageCell } from './TenantUsageCell'
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
   dateStyle: 'medium',
@@ -93,25 +92,23 @@ export function SuperAdminTenantManager() {
 
   return (
     <m.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={Spring.presets.smooth}>
-      <LinearBorderPanel className="p-6 bg-background-secondary">
-        <header className="flex items-center justify-end gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="gap-1"
-            onClick={() => tenantsQuery.refetch()}
-            disabled={tenantsQuery.isFetching}
-          >
-            <RefreshCcwIcon className="size-4" />
-            <span>
-              {tenantsQuery.isFetching
-                ? t('superadmin.tenants.refresh.loading')
-                : t('superadmin.tenants.refresh.button')}
-            </span>
-          </Button>
-        </header>
+      <header className="flex items-center justify-end gap-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="gap-1"
+          onClick={() => tenantsQuery.refetch()}
+          disabled={tenantsQuery.isFetching}
+        >
+          <RefreshCcwIcon className="size-4" />
+          <span>
+            {tenantsQuery.isFetching ? t('superadmin.tenants.refresh.loading') : t('superadmin.tenants.refresh.button')}
+          </span>
+        </Button>
+      </header>
 
+      <LinearBorderPanel className="p-6 bg-background-secondary mt-4">
         {tenants.length === 0 ? (
           <p className="text-text-secondary text-sm">{t('superadmin.tenants.empty')}</p>
         ) : (
@@ -130,11 +127,11 @@ export function SuperAdminTenantManager() {
               <tbody className="divide-y divide-border/20">
                 {tenants.map((tenant) => (
                   <tr key={tenant.id}>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 align-top">
                       <div className="font-medium text-text">{tenant.name}</div>
                       <div className="text-text-secondary text-xs">{tenant.slug}</div>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 align-top">
                       <PlanSelector
                         value={tenant.planId}
                         plans={plans}
@@ -143,12 +140,24 @@ export function SuperAdminTenantManager() {
                       />
                     </td>
                     <td className="px-3 py-3 align-top">
-                      <TenantUsageCell usageTotals={tenant.usageTotals} />
+                      <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => Modal.present(TenantDetailModal, { tenant })}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            Modal.present(TenantDetailModal, { tenant })
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <TenantUsageCell usageTotals={tenant.usageTotals} />
+                      </div>
                     </td>
-                    <td className="px-3 py-3 text-center align-middle">
+                    <td className="px-3 py-3 text-center align-top">
                       <StatusBadge status={tenant.status} banned={tenant.banned} />
                     </td>
-                    <td className="px-3 py-3 text-center align-middle">
+                    <td className="px-3 py-1 text-center align-top">
                       <Button
                         type="button"
                         size="sm"
@@ -164,7 +173,9 @@ export function SuperAdminTenantManager() {
                             : t('superadmin.tenants.button.ban')}
                       </Button>
                     </td>
-                    <td className="px-3 py-3 text-text-secondary text-xs">{formatDateLabel(tenant.createdAt)}</td>
+                    <td className="px-3 py-3 align-top text-text-secondary text-xs">
+                      {formatDateLabel(tenant.createdAt)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -207,117 +218,11 @@ function PlanSelector({
   )
 }
 
-function TenantUsageCell({ usageTotals }: { usageTotals: SuperAdminTenantSummary['usageTotals'] }) {
-  const { t, i18n } = useTranslation()
-  const locale = i18n.language ?? i18n.resolvedLanguage ?? 'en'
-  const numberFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(locale, {
-        notation: 'compact',
-        maximumFractionDigits: 1,
-      }),
-    [locale],
-  )
-
-  const entries = useMemo(() => {
-    const totalsMap = new Map<BillingUsageEventType, { total: number; unit: 'count' | 'byte' }>()
-    usageTotals?.forEach((entry) => {
-      totalsMap.set(entry.eventType as BillingUsageEventType, {
-        total: entry.totalQuantity ?? 0,
-        unit: entry.unit,
-      })
-    })
-
-    return (Object.keys(BILLING_USAGE_EVENT_CONFIG) as BillingUsageEventType[]).map((eventType) => {
-      const config = BILLING_USAGE_EVENT_CONFIG[eventType]
-      const usage = totalsMap.get(eventType)
-      return {
-        eventType,
-        label: t(config.labelKey),
-        tone: config.tone,
-        total: usage?.total ?? 0,
-        unit: usage?.unit ?? 'count',
-      }
-    })
-  }, [usageTotals, t])
-
-  const activeEntries = entries.filter((entry) => entry.total > 0)
-
-  if (activeEntries.length === 0) {
-    return <p className="text-text-tertiary text-xs">{t('superadmin.tenants.usage.empty')}</p>
-  }
-
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {activeEntries.map((entry) => (
-        <UsageBadge
-          key={`${entry.eventType}`}
-          label={entry.label}
-          tone={entry.tone}
-          value={entry.total}
-          unit={entry.unit}
-          formatter={numberFormatter}
-        />
-      ))}
-    </div>
-  )
-}
-
 function PlanDescription({ plan }: { plan: BillingPlanDefinition | undefined }) {
   if (!plan) {
     return null
   }
   return <p className="text-text-tertiary text-xs">{plan.description}</p>
-}
-
-type UsageBadgeProps = {
-  label: string
-  tone: (typeof BILLING_USAGE_EVENT_CONFIG)[BillingUsageEventType]['tone']
-  value: number
-  unit: 'count' | 'byte'
-  formatter: Intl.NumberFormat
-}
-
-function UsageBadge({ label, tone, value, unit, formatter }: UsageBadgeProps) {
-  const toneClass =
-    tone === 'accent'
-      ? 'bg-emerald-500/10 text-emerald-200 border-emerald-500/30'
-      : tone === 'warning'
-        ? 'bg-rose-500/10 text-rose-200 border-rose-500/30'
-        : 'bg-fill/30 text-text-secondary border-border/40'
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${toneClass}`}
-    >
-      <span className="uppercase tracking-wide text-[10px] text-text-tertiary/80">{label}</span>
-      <span className="text-xs font-semibold text-text">{formatUsageValue(value, unit, formatter)}</span>
-    </span>
-  )
-}
-
-function formatUsageValue(value: number, unit: 'count' | 'byte', formatter: Intl.NumberFormat): string {
-  if (!Number.isFinite(value)) {
-    return '0'
-  }
-  if (unit === 'byte') {
-    return formatBytes(value)
-  }
-  return formatter.format(value)
-}
-
-function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) {
-    return '0 B'
-  }
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  let value = bytes
-  let unitIndex = 0
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024
-    unitIndex += 1
-  }
-  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unitIndex]}`
 }
 
 function StatusBadge({ status, banned }: { status: SuperAdminTenantSummary['status']; banned: boolean }) {

@@ -1,0 +1,55 @@
+---
+title: SaaS Architecture
+description: Tenant model, domain routing, OAuth flow, and data injection paths.
+createdAt: 2025-11-23T20:20:00+08:00
+lastModified: 2025-11-23T20:44:02+08:00
+order: 36
+---
+
+# SaaS Architecture
+
+## Tenant model
+
+- Tenants identified by **slug**; reserved: `root` (superadmin) and the placeholder slug.
+- Status checks: active, suspended, banned (requests are rejected with dedicated error codes).
+- Per-tenant plans and quotas enforced by `BillingPlanService` + `BillingUsageService`.
+
+## Domains
+
+- **Base domain** (default `afilmory.art`, editable in System Settings): tenants available at `<slug>.<baseDomain>`.
+- **Custom domains**: tenant can request a domain; verification passes if CNAME points to `<baseDomain>` or TXT contains the issued token (handled by `TenantDomainService`).
+- **Placeholder tenant**: used when slug is missing to render onboarding instead of erroring.
+
+## Tenant resolution (core)
+
+1. Existing context? reuse.
+2. Match custom domain → `TenantDomainService`.
+3. Else derive slug from host via `extractTenantSlugFromHost` and `baseDomain`.
+4. Root/admin paths fallback to `root` tenant.
+5. If still none, apply placeholder (unless configured to throw).
+
+## OAuth gateway flow
+
+- Providers redirect to `https://auth.<baseDomain>/api/auth/callback/{provider}?tenantSlug=<slug>`.
+- Gateway rewrites to `https://<slug>.<baseDomain>/api/auth/callback/{provider}` preserving query params.
+- Keeps provider config simple (single callback URL) while maintaining per-tenant sessions.
+
+## Data path
+
+- Core serves the SPA and dashboard static bundles.
+- Before sending `index.html`, it injects `window.__CONFIG__` and `window.__MANIFEST__` built from live DB/storage, so the frontend stays source-agnostic.
+
+## Static assets roots
+
+- Web: `apps/web` build copied into `be/apps/core/dist/static/web`.
+- Dashboard: `be/apps/dashboard` build copied into `be/apps/core/dist/static/dashboard`.
+- During tenant resolution, static roots are chosen per route segment; fallback logs are emitted if missing.
+
+## Billing & plans
+
+- System Settings define plan catalogs/pricing/overrides (billing + storage).
+- Usage is aggregated per tenant; superadmin can change plan or ban via `/api/super-admin/tenants`.
+
+## Root account provisioning
+
+- On first boot, `RootAccountProvisioner` creates/updates the superadmin (`DEFAULT_SUPERADMIN_EMAIL/USERNAME`) and prints credentials and `/platform/root-login` URLs to stdout.

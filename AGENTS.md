@@ -217,3 +217,7 @@ This project contains multiple web applications with distinct design systems. Fo
 
 - **`apps/web`**: Contains the "Glassmorphic Depth Design System" for the main user-facing photo gallery. See `apps/web/AGENTS.md` for details.
 - **`be/apps/dashboard`**: Contains guidelines for the functional, data-driven UI of the administration panel. See `be/apps/dashboard/AGENTS.md` for details.
+
+## IMPORTANT
+
+Avoid feature gates/flags and any backwards compability changes - since our app is still unreleased" is really helpful. 

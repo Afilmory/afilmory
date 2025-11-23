@@ -11,6 +11,7 @@ export interface BillingPlanDefinition {
   id: BillingPlanId
   name: string
   description: string
+  includedStorageBytes?: number | null
   quotas: BillingPlanQuota
 }
 

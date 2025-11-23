@@ -1,12 +1,14 @@
-import { Body, Controller, createZodSchemaDto, Post } from '@afilmory/framework'
+import { Body, Controller, createZodSchemaDto, Delete, Get, Param, Post } from '@afilmory/framework'
 import { isTenantSlugReserved } from '@afilmory/utils'
 import { AllowPlaceholderTenant } from 'core/decorators/allow-placeholder.decorator'
 import { SkipTenantGuard } from 'core/decorators/skip-tenant.decorator'
 import { BizException, ErrorCode } from 'core/errors'
+import { Roles } from 'core/guards/roles.decorator'
 import { SystemSettingService } from 'core/modules/configuration/system-setting/system-setting.service'
 import { z } from 'zod'
 
 import { TenantService } from './tenant.service'
+import { TenantDomainService } from './tenant-domain.service'
 
 const TENANT_SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i
 
@@ -41,11 +43,22 @@ const checkTenantSlugSchema = z.object({
 
 class CheckTenantSlugDto extends createZodSchemaDto(checkTenantSlugSchema) {}
 
+const requestDomainSchema = z.object({
+  domain: z
+    .string()
+    .trim()
+    .min(1, { message: '域名不能为空' })
+    .regex(/^[a-z0-9.-]+$/i, { message: '域名只能包含字母、数字、连字符和点' }),
+})
+
+class RequestTenantDomainDto extends createZodSchemaDto(requestDomainSchema) {}
+
 @Controller('tenant')
 export class TenantController {
   constructor(
     private readonly tenantService: TenantService,
     private readonly systemSettings: SystemSettingService,
+    private readonly tenantDomainService: TenantDomainService,
   ) {}
 
   @AllowPlaceholderTenant()
@@ -90,5 +103,33 @@ export class TenantController {
       return 'http'
     }
     return 'https'
+  }
+
+  @Get('/domains')
+  @Roles('admin')
+  async listDomains() {
+    const domains = await this.tenantDomainService.listDomainsForTenant()
+    return { domains }
+  }
+
+  @Post('/domains')
+  @Roles('admin')
+  async requestDomain(@Body() body: RequestTenantDomainDto) {
+    const aggregate = await this.tenantDomainService.requestDomain(body.domain)
+    return { domain: aggregate.domain }
+  }
+
+  @Post('/domains/:domainId/verify')
+  @Roles('admin')
+  async verifyDomain(@Param('domainId') domainId: string) {
+    const aggregate = await this.tenantDomainService.verifyDomain(domainId)
+    return { domain: aggregate.domain }
+  }
+
+  @Delete('/domains/:domainId')
+  @Roles('admin')
+  async deleteDomain(@Param('domainId') domainId: string) {
+    await this.tenantDomainService.deleteDomain(domainId)
+    return { deleted: true }
   }
 }

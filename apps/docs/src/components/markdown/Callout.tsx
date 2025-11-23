@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import { AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import * as React from 'react'
 
@@ -33,17 +34,11 @@ const typeIcons: Record<CalloutType, React.ReactNode> = {
 export function Callout({ type = 'info', children, className = '' }: CalloutProps) {
   return (
     <div
-      className={`
-        flex items-start gap-4 
-        rounded-2xl px-6 py-4 my-6
-        shadow-sm shadow-black/5
-        ${typeStyles[type]} 
-        ${className}
-        transition-all duration-200 ease-out
-        border-0
-      `
-        .replaceAll(/\s+/g, ' ')
-        .trim()}
+      className={clsx(
+        'my-6 flex items-start gap-4 rounded-2xl border-0 px-6 py-4 transition-all duration-200 ease-out',
+        typeStyles[type],
+        className,
+      )}
       role="alert"
     >
       <div className="min-w-0 flex-1 pt-5 ">
@@ -52,7 +47,7 @@ export function Callout({ type = 'info', children, className = '' }: CalloutProp
           style={{ lineHeight: '1.25rem' }}
         >
           {' '}
-          <span className={`flex-shrink-0 ${iconColors[type]} flex items-center`} style={{ height: '1.25rem' }}>
+          <span className={clsx('flex flex-shrink-0 items-center', iconColors[type])} style={{ height: '1.25rem' }}>
             {typeIcons[type]}
           </span>
           {children}

@@ -15,6 +15,7 @@ const snowflakeId = createSnowflakeId('id').primaryKey()
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'superadmin'])
 
 export const tenantStatusEnum = pgEnum('tenant_status', ['active', 'inactive', 'suspended'])
+export const tenantDomainStatusEnum = pgEnum('tenant_domain_status', ['pending', 'verified', 'disabled'])
 export const photoSyncStatusEnum = pgEnum('photo_sync_status', ['pending', 'synced', 'conflict'])
 export const CURRENT_PHOTO_MANIFEST_VERSION = 'v7' as const
 
@@ -54,6 +55,8 @@ export interface PhotoSyncRunSummary {
   errors: number
 }
 
+export type ManagedStorageMetadata = Record<string, unknown>
+
 export const tenants = pgTable(
   'tenant',
   {
@@ -61,12 +64,30 @@ export const tenants = pgTable(
     slug: text('slug').notNull(),
     name: text('name').notNull(),
     planId: text('plan_id').notNull().default('free'),
+    storagePlanId: text('storage_plan_id'),
     banned: boolean('banned').notNull().default(false),
     status: tenantStatusEnum('status').notNull().default('inactive'),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
   (t) => [unique('uq_tenant_slug').on(t.slug)],
+)
+
+export const tenantDomains = pgTable(
+  'tenant_domain',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    domain: text('domain').notNull(),
+    status: tenantDomainStatusEnum('status').notNull().default('pending'),
+    verificationToken: text('verification_token').notNull(),
+    verifiedAt: timestamp('verified_at', { mode: 'string' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  (t) => [unique('uq_tenant_domain_domain').on(t.domain), index('idx_tenant_domain_tenant').on(t.tenantId)],
 )
 
 // Custom users table (Better Auth: user)
@@ -254,6 +275,55 @@ export const reactions = pgTable(
   (t) => [index('idx_reactions_tenant_ref_key').on(t.tenantId, t.refKey)],
 )
 
+export const managedStorageUsages = pgTable(
+  'managed_storage_usage',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    providerKey: text('provider_key').notNull(),
+    operation: text('operation'),
+    totalBytes: bigint('total_bytes', { mode: 'number' }).notNull().default(0),
+    fileCount: integer('file_count').notNull().default(0),
+    periodStart: timestamp('period_start', { mode: 'string' }),
+    periodEnd: timestamp('period_end', { mode: 'string' }),
+    recordedAt: timestamp('recorded_at', { mode: 'string' }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  (t) => [
+    index('idx_managed_storage_usage_tenant_recorded').on(t.tenantId, t.recordedAt),
+    index('idx_managed_storage_usage_provider').on(t.providerKey),
+  ],
+)
+
+export const managedStorageFileReferences = pgTable(
+  'managed_storage_file_reference',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    providerKey: text('provider_key').notNull(),
+    storageKey: text('storage_key').notNull(),
+    storageProvider: text('storage_provider'),
+    size: bigint('size', { mode: 'number' }),
+    contentType: text('content_type'),
+    etag: text('etag'),
+    referenceType: text('reference_type'),
+    referenceId: text('reference_id'),
+    metadata: jsonb('metadata').$type<ManagedStorageMetadata | null>().default(null),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  (t) => [
+    unique('uq_managed_storage_file_ref_tenant_key').on(t.tenantId, t.storageKey),
+    index('idx_managed_storage_file_ref_provider').on(t.providerKey),
+    index('idx_managed_storage_file_ref_reference').on(t.referenceType, t.referenceId),
+  ],
+)
+
 export const photoAssets = pgTable(
   'photo_asset',
   {
@@ -326,6 +396,7 @@ export const billingUsageEvents = pgTable(
 
 export const dbSchema = {
   tenants,
+  tenantDomains,
   authUsers,
   authSessions,
   authAccounts,
@@ -337,6 +408,8 @@ export const dbSchema = {
   settings,
   systemSettings,
   reactions,
+  managedStorageUsages,
+  managedStorageFileReferences,
   photoAssets,
   photoSyncRuns,
   billingUsageEvents,

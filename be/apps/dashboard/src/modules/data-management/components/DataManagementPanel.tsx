@@ -4,7 +4,7 @@ import { DynamicIcon } from 'lucide-react/dynamic'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { usePhotoAssetSummaryQuery } from '~/modules/photos/hooks'
 
 import { useDeleteTenantAccountMutation, useTruncatePhotoAssetsMutation } from '../hooks'

@@ -214,7 +214,7 @@ export function PhotoSyncProgressPanel({ progress }: PhotoSyncProgressPanelProps
   const recentLogs = progress.logs.slice(-8).reverse()
 
   return (
-    <div className="bg-background-tertiary relative overflow-hidden rounded-lg p-6">
+    <div className="bg-background-tertiary relative overflow-hidden p-6">
       <BorderOverlay />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>

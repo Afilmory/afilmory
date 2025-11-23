@@ -48,6 +48,15 @@ const buttonVariants = tv({
         'disabled:text-gray-400',
         'disabled:dark:text-gray-600',
       ],
+      text: [
+        'shadow-none',
+        'border-transparent',
+        'text-accent',
+        'bg-transparent',
+        'hover:bg-accent/10',
+        'disabled:text-accent/50',
+        '!px-0 !h-auto bg-transparent! hover:text-accent/80!',
+      ],
       destructive: [
         'text-white',
         'border-transparent',

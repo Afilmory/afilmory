@@ -9,6 +9,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import { defineConfig } from 'vite'
 
+import { astPlugin } from '../../plugins/vite/ast'
 import remarkHeading from './plugins/remark-heading'
 import { routeGenerator } from './plugins/route-generater'
 import { tocExtractor } from './plugins/toc-extractor'
@@ -27,6 +28,7 @@ export default defineConfig({
       outputFile: 'routes.ts',
       indexFile: 'index',
     }),
+    astPlugin,
     tailwindcss(),
     {
       enforce: 'pre',

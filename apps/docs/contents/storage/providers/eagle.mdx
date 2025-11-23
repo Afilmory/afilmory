@@ -1,0 +1,165 @@
+---
+title: Eagle Storage
+description: Publish directly from an Eagle 4 library with filtering support.
+createdAt: 2025-11-14T22:10:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 36
+---
+
+# Eagle Storage
+
+Eagle storage lets you publish directly from an Eagle 4 desktop library. Perfect if you already use Eagle for photo management and want to publish filtered collections.
+
+## Configuration
+
+Configure Eagle storage in `builder.config.ts`:
+
+```typescript
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'eagle',
+    libraryPath: '/Users/alice/Pictures/Eagle.library',
+    distPath: './apps/web/public/originals',
+    baseUrl: '/originals/',
+    include: [
+      { type: 'folder', name: 'Published', includeSubfolder: true }
+    ],
+    exclude: [
+      { type: 'tag', name: 'Private' }
+    ],
+    folderAsTag: true,
+  },
+}))
+```
+
+## Path Configuration
+
+### libraryPath
+
+The path to your Eagle library:
+
+```typescript
+libraryPath: '/Users/alice/Pictures/Eagle.library' // Absolute path
+libraryPath: './Eagle.library' // Relative to project root
+```
+
+Must be an absolute path or relative to the project root.
+
+### distPath
+
+Where to copy originals during build:
+
+```typescript
+distPath: './apps/web/public/originals'
+```
+
+Originals are copied here so they can be served by the web app.
+
+### baseUrl
+
+The URL path where originals are served:
+
+```typescript
+baseUrl: '/originals/'
+```
+
+Should match how `distPath` is served in your web application.
+
+## Filtering
+
+Eagle storage supports powerful filtering options:
+
+### Include Rules
+
+Specify what to include:
+
+```typescript
+include: [
+  { type: 'folder', name: 'Published', includeSubfolder: true },
+  { type: 'tag', name: 'Public' }
+]
+```
+
+- `type`: `'folder'` or `'tag'`
+- `name`: Folder or tag name
+- `includeSubfolder`: For folders, include subfolders (default: `true`)
+
+### Exclude Rules
+
+Specify what to exclude:
+
+```typescript
+exclude: [
+  { type: 'tag', name: 'Private' },
+  { type: 'folder', name: 'Drafts' }
+]
+```
+
+Exclude rules override include rules.
+
+### Empty Filters
+
+Leave `include` empty to export everything:
+
+```typescript
+include: [] // Export all photos
+```
+
+## Folder as Tag
+
+Enable `folderAsTag` to mirror Eagle folder names as tags:
+
+```typescript
+folderAsTag: true
+```
+
+This creates tags in the manifest based on folder structure, useful for organizing photos.
+
+## Use Cases
+
+**Curated galleries:**
+- Use Eagle's tagging and organization features
+- Publish only selected photos
+- Filter by folders or tags
+
+**Workflow integration:**
+- Manage photos in Eagle
+- Publish directly without manual export
+- Maintain organization in Eagle
+
+## Best Practices
+
+**Organization:**
+- Use Eagle folders to organize by project or date
+- Use tags for cross-cutting categories
+- Create a "Published" folder for photos to publish
+
+**Filtering:**
+- Use `include` to select what to publish
+- Use `exclude` to hide private or draft photos
+- Combine folder and tag filters for precise control
+
+**Performance:**
+- Large Eagle libraries may take time to process
+- Consider using `include` to limit scope
+- Use `exclude` to skip unwanted photos
+
+## Troubleshooting
+
+**Library not found:**
+- Verify `libraryPath` is correct (absolute path recommended)
+- Check that the Eagle library exists
+- Ensure the library is not locked by Eagle
+
+**No photos found:**
+- Check `include` rules match your organization
+- Verify `exclude` rules aren't too broad
+- Try empty `include` to test
+
+**Files not copied:**
+- Verify `distPath` is writable
+- Check that `baseUrl` matches your web server
+- Ensure the destination directory exists
+

@@ -5,6 +5,7 @@ import type {
   SiteAuthorProfile,
   SiteSettingEntryInput,
   SiteSettingUiSchemaResponse,
+  TenantDomain,
   UpdateSiteAuthorPayload,
 } from './types'
 
@@ -30,4 +31,28 @@ export async function updateSiteAuthorProfile(payload: UpdateSiteAuthorPayload) 
     method: 'POST',
     body: payload,
   })
+}
+
+export async function listTenantDomains() {
+  const result = await coreApi<{ domains: TenantDomain[] }>('/tenant/domains')
+  return camelCaseKeys(result) as { domains: TenantDomain[] }
+}
+
+export async function requestTenantDomain(domain: string) {
+  const result = await coreApi<{ domain: TenantDomain }>('/tenant/domains', {
+    method: 'POST',
+    body: { domain },
+  })
+  return camelCaseKeys(result) as { domain: TenantDomain }
+}
+
+export async function verifyTenantDomain(domainId: string) {
+  const result = await coreApi<{ domain: TenantDomain }>(`/tenant/domains/${domainId}/verify`, {
+    method: 'POST',
+  })
+  return camelCaseKeys(result) as { domain: TenantDomain }
+}
+
+export async function deleteTenantDomain(domainId: string) {
+  return await coreApi<{ deleted: boolean }>(`/tenant/domains/${domainId}`, { method: 'DELETE' })
 }

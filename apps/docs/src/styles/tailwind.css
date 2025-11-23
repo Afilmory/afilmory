@@ -7,3 +7,26 @@
 @import '@pastel-palette/tailwindcss/dist/theme-oklch.css';
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+  /* Accent color: black in light mode, soft white in dark mode (not too bright) */
+  --color-accent: #000000;
+
+  /* Background: soft white in light mode, soft dark gray in dark mode (not pure black) */
+  --color-background: #fefefe;
+  --color-link: #000;
+}
+
+[data-theme='dark'] {
+  /* Soft white accent in dark mode - not too bright to avoid eye strain */
+  --color-accent: #c0c0c0;
+
+  /* Soft dark background - not pure black for better readability */
+  --color-background: #0f0f0f;
+  --color-link: #fff;
+}
+
+html {
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--color-background);
+}

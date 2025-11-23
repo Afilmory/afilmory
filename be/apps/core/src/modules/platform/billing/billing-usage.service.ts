@@ -1,6 +1,7 @@
 import { billingUsageEvents } from '@afilmory/db'
 import { DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
+import { normalizeDate } from 'core/helpers/normalize.helper'
 import { getTenantContext, requireTenantContext } from 'core/modules/platform/tenant/tenant.context'
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
@@ -99,7 +100,7 @@ export class BillingUsageService {
     const rows = inputs.map((input) => {
       const tenantId = this.resolveTenantId(input.tenantId)
       const quantity = this.normalizeQuantity(input.quantity)
-      const occurredAt = this.normalizeDate(input.occurredAt) ?? now.toISOString()
+      const occurredAt = normalizeDate(input.occurredAt) ?? now.toISOString()
       return {
         tenantId,
         eventType: input.eventType,
@@ -175,7 +176,7 @@ export class BillingUsageService {
     const totalsByTenant: Record<string, BillingUsageTotalsEntry[]> = {}
 
     for (const row of rows) {
-      const {tenantId} = row
+      const { tenantId } = row
       if (!tenantId) {
         continue
       }
@@ -233,17 +234,5 @@ export class BillingUsageService {
       return quantity
     }
     return 1
-  }
-
-  private normalizeDate(value?: Date | string | null): string | null {
-    if (!value) {
-      return null
-    }
-
-    const date = value instanceof Date ? value : new Date(value)
-    if (Number.isNaN(date.getTime())) {
-      return null
-    }
-    return date.toISOString()
   }
 }

@@ -1,0 +1,169 @@
+---
+title: Architecture
+description: Understand how Afilmory works—static vs. SSR deployment modes.
+createdAt: 2025-11-14T22:25:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 3
+---
+
+# Architecture
+
+Afilmory supports two deployment modes, each optimized for different use cases. Understanding the architecture helps you choose the right approach for your needs.
+
+## Overview
+
+Afilmory transforms your photo collection into a web gallery through a simple pipeline:
+
+1. **Builder** processes photos from your storage
+2. Generates **thumbnails** and **metadata manifest**
+3. **Web application** consumes the manifest to display your gallery
+4. Deploy as **static site** or **server-rendered** application
+
+## Deployment Modes
+
+### Static Site (SPA)
+
+A pure client-side application that runs entirely in the browser. No server required.
+
+**How it works:**
+
+- Builder generates `photos-manifest.json` and thumbnails
+- Static files are published to any CDN or static host
+- Browser loads the manifest and renders the gallery client-side
+
+**Best for:**
+
+- Simple deployments
+- Cost-effective hosting
+- Maximum performance with CDN caching
+- No server maintenance
+
+**Limitations:**
+
+- Basic SEO (no server-rendered meta tags)
+- Limited social media preview support
+- No dynamic content generation
+
+**Deployment targets:**
+
+- GitHub Pages
+- Cloudflare Pages
+- Any static file host
+
+### Server-Side Rendering (SSR)
+
+A Next.js wrapper that enhances the SPA with server-side capabilities for better SEO and social sharing.
+
+**How it works:**
+
+- Builder generates manifest and thumbnails (same as static mode)
+- Next.js app injects manifest into HTML as `window.__MANIFEST__`
+- Server renders initial HTML with proper meta tags
+- Client-side React takes over for navigation
+
+**Best for:**
+
+- Better SEO and search engine visibility
+- Rich social media previews (Open Graph)
+- Dynamic meta tag generation per photo
+- Professional deployments
+
+**Requirements:**
+
+- Node.js runtime
+- More complex build process
+- Server hosting (Vercel, Node.js host, Docker)
+
+**Deployment targets:**
+
+- Vercel (recommended)
+- Any Node.js hosting platform
+- Docker containers
+
+## Common Components
+
+Both deployment modes share the same foundation:
+
+### Builder
+
+The photo processing pipeline that:
+
+- Syncs photos from storage providers (S3, B2, GitHub, Local, Eagle)
+- Converts formats (HEIC → JPEG, TIFF → web formats)
+- Extracts metadata (EXIF, GPS, Live Photo detection)
+- Generates thumbnails in multiple sizes
+- Creates blurhash placeholders
+- Outputs structured manifest JSON
+
+### Manifest
+
+The `photos-manifest.json` file contains:
+
+- Photo metadata (EXIF, GPS, camera settings)
+- Thumbnail paths and blurhash placeholders
+- Live Photo video references
+- HDR and Fujifilm recipe information
+- Organized by cameras, lenses, and tags
+
+### Web Application
+
+The React-based gallery interface:
+
+- WebGL-powered photo viewer
+- Masonry grid layout
+- Map view for geotagged photos
+- EXIF and metadata display
+- Responsive design
+
+## Data Flow
+
+### Static Mode Flow
+
+```
+Storage → Builder → Manifest + Thumbnails → Static Build → CDN
+```
+
+1. Builder reads photos from storage
+2. Generates manifest and thumbnails
+3. Static build bundles everything
+4. Deploy to CDN/static host
+
+### SSR Mode Flow
+
+```
+Storage → Builder → Manifest + Thumbnails → Next.js Build → Server
+                                                              ↓
+                                                         HTML with injected manifest
+```
+
+1. Builder generates manifest and thumbnails (same as static)
+2. Next.js build includes manifest injection
+3. Server renders HTML with manifest in `window.__MANIFEST__`
+4. Client-side React hydrates and takes over
+
+## Choosing the Right Mode
+
+**Choose Static if:**
+
+- You want the simplest deployment
+- Cost is a primary concern
+- You don't need advanced SEO
+- You're comfortable with basic social sharing
+
+**Choose SSR if:**
+
+- SEO is important for your gallery
+- You want rich social media previews
+- You need dynamic meta tags per photo
+- You're deploying to a platform that supports Node.js
+
+## Migration Path
+
+You can switch between modes anytime:
+
+- Both use the same builder outputs
+- Same manifest and thumbnail structure
+- No need to reprocess photos
+- Just change the deployment target
+
+The builder is mode-agnostic—it generates the same outputs regardless of how you deploy.

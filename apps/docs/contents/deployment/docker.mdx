@@ -1,33 +1,41 @@
 ---
 title: Docker
-description: Guide to deploying Afilmory via Docker.
+description: Deploy Afilmory using Docker for consistent, containerized deployments.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-14T21:52:55+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 51
 ---
 
 # Docker Deployment
 
-![Docker Deployment](https://github.com/Afilmory/assets/blob/main/docker-deploy.webp?raw=true)
+Deploy Afilmory using Docker for consistent, containerized deployments. Perfect for self-hosting or deploying to container platforms.
 
-## TL;DR
+## Prerequisites
 
-Fork https://github.com/Afilmory/docker, customize configuration and build image.
+- Docker installed
+- Docker Compose (optional, recommended)
+- PostgreSQL database (for SSR app with backend features)
 
-## 🚀 Quick Start
+## Quick Start
 
-Using Docker to deploy Afilmory is a convenient and efficient way to manage your photo gallery application. This guide will walk you through the steps to set up and run Afilmory using Docker.
+### Option 1: Use Pre-built Docker Setup
 
-### Prerequisites
+Fork the [Afilmory Docker repository](https://github.com/Afilmory/docker) and customize:
 
-- Docker
-- Docker Compose (optional but recommended)
-- PostgreSQL database (for SSR app)
+1. Clone the repository
+2. Configure `config.json` and `builder.config.ts`
+3. Set environment variables in `.env`
+4. Build and run
 
-### 1. Configuration Files
+### Option 2: Build from Source
 
-Before building your Docker image, you'll need to configure the following files:
+Build your own Docker image from the Afilmory source.
 
-**`config.json`**
+## Configuration
+
+### config.json
+
+Configure your site settings:
 
 ```json
 {
@@ -43,138 +51,115 @@ Before building your Docker image, you'll need to configure the following files:
   },
   "social": {
     "twitter": "@yourusername"
-  },
-  "extra": {
-    "accessRepo": true
   }
 }
 ```
 
-**`builder.config.ts`**
+### builder.config.ts
 
-```ts
+Configure storage and builder settings:
+
+```typescript
 import { defineBuilderConfig, githubRepoSyncPlugin } from '@afilmory/builder'
 
 export default defineBuilderConfig(() => ({
   storage: {
     provider: 's3',
-    bucket: 'your-photos-bucket',
-    region: 'us-east-1',
+    bucket: process.env.S3_BUCKET_NAME!,
+    region: process.env.S3_REGION!,
+    accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
     prefix: 'photos/',
-    customDomain: 'cdn.yourdomain.com',
   },
   plugins: [
     githubRepoSyncPlugin({
       repo: {
         enable: true,
-        url: 'https://github.com/username/gallery-public',
-        token: process.env.GIT_TOKEN,
-        branch: process.env.BUILDER_REPO_BRANCH ?? 'main',
+        url: process.env.BUILDER_REPO_URL!,
+        token: process.env.GIT_TOKEN!,
+        branch: process.env.BUILDER_REPO_BRANCH || 'main',
       },
     }),
   ],
-  performance: {
-    worker: {
-      enabled: true,
-      maxWorkers: 4,
-    },
-  },
 }))
 ```
 
-If you keep assets on a non-`main` branch, set `branch` accordingly; the plugin will also auto-create the specified branch when it doesn’t exist yet so first pushes succeed even for empty repositories.
+### .env
 
-**`.env`**
+Set environment variables:
 
 ```bash
-# Database Configuration
+# Database (for SSR with backend)
 PG_CONNECTION_STRING=postgresql://user:password@postgres:5432/afilmory
 
-# S3 Storage Configuration
-S3_ACCESS_KEY_ID=your_access_key_id
-S3_SECRET_ACCESS_KEY=your_secret_access_key
+# Storage (S3 example)
+S3_ACCESS_KEY_ID=your_access_key
+S3_SECRET_ACCESS_KEY=your_secret_key
+S3_BUCKET_NAME=your_bucket
+S3_REGION=us-east-1
 
-# Git Repository (optional)
+# Git Repository Cache (optional)
 GIT_TOKEN=your_github_token
+BUILDER_REPO_URL=https://github.com/username/gallery-cache
+BUILDER_REPO_BRANCH=main
 
-# Application Settings
+# Application
 NODE_ENV=production
 PORT=3000
 ```
 
-### 2. Dockerfile setup
+## Dockerfile
 
 Create a `Dockerfile` in your project root:
 
 ```dockerfile
-# Dockerfile for Next.js app in a pnpm monorepo
-# This Dockerfile should be built from the root of the monorepo:
-# > docker build -t iris-ssr .
-# > docker run -p 3000:3000 iris-ssr
-
-# -----------------
 # Base stage
-# -----------------
 FROM node:20-alpine AS base
 WORKDIR /app
 RUN corepack enable
 
-# -----------------
 # Builder stage
-# -----------------
 FROM base AS builder
 
 RUN apk update && apk add --no-cache git perl
 
-RUN git clone https://github.com/Afilmory/Afilmory --depth 1 .
-COPY config.json ./
-COPY builder.config.ts ./
-COPY .env ./
+# Copy source (or clone from repo)
+COPY . .
 
-ARG S3_ACCESS_KEY_ID
-ARG S3_SECRET_ACCESS_KEY
-ARG GIT_TOKEN
-ARG PG_CONNECTION_STRING
-
-RUN sh ./scripts/preinstall.sh
-# Install all dependencies
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build the app.
-# The build script in the ssr package.json handles building the web app first.
-RUN pnpm --filter=@afilmory/ssr build
+# Build the application
+RUN pnpm run build:manifest
+RUN pnpm --filter @afilmory/ssr build
 
-# -----------------
 # Runner stage
-# -----------------
 FROM base AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-# ENV PORT and other configurations are now in the config files
-# and passed through environment variables during runtime.
 RUN apk add --no-cache curl wget
-# Create a non-root user
+
+# Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 USER nextjs
 
+# Copy build output
 COPY --from=builder --chown=nextjs:nodejs /app/apps/ssr/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/ssr/.next/static /app/apps/ssr/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/ssr/public /app/apps/ssr/public
 
-# The standalone output includes the server.js file.
-# The PORT environment variable is automatically used by Next.js.
 EXPOSE 3000
 
 CMD ["node", "apps/ssr/server.js"]
 ```
 
-### 3. Docker Compose Setup
+## Docker Compose
 
-Create a `docker-compose.yml` file in your project root:
+Create `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
@@ -186,10 +171,11 @@ services:
       - '3000:3000'
     environment:
       - NODE_ENV=production
+    env_file:
+      - .env
     volumes:
       - ./config.json:/app/config.json:ro
       - ./builder.config.ts:/app/builder.config.ts:ro
-      - ./.env:/app/.env:ro
     depends_on:
       - postgres
     restart: unless-stopped
@@ -199,7 +185,7 @@ services:
     environment:
       POSTGRES_DB: afilmory
       POSTGRES_USER: afilmory
-      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -208,9 +194,9 @@ volumes:
   postgres_data:
 ```
 
-### 4. Building and Running
+## Building and Running
 
-#### Option 1: Using Docker Compose (Recommended)
+### Using Docker Compose (Recommended)
 
 ```bash
 # Build and start all services
@@ -223,7 +209,7 @@ docker-compose logs -f afilmory
 docker-compose down
 ```
 
-#### Option 2: Manual Docker Build
+### Manual Docker Build
 
 ```bash
 # Build the image
@@ -239,55 +225,84 @@ docker run -d \
   afilmory
 ```
 
-## 📋 Configuration Details
+## Storage Providers
 
-### Storage Providers
+Configure any supported storage provider in `builder.config.ts`:
 
-Afilmory supports multiple storage providers. Configure them in `builder.config.ts`:
+- **S3**: AWS S3, MinIO, Cloudflare R2, etc.
+- **B2**: Backblaze B2
+- **GitHub**: GitHub repository
+- **Local**: Local file system (mount volumes)
+- **Eagle**: Eagle 4 library
 
-**S3-Compatible Storage:**
+See [Storage Providers](/storage/providers) for configuration details.
 
-```json
-{
-  "storage": {
-    "provider": "s3",
-    "bucket": "your-bucket",
-    "region": "us-east-1",
-    "prefix": "photos/",
-    "customDomain": "cdn.example.com"
-  }
-}
+## Performance Tuning
+
+For large photo collections, optimize Docker resources:
+
+```yaml
+services:
+  afilmory:
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
 ```
 
-**GitHub Storage:**
+Adjust based on your collection size and system resources.
 
-```json
-{
-  "storage": {
-    "provider": "github",
-    "owner": "username",
-    "repo": "photo-storage",
-    "branch": "main",
-    "path": "photos/"
-  }
-}
-```
+## Troubleshooting
 
-### Performance Tuning
+**Build failures:**
+- Check Docker logs: `docker-compose logs afilmory`
+- Verify all environment variables are set
+- Ensure storage credentials are correct
+- Check disk space for build process
 
-For optimal performance in Docker environments:
+**Memory issues:**
+- Increase Docker memory limits
+- Reduce builder concurrency in config
+- Process photos in smaller batches
 
-```json
-{
-  "performance": {
-    "worker": {
-      "enabled": true,
-      "maxWorkers": 4
-    },
-    "cache": {
-      "thumbnails": true,
-      "manifests": true
-    }
-  }
-}
-```
+**Database connection:**
+- Verify PostgreSQL is running: `docker-compose ps`
+- Check connection string format
+- Ensure database is accessible from container
+
+**Storage access:**
+- Verify storage credentials
+- Check network connectivity from container
+- For local storage, ensure volumes are mounted correctly
+
+## Production Considerations
+
+**Security:**
+- Use secrets management (Docker secrets, environment files)
+- Run as non-root user (already configured)
+- Keep images updated
+- Use read-only volumes where possible
+
+**Monitoring:**
+- Set up health checks
+- Monitor container resources
+- Log aggregation
+- Backup strategies
+
+**Scaling:**
+- Use orchestration (Kubernetes, Docker Swarm)
+- Load balancing for multiple instances
+- Shared storage for thumbnails/manifest
+- Database connection pooling
+
+## Next Steps
+
+- Configure reverse proxy (nginx, Traefik)
+- Set up SSL certificates
+- Configure monitoring and logging
+- Implement backup strategies
+- Review [Docker documentation](https://docs.docker.com) for advanced features

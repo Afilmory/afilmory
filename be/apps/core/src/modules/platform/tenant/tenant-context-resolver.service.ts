@@ -10,6 +10,7 @@ import { injectable } from 'tsyringe'
 import { PLACEHOLDER_TENANT_SLUG, ROOT_TENANT_SLUG } from './tenant.constants'
 import { TenantService } from './tenant.service'
 import type { TenantAggregate, TenantContext } from './tenant.types'
+import { TenantDomainService } from './tenant-domain.service'
 import { extractTenantSlugFromHost } from './tenant-host.utils'
 
 const ROOT_TENANT_PATH_PREFIXES = [
@@ -30,6 +31,7 @@ export class TenantContextResolver {
 
   constructor(
     private readonly tenantService: TenantService,
+    private readonly tenantDomainService: TenantDomainService,
     private readonly appState: AppStateService,
     private readonly systemSettingService: SystemSettingService,
   ) {}
@@ -56,7 +58,23 @@ export class TenantContextResolver {
     this.log.debug(`Forwarded host: ${forwardedHost}, Host header: ${hostHeader}, Origin: ${origin}, Host: ${host}`)
 
     const baseDomain = await this.getBaseDomain()
-    let derivedSlug = host ? (extractTenantSlugFromHost(host, baseDomain) ?? undefined) : undefined
+    let derivedSlug: string | undefined
+    let tenantContext: TenantContext | null = null
+
+    if (host) {
+      const domainMatch = await this.tenantDomainService.resolveTenantByDomain(host)
+      if (domainMatch) {
+        tenantContext = this.asTenantContext(domainMatch, false, domainMatch.tenant.slug)
+        derivedSlug = domainMatch.tenant.slug
+        this.log.verbose(
+          `Resolved tenant by custom domain for request ${context.req.method} ${context.req.path} (host=${host})`,
+        )
+      }
+    }
+
+    if (!derivedSlug) {
+      derivedSlug = host ? (extractTenantSlugFromHost(host, baseDomain) ?? undefined) : undefined
+    }
     if (!derivedSlug && this.isRootTenantPath(context.req.path)) {
       derivedSlug = ROOT_TENANT_SLUG
     }
@@ -66,8 +84,7 @@ export class TenantContextResolver {
       `Resolve tenant for request ${context.req.method} ${context.req.path} (host=${host ?? 'n/a'}, slug=${derivedSlug ?? 'n/a'})`,
     )
 
-    let tenantContext: TenantContext | null = null
-    if (derivedSlug) {
+    if (!tenantContext && derivedSlug) {
       tenantContext = await this.tenantService.resolve(
         {
           slug: derivedSlug,
@@ -132,7 +149,17 @@ export class TenantContextResolver {
       return null
     }
 
-    return source.trim().toLowerCase()
+    const value = source.split(',', 1)[0]?.trim()
+    if (!value) {
+      return null
+    }
+
+    const withoutProtocol = value.replace(/^https?:\/\//, '')
+    const [hostname] = withoutProtocol.split('/', 1)
+    const [hostWithoutPort] = hostname.split(':', 1)
+
+    const normalized = hostWithoutPort.trim().toLowerCase()
+    return normalized.length > 0 ? normalized : null
   }
 
   private extractHostFromOrigin(origin: string | null | undefined): string | null {

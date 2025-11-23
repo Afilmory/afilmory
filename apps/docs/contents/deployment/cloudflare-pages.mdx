@@ -2,16 +2,23 @@
 title: Cloudflare Pages
 description: Guide to deploying Afilmory via Cloudflare Pages.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-20T23:04:22+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 53
 ---
 
 # Cloudflare Pages Deployment
+
+Cloudflare Pages provides fast, global static hosting with excellent CDN performance. Perfect for static gallery deployments.
 
 ## Prerequisites
 
 You need to upload your images to an OSS (Object Storage Service) like AWS S3 or Cloudflare R2 before deploying.
 
-## Deploy
+- Cloudflare account (free tier available)
+- GitHub or GitLab repository
+- Photos processed with builder
+
+## Quick Deploy
 
 Run the following command to build and deploy your application to Cloudflare Pages:
 
@@ -19,16 +26,152 @@ Run the following command to build and deploy your application to Cloudflare Pag
 pnpm --filter=@afilmory/web deploy:cloudflare
 ```
 
+## Deployment Steps
+
+### Step 1: Connect Repository
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Navigate to Pages → Create a project
+3. Connect your GitHub/GitLab repository
+4. Select the repository and branch
+
+### Step 2: Configure Build Settings
+
+**Build configuration:**
+
+- **Framework preset**: Vite
+- **Build command**: `pnpm run build:manifest && pnpm --filter web build`
+- **Build output directory**: `apps/web/dist`
+- **Root directory**: (leave empty, or set to project root)
+
+**Environment variables:**
+Add your storage credentials:
+
+```
+S3_ACCESS_KEY_ID=your_key
+S3_SECRET_ACCESS_KEY=your_secret
+S3_BUCKET_NAME=your_bucket
+S3_REGION=us-east-1
+```
+
+### Step 3: Deploy
+
+1. Click "Save and Deploy"
+2. Cloudflare Pages will:
+   - Install dependencies
+   - Run builder to generate thumbnails and manifest
+   - Build the static site
+   - Deploy to Cloudflare's global CDN
+
+## Build Configuration
+
+### Using wrangler.toml (Optional)
+
+Create `apps/web/wrangler.toml`:
+
+```toml
+name = "afilmory-gallery"
+compatibility_date = "2024-01-01"
+
+[build]
+command = "pnpm run build:manifest && pnpm --filter web build"
+cwd = "."
+```
+
+### Environment Variables
+
+Set in Cloudflare Dashboard → Pages → Your Project → Settings → Environment Variables:
+
+**Storage (S3 example):**
+
+```
+S3_ACCESS_KEY_ID
+S3_SECRET_ACCESS_KEY
+S3_BUCKET_NAME
+S3_REGION
+```
+
+**Production vs Preview:**
+
+- Set different variables for Production and Preview environments
+- Useful for testing with different storage buckets
+
+## Custom Domain
+
+1. Go to Pages → Your Project → Custom domains
+2. Add your domain
+3. Configure DNS:
+   - Add CNAME record pointing to Cloudflare Pages
+   - Cloudflare will automatically provision SSL
+
+## Continuous Deployment
+
+Cloudflare Pages automatically:
+
+- **Production**: Deploys on push to main/master
+- **Preview**: Creates preview deployments for pull requests
+
+Each deployment gets a unique URL.
+
+## Performance Features
+
+Cloudflare Pages provides:
+
+- **Global CDN**: Fast delivery worldwide
+- **Automatic compression**: Gzip and Brotli
+- **Image optimization**: Automatic image optimization (Pro plan)
+- **Cache control**: Intelligent caching headers
+
+## Build Limits
+
+Free tier limits:
+
+- **Build time**: 20 minutes per build
+- **Builds per month**: 500
+- **Bandwidth**: 500 requests/second
+
+Upgrade to Pro for higher limits.
+
+## Troubleshooting
+
+**Build failures:**
+
+- Check build logs in Cloudflare Dashboard
+- Verify all environment variables are set
+- Ensure `builder.config.ts` is correct
+- Check storage credentials
+
+**Missing photos:**
+
+- Verify thumbnails and manifest are in build output
+- Check file paths are correct
+- Ensure storage is accessible during build
+
+**Slow builds:**
+
+- Use repo cache plugin to avoid full rebuilds
+- Optimize storage access
+- Consider reducing photo count
+
 ## Limitations
 
 Deploying the `web` app directly to Cloudflare Pages results in a static site. This means you will lose server-side features provided by the `ssr` application (Next.js), such as:
 
 - **Dynamic Open Graph (OG) Images**: Social media preview cards will not be generated dynamically.
+
 - **Share/Iframe Support**: Specific sharing functionality that relies on server-side rendering may not work as expected.
 
 To support these features on Cloudflare, you would need to deploy the `ssr` application using a Cloudflare Workers adapter for Next.js (e.g., `@opennextjs/cloudflare`), which adds significant complexity to the deployment process.
 
+## Next Steps
+
+- Configure custom domain
+- Set up monitoring
+- Optimize build performance
+- Review [Cloudflare Pages documentation](https://developers.cloudflare.com/pages)
+
 ## Learn more
 
 - [Commands - Wrangler](https://developers.cloudflare.com/workers/wrangler/commands/#deploy-1)
+
 - [Deploy a Next.js project on Workers - Cloudflare Docs](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)

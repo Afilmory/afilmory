@@ -1,36 +1,33 @@
 @import './tailwind.css';
 
-/* Apple-style documentation prose styling */
+/* Documentation prose styling */
 .prose {
-  @apply text-gray-900 dark:text-gray-100;
   max-width: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
   font-feature-settings:
     'kern' 1,
     'liga' 1,
     'calt' 1;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -moz-osx-font-smoothing: zincscale;
 }
 
 /* 移动端优化 */
 @media (max-width: 768px) {
   .prose {
     font-size: 0.9rem;
-    line-height: 1.65;
+    line-height: 1.5;
   }
 }
 
 .prose h1 {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-weight: 700;
   font-size: 2.5rem;
   line-height: 1.15;
   letter-spacing: -0.025em;
   margin-bottom: 1.5rem;
   margin-top: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
 }
 
 /* 移动端标题优化 */
@@ -42,14 +39,13 @@
 }
 
 .prose h2 {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-weight: 600;
   font-size: 2rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  margin-top: 3rem;
-  margin-bottom: 1.25rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
 }
 
 /* 移动端H2标题优化 */
@@ -62,14 +58,13 @@
 }
 
 .prose h3 {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-weight: 600;
   font-size: 1.5rem;
   line-height: 1.3;
   letter-spacing: -0.015em;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
 }
 
 /* 移动端H3标题优化 */
@@ -82,57 +77,54 @@
 }
 
 .prose h4 {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-weight: 600;
   font-size: 1.25rem;
   line-height: 1.35;
   letter-spacing: -0.01em;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
 }
 
 .prose h5 {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-weight: 600;
   font-size: 1.125rem;
   line-height: 1.4;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
 }
 
 .prose h6 {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-weight: 600;
   font-size: 1rem;
   line-height: 1.5;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
 }
 
 .prose p {
   @apply text-text;
-  margin-bottom: 1.25rem;
-  line-height: 1.6;
+  margin-bottom: 1rem;
+  line-height: 1.5;
   font-size: 1rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   text-wrap: pretty;
 }
 
 .prose strong {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-weight: 600;
 }
 
 .prose em {
   font-style: italic;
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
 }
 
 .prose code {
-  @apply text-text-secondary;
+  @apply bg-zinc-100 dark:bg-zinc-800;
+  @apply text-zinc-900 dark:text-zinc-100;
   padding: 0.2rem 0.4rem;
   border-radius: 6px;
   font-size: 0.9em;
@@ -140,20 +132,32 @@
   font-weight: 500;
 }
 
-&:where([data-theme='dark'], [data-theme='dark'] *) {
-  .shiki,
-  .shiki span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg) !important;
-    /* Optional, if you also want font styles */
-    font-style: var(--shiki-dark-font-style) !important;
-    font-weight: var(--shiki-dark-font-weight) !important;
-    text-decoration: var(--shiki-dark-text-decoration) !important;
-  }
+/* Shiki syntax highlighting styles */
+.prose .shiki,
+.prose .shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+
+/* Dark mode support for Shiki */
+html[data-theme='dark'] .prose .shiki,
+html[data-theme='dark'] .prose .shiki span,
+[data-theme='dark'] .prose .shiki,
+[data-theme='dark'] .prose .shiki span,
+.prose [data-theme='dark'] .shiki,
+.prose [data-theme='dark'] .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
 }
 
 .prose pre {
-  @apply text-text border-border border-solid border-[1px];
+  @apply bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 border border-solid;
   padding: 1.25rem;
   border-radius: 12px;
   overflow-x: auto;
@@ -161,6 +165,13 @@
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.875rem;
   line-height: 1.5;
+  position: relative;
+}
+
+/* Override Shiki background for dark mode */
+html[data-theme='dark'] .prose pre.shiki,
+[data-theme='dark'] .prose pre.shiki {
+  background-color: var(--shiki-dark-bg) !important;
 }
 
 .prose pre code {
@@ -169,12 +180,13 @@
   border: none;
   border-radius: 0;
   font-weight: 400;
+  @apply text-zinc-900 dark:text-zinc-100;
 }
 
 .prose ul,
 .prose ol {
-  @apply text-gray-900 dark:text-gray-100;
-  margin: 1.25rem 0;
+  @apply text-zinc-900 dark:text-zinc-100;
+  margin: 1rem 0;
   padding-left: 1.75rem;
 }
 
@@ -188,7 +200,7 @@
 
 .prose ul > li::before {
   content: '•';
-  @apply text-gray-500 dark:text-gray-400;
+  @apply text-zinc-500 dark:text-zinc-400;
   font-weight: bold;
   position: absolute;
   left: -1.25rem;
@@ -200,38 +212,38 @@
 }
 
 .prose ol > li::marker {
-  @apply text-gray-500 dark:text-gray-400;
+  @apply text-zinc-500 dark:text-zinc-400;
   font-weight: 500;
 }
 
 .prose li {
-  margin: 0.75rem 0;
-  line-height: 1.6;
+  margin: 0.5rem 0;
+  line-height: 1.5;
 }
 
 .prose li > p {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem;
 }
 
 .prose blockquote {
   @apply border-l-4 border-blue-600 bg-blue-50 dark:bg-blue-900/20;
-  padding: 1.25rem 1.5rem;
-  margin: 2rem 0;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
   border-radius: 8px;
   position: relative;
 }
 
 .prose blockquote p {
-  @apply text-gray-900 dark:text-gray-100;
+  @apply text-zinc-900 dark:text-zinc-100;
   font-style: italic;
   margin-bottom: 0;
   font-size: 1.1em;
-  line-height: 1.7;
+  line-height: 1.5;
 }
 
 .prose blockquote::before {
   content: '"';
-  @apply text-gray-400 dark:text-gray-500;
+  @apply text-zinc-400 dark:text-zinc-500;
   font-size: 3rem;
   font-weight: bold;
   position: absolute;
@@ -242,21 +254,11 @@
 
 .prose a {
   @apply text-link;
-  text-decoration: none;
+  text-decoration: underline;
   font-weight: 500;
   transition: all 0.2s ease;
   border-radius: 4px;
   padding: 0 2px;
-}
-
-.prose a:hover {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-thickness: 1px;
-}
-
-.prose a:active {
-  transform: scale(0.98);
 }
 
 /* Table styling */
@@ -264,14 +266,14 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  @apply border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800;
+  @apply border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800;
   border-radius: 8px;
   overflow: hidden;
   margin: 1.5rem 0;
 }
 
 .prose th {
-  @apply bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-600;
+  @apply bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-600;
   font-weight: 600;
   padding: 0.75rem 1rem;
   text-align: left;
@@ -279,7 +281,7 @@
 
 .prose td {
   padding: 0.75rem 1rem;
-  @apply border-b border-gray-100 dark:border-gray-700 text-gray-900 dark:text-gray-100;
+  @apply border-b border-zinc-100 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100;
 }
 
 .prose tr:last-child td {
@@ -289,7 +291,7 @@
 /* Horizontal rule */
 .prose hr {
   border: none;
-  @apply border-t border-gray-200 dark:border-gray-700;
+  @apply border-t border-zinc-200 dark:border-zinc-700;
   margin: 3rem 0;
 }
 
@@ -303,16 +305,10 @@
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.5rem;
-  @apply bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700;
+  @apply bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700;
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
-}
-
-/* Focus and accessibility */
-.prose *:focus {
-  @apply outline-2 outline-blue-600 dark:outline-blue-400;
-  outline-offset: 2px;
 }
 
 .mermaid-diagram {
@@ -333,4 +329,113 @@
   .mermaid-dark {
     display: block;
   }
+}
+
+/* ============================================
+   Line Design System
+   ============================================ */
+
+/* Border line variants */
+.border-line-default {
+  --line-color: rgba(0, 0, 0, 0.15);
+}
+
+.border-line-subtle {
+  --line-color: rgba(0, 0, 0, 0.08);
+}
+
+.border-line-accent {
+  --line-color: rgba(59, 130, 246, 0.4);
+}
+
+[data-theme='dark'] .border-line-default {
+  --line-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='dark'] .border-line-subtle {
+  --line-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .border-line-accent {
+  --line-color: rgba(96, 165, 250, 0.4);
+}
+
+/* Linear border panel borders */
+.border-line-top {
+  background: linear-gradient(to right, transparent, var(--line-color, rgba(0, 0, 0, 0.15)), transparent);
+}
+
+.border-line-right {
+  background: linear-gradient(to bottom, transparent, var(--line-color, rgba(0, 0, 0, 0.15)), transparent);
+}
+
+.border-line-bottom {
+  background: linear-gradient(to right, transparent, var(--line-color, rgba(0, 0, 0, 0.15)), transparent);
+}
+
+.border-line-left {
+  background: linear-gradient(to bottom, transparent, var(--line-color, rgba(0, 0, 0, 0.15)), transparent);
+}
+
+/* Horizontal divider */
+.divider-default {
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.15), transparent);
+}
+
+.divider-subtle {
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.divider-accent {
+  background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.4), transparent);
+}
+
+[data-theme='dark'] .divider-default {
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+[data-theme='dark'] .divider-subtle {
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+[data-theme='dark'] .divider-accent {
+  background: linear-gradient(to right, transparent, rgba(96, 165, 250, 0.4), transparent);
+}
+
+/* Vertical divider */
+.divider-vertical-default {
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.15), transparent);
+}
+
+.divider-vertical-subtle {
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.08), transparent);
+}
+
+.divider-vertical-accent {
+  background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.4), transparent);
+}
+
+[data-theme='dark'] .divider-vertical-default {
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+[data-theme='dark'] .divider-vertical-subtle {
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+[data-theme='dark'] .divider-vertical-accent {
+  background: linear-gradient(to bottom, transparent, rgba(96, 165, 250, 0.4), transparent);
+}
+
+/* ============================================
+   Sidebar Design System
+   ============================================ */
+
+/* Sidebar Navigation Item States */
+.sidebar-item-active {
+  @apply bg-zinc-100 text-zinc-900 dark:bg-zinc-800/70 dark:text-zinc-50 font-medium;
+}
+
+.sidebar-item-hover {
+  @apply hover:bg-zinc-50 dark:hover:bg-zinc-800/50;
 }

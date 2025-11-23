@@ -1,0 +1,93 @@
+---
+title: Built-in Plugins
+description: Ready-to-use plugins shipped with the builder and how to configure them.
+createdAt: 2025-11-23T19:35:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 6
+---
+
+# Built-in Plugins
+
+These plugins ship with the builder. Use them as drop-in functionality or as reference implementations when writing your own.
+
+## GitHub Repo Sync (`githubRepoSyncPlugin`)
+
+**Purpose**: cache thumbnails and `photos-manifest.json` in a Git repository so CI/CD and collaborators can reuse built assets.
+
+**How it works**
+- `beforeBuild`: clones/pulls the repo into `assets-git`, ensures the branch exists, creates `thumbnails/` and `photos-manifest.json` if missing, then symlinks them to `apps/web/public/thumbnails` and `apps/web/src/data/photos-manifest.json`.
+- `afterBuild`: if `autoPush` is enabled and there are changes, commits and pushes to the configured branch (token required).
+
+**Config**
+
+```typescript
+import { defineBuilderConfig, githubRepoSyncPlugin } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [
+    githubRepoSyncPlugin({
+      enable: true,
+      autoPush: true,
+      repo: {
+        url: 'https://github.com/you/gallery-cache',
+        token: process.env.GIT_TOKEN,
+        branch: 'main',
+      },
+    }),
+  ],
+}))
+```
+
+**Notes**
+- Needs Git in PATH. Without `token`, pull/clone works but push is skipped.
+- Safe to rerun: it reuses `assets-git` and re-clones on pull failure.
+
+## Thumbnail Storage (`@afilmory/builder/plugins/thumbnail-storage`)
+
+**Purpose**: upload generated thumbnails to storage (default or secondary) and rewrite `thumbnailUrl` to the remote location.
+
+**How it works**
+- `beforeBuild`: resolves target storage manager; can reuse default storage or a dedicated one via `storageConfig`.
+- `afterPhotoProcess`: uploads each thumbnail once per run, caches the URL, and mutates `payload.result.item.thumbnailUrl` to the remote URL.
+
+**Config (reuse default storage)**
+
+```typescript
+import thumbnailStoragePlugin from '@afilmory/builder/plugins/thumbnail-storage'
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [thumbnailStoragePlugin()],
+}))
+```
+
+**Config (separate storage)**
+
+```typescript
+import thumbnailStoragePlugin from '@afilmory/builder/plugins/thumbnail-storage'
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [
+    thumbnailStoragePlugin({
+      storageConfig: {
+        provider: 'b2',
+        bucketId: process.env.B2_BUCKET_ID!,
+        applicationKeyId: process.env.B2_KEY_ID!,
+        applicationKey: process.env.B2_KEY!,
+      },
+      prefix: 'thumbnails/',
+      contentType: 'image/jpeg',
+    }),
+  ],
+}))
+```
+
+**Notes**
+- Deduplicates uploads per run; concurrent workers share an in-memory set.
+- If upload fails, it logs and keeps the local URL instead of failing the build.
+
+## Use as references
+
+Both plugins demonstrate robust error handling, use of `runShared`, and hook placement. Start from these when authoring custom plugins.

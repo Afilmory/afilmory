@@ -17,618 +17,1830 @@ export interface FileToc {
 
 export const tocData: FileToc[] = [
   {
-    file: 'index.mdx',
-    path: '/',
-    title: 'Overview',
-    toc: [
+    "file": "index.mdx",
+    "path": "/",
+    "title": "Overview",
+    "toc": [
       {
-        id: 'heading-overview',
-        level: 1,
-        text: 'Overview',
-        children: [
+        "id": "heading-overview",
+        "level": 1,
+        "text": "Overview",
+        "children": [
           {
-            id: 'heading-features',
-            level: 2,
-            text: '🌟 Features',
-            children: [
-              {
-                id: 'heading-core-functionality',
-                level: 3,
-                text: 'Core Functionality',
-                children: [],
-              },
-              {
-                id: 'heading-image-processing',
-                level: 3,
-                text: 'Image Processing',
-                children: [],
-              },
-              {
-                id: 'heading-advanced-features',
-                level: 3,
-                text: 'Advanced Features',
-                children: [],
-              },
-            ],
+            "id": "heading-what-is-afilmory",
+            "level": 2,
+            "text": "What is Afilmory?",
+            "children": []
           },
           {
-            id: 'heading-technical-architecture',
-            level: 2,
-            text: '🏗️ Technical Architecture',
-            children: [
-              {
-                id: 'heading-frontend-tech-stack',
-                level: 3,
-                text: 'Frontend Tech Stack',
-                children: [],
-              },
-              {
-                id: 'heading-build-system',
-                level: 3,
-                text: 'Build System',
-                children: [],
-              },
-              {
-                id: 'heading-storage-architecture',
-                level: 3,
-                text: 'Storage Architecture',
-                children: [],
-              },
-            ],
+            "id": "heading-key-features",
+            "level": 2,
+            "text": "Key Features",
+            "children": []
           },
           {
-            id: 'heading-quick-start',
-            level: 2,
-            text: '🚀 Quick Start',
-            children: [
-              {
-                id: 'heading-docker-deployment',
-                level: 3,
-                text: 'Docker Deployment',
-                children: [],
-              },
-            ],
+            "id": "heading-prerequisites",
+            "level": 2,
+            "text": "Prerequisites",
+            "children": []
           },
           {
-            id: 'heading-configuration-options',
-            level: 2,
-            text: '⚙️ Configuration Options',
-            children: [
-              {
-                id: 'heading-remote-repository-configuration-repo',
-                level: 4,
-                text: 'Remote Repository Configuration (`repo`)',
-                children: [],
-              },
-              {
-                id: 'heading-storage-configuration-storage',
-                level: 4,
-                text: 'Storage Configuration (`storage`)',
-                children: [],
-              },
-              {
-                id: 'heading-build-options-options',
-                level: 4,
-                text: 'Build Options (`options`)',
-                children: [],
-              },
-              {
-                id: 'heading-performance-configuration-performance',
-                level: 4,
-                text: 'Performance Configuration (`performance`)',
-                children: [],
-              },
-              {
-                id: 'heading-logging-configuration-logging',
-                level: 4,
-                text: 'Logging Configuration (`logging`)',
-                children: [],
-              },
-            ],
+            "id": "heading-quick-start",
+            "level": 2,
+            "text": "Quick Start",
+            "children": []
           },
           {
-            id: 'heading-cli-commands',
-            level: 2,
-            text: '📋 CLI Commands',
-            children: [
+            "id": "heading-deployment-options",
+            "level": 2,
+            "text": "Deployment Options",
+            "children": [
               {
-                id: 'heading-build-commands',
-                level: 3,
-                text: 'Build Commands',
-                children: [],
+                "id": "heading-static-hosting-easiest",
+                "level": 3,
+                "text": "Static Hosting (Easiest)",
+                "children": []
               },
               {
-                id: 'heading-development-commands',
-                level: 3,
-                text: 'Development Commands',
-                children: [],
-              },
-              {
-                id: 'heading-notes',
-                level: 3,
-                text: 'Notes',
-                children: [],
-              },
-            ],
+                "id": "heading-server-side-rendering-ssr",
+                "level": 3,
+                "text": "Server-Side Rendering (SSR)",
+                "children": []
+              }
+            ]
           },
           {
-            id: 'heading-advanced-usage',
-            level: 2,
-            text: '🔧 Advanced Usage',
-            children: [
-              {
-                id: 'heading-custom-storage-provider',
-                level: 3,
-                text: 'Custom Storage Provider',
-                children: [],
-              },
-              {
-                id: 'heading-custom-image-processing',
-                level: 3,
-                text: 'Custom Image Processing',
-                children: [],
-              },
-            ],
+            "id": "heading-next-steps",
+            "level": 2,
+            "text": "Next Steps",
+            "children": []
           },
           {
-            id: 'heading-license',
-            level: 2,
-            text: '📄 License',
-            children: [],
-          },
-          {
-            id: 'heading-related-links',
-            level: 2,
-            text: '🔗 Related Links',
-            children: [],
-          },
-        ],
-      },
-    ],
+            "id": "heading-need-help",
+            "level": 2,
+            "text": "Need Help?",
+            "children": []
+          }
+        ]
+      }
+    ]
   },
   {
-    file: 'deployment/index.mdx',
-    path: '/deployment',
-    title: 'Deployment',
-    toc: [
+    "file": "architecture.mdx",
+    "path": "/architecture",
+    "title": "Architecture",
+    "toc": [
       {
-        id: 'heading-deployment',
-        level: 1,
-        text: 'Deployment',
-        children: [],
-      },
-    ],
-  },
-  {
-    file: 'deployment/cloudflare-pages.mdx',
-    path: '/deployment/cloudflare-pages',
-    title: 'Cloudflare Pages',
-    toc: [
-      {
-        id: 'heading-cloudflare-pages-deployment',
-        level: 1,
-        text: 'Cloudflare Pages Deployment',
-        children: [],
-      },
-    ],
-  },
-  {
-    file: 'deployment/docker.mdx',
-    path: '/deployment/docker',
-    title: 'Docker',
-    toc: [
-      {
-        id: 'heading-docker-deployment',
-        level: 1,
-        text: 'Docker Deployment',
-        children: [
+        "id": "heading-architecture",
+        "level": 1,
+        "text": "Architecture",
+        "children": [
           {
-            id: 'heading-tldr',
-            level: 2,
-            text: 'TL;DR',
-            children: [],
+            "id": "heading-overview",
+            "level": 2,
+            "text": "Overview",
+            "children": []
           },
           {
-            id: 'heading-quick-start',
-            level: 2,
-            text: '🚀 Quick Start',
-            children: [
+            "id": "heading-deployment-modes",
+            "level": 2,
+            "text": "Deployment Modes",
+            "children": [
               {
-                id: 'heading-prerequisites',
-                level: 3,
-                text: 'Prerequisites',
-                children: [],
+                "id": "heading-static-site-spa",
+                "level": 3,
+                "text": "Static Site (SPA)",
+                "children": []
               },
               {
-                id: 'heading-1-configuration-files',
-                level: 3,
-                text: '1. Configuration Files',
-                children: [],
+                "id": "heading-server-side-rendering-ssr",
+                "level": 3,
+                "text": "Server-Side Rendering (SSR)",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-common-components",
+            "level": 2,
+            "text": "Common Components",
+            "children": [
+              {
+                "id": "heading-builder",
+                "level": 3,
+                "text": "Builder",
+                "children": []
               },
               {
-                id: 'heading-2-dockerfile-setup',
-                level: 3,
-                text: '2. Dockerfile setup',
-                children: [],
+                "id": "heading-manifest",
+                "level": 3,
+                "text": "Manifest",
+                "children": []
               },
               {
-                id: 'heading-3-docker-compose-setup',
-                level: 3,
-                text: '3. Docker Compose Setup',
-                children: [],
+                "id": "heading-web-application",
+                "level": 3,
+                "text": "Web Application",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-data-flow",
+            "level": 2,
+            "text": "Data Flow",
+            "children": [
+              {
+                "id": "heading-static-mode-flow",
+                "level": 3,
+                "text": "Static Mode Flow",
+                "children": []
               },
               {
-                id: 'heading-4-building-and-running',
-                level: 3,
-                text: '4. Building and Running',
-                children: [
+                "id": "heading-ssr-mode-flow",
+                "level": 3,
+                "text": "SSR Mode Flow",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-choosing-the-right-mode",
+            "level": 2,
+            "text": "Choosing the Right Mode",
+            "children": []
+          },
+          {
+            "id": "heading-migration-path",
+            "level": 2,
+            "text": "Migration Path",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "builder/index.mdx",
+    "path": "/builder",
+    "title": "Builder",
+    "toc": [
+      {
+        "id": "heading-builder",
+        "level": 1,
+        "text": "Builder",
+        "children": [
+          {
+            "id": "heading-what-you-get",
+            "level": 2,
+            "text": "What you get",
+            "children": []
+          },
+          {
+            "id": "heading-how-to-run-it",
+            "level": 2,
+            "text": "How to run it",
+            "children": []
+          },
+          {
+            "id": "heading-choose-your-path",
+            "level": 2,
+            "text": "Choose your path",
+            "children": []
+          },
+          {
+            "id": "heading-prerequisites",
+            "level": 2,
+            "text": "Prerequisites",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "builder/built-ins.mdx",
+    "path": "/builder/built-ins",
+    "title": "Built-in Plugins",
+    "toc": [
+      {
+        "id": "heading-built-in-plugins",
+        "level": 1,
+        "text": "Built-in Plugins",
+        "children": [
+          {
+            "id": "heading-github-repo-sync-githubreposyncplugin",
+            "level": 2,
+            "text": "GitHub Repo Sync (`githubRepoSyncPlugin`)",
+            "children": []
+          },
+          {
+            "id": "heading-thumbnail-storage-afilmorybuilderpluginsthumbnail-storage",
+            "level": 2,
+            "text": "Thumbnail Storage (`@afilmory/builder/plugins/thumbnail-storage`)",
+            "children": []
+          },
+          {
+            "id": "heading-use-as-references",
+            "level": 2,
+            "text": "Use as references",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "builder/cli.mdx",
+    "path": "/builder/cli",
+    "title": "CLI & Run Modes",
+    "toc": [
+      {
+        "id": "heading-cli-run-modes",
+        "level": 1,
+        "text": "CLI & Run Modes",
+        "children": [
+          {
+            "id": "heading-commands",
+            "level": 2,
+            "text": "Commands",
+            "children": []
+          },
+          {
+            "id": "heading-concurrency-execution-model",
+            "level": 2,
+            "text": "Concurrency & execution model",
+            "children": []
+          },
+          {
+            "id": "heading-incremental-logic-per-file",
+            "level": 2,
+            "text": "Incremental logic (per file)",
+            "children": []
+          },
+          {
+            "id": "heading-exit-codes-help",
+            "level": 2,
+            "text": "Exit codes & help",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "builder/config.mdx",
+    "path": "/builder/config",
+    "title": "Configuration",
+    "toc": [
+      {
+        "id": "heading-configuration",
+        "level": 1,
+        "text": "Configuration",
+        "children": [
+          {
+            "id": "heading-minimal-template",
+            "level": 2,
+            "text": "Minimal template",
+            "children": []
+          },
+          {
+            "id": "heading-storage-providers",
+            "level": 2,
+            "text": "Storage providers",
+            "children": []
+          },
+          {
+            "id": "heading-system-settings",
+            "level": 2,
+            "text": "System settings",
+            "children": []
+          },
+          {
+            "id": "heading-plugins-array",
+            "level": 2,
+            "text": "Plugins array",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "builder/pipeline.mdx",
+    "path": "/builder/pipeline",
+    "title": "Processing Flow",
+    "toc": [
+      {
+        "id": "heading-processing-flow",
+        "level": 1,
+        "text": "Processing Flow",
+        "children": [
+          {
+            "id": "heading-high-level-steps",
+            "level": 2,
+            "text": "High-level steps",
+            "children": []
+          },
+          {
+            "id": "heading-incremental-rules",
+            "level": 2,
+            "text": "Incremental rules",
+            "children": []
+          },
+          {
+            "id": "heading-outputs",
+            "level": 2,
+            "text": "Outputs",
+            "children": []
+          },
+          {
+            "id": "heading-error-handling",
+            "level": 2,
+            "text": "Error handling",
+            "children": []
+          },
+          {
+            "id": "heading-performance-levers",
+            "level": 2,
+            "text": "Performance levers",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "builder/plugins.mdx",
+    "path": "/builder/plugins",
+    "title": "Plugins",
+    "toc": [
+      {
+        "id": "heading-plugins",
+        "level": 1,
+        "text": "Plugins",
+        "children": [
+          {
+            "id": "heading-lifecycle-surface",
+            "level": 2,
+            "text": "Lifecycle surface",
+            "children": []
+          },
+          {
+            "id": "heading-writing-your-first-plugin",
+            "level": 2,
+            "text": "Writing your first plugin",
+            "children": []
+          },
+          {
+            "id": "heading-patterns",
+            "level": 2,
+            "text": "Patterns",
+            "children": []
+          },
+          {
+            "id": "heading-built-in-plugins",
+            "level": 2,
+            "text": "Built-in plugins",
+            "children": [
+              {
+                "id": "heading-github-repo-sync-githubreposyncplugin",
+                "level": 3,
+                "text": "GitHub repo sync (`githubRepoSyncPlugin`)",
+                "children": []
+              },
+              {
+                "id": "heading-thumbnail-storage-afilmorybuilderpluginsthumbnail-storage",
+                "level": 3,
+                "text": "Thumbnail storage (`@afilmory/builder/plugins/thumbnail-storage`)",
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "deployment/index.mdx",
+    "path": "/deployment",
+    "title": "Deployment",
+    "toc": [
+      {
+        "id": "heading-deployment",
+        "level": 1,
+        "text": "Deployment",
+        "children": [
+          {
+            "id": "heading-deployment-options",
+            "level": 2,
+            "text": "Deployment Options",
+            "children": [
+              {
+                "id": "heading-static-hosting",
+                "level": 3,
+                "text": "Static Hosting",
+                "children": []
+              },
+              {
+                "id": "heading-server-side-rendering-ssr",
+                "level": 3,
+                "text": "Server-Side Rendering (SSR)",
+                "children": []
+              },
+              {
+                "id": "heading-docker",
+                "level": 3,
+                "text": "Docker",
+                "children": []
+              },
+              {
+                "id": "heading-multi-tenant-saas",
+                "level": 3,
+                "text": "Multi-tenant SaaS",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-deployment-workflow",
+            "level": 2,
+            "text": "Deployment Workflow",
+            "children": [
+              {
+                "id": "heading-1-build-assets",
+                "level": 3,
+                "text": "1. Build Assets",
+                "children": []
+              },
+              {
+                "id": "heading-2-build-application",
+                "level": 3,
+                "text": "2. Build Application",
+                "children": []
+              },
+              {
+                "id": "heading-3-deploy",
+                "level": 3,
+                "text": "3. Deploy",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-what-to-deploy",
+            "level": 2,
+            "text": "What to Deploy",
+            "children": [
+              {
+                "id": "heading-static-hosting-1",
+                "level": 3,
+                "text": "Static Hosting",
+                "children": []
+              },
+              {
+                "id": "heading-ssr",
+                "level": 3,
+                "text": "SSR",
+                "children": []
+              },
+              {
+                "id": "heading-docker-1",
+                "level": 3,
+                "text": "Docker",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-environment-variables",
+            "level": 2,
+            "text": "Environment Variables",
+            "children": []
+          },
+          {
+            "id": "heading-continuous-deployment",
+            "level": 2,
+            "text": "Continuous Deployment",
+            "children": []
+          },
+          {
+            "id": "heading-custom-domains",
+            "level": 2,
+            "text": "Custom Domains",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "deployment/cloudflare-pages.mdx",
+    "path": "/deployment/cloudflare-pages",
+    "title": "Cloudflare Pages",
+    "toc": [
+      {
+        "id": "heading-cloudflare-pages-deployment",
+        "level": 1,
+        "text": "Cloudflare Pages Deployment",
+        "children": [
+          {
+            "id": "heading-prerequisites",
+            "level": 2,
+            "text": "Prerequisites",
+            "children": []
+          },
+          {
+            "id": "heading-deployment-steps",
+            "level": 2,
+            "text": "Deployment Steps",
+            "children": [
+              {
+                "id": "heading-step-1-connect-repository",
+                "level": 3,
+                "text": "Step 1: Connect Repository",
+                "children": []
+              },
+              {
+                "id": "heading-step-2-configure-build-settings",
+                "level": 3,
+                "text": "Step 2: Configure Build Settings",
+                "children": []
+              },
+              {
+                "id": "heading-step-3-deploy",
+                "level": 3,
+                "text": "Step 3: Deploy",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-build-configuration",
+            "level": 2,
+            "text": "Build Configuration",
+            "children": [
+              {
+                "id": "heading-using-wranglertoml-optional",
+                "level": 3,
+                "text": "Using wrangler.toml (Optional)",
+                "children": []
+              },
+              {
+                "id": "heading-environment-variables",
+                "level": 3,
+                "text": "Environment Variables",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-custom-domain",
+            "level": 2,
+            "text": "Custom Domain",
+            "children": []
+          },
+          {
+            "id": "heading-continuous-deployment",
+            "level": 2,
+            "text": "Continuous Deployment",
+            "children": []
+          },
+          {
+            "id": "heading-performance-features",
+            "level": 2,
+            "text": "Performance Features",
+            "children": []
+          },
+          {
+            "id": "heading-build-limits",
+            "level": 2,
+            "text": "Build Limits",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          },
+          {
+            "id": "heading-next-steps",
+            "level": 2,
+            "text": "Next Steps",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "deployment/docker.mdx",
+    "path": "/deployment/docker",
+    "title": "Docker",
+    "toc": [
+      {
+        "id": "heading-docker-deployment",
+        "level": 1,
+        "text": "Docker Deployment",
+        "children": [
+          {
+            "id": "heading-prerequisites",
+            "level": 2,
+            "text": "Prerequisites",
+            "children": []
+          },
+          {
+            "id": "heading-quick-start",
+            "level": 2,
+            "text": "Quick Start",
+            "children": [
+              {
+                "id": "heading-option-1-use-pre-built-docker-setup",
+                "level": 3,
+                "text": "Option 1: Use Pre-built Docker Setup",
+                "children": []
+              },
+              {
+                "id": "heading-option-2-build-from-source",
+                "level": 3,
+                "text": "Option 2: Build from Source",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": [
+              {
+                "id": "heading-configjson",
+                "level": 3,
+                "text": "config.json",
+                "children": []
+              },
+              {
+                "id": "heading-builderconfigts",
+                "level": 3,
+                "text": "builder.config.ts",
+                "children": []
+              },
+              {
+                "id": "heading-env",
+                "level": 3,
+                "text": ".env",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-dockerfile",
+            "level": 2,
+            "text": "Dockerfile",
+            "children": []
+          },
+          {
+            "id": "heading-docker-compose",
+            "level": 2,
+            "text": "Docker Compose",
+            "children": []
+          },
+          {
+            "id": "heading-building-and-running",
+            "level": 2,
+            "text": "Building and Running",
+            "children": [
+              {
+                "id": "heading-using-docker-compose-recommended",
+                "level": 3,
+                "text": "Using Docker Compose (Recommended)",
+                "children": []
+              },
+              {
+                "id": "heading-manual-docker-build",
+                "level": 3,
+                "text": "Manual Docker Build",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-storage-providers",
+            "level": 2,
+            "text": "Storage Providers",
+            "children": []
+          },
+          {
+            "id": "heading-performance-tuning",
+            "level": 2,
+            "text": "Performance Tuning",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          },
+          {
+            "id": "heading-production-considerations",
+            "level": 2,
+            "text": "Production Considerations",
+            "children": []
+          },
+          {
+            "id": "heading-next-steps",
+            "level": 2,
+            "text": "Next Steps",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "deployment/github-pages.mdx",
+    "path": "/deployment/github-pages",
+    "title": "GitHub Pages",
+    "toc": [
+      {
+        "id": "heading-github-pages-deployment",
+        "level": 1,
+        "text": "GitHub Pages Deployment",
+        "children": [
+          {
+            "id": "heading-prerequisites",
+            "level": 2,
+            "text": "Prerequisites",
+            "children": []
+          },
+          {
+            "id": "heading-deployment-steps",
+            "level": 2,
+            "text": "Deployment Steps",
+            "children": [
+              {
+                "id": "heading-step-1-build-your-gallery",
+                "level": 3,
+                "text": "Step 1: Build Your Gallery",
+                "children": []
+              },
+              {
+                "id": "heading-step-2-prepare-files-for-deployment",
+                "level": 3,
+                "text": "Step 2: Prepare Files for Deployment",
+                "children": []
+              },
+              {
+                "id": "heading-step-3-deploy-to-github-pages",
+                "level": 3,
+                "text": "Step 3: Deploy to GitHub Pages",
+                "children": [
                   {
-                    id: 'heading-option-1-using-docker-compose-recommended',
-                    level: 4,
-                    text: 'Option 1: Using Docker Compose (Recommended)',
-                    children: [],
+                    "id": "heading-option-a-gh-pages-branch-simplest",
+                    "level": 4,
+                    "text": "Option A: gh-pages Branch (Simplest)",
+                    "children": []
                   },
                   {
-                    id: 'heading-option-2-manual-docker-build',
-                    level: 4,
-                    text: 'Option 2: Manual Docker Build',
-                    children: [],
-                  },
-                ],
+                    "id": "heading-option-b-github-actions-automated",
+                    "level": 4,
+                    "text": "Option B: GitHub Actions (Automated)",
+                    "children": []
+                  }
+                ]
               },
-            ],
+              {
+                "id": "heading-step-4-configure-github-pages",
+                "level": 3,
+                "text": "Step 4: Configure GitHub Pages",
+                "children": []
+              }
+            ]
           },
           {
-            id: 'heading-configuration-details',
-            level: 2,
-            text: '📋 Configuration Details',
-            children: [
-              {
-                id: 'heading-storage-providers',
-                level: 3,
-                text: 'Storage Providers',
-                children: [],
-              },
-              {
-                id: 'heading-performance-tuning',
-                level: 3,
-                text: 'Performance Tuning',
-                children: [],
-              },
-            ],
+            "id": "heading-custom-domain",
+            "level": 2,
+            "text": "Custom Domain",
+            "children": []
           },
-        ],
-      },
-    ],
+          {
+            "id": "heading-updating-your-gallery",
+            "level": 2,
+            "text": "Updating Your Gallery",
+            "children": []
+          },
+          {
+            "id": "heading-limitations",
+            "level": 2,
+            "text": "Limitations",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          }
+        ]
+      }
+    ]
   },
   {
-    file: 'deployment/github-action.mdx',
-    path: '/deployment/github-action',
-    title: 'Github Action',
-    toc: [
+    "file": "deployment/vercel.mdx",
+    "path": "/deployment/vercel",
+    "title": "Vercel",
+    "toc": [
       {
-        id: 'heading-github-action-deployment',
-        level: 1,
-        text: 'Github Action Deployment',
-        children: [],
-      },
-    ],
+        "id": "heading-vercel-deployment",
+        "level": 1,
+        "text": "Vercel Deployment",
+        "children": [
+          {
+            "id": "heading-prerequisites",
+            "level": 2,
+            "text": "Prerequisites",
+            "children": []
+          },
+          {
+            "id": "heading-quick-start",
+            "level": 2,
+            "text": "Quick Start",
+            "children": [
+              {
+                "id": "heading-option-1-deploy-from-git-recommended",
+                "level": 3,
+                "text": "Option 1: Deploy from Git (Recommended)",
+                "children": []
+              },
+              {
+                "id": "heading-option-2-deploy-with-pre-built-assets",
+                "level": 3,
+                "text": "Option 2: Deploy with Pre-built Assets",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-project-configuration",
+            "level": 2,
+            "text": "Project Configuration",
+            "children": [
+              {
+                "id": "heading-verceljson-optional",
+                "level": 3,
+                "text": "vercel.json (Optional)",
+                "children": []
+              },
+              {
+                "id": "heading-environment-variables",
+                "level": 3,
+                "text": "Environment Variables",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-build-process",
+            "level": 2,
+            "text": "Build Process",
+            "children": []
+          },
+          {
+            "id": "heading-performance-optimization",
+            "level": 2,
+            "text": "Performance Optimization",
+            "children": [
+              {
+                "id": "heading-use-repo-cache-plugin",
+                "level": 3,
+                "text": "Use Repo Cache Plugin",
+                "children": []
+              },
+              {
+                "id": "heading-build-caching",
+                "level": 3,
+                "text": "Build Caching",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-custom-domain",
+            "level": 2,
+            "text": "Custom Domain",
+            "children": []
+          },
+          {
+            "id": "heading-continuous-deployment",
+            "level": 2,
+            "text": "Continuous Deployment",
+            "children": []
+          },
+          {
+            "id": "heading-monitoring-and-analytics",
+            "level": 2,
+            "text": "Monitoring and Analytics",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          },
+          {
+            "id": "heading-next-steps",
+            "level": 2,
+            "text": "Next Steps",
+            "children": []
+          }
+        ]
+      }
+    ]
   },
   {
-    file: 'deployment/github-pages.mdx',
-    path: '/deployment/github-pages',
-    title: 'Github Pages',
-    toc: [
+    "file": "docs-site.mdx",
+    "path": "/docs-site",
+    "title": "Docs Site",
+    "toc": [
       {
-        id: 'heading-github-pages-deployment',
-        level: 1,
-        text: 'Github Pages Deployment',
-        children: [],
-      },
-    ],
+        "id": "heading-afilmory-docs-site",
+        "level": 1,
+        "text": "Afilmory Docs Site",
+        "children": [
+          {
+            "id": "heading-features",
+            "level": 2,
+            "text": "Features",
+            "children": []
+          },
+          {
+            "id": "heading-quick-start",
+            "level": 2,
+            "text": "Quick Start",
+            "children": [
+              {
+                "id": "heading-development",
+                "level": 3,
+                "text": "Development",
+                "children": []
+              },
+              {
+                "id": "heading-building",
+                "level": 3,
+                "text": "Building",
+                "children": []
+              },
+              {
+                "id": "heading-preview",
+                "level": 3,
+                "text": "Preview",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-project-structure",
+            "level": 2,
+            "text": "Project Structure",
+            "children": []
+          },
+          {
+            "id": "heading-writing-documentation",
+            "level": 2,
+            "text": "Writing Documentation",
+            "children": [
+              {
+                "id": "heading-file-based-routing",
+                "level": 3,
+                "text": "File-based Routing",
+                "children": []
+              },
+              {
+                "id": "heading-mdx-format",
+                "level": 3,
+                "text": "MDX Format",
+                "children": []
+              },
+              {
+                "id": "heading-frontmatter",
+                "level": 3,
+                "text": "Frontmatter",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-development-guide",
+            "level": 2,
+            "text": "Development Guide",
+            "children": [
+              {
+                "id": "heading-adding-new-content",
+                "level": 3,
+                "text": "Adding New Content",
+                "children": []
+              },
+              {
+                "id": "heading-custom-components",
+                "level": 3,
+                "text": "Custom Components",
+                "children": []
+              },
+              {
+                "id": "heading-styling",
+                "level": 3,
+                "text": "Styling",
+                "children": []
+              },
+              {
+                "id": "heading-route-generation-plugin",
+                "level": 3,
+                "text": "Route Generation Plugin",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": [
+              {
+                "id": "heading-vite-configuration",
+                "level": 3,
+                "text": "Vite Configuration",
+                "children": []
+              },
+              {
+                "id": "heading-supported-languages",
+                "level": 3,
+                "text": "Supported Languages",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-deployment",
+            "level": 2,
+            "text": "Deployment",
+            "children": []
+          },
+          {
+            "id": "heading-scripts-reference",
+            "level": 2,
+            "text": "Scripts Reference",
+            "children": []
+          },
+          {
+            "id": "heading-contributing",
+            "level": 2,
+            "text": "Contributing",
+            "children": []
+          }
+        ]
+      }
+    ]
   },
   {
-    file: 'deployment/vercel.mdx',
-    path: '/deployment/vercel',
-    title: 'Vercel',
-    toc: [
+    "file": "getting-started/quick-start.mdx",
+    "path": "/getting-started/quick-start",
+    "title": "Quick Start",
+    "toc": [
       {
-        id: 'heading-vercel-deployment',
-        level: 1,
-        text: 'Vercel Deployment',
-        children: [],
-      },
-    ],
+        "id": "heading-quick-start",
+        "level": 1,
+        "text": "Quick Start",
+        "children": [
+          {
+            "id": "heading-step-1-configure-your-site",
+            "level": 2,
+            "text": "Step 1: Configure Your Site",
+            "children": []
+          },
+          {
+            "id": "heading-step-2-choose-and-configure-storage",
+            "level": 2,
+            "text": "Step 2: Choose and Configure Storage",
+            "children": []
+          },
+          {
+            "id": "heading-step-3-generate-thumbnails-and-manifest",
+            "level": 2,
+            "text": "Step 3: Generate Thumbnails and Manifest",
+            "children": []
+          },
+          {
+            "id": "heading-step-4-preview-locally",
+            "level": 2,
+            "text": "Step 4: Preview Locally",
+            "children": []
+          },
+          {
+            "id": "heading-step-5-deploy",
+            "level": 2,
+            "text": "Step 5: Deploy",
+            "children": [
+              {
+                "id": "heading-static-hosting",
+                "level": 3,
+                "text": "Static Hosting",
+                "children": []
+              },
+              {
+                "id": "heading-server-side-rendering-ssr",
+                "level": 3,
+                "text": "Server-Side Rendering (SSR)",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-what-you-have-now",
+            "level": 2,
+            "text": "What You Have Now",
+            "children": []
+          },
+          {
+            "id": "heading-next-steps",
+            "level": 2,
+            "text": "Next Steps",
+            "children": []
+          }
+        ]
+      }
+    ]
   },
   {
-    file: 'docs-site.mdx',
-    path: '/docs-site',
-    title: 'Docs site',
-    toc: [
+    "file": "saas/index.mdx",
+    "path": "/saas",
+    "title": "SaaS Mode",
+    "toc": [
       {
-        id: 'heading-afilmory-docs-site',
-        level: 1,
-        text: 'Afilmory Docs Site',
-        children: [
+        "id": "heading-saas-mode",
+        "level": 1,
+        "text": "SaaS Mode",
+        "children": [
           {
-            id: 'heading-features',
-            level: 2,
-            text: 'Features',
-            children: [],
+            "id": "heading-why-saas",
+            "level": 2,
+            "text": "Why SaaS?",
+            "children": []
           },
           {
-            id: 'heading-quick-start',
-            level: 2,
-            text: 'Quick Start',
-            children: [
-              {
-                id: 'heading-development',
-                level: 3,
-                text: 'Development',
-                children: [],
-              },
-              {
-                id: 'heading-building',
-                level: 3,
-                text: 'Building',
-                children: [],
-              },
-              {
-                id: 'heading-preview',
-                level: 3,
-                text: 'Preview',
-                children: [],
-              },
-            ],
+            "id": "heading-what-you-can-do",
+            "level": 2,
+            "text": "What you can do",
+            "children": []
           },
           {
-            id: 'heading-project-structure',
-            level: 2,
-            text: 'Project Structure',
-            children: [],
+            "id": "heading-architecture-at-a-glance",
+            "level": 2,
+            "text": "Architecture at a glance",
+            "children": []
           },
           {
-            id: 'heading-writing-documentation',
-            level: 2,
-            text: 'Writing Documentation',
-            children: [
-              {
-                id: 'heading-file-based-routing',
-                level: 3,
-                text: 'File-based Routing',
-                children: [],
-              },
-              {
-                id: 'heading-mdx-format',
-                level: 3,
-                text: 'MDX Format',
-                children: [],
-              },
-              {
-                id: 'heading-frontmatter',
-                level: 3,
-                text: 'Frontmatter',
-                children: [],
-              },
-            ],
-          },
-          {
-            id: 'heading-development-guide',
-            level: 2,
-            text: 'Development Guide',
-            children: [
-              {
-                id: 'heading-adding-new-content',
-                level: 3,
-                text: 'Adding New Content',
-                children: [],
-              },
-              {
-                id: 'heading-custom-components',
-                level: 3,
-                text: 'Custom Components',
-                children: [],
-              },
-              {
-                id: 'heading-styling',
-                level: 3,
-                text: 'Styling',
-                children: [],
-              },
-              {
-                id: 'heading-route-generation-plugin',
-                level: 3,
-                text: 'Route Generation Plugin',
-                children: [],
-              },
-            ],
-          },
-          {
-            id: 'heading-configuration',
-            level: 2,
-            text: 'Configuration',
-            children: [
-              {
-                id: 'heading-vite-configuration',
-                level: 3,
-                text: 'Vite Configuration',
-                children: [],
-              },
-              {
-                id: 'heading-supported-languages',
-                level: 3,
-                text: 'Supported Languages',
-                children: [],
-              },
-            ],
-          },
-          {
-            id: 'heading-deployment',
-            level: 2,
-            text: 'Deployment',
-            children: [],
-          },
-          {
-            id: 'heading-scripts-reference',
-            level: 2,
-            text: 'Scripts Reference',
-            children: [],
-          },
-          {
-            id: 'heading-contributing',
-            level: 2,
-            text: 'Contributing',
-            children: [],
-          },
-        ],
-      },
-    ],
+            "id": "heading-licensing-note",
+            "level": 2,
+            "text": "Licensing note",
+            "children": []
+          }
+        ]
+      }
+    ]
   },
   {
-    file: 'storage/index.mdx',
-    path: '/storage',
-    title: 'Storage providers',
-    toc: [
+    "file": "saas/architecture.mdx",
+    "path": "/saas/architecture",
+    "title": "SaaS Architecture",
+    "toc": [
       {
-        id: 'heading-storage-providers',
-        level: 1,
-        text: 'Storage Providers',
-        children: [
+        "id": "heading-saas-architecture",
+        "level": 1,
+        "text": "SaaS Architecture",
+        "children": [
           {
-            id: 'heading-supported-providers',
-            level: 2,
-            text: 'Supported Providers',
-            children: [
-              {
-                id: 'heading-s3-compatible-storage',
-                level: 3,
-                text: 'S3-Compatible Storage',
-                children: [],
-              },
-              {
-                id: 'heading-github-storage',
-                level: 3,
-                text: 'GitHub Storage',
-                children: [],
-              },
-              {
-                id: 'heading-local-file-system',
-                level: 3,
-                text: 'Local File System',
-                children: [],
-              },
-            ],
+            "id": "heading-tenant-model",
+            "level": 2,
+            "text": "Tenant model",
+            "children": []
           },
           {
-            id: 'heading-photo-processing-workflow',
-            level: 2,
-            text: 'Photo Processing Workflow',
-            children: [
-              {
-                id: 'heading-image-processing-pipeline',
-                level: 3,
-                text: 'Image Processing Pipeline',
-                children: [],
-              },
-              {
-                id: 'heading-storage-organization',
-                level: 3,
-                text: 'Storage Organization',
-                children: [],
-              },
-              {
-                id: 'heading-processing-commands',
-                level: 3,
-                text: 'Processing Commands',
-                children: [],
-              },
-            ],
+            "id": "heading-domains",
+            "level": 2,
+            "text": "Domains",
+            "children": []
           },
           {
-            id: 'heading-environment-specific-configurations',
-            level: 2,
-            text: 'Environment-Specific Configurations',
-            children: [
-              {
-                id: 'heading-development-setup',
-                level: 3,
-                text: 'Development Setup',
-                children: [],
-              },
-              {
-                id: 'heading-production-setup',
-                level: 3,
-                text: 'Production Setup',
-                children: [],
-              },
-            ],
+            "id": "heading-tenant-resolution-core",
+            "level": 2,
+            "text": "Tenant resolution (core)",
+            "children": []
           },
           {
-            id: 'heading-api-limitations',
-            level: 2,
-            text: 'API Limitations',
-            children: [
-              {
-                id: 'heading-github-storage-limits',
-                level: 3,
-                text: 'GitHub Storage Limits',
-                children: [],
-              },
-              {
-                id: 'heading-storage-provider-comparison',
-                level: 3,
-                text: 'Storage Provider Comparison',
-                children: [],
-              },
-            ],
+            "id": "heading-oauth-gateway-flow",
+            "level": 2,
+            "text": "OAuth gateway flow",
+            "children": []
           },
           {
-            id: 'heading-security-considerations',
-            level: 2,
-            text: 'Security Considerations',
-            children: [
-              {
-                id: 'heading-s3-bucket-policies',
-                level: 3,
-                text: 'S3 Bucket Policies',
-                children: [],
-              },
-              {
-                id: 'heading-github-repository-settings',
-                level: 3,
-                text: 'GitHub Repository Settings',
-                children: [],
-              },
-              {
-                id: 'heading-environment-variables',
-                level: 3,
-                text: 'Environment Variables',
-                children: [],
-              },
-            ],
+            "id": "heading-data-path",
+            "level": 2,
+            "text": "Data path",
+            "children": []
           },
-        ],
-      },
-    ],
+          {
+            "id": "heading-static-assets-roots",
+            "level": 2,
+            "text": "Static assets roots",
+            "children": []
+          },
+          {
+            "id": "heading-billing-plans",
+            "level": 2,
+            "text": "Billing & plans",
+            "children": []
+          },
+          {
+            "id": "heading-root-account-provisioning",
+            "level": 2,
+            "text": "Root account provisioning",
+            "children": []
+          }
+        ]
+      }
+    ]
   },
+  {
+    "file": "saas/cms.mdx",
+    "path": "/saas/cms",
+    "title": "CMS & Live Updates",
+    "toc": [
+      {
+        "id": "heading-cms-live-updates",
+        "level": 1,
+        "text": "CMS & Live Updates",
+        "children": [
+          {
+            "id": "heading-how-it-works",
+            "level": 2,
+            "text": "How it works",
+            "children": []
+          },
+          {
+            "id": "heading-editing-flow-dashboardcms",
+            "level": 2,
+            "text": "Editing flow (dashboard/CMS)",
+            "children": []
+          },
+          {
+            "id": "heading-when-to-run-the-builder",
+            "level": 2,
+            "text": "When to run the builder",
+            "children": []
+          },
+          {
+            "id": "heading-caching-behavior",
+            "level": 2,
+            "text": "Caching behavior",
+            "children": []
+          },
+          {
+            "id": "heading-permissions",
+            "level": 2,
+            "text": "Permissions",
+            "children": []
+          },
+          {
+            "id": "heading-gotchas",
+            "level": 2,
+            "text": "Gotchas",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "saas/deployment.mdx",
+    "path": "/saas/deployment",
+    "title": "SaaS Deployment",
+    "toc": [
+      {
+        "id": "heading-saas-deployment",
+        "level": 1,
+        "text": "SaaS Deployment",
+        "children": [
+          {
+            "id": "heading-components",
+            "level": 2,
+            "text": "Components",
+            "children": []
+          },
+          {
+            "id": "heading-domain-model-dns",
+            "level": 2,
+            "text": "Domain model & DNS",
+            "children": []
+          },
+          {
+            "id": "heading-quick-start-with-docker-core",
+            "level": 2,
+            "text": "Quick start with Docker (core)",
+            "children": [
+              {
+                "id": "heading-minimal-env-core",
+                "level": 3,
+                "text": "Minimal env (core)",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-oauth-gateway",
+            "level": 2,
+            "text": "OAuth Gateway",
+            "children": []
+          },
+          {
+            "id": "heading-first-login-flow",
+            "level": 2,
+            "text": "First-login flow",
+            "children": []
+          },
+          {
+            "id": "heading-request-routing",
+            "level": 2,
+            "text": "Request routing",
+            "children": []
+          },
+          {
+            "id": "heading-deployment-checklist",
+            "level": 2,
+            "text": "Deployment checklist",
+            "children": []
+          },
+          {
+            "id": "heading-licensing-notice-commercial-use",
+            "level": 2,
+            "text": "Licensing notice (commercial use)",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "storage/providers/index.mdx",
+    "path": "/storage/providers",
+    "title": "Storage Providers",
+    "toc": [
+      {
+        "id": "heading-storage-providers",
+        "level": 1,
+        "text": "Storage Providers",
+        "children": [
+          {
+            "id": "heading-available-providers",
+            "level": 2,
+            "text": "Available Providers",
+            "children": [
+              {
+                "id": "heading-s3-s3-compatiblestorageproviderss3",
+                "level": 3,
+                "text": "[S3 / S3-Compatible](/storage/providers/s3)",
+                "children": []
+              },
+              {
+                "id": "heading-b2-backblaze-b2storageprovidersb2",
+                "level": 3,
+                "text": "[B2 (Backblaze B2)](/storage/providers/b2)",
+                "children": []
+              },
+              {
+                "id": "heading-githubstorageprovidersgithub",
+                "level": 3,
+                "text": "[GitHub](/storage/providers/github)",
+                "children": []
+              },
+              {
+                "id": "heading-localstorageproviderslocal",
+                "level": 3,
+                "text": "[Local](/storage/providers/local)",
+                "children": []
+              },
+              {
+                "id": "heading-eaglestorageproviderseagle",
+                "level": 3,
+                "text": "[Eagle](/storage/providers/eagle)",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-choosing-a-provider",
+            "level": 2,
+            "text": "Choosing a Provider",
+            "children": []
+          },
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "storage/providers/b2.mdx",
+    "path": "/storage/providers/b2",
+    "title": "B2 (Backblaze B2)",
+    "toc": [
+      {
+        "id": "heading-b2-backblaze-b2-storage",
+        "level": 1,
+        "text": "B2 (Backblaze B2) Storage",
+        "children": [
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": []
+          },
+          {
+            "id": "heading-environment-variables",
+            "level": 2,
+            "text": "Environment Variables",
+            "children": []
+          },
+          {
+            "id": "heading-getting-b2-credentials",
+            "level": 2,
+            "text": "Getting B2 Credentials",
+            "children": []
+          },
+          {
+            "id": "heading-cdn-integration",
+            "level": 2,
+            "text": "CDN Integration",
+            "children": []
+          },
+          {
+            "id": "heading-prefix-organization",
+            "level": 2,
+            "text": "Prefix Organization",
+            "children": []
+          },
+          {
+            "id": "heading-cost-considerations",
+            "level": 2,
+            "text": "Cost Considerations",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "storage/providers/eagle.mdx",
+    "path": "/storage/providers/eagle",
+    "title": "Eagle Storage",
+    "toc": [
+      {
+        "id": "heading-eagle-storage",
+        "level": 1,
+        "text": "Eagle Storage",
+        "children": [
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": []
+          },
+          {
+            "id": "heading-path-configuration",
+            "level": 2,
+            "text": "Path Configuration",
+            "children": [
+              {
+                "id": "heading-librarypath",
+                "level": 3,
+                "text": "libraryPath",
+                "children": []
+              },
+              {
+                "id": "heading-distpath",
+                "level": 3,
+                "text": "distPath",
+                "children": []
+              },
+              {
+                "id": "heading-baseurl",
+                "level": 3,
+                "text": "baseUrl",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-filtering",
+            "level": 2,
+            "text": "Filtering",
+            "children": [
+              {
+                "id": "heading-include-rules",
+                "level": 3,
+                "text": "Include Rules",
+                "children": []
+              },
+              {
+                "id": "heading-exclude-rules",
+                "level": 3,
+                "text": "Exclude Rules",
+                "children": []
+              },
+              {
+                "id": "heading-empty-filters",
+                "level": 3,
+                "text": "Empty Filters",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-folder-as-tag",
+            "level": 2,
+            "text": "Folder as Tag",
+            "children": []
+          },
+          {
+            "id": "heading-use-cases",
+            "level": 2,
+            "text": "Use Cases",
+            "children": []
+          },
+          {
+            "id": "heading-best-practices",
+            "level": 2,
+            "text": "Best Practices",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "storage/providers/github.mdx",
+    "path": "/storage/providers/github",
+    "title": "GitHub Storage",
+    "toc": [
+      {
+        "id": "heading-github-storage",
+        "level": 1,
+        "text": "GitHub Storage",
+        "children": [
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": []
+          },
+          {
+            "id": "heading-environment-variables",
+            "level": 2,
+            "text": "Environment Variables",
+            "children": []
+          },
+          {
+            "id": "heading-getting-a-github-token",
+            "level": 2,
+            "text": "Getting a GitHub Token",
+            "children": []
+          },
+          {
+            "id": "heading-repository-setup",
+            "level": 2,
+            "text": "Repository Setup",
+            "children": []
+          },
+          {
+            "id": "heading-limitations",
+            "level": 2,
+            "text": "Limitations",
+            "children": []
+          },
+          {
+            "id": "heading-raw-url-cdn",
+            "level": 2,
+            "text": "Raw URL CDN",
+            "children": []
+          },
+          {
+            "id": "heading-private-repositories",
+            "level": 2,
+            "text": "Private Repositories",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "storage/providers/local.mdx",
+    "path": "/storage/providers/local",
+    "title": "Local Storage",
+    "toc": [
+      {
+        "id": "heading-local-storage",
+        "level": 1,
+        "text": "Local Storage",
+        "children": [
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": []
+          },
+          {
+            "id": "heading-path-configuration",
+            "level": 2,
+            "text": "Path Configuration",
+            "children": [
+              {
+                "id": "heading-basepath",
+                "level": 3,
+                "text": "basePath",
+                "children": []
+              },
+              {
+                "id": "heading-distpath-optional",
+                "level": 3,
+                "text": "distPath (Optional)",
+                "children": []
+              },
+              {
+                "id": "heading-baseurl",
+                "level": 3,
+                "text": "baseUrl",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-use-cases",
+            "level": 2,
+            "text": "Use Cases",
+            "children": []
+          },
+          {
+            "id": "heading-file-organization",
+            "level": 2,
+            "text": "File Organization",
+            "children": []
+          },
+          {
+            "id": "heading-excluding-files",
+            "level": 2,
+            "text": "Excluding Files",
+            "children": []
+          },
+          {
+            "id": "heading-serving-originals",
+            "level": 2,
+            "text": "Serving Originals",
+            "children": []
+          },
+          {
+            "id": "heading-best-practices",
+            "level": 2,
+            "text": "Best Practices",
+            "children": []
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "storage/providers/s3.mdx",
+    "path": "/storage/providers/s3",
+    "title": "S3 / S3-Compatible",
+    "toc": [
+      {
+        "id": "heading-s3-s3-compatible-storage",
+        "level": 1,
+        "text": "S3 / S3-Compatible Storage",
+        "children": [
+          {
+            "id": "heading-configuration",
+            "level": 2,
+            "text": "Configuration",
+            "children": []
+          },
+          {
+            "id": "heading-environment-variables",
+            "level": 2,
+            "text": "Environment Variables",
+            "children": []
+          },
+          {
+            "id": "heading-supported-services",
+            "level": 2,
+            "text": "Supported Services",
+            "children": []
+          },
+          {
+            "id": "heading-best-practices",
+            "level": 2,
+            "text": "Best Practices",
+            "children": [
+              {
+                "id": "heading-custom-domain-cdn",
+                "level": 3,
+                "text": "Custom Domain (CDN)",
+                "children": []
+              },
+              {
+                "id": "heading-prefix-organization",
+                "level": 3,
+                "text": "Prefix Organization",
+                "children": []
+              },
+              {
+                "id": "heading-download-concurrency",
+                "level": 3,
+                "text": "Download Concurrency",
+                "children": []
+              },
+              {
+                "id": "heading-exclude-patterns",
+                "level": 3,
+                "text": "Exclude Patterns",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "heading-troubleshooting",
+            "level": 2,
+            "text": "Troubleshooting",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
 ]
 
 // Helper function to find TOC data by file path
 export function getTocByFile(filePath: string): TocItem[] | undefined {
-  const item = tocData.find((item) => item.file === filePath)
+  const item = tocData.find(item => item.file === filePath)
   return item?.toc
 }
 
 // Helper function to find TOC data by route path
 export function getTocByPath(routePath: string): TocItem[] | undefined {
-  const item = tocData.find((item) => item.path === routePath)
+  const item = tocData.find(item => item.path === routePath)
   return item?.toc
 }
 
 // Helper function to flatten TOC tree into a simple array
 export function flattenToc(toc: TocItem[]): TocItem[] {
   const result: TocItem[] = []
-
+  
   function traverse(items: TocItem[]) {
     for (const item of items) {
       result.push({
@@ -641,7 +1853,7 @@ export function flattenToc(toc: TocItem[]): TocItem[] {
       }
     }
   }
-
+  
   traverse(toc)
   return result
 }
@@ -649,7 +1861,7 @@ export function flattenToc(toc: TocItem[]): TocItem[] {
 // Helper function to get all headings at a specific level
 export function getHeadingsByLevel(toc: TocItem[], level: number): TocItem[] {
   const result: TocItem[] = []
-
+  
   function traverse(items: TocItem[]) {
     for (const item of items) {
       if (item.level === level) {
@@ -660,7 +1872,7 @@ export function getHeadingsByLevel(toc: TocItem[], level: number): TocItem[] {
       }
     }
   }
-
+  
   traverse(toc)
   return result
 }

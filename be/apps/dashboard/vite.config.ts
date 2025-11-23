@@ -15,7 +15,6 @@ import { astPlugin } from '../../../plugins/vite/ast'
 import PKG from './package.json'
 
 const ROOT = fileURLToPath(new URL('./', import.meta.url))
-const API_TARGET = process.env.CORE_API_URL || 'http://localhost:3000'
 
 export default defineConfig({
   plugins: [
@@ -58,7 +57,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: API_TARGET,
+        target: 'http://localhost:1841',
         changeOrigin: true,
         xfwd: true,
         // keep path as-is so /api -> backend /api

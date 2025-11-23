@@ -296,6 +296,36 @@ const zhCnUiSchema = {
           },
         },
       },
+      'storage-plans': {
+        title: '存储计划',
+        description: '管理托管存储方案的目录、定价以及 Creem 商品映射。',
+        fields: {
+          catalog: {
+            title: '计划目录',
+            description: '存储计划的名称/描述/容量与启用状态，建议在控制台中编辑，无需手填 JSON。',
+            placeholder: '通过控制台编辑',
+            helper: '包含 plan id、name、description、capacityBytes、isActive 等字段。',
+          },
+          pricing: {
+            title: '存储定价',
+            description: '每个存储计划的月费与币种。',
+            placeholder: '通过控制台编辑',
+            helper: '留空回退到默认值或隐藏价格。',
+          },
+          products: {
+            title: 'Creem 商品',
+            description: '为存储计划绑定 Creem 商品 ID，用于结算与用户门户。',
+            placeholder: '通过控制台编辑',
+            helper: '留空则该计划不会展示升级入口。',
+          },
+          'managed-provider': {
+            title: '托管存储 Provider Key',
+            description: '与存储提供商列表中的配置项对应（例如 b2-managed）。',
+            placeholder: 'b2-managed',
+            helper: '后端将用该 Provider 为托管存储租户发放上传/读取权限。',
+          },
+        },
+      },
       oauth: {
         title: 'OAuth 登录渠道',
         description: '统一配置所有租户可用的第三方登录渠道。',

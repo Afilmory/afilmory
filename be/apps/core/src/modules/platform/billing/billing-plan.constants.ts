@@ -7,6 +7,7 @@ export const BILLING_PLAN_DEFINITIONS: Record<BillingPlanId, BillingPlanDefiniti
     id: 'free',
     name: 'Free',
     description: '默认入门方案，适用于个人与试用场景。',
+    includedStorageBytes: 0,
     quotas: {
       monthlyAssetProcessLimit: 300,
       libraryItemLimit: 500,
@@ -18,6 +19,7 @@ export const BILLING_PLAN_DEFINITIONS: Record<BillingPlanId, BillingPlanDefiniti
     id: 'pro',
     name: 'Pro',
     description: '专业方案，预留给即将上线的订阅。',
+    includedStorageBytes: 0,
     quotas: {
       monthlyAssetProcessLimit: 1000,
       libraryItemLimit: 5000,
@@ -29,6 +31,7 @@ export const BILLING_PLAN_DEFINITIONS: Record<BillingPlanId, BillingPlanDefiniti
     id: 'friend',
     name: 'Friend',
     description: '内部使用的好友方案，没有任何限制，仅超级管理员可设置。',
+    includedStorageBytes: null,
     quotas: {
       monthlyAssetProcessLimit: null,
       libraryItemLimit: null,

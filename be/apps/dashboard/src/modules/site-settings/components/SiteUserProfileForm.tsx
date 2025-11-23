@@ -5,7 +5,7 @@ import { startTransition, useCallback, useEffect, useId, useMemo, useState } fro
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { MainPageLayout, useMainPageLayout } from '~/components/layouts/MainPageLayout'
 import { useBlock } from '~/hooks/useBlock'
 import { getRequestErrorMessage } from '~/lib/errors'

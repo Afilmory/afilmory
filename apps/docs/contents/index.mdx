@@ -1,220 +1,76 @@
 ---
 title: Overview
+description: Deploy a photo gallery in minutes—no database required.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-14T21:52:55+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 1
 ---
 
 # Overview
 
-<p align="center">
-  <img
-    src="https://github.com/Afilmory/assets/blob/main/afilmory-readme.webp?raw=true"
-    alt="Afilmory"
-    width="100%"
-  />
-</p>
+Afilmory is a platform that transforms your photo collection into a fast, modern gallery. No database required—just point it at your photos and deploy.
 
-Afilmory (/əˈfɪlməri/, "uh-FIL-muh-ree") is a term created for personal photography websites, blending Auto Focus (AF), aperture (light control), film (vintage medium), and memory (captured moments).
+## What is Afilmory?
 
-A modern photo gallery website built with React + TypeScript, supporting automatic photo synchronization from multiple storage sources (S3, GitHub), featuring high-performance WebGL rendering, masonry layout, EXIF information display, thumbnail generation, and more.
+Afilmory turns a photo folder (S3/B2/GitHub/local) into a fast, modern gallery. It processes your photos, generates thumbnails and metadata, and creates a beautiful web interface for browsing and viewing your collection.
 
-Live Photo Galleries:
+## Key Features
 
-- [afilmory.innei.in](https://afilmory.innei.in)
-- [gallery.mxte.cc](https://gallery.mxte.cc)
-- [photography.pseudoyu.com](https://photography.pseudoyu.com)
-- [afilmory.magren.cc](https://afilmory.magren.cc)
+- **WebGL-powered viewer** - Smooth zoom, pan, and navigation
+- **Masonry grid layout** - Responsive photo grid with blurhash placeholders
+- **Rich metadata** - EXIF data, Live Photo support, HDR detection, Fujifilm recipe details
+- **Map view** - Visualize geotagged photos on an interactive map
+- **SEO-ready** - Server-side rendering support for better discoverability
+- **No database** - Everything runs from static files and manifests
 
-## 🌟 Features
+## Prerequisites
 
-### Core Functionality
+Before you begin, make sure you have:
 
-- 🖼️ **High-Performance WebGL Image Renderer** - Custom WebGL component with smooth zoom and pan operations
-- 📱 **Responsive Masonry Layout** - Powered by Masonic, adapts to different screen sizes
-- 🎨 **Modern UI Design** - Built with Tailwind CSS and Radix UI component library
-- ⚡ **Incremental Sync** - Smart change detection, processes only new or modified photos
-- 🌐 **i18n** - Multi-language support
-- 🔗 **OpenGraph** - OpenGraph metadata for social media sharing
+- **Git** installed
+- **pnpm** package manager
+- **Node.js 20+** installed
+- Access to a photo source (S3/B2/GitHub/local/Eagle)
 
-### Image Processing
+## Quick Start
 
-- 🔄 **HEIC/HEIF Format Support** - Automatic conversion of Apple device HEIC format
-- 📷 **TIFF Format Support** - Automatic conversion of TIFF format
-- 🖼️ **Smart Thumbnail Generation** - Multi-size thumbnails for optimized loading performance
-- 📊 **EXIF Information Display** - Complete shooting parameters including camera model, focal length, aperture, etc.
-- 🌈 **Blurhash Placeholders** - Elegant image loading experience
-- 📱 **Live Photo Support** - Detection and display of iPhone Live Photos
-- ☀️ **HDR Image Support** - Display HDR images
+Get your gallery running in 3 steps:
 
-### Advanced Features
+1. **Copy config**: `cp config.example.json config.json`, then set your name, links, and accent color
+2. **Choose storage**: Go to [Storage Providers](/storage/providers) and configure your photo source
+3. **Build and deploy**: Run `pnpm run build:manifest` to generate thumbnails and manifest, then deploy
 
-- 🎛️ **Fujifilm Recipe** - Read and display Fujifilm camera film simulation settings
-- 🔍 **Fullscreen Viewer** - Image viewer with gesture support
-- 🏷️ **File System Tags** - Auto-generated tags based on file system
-- ⚡ **Concurrent Processing** - Multi-process/multi-thread concurrent processing support
-- 🗂️ **Multi-Storage Support** - S3, GitHub, and other storage backends
-- 📷 **Share Image** - Share image to social media or embed iframe to your website
-- 🗺️ **Interactive Map Explorer** - Geographic visualization of photos with GPS coordinates from EXIF data using MapLibre
+For detailed instructions, see the [Quick Start Guide](/getting-started/quick-start).
 
-## 🏗️ Technical Architecture
+## Deployment Options
 
-### Frontend Tech Stack
+Afilmory supports two deployment modes:
 
-- **React 19** - Latest React version with Compiler
-- **TypeScript** - Complete type safety
-- **Vite** - Modern build tool
-- **Tailwind CSS** - Atomic CSS framework
-- **Radix UI** - Accessible component library
-- **Jotai** - State management
-- **TanStack Query** - Data fetching and caching
-- **React Router 7** - Routing management
-- **i18next** - Internationalization
+### Static Hosting (Easiest)
 
-### Build System
+Publish your built files to any static host—GitHub Pages, Cloudflare Pages, or any CDN. No servers, no maintenance.
 
-- **Node.js** - Server-side runtime
-- **Sharp** - High-performance image processing
-- **AWS SDK** - S3 storage operations
-- **Worker Threads/Cluster** - Concurrent processing
-- **EXIF-Reader** - EXIF data extraction
+- **Best for**: Simple deployments, cost-effective hosting
+- **Limitations**: Basic SEO, no server-rendered meta tags
 
-### Storage Architecture
+### Server-Side Rendering (SSR)
 
-Designed with adapter pattern, supporting multiple storage backends:
+Use the Next.js wrapper for enhanced SEO and Open Graph support. Deploy to Vercel or any Node.js host.
 
-- **S3-Compatible Storage** - AWS S3, MinIO, Alibaba Cloud OSS, etc.
-- **GitHub Storage** - Using GitHub repository as image storage
+- **Best for**: Better SEO, social media previews, dynamic meta tags
+- **Requirements**: Node.js runtime
 
-## 🚀 Quick Start
+See [Architecture](/architecture) for a detailed comparison.
 
-### Docker Deployment
+## Next Steps
 
-[Docker Deployment](https://github.com/Afilmory/docker)
+- **New to Afilmory?** Start with the [Quick Start Guide](/getting-started/quick-start)
+- **Choose storage**: See [Storage Providers](/storage/providers) for setup instructions
+- **Understand the system**: Read [Architecture](/architecture) to learn how it works
+- **Deploy**: Follow the [Deployment Guide](/deployment) for your chosen platform
 
-## ⚙️ Configuration Options
+## Need Help?
 
-#### Remote Repository Configuration (`repo`)
-
-To achieve incremental builds in CI, it is necessary to configure a cache repository, which will pull the cache before each build and upload the build results after the build.
-
-```json
-{
-  "repo": {
-    "enable": true,
-    "url": "https://github.com/username/gallery-assets"
-  }
-}
-```
-
-This will automatically pull resources from the remote repository, avoiding rebuilds each time.
-
-**In order to achieve uploading to the git repository, you need to provide a `GIT_TOKEN` and write it in the `.env` file.**
-
-#### Storage Configuration (`storage`)
-
-- `provider`: Storage provider (`s3` | `github`)
-- `bucket`: S3 bucket name
-- `region`: S3 region
-- `endpoint`: S3 endpoint (optional)
-- `prefix`: File prefix
-- `customDomain`: Custom domain
-- `excludeRegex`: Regular expression to exclude files (optional)
-
-#### System Processing (`system.processing`)
-
-- `defaultConcurrency`: Default concurrency
-- `enableLivePhotoDetection`: Enable Live Photo detection
-- `digestSuffixLength`: Digest suffix length for deterministic IDs
-- `supportedFormats`: Optional allowlist of file extensions to process
-
-#### System Observability (`system.observability`)
-
-- `showProgress`: Show build progress
-- `showDetailedStats`: Show detailed statistics
-- `logging.verbose`: Verbose logging
-- `logging.level`: Log level (`info` | `warn` | `error` | `debug`)
-- `logging.outputToFile`: Output to file
-- `performance.worker.workerCount`: Number of worker processes
-- `performance.worker.timeout`: Worker timeout (milliseconds)
-- `performance.worker.useClusterMode`: Enable cluster mode
-
-## 📋 CLI Commands
-
-### Build Commands
-
-```bash
-# View help
-pnpm run build:manifest -- --help
-
-# Incremental update (default)
-pnpm run build:manifest
-
-# Force full update
-pnpm run build:manifest -- --force
-
-# Only regenerate thumbnails
-pnpm run build:manifest -- --force-thumbnails
-
-# Only regenerate manifest
-pnpm run build:manifest -- --force-manifest
-```
-
-### Development Commands
-
-```bash
-# Start development server
-pnpm dev
-
-# Build production version
-pnpm build
-```
-
-### Notes
-
-- Ensure your S3 bucket already contains photo files
-- If using remote repository, configure `builder.config.ts` first
-
-## 🔧 Advanced Usage
-
-### Custom Storage Provider
-
-Implement the `StorageProvider` interface to support new storage backends:
-
-```typescript
-import { StorageProvider } from './src/core/storage/interfaces'
-
-class MyStorageProvider implements StorageProvider {
-  async getFile(key: string): Promise<Buffer | null> {
-    // Implement file retrieval logic
-  }
-
-  async listImages(): Promise<StorageObject[]> {
-    // Implement image list retrieval logic
-  }
-
-  // ... other methods
-}
-```
-
-### Custom Image Processing
-
-Add custom processors in the `src/core/image/` directory:
-
-```typescript
-export async function customImageProcessor(buffer: Buffer) {
-  // Custom image processing logic
-  return processedBuffer
-}
-```
-
-## 📄 License
-
-MIT License © 2025 Innei
-
-## 🔗 Related Links
-
-- [Live Demo](https://gallery.innei.in)
-- [Personal Website](https://innei.in)
-- [GitHub](https://github.com/innei)
-
-If this project helps you, please give it a ⭐️ Star for support!
+- Check the [Storage Providers](/storage/providers) section for setup examples
+- Review [Builder Commands](/builder) for common build operations
+- File an issue on GitHub or check deployment guides for troubleshooting

@@ -2,7 +2,7 @@ import { Button } from '@afilmory/ui'
 import { useMemo } from 'react'
 import { useShallow } from 'zustand/shallow'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 
 import { AutoSelect } from '../AutoSelect'
 import { usePhotoUploadStore } from '../store'

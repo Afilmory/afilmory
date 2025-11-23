@@ -1,0 +1,91 @@
+---
+title: Storage Providers
+description: Choose a storage provider for your photo collection.
+createdAt: 2025-11-14T22:40:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 30
+---
+
+# Storage Providers
+
+Afilmory supports multiple storage providers for your photo collection. Choose the one that best fits your needs, budget, and technical requirements.
+
+## Available Providers
+
+### [S3 / S3-Compatible](/storage/providers/s3)
+
+**Best for production deployments**
+
+- Scalable and reliable
+- CDN-friendly with custom domains
+- Works with AWS S3, MinIO, Cloudflare R2, and other S3-compatible services
+- Recommended for large collections
+
+### [B2 (Backblaze B2)](/storage/providers/b2)
+
+**Cost-effective cloud storage**
+
+- S3-compatible API
+- Lower cost than AWS S3
+- Good performance and reliability
+- Great for budget-conscious deployments
+
+### [GitHub](/storage/providers/github)
+
+**Simplest setup for small galleries**
+
+- No additional storage costs
+- Easy to manage with Git
+- Perfect for demos and small collections
+- Limited by repository size (~1GB recommended)
+
+### [Local](/storage/providers/local)
+
+**Development and self-hosting**
+
+- Fastest for local development
+- No external dependencies
+- Perfect for single-node deployments
+- Use when storage and app are on the same machine
+
+### [Eagle](/storage/providers/eagle)
+
+**Direct Eagle 4 integration**
+
+- Publish directly from Eagle library
+- Filter by folders and tags
+- Great if you already use Eagle for photo management
+- Supports folder-to-tag mapping
+
+## Choosing a Provider
+
+**For production:**
+- Use **S3** or **B2** for scalability and reliability
+
+**For development:**
+- Use **Local** for fastest iteration
+- Use **GitHub** for simple demos
+
+**For existing workflows:**
+- Use **Eagle** if you already manage photos there
+- Use **GitHub** if your photos are already in a repo
+
+## Configuration
+
+All providers are configured in `builder.config.ts`:
+
+```typescript
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 's3', // or 'b2', 'github', 'local', 'eagle'
+    // ... provider-specific options
+  },
+}))
+```
+
+Credentials and sensitive information should be stored in `.env` and referenced via `process.env`.
+
+See each provider's documentation for specific configuration options.
+

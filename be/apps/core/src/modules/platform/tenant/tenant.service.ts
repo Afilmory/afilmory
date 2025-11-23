@@ -1,5 +1,6 @@
 import { isTenantSlugReserved } from '@afilmory/utils'
 import { BizException, ErrorCode } from 'core/errors'
+import { normalizeString } from 'core/helpers/normalize.helper'
 import type { BillingPlanId } from 'core/modules/platform/billing/billing-plan.types'
 import { injectable } from 'tsyringe'
 
@@ -16,7 +17,12 @@ import type { TenantAggregate, TenantContext, TenantResolutionInput } from './te
 export class TenantService {
   constructor(private readonly repository: TenantRepository) {}
 
-  async createTenant(payload: { name: string; slug: string; planId?: BillingPlanId }): Promise<TenantAggregate> {
+  async createTenant(payload: {
+    name: string
+    slug: string
+    planId?: BillingPlanId
+    storagePlanId?: string | null
+  }): Promise<TenantAggregate> {
     const normalizedSlug = this.normalizeSlug(payload.slug)
 
     if (!normalizedSlug) {
@@ -74,7 +80,7 @@ export class TenantService {
   async resolve(input: TenantResolutionInput, noThrow: boolean): Promise<TenantContext | null>
   async resolve(input: TenantResolutionInput): Promise<TenantContext>
   async resolve(input: TenantResolutionInput, noThrow = false): Promise<TenantContext | null> {
-    const tenantId = this.normalizeString(input.tenantId)
+    const tenantId = normalizeString(input.tenantId)
     const slug = this.normalizeSlug(input.slug)
 
     let aggregate: TenantAggregate | null = null
@@ -153,7 +159,7 @@ export class TenantService {
     return existing === null
   }
 
-  private ensureTenantIsActive(tenant: TenantAggregate['tenant']): void {
+  ensureTenantIsActive(tenant: TenantAggregate['tenant']): void {
     if (tenant.banned) {
       throw new BizException(ErrorCode.TENANT_BANNED)
     }
@@ -167,16 +173,8 @@ export class TenantService {
     }
   }
 
-  private normalizeString(value?: string | null): string | null {
-    if (!value) {
-      return null
-    }
-    const trimmed = value.trim()
-    return trimmed.length > 0 ? trimmed : null
-  }
-
   private normalizeSlug(value?: string | null): string | null {
-    const normalized = this.normalizeString(value)
+    const normalized = normalizeString(value)
     return normalized ? normalized.toLowerCase() : null
   }
 }

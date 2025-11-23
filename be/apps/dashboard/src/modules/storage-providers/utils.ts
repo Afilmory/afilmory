@@ -1,6 +1,6 @@
 import { getI18n } from '~/i18n'
 
-import { storageProvidersI18nKeys } from './constants'
+import { MANAGED_STORAGE_ACTIVE_ID, storageProvidersI18nKeys } from './constants'
 import type { StorageProvider, StorageProviderType } from './types'
 
 function generateId() {
@@ -101,6 +101,10 @@ export function createEmptyProvider(type: StorageProviderType): StorageProvider 
 export function ensureActiveProviderId(providers: readonly StorageProvider[], activeId: string | null): string | null {
   if (!activeId) {
     return null
+  }
+
+  if (activeId === MANAGED_STORAGE_ACTIVE_ID) {
+    return activeId
   }
 
   return providers.some((provider) => provider.id === activeId) ? activeId : null

@@ -1,0 +1,1 @@
+ALTER TABLE "tenant" ADD COLUMN "storage_plan_id" text;

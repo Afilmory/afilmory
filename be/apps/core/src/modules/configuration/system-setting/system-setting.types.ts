@@ -3,8 +3,14 @@ import type {
   BillingPlanPricingConfigs,
   BillingPlanProductConfigs,
 } from 'core/modules/platform/billing/billing-plan.types'
+import type {
+  StoragePlanCatalog,
+  StoragePlanPricingConfigs,
+  StoragePlanProductConfigs,
+} from 'core/modules/platform/billing/storage-plan.types'
 import type { UiSchema } from 'core/modules/ui/ui-schema/ui-schema.type'
 
+import type { BuilderStorageProvider } from '../setting/storage-provider.utils'
 import type { BillingPlanSettingField, SystemSettingDbField, SystemSettingField } from './system-setting.constants'
 
 export interface SystemSettings {
@@ -23,6 +29,11 @@ export interface SystemSettings {
   billingPlanOverrides: BillingPlanOverrides
   billingPlanProducts: BillingPlanProductConfigs
   billingPlanPricing: BillingPlanPricingConfigs
+  storagePlanCatalog: StoragePlanCatalog
+  storagePlanProducts: StoragePlanProductConfigs
+  storagePlanPricing: StoragePlanPricingConfigs
+  managedStorageProvider: string | null
+  managedStorageProviders: BuilderStorageProvider[]
 }
 
 export type SystemSettingValueMap = {

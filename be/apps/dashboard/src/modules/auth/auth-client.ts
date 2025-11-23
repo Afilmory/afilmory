@@ -2,7 +2,7 @@ import { creemClient } from '@creem_io/better-auth/client'
 import { createCreemAuthClient } from '@creem_io/better-auth/create-creem-auth-client'
 import { FetchError } from 'ofetch'
 
-const apiBase = import.meta.env.VITE_APP_API_BASE?.replace(/\/$/, '') || '/api'
+const apiBase = import.meta.env.VITE_APP_CORE_API_URL?.replace(/\/$/, '') || '/api'
 
 const authBase = resolveUrl(`${apiBase}/auth`)
 

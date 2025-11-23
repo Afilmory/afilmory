@@ -1,0 +1,100 @@
+---
+title: GitHub Storage
+description: Use a GitHub repository as photo storage for simple deployments.
+createdAt: 2025-11-14T22:10:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 34
+---
+
+# GitHub Storage
+
+GitHub storage is perfect for small galleries, demos, or when you already keep assets in a repository. It's the simplest setup with no additional storage costs.
+
+## Configuration
+
+Configure GitHub storage in `builder.config.ts`:
+
+```typescript
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'github',
+    owner: 'your-username',
+    repo: 'photo-storage',
+    branch: 'main',
+    path: 'photos',
+    useRawUrl: true, // Use raw.githubusercontent.com CDN
+  },
+}))
+```
+
+## Environment Variables
+
+Add this to your `.env` file:
+
+```bash
+GIT_TOKEN=ghp_your_github_token
+```
+
+## Getting a GitHub Token
+
+1. Go to GitHub Settings → Developer settings → Personal access tokens
+2. Generate a new token (classic) or fine-grained token
+3. For classic tokens, grant `repo` scope (or `public_repo` for public repos)
+4. For fine-grained tokens, grant `Contents: Read` permission
+5. Copy the token to your `.env` file
+
+## Repository Setup
+
+1. Create a new repository (or use an existing one)
+2. Upload your photos to a folder (e.g., `photos/`)
+3. Commit and push to your repository
+4. Configure the builder with the repository details
+
+## Limitations
+
+**File size limits:**
+- GitHub enforces ~100MB per file via API
+- Repository size should stay under ~1GB for best performance
+- Large collections may hit API rate limits
+
+**Best practices:**
+- Keep repositories focused and organized
+- Use `path` to scope to a specific folder
+- Consider using a separate repository for photos
+
+## Raw URL CDN
+
+Setting `useRawUrl: true` uses GitHub's CDN (`raw.githubusercontent.com`) for public access:
+
+```typescript
+useRawUrl: true
+```
+
+This provides faster access and better caching for public repositories.
+
+## Private Repositories
+
+For private repositories:
+
+1. Use a classic token with `repo` scope, or
+2. Use a fine-grained token with `Contents: Read` permission
+3. Ensure the token has access to the repository
+
+## Troubleshooting
+
+**Authentication errors:**
+- Verify `GIT_TOKEN` is correct and not expired
+- Check that the token has the required permissions
+- For private repos, ensure the token has `repo` scope
+
+**Rate limiting:**
+- GitHub API has rate limits (5,000 requests/hour for authenticated users)
+- Large collections may hit limits during initial sync
+- Consider using S3 or B2 for very large collections
+
+**File size errors:**
+- Ensure no individual file exceeds ~100MB
+- Consider compressing large photos or using a different provider
+

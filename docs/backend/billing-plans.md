@@ -10,10 +10,10 @@ This document tracks the current subscription plans, quota knobs, and the design
 
 ## Plan Catalog (2024-xx-xx)
 
-| Plan ID    | Label              | Availability         | Monthly Process Limit | Library Items | Upload Size (MB) | Sync Object (MB) | Notes |
-|------------|--------------------|----------------------|-----------------------|---------------|------------------|------------------|-------|
-| `free`     | Free               | Default for new orgs | 300                   | 500           | 20               | 50               | Soft cap for testing & hobby users. |
-| `pro`      | Pro                | Upcoming public tier | 1,000                 | 5,000         | 200              | 500              | Placeholder numbers; tune before launch. |
+| Plan ID    | Label              | Availability          | Monthly Process Limit | Library Items | Upload Size (MB) | Sync Object (MB) | Notes |
+|------------|--------------------|-----------------------|-----------------------|---------------|------------------|------------------|-------|
+| `free`     | Free               | Default for new orgs  | 300                   | 500           | 20               | 50               | Soft cap for testing & hobby users. |
+| `pro`      | Pro                | Upcoming public tier  | 1,000                 | 5,000         | 200              | 500              | Placeholder numbers; tune before launch. |
 | `friend`   | Friend (Internal)  | Manual via superadmin | Unlimited (null)      | Unlimited     | Unlimited        | Unlimited        | Private plan for friends/internal testers; never exposed in product UI. |
 
 > `Unlimited` == `null` in the DB schema, meaning enforcement is skipped for that quota dimension.

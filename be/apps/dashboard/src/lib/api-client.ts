@@ -3,7 +3,7 @@ import { $fetch } from 'ofetch'
 import { getAccessDenied, setAccessDenied } from '~/atoms/access-denied'
 import { withLanguageHeader } from '~/lib/request-language'
 
-export const coreApiBaseURL = import.meta.env.VITE_APP_API_BASE?.replace(/\/$/, '') || '/api'
+export const coreApiBaseURL = import.meta.env.VITE_APP_CORE_API_URL || '/api'
 
 export const coreApi = $fetch.create({
   baseURL: coreApiBaseURL,

@@ -1,0 +1,96 @@
+---
+title: B2 (Backblaze B2)
+description: Configure Backblaze B2 storage for cost-effective cloud storage.
+createdAt: 2025-11-14T22:10:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 33
+---
+
+# B2 (Backblaze B2) Storage
+
+Backblaze B2 provides cost-effective cloud storage with an S3-compatible API. It's a great alternative to AWS S3 for budget-conscious deployments.
+
+## Configuration
+
+Configure B2 storage in `builder.config.ts`:
+
+```typescript
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'b2',
+    applicationKeyId: process.env.B2_KEY_ID!,
+    applicationKey: process.env.B2_KEY!,
+    bucketId: process.env.B2_BUCKET_ID!,
+    bucketName: process.env.B2_BUCKET_NAME!,
+    prefix: 'photos/',
+    customDomain: process.env.B2_CUSTOM_DOMAIN, // Optional CDN domain
+  },
+}))
+```
+
+## Environment Variables
+
+Add these to your `.env` file:
+
+```bash
+# Required
+B2_KEY_ID=your_application_key_id
+B2_KEY=your_application_key
+B2_BUCKET_ID=your_bucket_id
+B2_BUCKET_NAME=your_bucket_name
+
+# Optional
+B2_CUSTOM_DOMAIN=cdn.yourdomain.com
+```
+
+## Getting B2 Credentials
+
+1. Sign up for a Backblaze B2 account
+2. Create a bucket in the B2 console
+3. Create an application key with read permissions
+4. Copy the Key ID and Application Key to your `.env` file
+5. Find your bucket ID and name in the B2 console
+
+## CDN Integration
+
+B2 links can be fronted by a CDN. Set `customDomain` if you use Cloudflare or another CDN:
+
+```typescript
+customDomain: 'cdn.yourdomain.com'
+```
+
+This generates public URLs using your CDN instead of B2's default domain.
+
+## Prefix Organization
+
+Use `prefix` to organize photos within your bucket:
+
+```typescript
+prefix: 'photos/2024/'
+```
+
+This scopes the builder to a specific folder, useful for organizing by year or project.
+
+## Cost Considerations
+
+B2 offers competitive pricing:
+
+- **Storage**: $6/TB/month
+- **Download**: First 1GB/day free, then $10/TB
+- **Operations**: Free for most use cases
+
+Compare with AWS S3 to see which fits your usage pattern better.
+
+## Troubleshooting
+
+**Authentication errors:**
+- Verify `B2_KEY_ID` and `B2_KEY` are correct
+- Check that the application key has read permissions
+- Ensure the bucket ID and name match your B2 bucket
+
+**Rate limiting:**
+- B2 has generous rate limits, but very high concurrency may still hit limits
+- Reduce concurrency if needed
+

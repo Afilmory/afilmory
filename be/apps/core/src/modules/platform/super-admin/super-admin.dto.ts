@@ -31,6 +31,14 @@ const planProductFields = (() => {
   return fields
 })()
 
+const storageProviderConfigSchema = z.record(z.string(), z.string())
+const storageProviderSchema = z.object({
+  id: z.string().trim().min(1).optional(),
+  name: z.string().trim().optional(),
+  type: z.string().trim().min(1),
+  config: storageProviderConfigSchema.optional(),
+})
+
 const updateSuperAdminSettingsSchema = z
   .object({
     allowRegistration: z.boolean().optional(),
@@ -55,6 +63,11 @@ const updateSuperAdminSettingsSchema = z
     oauthGoogleClientSecret: z.string().trim().min(1).nullable().optional(),
     oauthGithubClientId: z.string().trim().min(1).nullable().optional(),
     oauthGithubClientSecret: z.string().trim().min(1).nullable().optional(),
+    storagePlanCatalog: z.record(z.string(), z.any()).optional(),
+    storagePlanPricing: z.record(z.string(), z.any()).optional(),
+    storagePlanProducts: z.record(z.string(), z.any()).optional(),
+    managedStorageProvider: z.string().trim().min(1).nullable().optional(),
+    managedStorageProviders: z.array(storageProviderSchema).optional(),
     ...planQuotaFields,
     ...planPricingFields,
     ...planProductFields,

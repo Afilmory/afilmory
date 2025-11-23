@@ -88,7 +88,7 @@ export function ProviderEditModal({
 
   const handleSave = () => {
     if (!formData) return
-    formData.id = formData.id ?? nanoid()
+    formData.id = formData.id && formData.id.trim().length > 0 ? formData.id : nanoid()
     onSave(formData)
     dismiss()
   }

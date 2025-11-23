@@ -114,7 +114,7 @@ export const PhotoMarkerPin = ({ marker, isSelected = false, onClick, onClose }:
             <div className="space-y-3 p-4">
               {/* Title with link */}
               <Link
-                to={`/${marker.photo.id}`}
+                to={`/photos/${marker.photo.id}`}
                 target="_blank"
                 className="group/link hover:text-blue flex items-center gap-2 transition-colors"
               >

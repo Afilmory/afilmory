@@ -9,10 +9,12 @@ import { TenantController } from './tenant.controller'
 import { TenantRepository } from './tenant.repository'
 import { TenantService } from './tenant.service'
 import { TenantContextResolver } from './tenant-context-resolver.service'
+import { TenantDomainRepository } from './tenant-domain.repository'
+import { TenantDomainService } from './tenant-domain.service'
 
 @Module({
   imports: [DatabaseModule, AppStateModule, SystemSettingModule],
   controllers: [TenantController],
-  providers: [TenantRepository, TenantService, TenantContextResolver],
+  providers: [TenantRepository, TenantDomainRepository, TenantService, TenantDomainService, TenantContextResolver],
 })
 export class TenantModule {}

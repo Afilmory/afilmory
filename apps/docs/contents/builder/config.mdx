@@ -1,0 +1,73 @@
+---
+title: Configuration
+description: How to declare storage, system defaults, and plugins in builder.config.ts.
+createdAt: 2025-11-23T19:00:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 3
+---
+
+# Configuration
+
+`builder.config.ts` defines storage, processing defaults, observability, and plugins. It uses `defineBuilderConfig` and merges user overrides onto sensible defaults.
+
+## Minimal template
+
+```typescript
+import os from 'node:os'
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 'local',
+    basePath: './apps/web/public/photos',
+    baseUrl: '/photos',
+  },
+  system: {
+    processing: {
+      defaultConcurrency: 10,
+      enableLivePhotoDetection: true,
+      digestSuffixLength: 0,
+    },
+    observability: {
+      showProgress: true,
+      showDetailedStats: true,
+      logging: { verbose: false, level: 'info', outputToFile: false },
+      performance: {
+        worker: {
+          workerCount: os.cpus().length * 2,
+          workerConcurrency: 2,
+          timeout: 30_000,
+          useClusterMode: true,
+        },
+      },
+    },
+  },
+  plugins: [],
+}))
+```
+
+## Storage providers
+
+- **s3**: bucket/region/endpoint plus tuning (`downloadConcurrency`, keep-alive, socket limits, retries, timeouts, `customDomain`, `excludeRegex`, `prefix`).
+- **b2**: `applicationKeyId`, `applicationKey`, `bucketId`, optional `bucketName`, `prefix`, `customDomain`, limits.
+- **github**: `owner`, `repo`, optional `branch`, `token`, `path`, `useRawUrl` (raw.githubusercontent.com for public URLs).
+- **local**: `basePath` (scan source), optional `distPath` to copy originals, `baseUrl` for generated URLs, `excludeRegex`, `maxFileLimit`.
+- **eagle**: `libraryPath`, optional `distPath`/`baseUrl`, include/exclude rules, `folderAsTag`, `omitTagNamesInMetadata`.
+
+## System settings
+
+- **processing**: `defaultConcurrency`, `enableLivePhotoDetection`, `digestSuffixLength`, optional `supportedFormats` (Set).
+- **observability**:
+  - `showProgress`, `showDetailedStats`.
+  - `logging`: `verbose`, `level` (`info | warn | error | debug`), `outputToFile`, optional `logFilePath`.
+  - `performance.worker`: `workerCount`, `workerConcurrency`, `timeout`, `useClusterMode`.
+
+## Plugins array
+
+`plugins` accepts:
+
+- A plugin instance (`{ hooks: { ... } }`).
+- A factory: `() => BuilderPlugin` or `(options) => BuilderPlugin`.
+- An async ESM importer `() => import('...')` returning a default export plugin.
+
+See [Plugins](/builder/plugins) for lifecycle and authoring guidance.

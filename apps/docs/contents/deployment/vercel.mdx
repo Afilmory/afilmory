@@ -1,10 +1,193 @@
 ---
 title: Vercel
-description: Guide to deploying Afilmory via Vercel.
+description: Deploy your gallery to Vercel with server-side rendering support.
 createdAt: 2025-07-20T22:35:03+08:00
-lastModified: 2025-11-14T21:52:55+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 54
 ---
 
 # Vercel Deployment
 
-🚧 WIP
+Vercel is the recommended platform for deploying Afilmory with server-side rendering. It provides excellent Next.js support, automatic deployments, and global CDN distribution.
+
+## Prerequisites
+
+- Vercel account (free tier available)
+- GitHub, GitLab, or Bitbucket repository
+- Photos processed with builder (or configure builder to run on Vercel)
+
+## Quick Start
+
+### Option 1: Deploy from Git (Recommended)
+
+1. **Connect Repository**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "Add New Project"
+   - Import your GitHub/GitLab/Bitbucket repository
+
+2. **Configure Project**
+   - **Framework Preset**: Next.js
+   - **Root Directory**: `apps/ssr`
+   - **Install Command**: `pnpm install --frozen-lockfile`
+   - **Build Command**: `pnpm run build:manifest && pnpm --filter @afilmory/ssr build`
+   - **Output Directory**: `.next` (auto-detected)
+
+3. **Set Environment Variables**
+   Add your storage credentials:
+   ```
+   S3_ACCESS_KEY_ID=your_key
+   S3_SECRET_ACCESS_KEY=your_secret
+   S3_BUCKET_NAME=your_bucket
+   S3_REGION=us-east-1
+   ```
+   (Adjust based on your storage provider)
+
+4. **Deploy**
+   - Click "Deploy"
+   - Vercel will build and deploy automatically
+
+### Option 2: Deploy with Pre-built Assets
+
+If you use the GitHub repo cache plugin to store thumbnails and manifest:
+
+1. Configure the plugin in `builder.config.ts`
+2. Set environment variables:
+   ```
+   GIT_TOKEN=your_token
+   BUILDER_REPO_URL=https://github.com/username/cache-repo
+   BUILDER_REPO_BRANCH=main
+   ```
+3. Vercel will download assets instead of rebuilding
+
+## Project Configuration
+
+### vercel.json (Optional)
+
+Create `apps/ssr/vercel.json` for custom configuration:
+
+```json
+{
+  "buildCommand": "pnpm run build:manifest && pnpm --filter @afilmory/ssr build",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "nodeVersion": "20.x"
+}
+```
+
+### Environment Variables
+
+Set these in Vercel Dashboard → Project Settings → Environment Variables:
+
+**Storage (S3 example):**
+```
+S3_ACCESS_KEY_ID
+S3_SECRET_ACCESS_KEY
+S3_BUCKET_NAME
+S3_REGION
+S3_ENDPOINT (optional)
+S3_PREFIX (optional)
+```
+
+**GitHub Repo Cache (optional):**
+```
+GIT_TOKEN
+BUILDER_REPO_URL
+BUILDER_REPO_BRANCH
+```
+
+## Build Process
+
+Vercel runs this build process:
+
+1. **Install dependencies**: `pnpm install --frozen-lockfile`
+2. **Run builder**: `pnpm run build:manifest`
+   - Downloads photos from storage
+   - Generates thumbnails
+   - Creates manifest
+3. **Build Next.js**: `pnpm --filter @afilmory/ssr build`
+   - Builds the Next.js application
+   - Bundles SPA assets
+   - Prepares for server-side rendering
+4. **Deploy**: Vercel deploys the build output
+
+## Performance Optimization
+
+### Use Repo Cache Plugin
+
+For faster builds, use the GitHub repo cache plugin:
+
+```typescript
+import { githubRepoSyncPlugin } from '@afilmory/builder'
+
+plugins: [
+  githubRepoSyncPlugin({
+    repo: {
+      enable: true,
+      url: process.env.BUILDER_REPO_URL!,
+      token: process.env.GIT_TOKEN!,
+      branch: process.env.BUILDER_REPO_BRANCH || 'main',
+    },
+  }),
+]
+```
+
+This stores thumbnails and manifest in a separate repo, avoiding full rebuilds on Vercel.
+
+### Build Caching
+
+Vercel automatically caches:
+- `node_modules` between builds
+- Build outputs for faster redeployments
+
+## Custom Domain
+
+1. Go to Project Settings → Domains
+2. Add your domain
+3. Configure DNS as instructed:
+   - Add CNAME record pointing to Vercel
+   - Or add A records for Vercel IPs
+4. Vercel automatically provisions SSL
+
+## Continuous Deployment
+
+Vercel automatically deploys:
+- **Production**: On push to main/master branch
+- **Preview**: On every pull request and push to other branches
+
+Each deployment gets a unique URL for previewing changes.
+
+## Monitoring and Analytics
+
+Vercel provides:
+- **Deployment logs**: View build and runtime logs
+- **Analytics**: Performance metrics (Pro plan)
+- **Speed Insights**: Real user monitoring (Pro plan)
+
+## Troubleshooting
+
+**Build timeouts:**
+- Use repo cache plugin to reduce build time
+- Optimize storage access (use CDN)
+- Consider reducing photo count for initial build
+
+**Missing photos:**
+- Verify storage credentials are correct
+- Check build logs for authentication errors
+- Ensure storage is accessible from Vercel
+
+**Memory issues:**
+- Reduce builder concurrency in config
+- Process photos in smaller batches
+- Consider upgrading Vercel plan
+
+**Deployment failures:**
+- Check build logs in Vercel dashboard
+- Verify all environment variables are set
+- Ensure `builder.config.ts` is correct
+
+## Next Steps
+
+- Configure custom domain
+- Set up monitoring
+- Optimize build performance with repo cache
+- Review [Vercel documentation](https://vercel.com/docs) for advanced features

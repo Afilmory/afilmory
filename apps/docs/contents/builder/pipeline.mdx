@@ -1,0 +1,50 @@
+---
+title: Processing Flow
+description: End-to-end pipeline, ordering, and incremental rules backed by the code.
+createdAt: 2025-11-23T19:00:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 4
+---
+
+# Processing Flow
+
+This page walks the real sequence the builder executes, matching `packages/builder/src/photo` and `src/builder`.
+
+## High-level steps
+
+1. Load/migrate existing manifest (preserves `cameras` / `lenses`).
+2. List all storage objects → detect Live Photo pairs → list image objects.
+3. Sort tasks by size (largest first) to reduce tail latency.
+4. Decide reuse vs reprocess per image (incremental rules below).
+5. For each image:
+   - Preprocess (HEIC/HEIF → JPEG, BMP → JPEG) and rotate per EXIF.
+   - Build Sharp instance, compute digest, generate 600 px thumbnail + ThumbHash.
+   - Extract EXIF, GPS, recipes; run tone analysis.
+   - Detect HDR GainMap, Motion Photo (embedded) or Live Photo (paired video)—never both.
+   - Compose manifest item with URLs, dimensions, hashes, EXIF, tone, HDR/video flags, tags/title/description.
+6. Save manifest (`apps/web/src/data/photos-manifest.json`) and write thumbnails to `apps/web/public/thumbnails` (plugins may rewrite `thumbnailUrl` before save).
+7. Clean up orphaned thumbnails when photos were deleted.
+
+## Incremental rules
+
+- `--force`: process everything.
+- New file: process.
+- Updated `LastModified` or `--force-manifest`: rebuild manifest entry (EXIF + tone).
+- Missing thumbnail or `--force-thumbnails`: regenerate thumbnail + ThumbHash.
+- Otherwise reuse existing item and thumbnail.
+
+## Outputs
+
+- **Thumbnails**: one 600 px JPEG per photo, quality 100, filename `<photoId>.jpg`.
+- **Manifest**: `photos-manifest.json` includes `data[]`, `cameras[]`, `lenses[]` sorted by capture time.
+
+## Error handling
+
+- Fatal issues bubble up and fail the run (non‑zero exit code).
+- Per-photo failures mark that item as `failed` and keep the run moving; counts surface in logs/TUI.
+
+## Performance levers
+
+- `workerCount` and `workerConcurrency` control breadth/parallelism.
+- `downloadConcurrency` (S3/B2) caps in-process fetches per worker.
+- Sorting by size ensures large files start early; adjust only if your storage penalizes size-based ordering.

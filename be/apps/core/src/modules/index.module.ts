@@ -23,6 +23,7 @@ import { PhotoModule } from './content/photo/photo.module'
 import { ReactionModule } from './content/reaction/reaction.module'
 import { CacheModule } from './infrastructure/cache/cache.module'
 import { DataSyncModule } from './infrastructure/data-sync/data-sync.module'
+import { HealthModule } from './infrastructure/health/health.module'
 import { StaticWebModule } from './infrastructure/static-web/static-web.module'
 import { AuthModule } from './platform/auth/auth.module'
 import { BillingModule } from './platform/billing/billing.module'
@@ -48,6 +49,7 @@ function createEventModuleOptions(redis: RedisAccessor) {
     RedisModule,
     AuthModule,
     CacheModule,
+    HealthModule,
     SettingModule,
     BuilderSettingModule,
     StorageSettingModule,

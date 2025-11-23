@@ -56,7 +56,7 @@ export class SuperAdminBuilderDebugController {
           if (event.type !== 'log') {
             return
           }
-          sendEvent({ type: 'log', payload: event.payload })
+          await sendEvent({ type: 'log', payload: event.payload })
         }
 
         try {
@@ -67,7 +67,7 @@ export class SuperAdminBuilderDebugController {
             logEmitter,
           })
 
-          sendEvent({
+          await sendEvent({
             type: 'complete',
             payload: {
               storageKey: result.storageKey,
@@ -80,7 +80,7 @@ export class SuperAdminBuilderDebugController {
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unknown error'
           this.logger.error('Builder debug run failed', error)
-          sendEvent({ type: 'error', payload: { message } })
+          await sendEvent({ type: 'error', payload: { message } })
         }
       },
     })
@@ -114,7 +114,7 @@ export class SuperAdminBuilderDebugController {
   private async executeDebugRun(
     params: StorageResolution & {
       file: UploadedDebugFile
-      sendEvent: (event: BuilderDebugProgressEvent) => void
+      sendEvent: (event: BuilderDebugProgressEvent) => Promise<void>
       logEmitter: DataSyncProgressEmitter
     },
   ) {
@@ -128,7 +128,7 @@ export class SuperAdminBuilderDebugController {
     const normalizedObject = this.normalizeStorageObjectKey(uploaded, tempKey)
     cleanupKeys.add(normalizedObject.key)
 
-    sendEvent({
+    await sendEvent({
       type: 'start',
       payload: {
         storageKey: normalizedObject.key,

@@ -298,6 +298,37 @@ const enUiSchema = {
           },
         },
       },
+      'storage-plans': {
+        title: 'Storage plans',
+        description: 'Managed storage catalog, pricing, and Creem products for storage subscriptions.',
+        fields: {
+          catalog: {
+            title: 'Plan catalog',
+            description:
+              'Manage storage plans for managed B2 space. Use the dashboard editor; JSON is no longer required.',
+            placeholder: 'Configured via dashboard',
+            helper: 'Plans include name/description/capacity and active flag.',
+          },
+          pricing: {
+            title: 'Storage pricing',
+            description: 'Monthly price and currency per storage plan.',
+            placeholder: 'Configured via dashboard',
+            helper: 'Blank values fall back to defaults or hide pricing.',
+          },
+          products: {
+            title: 'Creem products',
+            description: 'Creem product per storage plan for checkout and portal.',
+            placeholder: 'Configured via dashboard',
+            helper: 'Blank values hide the upgrade entry for that plan.',
+          },
+          'managed-provider': {
+            title: 'Managed provider key',
+            description: 'Provider ID from storage providers list that backs managed storage plans (e.g., b2-managed).',
+            placeholder: 'b2-managed',
+            helper: 'Used by backend to issue upload/read credentials for managed tenants.',
+          },
+        },
+      },
       oauth: {
         title: 'OAuth providers',
         description: 'Configure shared third-party login providers for all tenants.',

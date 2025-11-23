@@ -5,13 +5,14 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { MainPageLayout } from '~/components/layouts/MainPageLayout'
 import type { SessionResponse } from '~/modules/auth/api/session'
 import { AUTH_SESSION_QUERY_KEY } from '~/modules/auth/api/session'
 import { authClient } from '~/modules/auth/auth-client'
 import type { BillingPlanSummary } from '~/modules/billing'
 import { useTenantPlanQuery } from '~/modules/billing'
+import { buildCheckoutSuccessUrl } from '~/modules/billing/creem-utils'
 
 const planI18nKeys = {
   pageTitle: 'plan.page.title',
@@ -303,24 +304,6 @@ function PlanCard({
       )}
     </LinearBorderPanel>
   )
-}
-
-function buildCheckoutSuccessUrl(tenantSlug: string | null): string {
-  const { origin, pathname, search, hash, protocol, hostname, port } = window.location
-  const defaultUrl = `${origin}${pathname}${search}${hash}`
-  const isLocalSubdomain = hostname !== 'localhost' && hostname.endsWith('.localhost')
-
-  if (!isLocalSubdomain) {
-    return defaultUrl
-  }
-
-  const redirectOrigin = `${protocol}//localhost${port ? `:${port}` : ''}`
-  const redirectUrl = new URL('/creem-redirect.html', redirectOrigin)
-  redirectUrl.searchParams.set('redirect', defaultUrl)
-  if (tenantSlug) {
-    redirectUrl.searchParams.set('tenant', tenantSlug)
-  }
-  return redirectUrl.toString()
 }
 
 function CurrentBadge({ planId }: { planId: string }) {

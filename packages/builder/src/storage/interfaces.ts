@@ -215,15 +215,23 @@ export interface CustomStorageConfig {
   [key: string]: unknown
 }
 
-export type StorageConfig = S3Config | B2Config | GitHubConfig | EagleConfig | LocalConfig | CustomStorageConfig
+export type RemoteStorageProviderName = 's3' | 'b2' | 'github'
+export type LocalStorageProviderName = 'eagle' | 'local'
 
-export const REMOTE_STORAGE_PROVIDERS = ['s3', 'b2', 'github'] as const
-export const LOCAL_STORAGE_PROVIDERS = ['eagle', 'local'] as const
+export const REMOTE_STORAGE_PROVIDERS: readonly RemoteStorageProviderName[] = ['s3', 'b2', 'github']
+export const LOCAL_STORAGE_PROVIDERS: readonly LocalStorageProviderName[] = ['eagle', 'local']
 
-export type RemoteStorageProviderName = (typeof REMOTE_STORAGE_PROVIDERS)[number]
-export type LocalStorageProviderName = (typeof LOCAL_STORAGE_PROVIDERS)[number]
+export type RemoteStorageConfig = S3Config | B2Config | GitHubConfig
+export type LocalStorageConfig = EagleConfig | LocalConfig
+
+export type ManagedStorageConfig = {
+  provider: 'managed'
+  tenantId: string
+  providerKey?: string | null
+  basePrefix?: string | null
+  upstream: RemoteStorageConfig
+}
+
+export type StorageConfig = RemoteStorageConfig | LocalStorageConfig | ManagedStorageConfig | CustomStorageConfig
 
 export type StorageProviderCategory = 'remote' | 'local'
-
-export type RemoteStorageConfig = Extract<StorageConfig, { provider: RemoteStorageProviderName }>
-export type LocalStorageConfig = Extract<StorageConfig, { provider: LocalStorageProviderName }>

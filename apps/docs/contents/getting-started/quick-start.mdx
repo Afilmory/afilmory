@@ -1,0 +1,111 @@
+---
+title: Quick Start
+description: Get your gallery running in about 5 minutes.
+createdAt: 2025-11-14T22:20:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 2
+---
+
+# Quick Start
+
+This guide will help you deploy your first gallery in about 5 minutes. You'll need Git, pnpm, and Node.js 20+ installed.
+
+## Step 1: Configure Your Site
+
+Copy the example configuration file:
+
+```bash
+cp config.example.json config.json
+```
+
+Edit `config.json` with your site information:
+
+```json
+{
+  "name": "My Photo Gallery",
+  "description": "A collection of my favorite photos",
+  "author": {
+    "name": "Your Name",
+    "url": "https://yourwebsite.com",
+    "avatar": "https://yourwebsite.com/avatar.jpg"
+  },
+  "social": {
+    "twitter": "@yourhandle",
+    "github": "yourusername"
+  }
+}
+```
+
+## Step 2: Choose and Configure Storage
+
+Pick a storage provider from the [Storage Providers](/storage/providers) section:
+
+- **S3** - Recommended for production (scalable, CDN-friendly)
+- **GitHub** - Simplest setup, great for small collections
+- **Local** - Perfect for development and testing
+- **B2** - Cost-effective cloud storage
+- **Eagle** - Direct integration with Eagle 4 library
+
+Configure your chosen provider in `builder.config.ts` and add credentials to `.env`. See the provider-specific guides for detailed setup instructions.
+
+## Step 3: Generate Thumbnails and Manifest
+
+Run the builder to process your photos:
+
+```bash
+pnpm run build:manifest              # Incremental build (only new/changed photos)
+pnpm run build:manifest -- --force  # Full rebuild (all photos)
+```
+
+This generates:
+- **Thumbnails**: `apps/web/public/thumbnails/`
+- **Manifest**: `apps/web/src/data/photos-manifest.json`
+
+## Step 4: Preview Locally
+
+Start the development server:
+
+```bash
+pnpm dev
+```
+
+Your gallery will be available at `http://localhost:5173`.
+
+## Step 5: Deploy
+
+Choose your deployment method:
+
+### Static Hosting
+
+Build the static site:
+
+```bash
+pnpm --filter web build
+```
+
+Then publish the `apps/web/dist` folder along with `thumbnails` and `photos-manifest.json` to your static host. See [Deployment](/deployment) for platform-specific guides.
+
+### Server-Side Rendering (SSR)
+
+For better SEO and Open Graph support, deploy the Next.js wrapper:
+
+```bash
+pnpm --filter @afilmory/ssr build
+```
+
+Deploy to Vercel or any Node.js host. See [Vercel Deployment](/deployment/vercel) for details.
+
+## What You Have Now
+
+- ✅ A working gallery with your photos
+- ✅ Thumbnails and metadata ready for deployment
+- ✅ Local preview running at `http://localhost:5173`
+- ✅ Deployment-ready build artifacts
+
+## Next Steps
+
+- **Customize your gallery**: Edit `config.json` and `builder.config.ts`
+- **Add more photos**: Run `pnpm run build:manifest` again after adding photos
+- **Deploy**: Follow the [Deployment Guide](/deployment) for your platform
+- **Learn more**: Check out [Architecture](/architecture) and [Builder](/builder) documentation
+

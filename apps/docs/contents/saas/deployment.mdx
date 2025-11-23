@@ -1,0 +1,115 @@
+---
+title: SaaS Deployment
+description: Deploy the multi-tenant stack (core API + OAuth gateway) with subdomains and custom domains.
+createdAt: 2025-11-23T19:50:00+08:00
+lastModified: 2025-11-23T20:44:02+08:00
+order: 37
+---
+
+# SaaS Deployment
+
+## Components
+
+- **Core API + SPA host (`@afilmory/core`)** — resolves tenant by host, injects `__MANIFEST__`/`__CONFIG__`, serves web + dashboard.
+- **OAuth Gateway (`@afilmory/oauth-gateway`)** — single callback domain forwarding provider responses to each tenant.
+- **PostgreSQL + Redis** — required by core.
+- **Object storage** — where originals live (S3/B2/GitHub/local, configured via builder/system settings).
+
+## Domain model & DNS
+
+- **Base domain**: `<slug>.<baseDomain>` (default `afilmory.art`).
+- **OAuth callback domain**: `auth.<baseDomain>` → gateway.
+- **Custom domains**: tenants bind via CNAME to base domain or TXT token.
+
+DNS checklist:
+- `A/AAAA` or `CNAME` for `<baseDomain>` → core LB.
+- `CNAME *.<baseDomain>` → core LB (wildcard tenants).
+- `CNAME auth.<baseDomain>` → gateway LB.
+
+## Quick start with Docker (core)
+
+`Dockerfile.core` builds the API and bundles web/dashboard; installs `exiftool`/`vips`; runs migrations on start.
+
+```bash
+# Build
+docker build -f Dockerfile.core -t afilmory-core .
+
+# Run
+docker run --rm \
+  -p 1841:1841 \
+  -e DATABASE_URL="postgres://localhost:5432/afilmory" \
+  -e REDIS_URL="redis://localhost:6379" \
+  -e PORT=1841 \
+  -e CONFIG_ENCRYPTION_KEY=$(openssl rand -hex 64) \
+  -e HOSTNAME="core.local" \  # optional, affects printed URLs
+  -e NODE_ENV=production \
+  afilmory-core
+```
+
+First boot output (example):
+
+```
+============================================================
+Root dashboard access provisioned.
+  Dashboard URL: http://localhost:1841/platform/root-login
+  Alternate URL: http://core.local:1841/platform/root-login
+  Email: root@local.host
+  Username: root
+  Password: w3xF1cC5cE5Zf1l_yhGy6w
+============================================================
+```
+
+- Password is random `base64url` (16 bytes), printed once.
+- Defaults for email/username come from `DEFAULT_SUPERADMIN_EMAIL/USERNAME`.
+
+### Minimal env (core)
+
+```
+PORT=1841
+DATABASE_URL=postgres://localhost:5432/afilmory
+REDIS_URL=redis://localhost:6379
+CONFIG_ENCRYPTION_KEY=<openssl -hex 64>
+```
+
+## OAuth Gateway
+
+Env:
+
+```
+AUTH_GATEWAY_HOST=0.0.0.0
+AUTH_GATEWAY_PORT=8790
+AUTH_GATEWAY_BASE_DOMAIN=<baseDomain>
+AUTH_GATEWAY_FORCE_HTTPS=true
+AUTH_GATEWAY_CALLBACK_BASE_PATH=/api/auth/callback
+AUTH_GATEWAY_ALLOW_CUSTOM_HOST=false
+AUTH_GATEWAY_ROOT_SLUG=root
+```
+
+Run: `pnpm --filter @afilmory/oauth-gateway dev` (or containerize). Expose HTTPS at `auth.<baseDomain>`.
+
+## First-login flow
+
+1. Open `https://root.<baseDomain>/platform/root-login` (or printed URL locally).
+2. Sign in with printed root credentials.
+3. In Superadmin, set `baseDomain`, `oauthGatewayUrl`, storage providers, registration rules, billing/storage plans.
+4. Create the first tenant (slug not reserved: avoid `root` and placeholder slug).
+5. Configure OAuth providers (Google/GitHub) to call the gateway URL; the gateway forwards to the tenant domain.
+
+## Request routing
+
+1. Core resolves tenant: custom domain → slug from `<slug>.<baseDomain>` → root/admin fallback → placeholder if missing.
+2. Gateway rewrites provider callbacks from `auth.<baseDomain>` to `<slug>.<baseDomain>`.
+3. Core injects manifest/config and serves SPA/dashboard.
+
+## Deployment checklist
+
+1. Provision Postgres + Redis; run migrations.
+2. Deploy core behind HTTPS with wildcard `<baseDomain>`.
+3. Deploy OAuth Gateway at `auth.<baseDomain>`; set System Settings `oauthGatewayUrl`.
+4. Set System Settings `baseDomain`; restart core if host/ports change.
+5. Create superadmin/tenant; test subdomain login and OAuth.
+6. Test custom domain binding (CNAME or TXT token) and HTTPS.
+
+## Licensing notice (commercial use)
+
+SaaS build includes billing (Creem, plan enforcement, usage). The open-source license does **not** grant commercial rights. Contact the project owner for authorization.

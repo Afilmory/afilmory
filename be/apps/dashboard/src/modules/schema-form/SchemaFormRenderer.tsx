@@ -17,7 +17,7 @@ import type { ReactNode } from 'react'
 import { Fragment, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { LinearBorderPanel } from '../../components/common/GlassPanel'
+import { LinearBorderPanel } from '../../components/common/LinearBorderPanel'
 import type {
   SchemaFormState,
   SchemaFormValue,

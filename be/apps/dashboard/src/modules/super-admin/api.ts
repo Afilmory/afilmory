@@ -8,6 +8,7 @@ import type {
   BuilderDebugResult,
   SuperAdminSettingsResponse,
   SuperAdminTenantListResponse,
+  SuperAdminTenantPhotosResponse,
   UpdateSuperAdminSettingsPayload,
   UpdateTenantBanPayload,
   UpdateTenantPlanPayload,
@@ -176,4 +177,11 @@ export async function runBuilderDebugTest(file: File, options?: RunBuilderDebugO
   }
 
   return camelCaseKeys<BuilderDebugResult>(finalResult)
+}
+
+export async function fetchSuperAdminTenantPhotos(tenantId: string): Promise<SuperAdminTenantPhotosResponse> {
+  const response = await coreApi<SuperAdminTenantPhotosResponse>(`${SUPER_ADMIN_TENANTS_ENDPOINT}/${tenantId}/photos`, {
+    method: 'GET',
+  })
+  return camelCaseKeys<SuperAdminTenantPhotosResponse>(response)
 }

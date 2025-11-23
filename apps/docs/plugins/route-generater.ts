@@ -95,8 +95,23 @@ async function generateRoutes(options: Required<GenerateRoutesOptions>) {
       }
     }
 
-    // 按路径排序，确保首页在最前面
+    // 排序：先看 meta.order（数字），然后首页，其余按路径
+    const getOrder = (route: RouteConfig) => {
+      const raw = route.meta?.order
+      const n = Number(raw)
+      return Number.isFinite(n) ? n : undefined
+    }
+
     routes.sort((a, b) => {
+      const oa = getOrder(a)
+      const ob = getOrder(b)
+
+      if (oa !== undefined || ob !== undefined) {
+        if (oa === undefined) return 1
+        if (ob === undefined) return -1
+        if (oa !== ob) return oa - ob
+      }
+
       if (a.path === '/') return -1
       if (b.path === '/') return 1
       return a.path.localeCompare(b.path)

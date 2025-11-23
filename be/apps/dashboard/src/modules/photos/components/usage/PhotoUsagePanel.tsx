@@ -2,7 +2,7 @@ import { Button } from '@afilmory/ui'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 
 import { BILLING_USAGE_EVENT_CONFIG, getUsageEventDescription, getUsageEventLabel } from '../../constants'
 import type { BillingUsageEvent, BillingUsageOverview } from '../../types'

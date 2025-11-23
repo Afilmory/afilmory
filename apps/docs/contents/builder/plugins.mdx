@@ -1,0 +1,171 @@
+---
+title: Plugins
+description: Lifecycle hooks, authoring a custom plugin, and built-in plugins.
+createdAt: 2025-11-23T19:00:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 5
+---
+
+# Plugins
+
+Plugins extend the builder without forking its core. They are plain objects with lifecycle hooks, optional `onInit`, and can be registered inline, as factories, or via async ESM importers.
+
+## Lifecycle surface
+
+Hook names map directly to `packages/builder/src/plugins/types.ts`:
+
+- `onInit` — once per process, after config is resolved.
+- `beforeBuild` / `afterBuild` — whole run.
+- `afterManifestLoad` — existing manifest is available.
+- `afterAllFilesListed` → `afterLivePhotoDetection` → `afterImagesListed` → `afterTasksPrepared` — storage discovery.
+- `beforeProcessTasks` / `afterProcessTasks` — batch level.
+- `beforePhotoProcess` / `afterPhotoProcess` / `photoProcessError` — per photo.
+- `beforeAddManifestItem` — right before an item is pushed.
+- `beforeSaveManifest` / `afterSaveManifest` — final write.
+- `afterCleanup` — after orphaned thumbnail cleanup.
+- `onError` — uncaught errors.
+
+All hooks receive `{ builder, config, logger, options, pluginName, pluginOptions, runShared, payload }`.
+
+## Writing your first plugin
+
+Minimal inline plugin (skips GIFs):
+
+```typescript
+// builder.config.ts
+import { defineBuilderConfig } from '@afilmory/builder'
+
+const skipGifsPlugin = {
+  name: 'skip-gifs',
+  hooks: {
+    afterTasksPrepared: async ({ payload }) => {
+      payload.tasks = payload.tasks.filter((t) => !t.key.toLowerCase().endsWith('.gif'))
+    },
+  },
+}
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 'local', basePath: './photos', baseUrl: '/photos' },
+  plugins: [skipGifsPlugin],
+}))
+```
+
+Factory with options:
+
+```typescript
+function watermarkPlugin(options: { text: string }) {
+  return {
+    name: 'watermark',
+    hooks: {
+      afterPhotoProcess: async ({ payload }) => {
+        if (!payload.result.item) return
+        payload.result.item.description += ` | ${options.text}`
+      },
+    },
+  }
+}
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [watermarkPlugin({ text: '© Afilmory' })],
+}))
+```
+
+Async importer (keeps bundles slim):
+
+```typescript
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [() => import('./plugins/geo-tag-plugin.js')],
+}))
+```
+
+## Patterns
+
+- **Shared state**: use `runShared` (a `Map`) to cache data across hooks within one run.
+- **Storage extensions**: `registerStorageProvider` lets a plugin add a custom storage provider before discovery.
+- **Manifest mutations**: prefer `beforeAddManifestItem` or `afterPhotoProcess` for per-item edits; `beforeSaveManifest` for global edits.
+- **I/O**: keep uploads/downloads async and respect `options` flags; avoid blocking the event loop in hooks.
+
+## Built-in plugins
+
+### GitHub repo sync (`githubRepoSyncPlugin`)
+
+Purpose: cache thumbnails and `photos-manifest.json` in a Git repo to speed up CI/CD and enable sharing of built assets.
+
+What it does
+- `beforeBuild`: clones or pulls the repo into `assets-git`, ensures branch exists, creates `thumbnails/` and `photos-manifest.json` if missing, then symlinks them into `apps/web/public/thumbnails` and `apps/web/src/data/photos-manifest.json`.
+- `afterBuild`: if `autoPush` and there are changes, commits and pushes to the configured branch (requires token).
+
+Config example:
+
+```typescript
+import { defineBuilderConfig, githubRepoSyncPlugin } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [
+    githubRepoSyncPlugin({
+      enable: true,
+      autoPush: true,
+      repo: {
+        url: 'https://github.com/you/gallery-cache',
+        token: process.env.GIT_TOKEN,
+        branch: 'main',
+      },
+    }),
+  ],
+}))
+```
+
+Notes
+- Requires Git in PATH.
+- If token is absent, sync still reads but skips push.
+- Safe to run repeatedly; it reuses `assets-git` and handles re-clone on pull failure.
+
+### Thumbnail storage (`@afilmory/builder/plugins/thumbnail-storage`)
+
+Purpose: upload generated thumbnails to your storage (default or a secondary storage config) and rewrite `thumbnailUrl` to point to the remote location.
+
+What it does
+- `beforeBuild`: resolves the target storage manager; can reuse default storage or a dedicated one you pass in `storageConfig`.
+- `afterPhotoProcess`: uploads the thumbnail buffer once per run per file, caches remote URL, and mutates `payload.result.item.thumbnailUrl` to the remote URL.
+
+Config example (reuse default storage):
+
+```typescript
+import thumbnailStoragePlugin from '@afilmory/builder/plugins/thumbnail-storage'
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [thumbnailStoragePlugin()],
+}))
+```
+
+Config example (separate storage for thumbnails):
+
+```typescript
+import thumbnailStoragePlugin from '@afilmory/builder/plugins/thumbnail-storage'
+
+export default defineBuilderConfig(() => ({
+  storage: { provider: 's3', bucket: process.env.S3_BUCKET_NAME! },
+  plugins: [
+    thumbnailStoragePlugin({
+      storageConfig: {
+        provider: 'b2',
+        bucketId: process.env.B2_BUCKET_ID!,
+        applicationKeyId: process.env.B2_KEY_ID!,
+        applicationKey: process.env.B2_KEY!,
+      },
+      prefix: 'thumbnails/',
+      contentType: 'image/jpeg',
+    }),
+  ],
+}))
+```
+
+Notes
+- Deduplicates uploads per run via an in-memory set; safe for concurrent workers.
+- If upload fails, it logs the error and leaves the local URL intact rather than failing the whole build.
+
+Use these built-ins as references for structure, error handling, and hook usage when authoring your own plugins.

@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { getRequestErrorMessage } from '~/lib/errors'
 
 import type { SocialAccountRecord } from '../api/socialAccounts'

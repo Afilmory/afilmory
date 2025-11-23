@@ -4,8 +4,186 @@
     "title": "Overview",
     "meta": {
       "title": "Overview",
+      "description": "Deploy a photo gallery in minutes—no database required.",
       "createdAt": "2025-07-20T22:35:03+08:00",
-      "lastModified": "2025-07-20T22:35:03+08:00"
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "1"
+    }
+  },
+  {
+    "path": "/builder/cli",
+    "title": "CLI & Run Modes",
+    "meta": {
+      "title": "CLI & Run Modes",
+      "description": "Per-run flags, concurrency behavior, and cluster vs worker execution.",
+      "createdAt": "2025-11-23T19:00:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "2"
+    }
+  },
+  {
+    "path": "/getting-started/quick-start",
+    "title": "Quick Start",
+    "meta": {
+      "title": "Quick Start",
+      "description": "Get your gallery running in about 5 minutes.",
+      "createdAt": "2025-11-14T22:20:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "2"
+    }
+  },
+  {
+    "path": "/architecture",
+    "title": "Architecture",
+    "meta": {
+      "title": "Architecture",
+      "description": "Understand how Afilmory works—static vs. SSR deployment modes.",
+      "createdAt": "2025-11-14T22:25:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "3"
+    }
+  },
+  {
+    "path": "/builder/config",
+    "title": "Configuration",
+    "meta": {
+      "title": "Configuration",
+      "description": "How to declare storage, system defaults, and plugins in builder.config.ts.",
+      "createdAt": "2025-11-23T19:00:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "3"
+    }
+  },
+  {
+    "path": "/builder/pipeline",
+    "title": "Processing Flow",
+    "meta": {
+      "title": "Processing Flow",
+      "description": "End-to-end pipeline, ordering, and incremental rules backed by the code.",
+      "createdAt": "2025-11-23T19:00:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "4"
+    }
+  },
+  {
+    "path": "/builder/plugins",
+    "title": "Plugins",
+    "meta": {
+      "title": "Plugins",
+      "description": "Lifecycle hooks, authoring a custom plugin, and built-in plugins.",
+      "createdAt": "2025-11-23T19:00:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "5"
+    }
+  },
+  {
+    "path": "/builder/built-ins",
+    "title": "Built-in Plugins",
+    "meta": {
+      "title": "Built-in Plugins",
+      "description": "Ready-to-use plugins shipped with the builder and how to configure them.",
+      "createdAt": "2025-11-23T19:35:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "6"
+    }
+  },
+  {
+    "path": "/storage/providers",
+    "title": "Storage Providers",
+    "meta": {
+      "title": "Storage Providers",
+      "description": "Choose a storage provider for your photo collection.",
+      "createdAt": "2025-11-14T22:40:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "30"
+    }
+  },
+  {
+    "path": "/storage/providers/s3",
+    "title": "S3 / S3-Compatible",
+    "meta": {
+      "title": "S3 / S3-Compatible",
+      "description": "Configure S3 or S3-compatible storage for your photo collection.",
+      "createdAt": "2025-11-14T22:10:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "32"
+    }
+  },
+  {
+    "path": "/storage/providers/b2",
+    "title": "B2 (Backblaze B2)",
+    "meta": {
+      "title": "B2 (Backblaze B2)",
+      "description": "Configure Backblaze B2 storage for cost-effective cloud storage.",
+      "createdAt": "2025-11-14T22:10:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "33"
+    }
+  },
+  {
+    "path": "/storage/providers/github",
+    "title": "GitHub Storage",
+    "meta": {
+      "title": "GitHub Storage",
+      "description": "Use a GitHub repository as photo storage for simple deployments.",
+      "createdAt": "2025-11-14T22:10:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "34"
+    }
+  },
+  {
+    "path": "/storage/providers/local",
+    "title": "Local Storage",
+    "meta": {
+      "title": "Local Storage",
+      "description": "Use local file system paths for development and self-hosting.",
+      "createdAt": "2025-11-14T22:10:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "35"
+    }
+  },
+  {
+    "path": "/saas/architecture",
+    "title": "SaaS Architecture",
+    "meta": {
+      "title": "SaaS Architecture",
+      "description": "Tenant model, domain routing, OAuth flow, and data injection paths.",
+      "createdAt": "2025-11-23T20:20:00+08:00",
+      "lastModified": "2025-11-23T20:44:02+08:00",
+      "order": "36"
+    }
+  },
+  {
+    "path": "/storage/providers/eagle",
+    "title": "Eagle Storage",
+    "meta": {
+      "title": "Eagle Storage",
+      "description": "Publish directly from an Eagle 4 library with filtering support.",
+      "createdAt": "2025-11-14T22:10:00+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "36"
+    }
+  },
+  {
+    "path": "/saas/deployment",
+    "title": "SaaS Deployment",
+    "meta": {
+      "title": "SaaS Deployment",
+      "description": "Deploy the multi-tenant stack (core API + OAuth gateway) with subdomains and custom domains.",
+      "createdAt": "2025-11-23T19:50:00+08:00",
+      "lastModified": "2025-11-23T20:44:02+08:00",
+      "order": "37"
+    }
+  },
+  {
+    "path": "/builder",
+    "title": "Builder",
+    "meta": {
+      "title": "Builder",
+      "description": "Overview of the photo pipeline and how to choose the right entrypoint for your run.",
+      "createdAt": "2025-11-14T22:10:00+08:00",
+      "lastModified": "2025-11-23T20:44:02+08:00",
+      "order": "40"
     }
   },
   {
@@ -13,19 +191,10 @@
     "title": "Deployment",
     "meta": {
       "title": "Deployment",
-      "description": "Guide to deploying Afilmory in production environments, including Docker and configuration options.",
+      "description": "Deploy your gallery to static hosting, SSR platforms, or Docker.",
       "createdAt": "2025-07-20T22:35:03+08:00",
-      "lastModified": "2025-08-08T08:28:42.778+08:00"
-    }
-  },
-  {
-    "path": "/deployment/cloudflare-pages",
-    "title": "Cloudflare Pages",
-    "meta": {
-      "title": "Cloudflare Pages",
-      "description": "Guide to deploying Afilmory via Cloudflare Pages.",
-      "createdAt": "2025-07-20T22:35:03+08:00",
-      "lastModified": "2025-08-08T17:39:40+08:00"
+      "lastModified": "2025-11-23T20:44:02+08:00",
+      "order": "50"
     }
   },
   {
@@ -33,29 +202,32 @@
     "title": "Docker",
     "meta": {
       "title": "Docker",
-      "description": "Guide to deploying Afilmory via Docker.",
+      "description": "Deploy Afilmory using Docker for consistent, containerized deployments.",
       "createdAt": "2025-07-20T22:35:03+08:00",
-      "lastModified": "2025-08-31T11:08:35+08:00"
-    }
-  },
-  {
-    "path": "/deployment/github-action",
-    "title": "Github Action",
-    "meta": {
-      "title": "Github Action",
-      "description": "Guide to deploying Afilmory via Github Action.",
-      "createdAt": "2025-07-20T22:35:03+08:00",
-      "lastModified": "2025-08-08T17:39:40+08:00"
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "51"
     }
   },
   {
     "path": "/deployment/github-pages",
-    "title": "Github Pages",
+    "title": "GitHub Pages",
     "meta": {
-      "title": "Github Pages",
-      "description": "Guide to deploying Afilmory via Github Pages.",
+      "title": "GitHub Pages",
+      "description": "Deploy your gallery to GitHub Pages for free static hosting.",
       "createdAt": "2025-07-20T22:35:03+08:00",
-      "lastModified": "2025-08-08T17:39:40+08:00"
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "52"
+    }
+  },
+  {
+    "path": "/deployment/cloudflare-pages",
+    "title": "Cloudflare Pages",
+    "meta": {
+      "title": "Cloudflare Pages",
+      "description": "Deploy your gallery to Cloudflare Pages for fast global CDN distribution.",
+      "createdAt": "2025-07-20T22:35:03+08:00",
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "53"
     }
   },
   {
@@ -63,29 +235,43 @@
     "title": "Vercel",
     "meta": {
       "title": "Vercel",
-      "description": "Guide to deploying Afilmory via Vercel.",
+      "description": "Deploy your gallery to Vercel with server-side rendering support.",
       "createdAt": "2025-07-20T22:35:03+08:00",
-      "lastModified": "2025-08-08T17:39:40+08:00"
+      "lastModified": "2025-11-23T19:40:52+08:00",
+      "order": "54"
+    }
+  },
+  {
+    "path": "/saas",
+    "title": "SaaS Mode",
+    "meta": {
+      "title": "SaaS Mode",
+      "description": "Why run Afilmory as a multi-tenant SaaS, what it can do, and where to start.",
+      "createdAt": "2025-11-23T20:20:00+08:00",
+      "lastModified": "2025-11-23T20:44:02+08:00",
+      "order": "60"
+    }
+  },
+  {
+    "path": "/saas/cms",
+    "title": "CMS & Live Updates",
+    "meta": {
+      "title": "CMS & Live Updates",
+      "description": "How SaaS mode lets users change photos and metadata and see updates instantly without rebuilding.",
+      "createdAt": "2025-11-23T20:26:00+08:00",
+      "lastModified": "2025-11-23T20:44:02+08:00",
+      "order": "61"
     }
   },
   {
     "path": "/docs-site",
-    "title": "Docs site",
+    "title": "Docs Site",
     "meta": {
-      "title": "Docs site",
+      "title": "Docs Site",
       "description": "Docs site introduction and contribution guide",
       "createdAt": "2025-09-11T17:05:55+08:00",
-      "lastModified": "2025-09-11T17:10:35+08:00"
-    }
-  },
-  {
-    "path": "/storage",
-    "title": "Storage providers",
-    "meta": {
-      "title": "Storage providers",
-      "description": "Afilmory can work with multiple storage providers, including S3, Git and local file system",
-      "createdAt": "2025-08-12T15:09:08+08:00",
-      "lastModified": "2025-08-31T11:08:35+08:00"
+      "lastModified": "2025-11-23T20:22:24+08:00",
+      "order": "90"
     }
   }
 ]

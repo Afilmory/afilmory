@@ -1,0 +1,121 @@
+---
+title: S3 / S3-Compatible
+description: Configure S3 or S3-compatible storage for your photo collection.
+createdAt: 2025-11-14T22:10:00+08:00
+lastModified: 2025-11-23T19:40:52+08:00
+order: 32
+---
+
+# S3 / S3-Compatible Storage
+
+S3-compatible storage is the recommended choice for production deployments. It's scalable, reliable, and works with a wide range of services including AWS S3, MinIO, Cloudflare R2, and other S3-compatible APIs.
+
+## Configuration
+
+Configure S3 storage in `builder.config.ts`:
+
+```typescript
+import { defineBuilderConfig } from '@afilmory/builder'
+
+export default defineBuilderConfig(() => ({
+  storage: {
+    provider: 's3',
+    bucket: process.env.S3_BUCKET_NAME!,
+    region: process.env.S3_REGION!,
+    endpoint: process.env.S3_ENDPOINT, // Optional, defaults to AWS S3
+    accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+    prefix: process.env.S3_PREFIX || 'photos/',
+    customDomain: process.env.S3_CUSTOM_DOMAIN, // Optional CDN domain
+    excludeRegex: process.env.S3_EXCLUDE_REGEX,
+    downloadConcurrency: 16, // Adjust based on network
+  },
+}))
+```
+
+## Environment Variables
+
+Add these to your `.env` file:
+
+```bash
+# Required
+S3_REGION=us-east-1
+S3_ENDPOINT=https://s3.us-east-1.amazonaws.com
+S3_BUCKET_NAME=your-photos-bucket
+S3_ACCESS_KEY_ID=your_access_key
+S3_SECRET_ACCESS_KEY=your_secret_key
+
+# Optional
+S3_PREFIX=photos/
+S3_CUSTOM_DOMAIN=cdn.yourdomain.com
+S3_EXCLUDE_REGEX=\.(tmp|cache)$
+```
+
+## Supported Services
+
+Afilmory works with any S3-compatible API:
+
+- **AWS S3** - Default endpoint, no configuration needed
+- **Cloudflare R2** - Set endpoint to your R2 endpoint
+- **MinIO** - Use your MinIO server endpoint
+- **DigitalOcean Spaces** - Use Spaces endpoint
+- **Backblaze B2** - Use B2 S3-compatible endpoint (or use the B2 provider directly)
+- **Other S3-compatible services** - Configure with appropriate endpoint
+
+## Best Practices
+
+### Custom Domain (CDN)
+
+Set `customDomain` to your CDN URL for faster photo delivery:
+
+```typescript
+customDomain: 'cdn.yourdomain.com'
+```
+
+This generates public URLs using your CDN instead of the storage provider's default domain.
+
+### Prefix Organization
+
+Use `prefix` to organize photos within your bucket:
+
+```typescript
+prefix: 'photos/2024/'
+```
+
+This scopes the builder to a specific folder, useful for organizing by year or project.
+
+### Download Concurrency
+
+Adjust `downloadConcurrency` based on your network and storage limits:
+
+```typescript
+downloadConcurrency: 16 // Default, increase for faster networks
+```
+
+Higher values download more photos simultaneously but may hit rate limits.
+
+### Exclude Patterns
+
+Use `excludeRegex` to skip unwanted files:
+
+```typescript
+excludeRegex: '\\.(tmp|cache|DS_Store)$'
+```
+
+This prevents processing temporary or system files.
+
+## Troubleshooting
+
+**Authentication errors:**
+- Verify `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` are correct
+- Check IAM permissions for the bucket
+- Ensure the access key has read permissions
+
+**Rate limiting:**
+- Reduce `downloadConcurrency` if you hit rate limits
+- Consider using a CDN to reduce direct storage requests
+
+**Endpoint issues:**
+- For non-AWS services, ensure `endpoint` is correctly configured
+- Check that the endpoint URL format matches your provider's requirements
+

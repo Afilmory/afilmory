@@ -1,7 +1,6 @@
 import type { Context } from 'hono'
 
 import type { StaticAssetService } from './static-asset.service'
-import { StaticControllerUtils } from './static-controller.utils'
 import type { StaticDashboardService } from './static-dashboard.service'
 import { STATIC_DASHBOARD_BASENAME } from './static-dashboard.service'
 import type { StaticWebService } from './static-web.service'
@@ -20,9 +19,7 @@ export abstract class StaticBaseController {
   protected async serve(context: Context, service: StaticAssetService, headOnly: boolean): Promise<Response> {
     const pathname = context.req.path
     const normalizedPath = this.normalizeRequestPath(pathname, service)
-    const response = await service.handleRequest(normalizedPath, headOnly, {
-      requestHost: StaticControllerUtils.resolveRequestHost(context),
-    })
+    const response = await service.handleRequest(normalizedPath, headOnly)
 
     if (response) {
       return response

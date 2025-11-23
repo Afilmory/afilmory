@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { LinearBorderPanel } from '~/components/common/GlassPanel'
+import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { getI18n } from '~/i18n'
 import { getRequestErrorMessage } from '~/lib/errors'
 import type { PhotoSyncLogLevel } from '~/modules/photos/types'

@@ -141,7 +141,7 @@ export const ProviderCard: FC<ProviderCardProps> = ({ provider, isActive, onEdit
             className="border-accent/30 bg-accent/10 text-accent hover:bg-accent/20 border"
             onClick={onToggleActive}
           >
-            <DynamicIcon name="check" className="h-3.5 w-3.5" />
+            <DynamicIcon name="check" className="h-3.5 w-3.5 mr-1" />
             <span>{t(storageProvidersI18nKeys.card.makeActive)}</span>
           </Button>
         )}
