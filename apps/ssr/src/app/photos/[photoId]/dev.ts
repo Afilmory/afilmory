@@ -1,1 +1,1 @@
-export { handler } from '../[...all]/dev'
+export { handler } from '../../[...all]/dev'
