@@ -39,7 +39,7 @@ export const ClusterPhotoGrid = ({ photos, onPhotoClick }: ClusterPhotoGridProps
             className="group relative aspect-square overflow-hidden rounded-lg"
           >
             <Link
-              to={`/${photoMarker.photo.id}`}
+              to={`/photos/${photoMarker.photo.id}`}
               target="_blank"
               onClick={(e) => {
                 e.stopPropagation()
