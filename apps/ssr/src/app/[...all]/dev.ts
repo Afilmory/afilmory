@@ -1,3 +1,5 @@
+import { extname } from 'node:path'
+
 import { DOMParser } from 'linkedom'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
@@ -10,7 +12,22 @@ export const handler = async (req: NextRequest) => {
     return new NextResponse(null, { status: 404 })
   }
 
-  if (req.nextUrl.pathname.startsWith('/thumbnails') || req.nextUrl.pathname.startsWith('/photos')) {
+  const { pathname } = req.nextUrl
+  const wantsHtml = req.headers.get('accept')?.includes('text/html')
+
+  if (pathname.startsWith('/thumbnails')) {
+    return proxyAssets(req)
+  }
+
+  if (pathname.startsWith('/photos')) {
+    const hasExtension = Boolean(extname(pathname))
+
+    // When the browser requests a photo detail route (no file extension, accepts HTML),
+    // serve the SPA shell instead of proxying to the static photo server.
+    if (!hasExtension && wantsHtml) {
+      return proxyIndexHtml()
+    }
+
     return proxyAssets(req)
   }
 
@@ -23,6 +40,8 @@ async function proxyAssets(req: NextRequest) {
   const response = await fetch(host + pathname)
   return new NextResponse(response.body, {
     headers: response.headers,
+    status: response.status,
+    statusText: response.statusText,
   })
 }
 
