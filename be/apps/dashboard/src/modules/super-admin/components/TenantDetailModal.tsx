@@ -1,5 +1,5 @@
 import type { ModalComponent } from '@afilmory/ui'
-import { DialogDescription, DialogHeader, DialogTitle } from '@afilmory/ui'
+import { DialogDescription, DialogHeader, DialogTitle } from '@afilmory/ui/modal/Dialog.jsx'
 import { useTranslation } from 'react-i18next'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs'

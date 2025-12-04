@@ -1,6 +1,7 @@
 import type { PhotoManifestItem, PickedExif } from '@afilmory/builder'
 import type { ModalComponent } from '@afilmory/ui'
-import { DialogDescription, DialogHeader, DialogTitle, LinearDivider, ScrollArea } from '@afilmory/ui'
+import { LinearDivider, ScrollArea } from '@afilmory/ui'
+import { DialogDescription, DialogHeader, DialogTitle } from '@afilmory/ui/modal/Dialog.jsx'
 import { clsxm } from '@afilmory/utils'
 import { useTranslation } from 'react-i18next'
 

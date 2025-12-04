@@ -1,5 +1,6 @@
 import type { ModalComponent } from '@afilmory/ui'
-import { Button, DialogDescription, DialogFooter, DialogHeader, DialogTitle, LinearDivider } from '@afilmory/ui'
+import { Button, LinearDivider } from '@afilmory/ui'
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@afilmory/ui/modal/Dialog.jsx'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'

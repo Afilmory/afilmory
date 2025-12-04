@@ -1,5 +1,6 @@
 import type { ModalComponent } from '@afilmory/ui'
-import { Button, DialogDescription, DialogHeader, DialogTitle } from '@afilmory/ui'
+import { Button } from '@afilmory/ui'
+import { DialogDescription, DialogHeader, DialogTitle } from '@afilmory/ui/modal/Dialog.jsx'
 import { clsxm } from '@afilmory/utils'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
