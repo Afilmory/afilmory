@@ -29,7 +29,7 @@ export function UploadFileList({ entries, overallProgress, onRemoveEntry }: Uplo
         />
       </div>
 
-      <ScrollArea rootClassName="h-60 mt-4 -mx-4" viewportClassName="px-4">
+      <ScrollArea rootClassName="h-60 mt-4 -mx-3" viewportClassName="px-3">
         <m.ul
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
