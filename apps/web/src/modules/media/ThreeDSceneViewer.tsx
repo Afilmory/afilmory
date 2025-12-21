@@ -894,6 +894,17 @@ export const ThreeDSceneViewer = ({
     setError(null)
     setIsLoading(true)
     onLoadingChange?.(true)
+    loadingIndicatorRef?.current?.updateLoadingState({
+      isVisible: true,
+      isConverting: false,
+      isQueueWaiting: false,
+      isHeicFormat: false,
+      isError: false,
+      isWebGLLoading: true,
+      webglMessage: t('photo.3d.loading'),
+      webglDetail: t('photo.3d.loadingDetail'),
+      webglQuality: 'unknown',
+    })
 
     const removeCurrentMesh = () => {
       if (meshRef.current) {
@@ -981,6 +992,7 @@ export const ThreeDSceneViewer = ({
       disposed = true
       setIsLoading(false)
       onLoadingChange?.(false)
+      loadingIndicatorRef?.current?.updateLoadingState({ isVisible: false })
     }
   }, [isReady, scene, sceneBytes, t, loadingIndicatorRef, onLoadingChange, onError, onReady, updateParallaxState])
 

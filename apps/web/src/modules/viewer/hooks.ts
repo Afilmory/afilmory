@@ -243,6 +243,7 @@ export const useWebGLLoadingState = (loadingIndicatorRef: React.RefObject<Loadin
         isVisible: isLoading,
         isWebGLLoading: isLoading,
         webglMessage: message,
+        webglDetail: undefined,
         webglQuality: quality,
       })
     },

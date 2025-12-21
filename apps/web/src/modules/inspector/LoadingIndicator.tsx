@@ -15,6 +15,7 @@ interface LoadingState {
   // WebGL 相关状态
   isWebGLLoading?: boolean // WebGL 纹理是否正在加载
   webglMessage?: string // WebGL 加载消息
+  webglDetail?: string // WebGL 详细信息
   webglQuality?: 'high' | 'medium' | 'low' | 'unknown' // WebGL 纹理质量
 
   // 错误状态
@@ -39,6 +40,7 @@ const initialLoadingState: LoadingState = {
 
   isWebGLLoading: false,
   webglMessage: undefined,
+  webglDetail: undefined,
   webglQuality: 'unknown',
 
   isError: false,
@@ -124,7 +126,7 @@ export const LoadingIndicator = ({ ref }: { ref?: React.Ref<LoadingIndicatorRef 
                   </span>
                 )}
               </div>
-              <p className="text-xs text-white/70">{t('loading.webgl.building')}</p>
+              <p className="text-xs text-white/70">{loadingState.webglDetail || t('loading.webgl.building')}</p>
             </>
           ) : (
             // 图片加载状态

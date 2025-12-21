@@ -139,6 +139,26 @@ export const ProgressiveImage = ({
   const { handleLongPressStart, handleLongPressEnd } = useLivePhotoControls(hasVideo, isLivePhotoPlaying, livePhotoRef)
 
   const handleWebGLLoadingStateChange = useWebGLLoadingState(loadingIndicatorRef)
+  const handleThreeDLoadingStateUpdate = useCallback(
+    (state: { isVisible?: boolean }) => {
+      if (state.isVisible === false) {
+        loadingIndicatorRef?.current?.updateLoadingState({ isVisible: false })
+        return
+      }
+      loadingIndicatorRef?.current?.updateLoadingState({
+        isVisible: true,
+        isConverting: false,
+        isQueueWaiting: false,
+        isHeicFormat: false,
+        isError: false,
+        isWebGLLoading: true,
+        webglMessage: t('photo.3d.fetching'),
+        webglDetail: t('photo.3d.fetchingDetail'),
+        webglQuality: 'unknown',
+      })
+    },
+    [loadingIndicatorRef, t],
+  )
 
   const handleThumbnailLoad = useCallback(() => {
     setState.setIsThumbnailLoaded(true)
@@ -179,7 +199,9 @@ export const ProgressiveImage = ({
 
     const loadThreeD = async () => {
       try {
-        const result = await loader.loadBinary(threeDScene.url)
+        const result = await loader.loadBinary(threeDScene.url, {
+          onLoadingStateUpdate: handleThreeDLoadingStateUpdate,
+        })
         if (cancelled) return
         setThreeDBytes(result.bytes)
       } catch (err) {
@@ -197,9 +219,18 @@ export const ProgressiveImage = ({
 
     return () => {
       cancelled = true
+      handleThreeDLoadingStateUpdate({ isVisible: false })
       loader.cleanup()
     }
-  }, [hasThreeDScene, threeDScene, isActiveImage, highResLoaded, threeDBytes, threeDLoadError])
+  }, [
+    hasThreeDScene,
+    threeDScene,
+    isActiveImage,
+    highResLoaded,
+    threeDBytes,
+    threeDLoadError,
+    handleThreeDLoadingStateUpdate,
+  ])
 
   useEffect(() => {
     if (!isThreeDMode) {
