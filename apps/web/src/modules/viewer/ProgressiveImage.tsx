@@ -73,6 +73,7 @@ export const ProgressiveImage = ({
   const [threeDBytesForViewer, setThreeDBytesForViewer] = useState<Uint8Array | null>(null)
   const [isThreeDBytesLoading, setIsThreeDBytesLoading] = useState(false)
   const [isThreeDSceneReady, setIsThreeDSceneReady] = useState(false)
+  const [webglLoadState, setWebglLoadState] = useState<'idle' | 'loading' | 'done'>('idle')
 
   const isActiveImage = Boolean(isCurrentImage && shouldRenderHighRes)
   const hasThreeDScene = Boolean(threeDScene && threeDScene.mode === 'sog')
@@ -97,6 +98,7 @@ export const ProgressiveImage = ({
       setThreeDBytesForViewer(null)
       setIsThreeDBytesLoading(false)
       setIsThreeDSceneReady(false)
+      setWebglLoadState('idle')
       hasAutoEnteredThreeDRef.current = false
     }
   }, [isActiveImage])
@@ -110,6 +112,7 @@ export const ProgressiveImage = ({
       setThreeDBytesForViewer(null)
       setIsThreeDBytesLoading(false)
       setIsThreeDSceneReady(false)
+      setWebglLoadState('idle')
       hasAutoEnteredThreeDRef.current = false
     }
   }, [hasThreeDScene])
@@ -145,7 +148,15 @@ export const ProgressiveImage = ({
 
   const { handleLongPressStart, handleLongPressEnd } = useLivePhotoControls(hasVideo, isLivePhotoPlaying, livePhotoRef)
 
-  const handleWebGLLoadingStateChange = useWebGLLoadingState(loadingIndicatorRef)
+  const handleWebGLLoadingStateChangeBase = useWebGLLoadingState(loadingIndicatorRef)
+  const handleWebGLLoadingStateChange = useCallback(
+    (...args: Parameters<typeof handleWebGLLoadingStateChangeBase>) => {
+      const [isLoading] = args
+      setWebglLoadState(isLoading ? 'loading' : 'done')
+      handleWebGLLoadingStateChangeBase(...args)
+    },
+    [handleWebGLLoadingStateChangeBase],
+  )
   const handleThreeDLoadingStateUpdate = useCallback(
     (state: { isVisible?: boolean; loadingProgress?: number; loadedBytes?: number; totalBytes?: number }) => {
       if (state.isVisible === false) {
@@ -179,6 +190,7 @@ export const ProgressiveImage = ({
   const isHDRSupported = useMediaQuery('(dynamic-range: high)')
   // Only use HDR if the browser supports it and the image is HDR
   const shouldUseHDR = isHDR && isHDRSupported
+  const usesWebGLViewer = !hasVideo && !shouldUseHDR && canUseWebGL
   const handleToggleThreeD = useCallback(() => {
     if (!hasThreeDScene || !isActiveImage || !canUseWebGL) return
     setThreeDError(null)
@@ -208,6 +220,7 @@ export const ProgressiveImage = ({
 
   useEffect(() => {
     if (!hasThreeDScene || !threeDScene || !isActiveImage || !highResLoaded) return
+    if (usesWebGLViewer && webglLoadState !== 'done') return
     if (!imageLoaderManagerRef.current) return
     if (threeDBytes || threeDLoadError || isThreeDBytesLoading) return
 
@@ -246,6 +259,8 @@ export const ProgressiveImage = ({
     threeDScene,
     isActiveImage,
     highResLoaded,
+    usesWebGLViewer,
+    webglLoadState,
     threeDBytes,
     threeDLoadError,
     handleThreeDLoadingStateUpdate,
