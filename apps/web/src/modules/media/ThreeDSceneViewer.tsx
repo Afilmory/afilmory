@@ -729,16 +729,17 @@ export const ThreeDSceneViewer = ({
     const canvasContainer = canvasContainerRef.current
     if (!container || !canvasContainer) return
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false })
+    const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true })
     renderer.outputColorSpace = THREE.SRGBColorSpace
     renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.setClearColor(0x000000, 0)
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.display = 'block'
     canvasContainer.append(renderer.domElement)
 
     const sceneObj = new THREE.Scene()
-    sceneObj.background = new THREE.Color('#0c1018')
+    sceneObj.background = null
 
     const camera = new THREE.PerspectiveCamera(60, 1, 0.01, 500)
     camera.position.set(0.5, 0.5, 2.5)
@@ -997,7 +998,7 @@ export const ThreeDSceneViewer = ({
   }, [isReady, scene, sceneBytes, t, loadingIndicatorRef, onLoadingChange, onError, onReady, updateParallaxState])
 
   return (
-    <div ref={containerRef} className={clsxm('relative h-full w-full overflow-hidden bg-[#0c1018]', className)}>
+    <div ref={containerRef} className={clsxm('relative h-full w-full overflow-hidden bg-transparent', className)}>
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           ref={canvasContainerRef}
