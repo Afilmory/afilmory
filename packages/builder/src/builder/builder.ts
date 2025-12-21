@@ -6,6 +6,7 @@ import { thumbnailExists } from '../image/thumbnail.js'
 import { logger } from '../logger/index.js'
 import { handleDeletedPhotos, loadExistingManifest, needsUpdate, saveManifest } from '../manifest/manager.js'
 import { CURRENT_MANIFEST_VERSION } from '../manifest/version.js'
+import { needsThreeDSceneUpdate } from '../photo/cache-manager.js'
 import type { PhotoProcessorOptions } from '../photo/processor.js'
 import { processPhoto } from '../photo/processor.js'
 import type { PluginRunState } from '../plugins/manager.js'
@@ -18,6 +19,7 @@ import type {
 import type { StorageProviderFactory, StorageProviderRegistrationOptions } from '../storage/factory.js'
 import type { StorageConfig } from '../storage/index.js'
 import { StorageFactory, StorageManager } from '../storage/index.js'
+import type { StorageObject } from '../storage/interfaces.js'
 import type { BuilderConfig, UserBuilderSettings } from '../types/config.js'
 import { ClusterPool } from '../worker/cluster-pool.js'
 import type { TaskCompletedPayload } from '../worker/pool.js'
@@ -187,7 +189,7 @@ export class AfilmoryBuilder {
       const s3ImageKeys = new Set(imageObjects.map((obj) => obj.key))
 
       // 筛选出实际需要处理的图片
-      let tasksToProcess = await this.filterTaskImages(imageObjects, existingManifestMap, options)
+      let tasksToProcess = await this.filterTaskImages(imageObjects, existingManifestMap, threeDSceneMap, options)
 
       // 为减少尾部长耗时，按文件大小降序处理（优先处理大文件）
       if (tasksToProcess.length > 1) {
@@ -728,12 +730,14 @@ export class AfilmoryBuilder {
    * 筛选出实际需要处理的图片
    * @param imageObjects 存储中的图片对象列表
    * @param existingManifestMap 现有 manifest 的映射
+   * @param threeDSceneMap 3D 场景映射
    * @param options 构建选项
    * @returns 实际需要处理的图片数组
    */
   private async filterTaskImages(
     imageObjects: Awaited<ReturnType<StorageManager['listImages']>>,
     existingManifestMap: Map<string, PhotoManifestItem>,
+    threeDSceneMap: Map<string, StorageObject>,
     options: BuilderOptions,
   ): Promise<Awaited<ReturnType<StorageManager['listImages']>>> {
     // 强制模式下所有图片都需要处理
@@ -750,6 +754,13 @@ export class AfilmoryBuilder {
 
       // 新图片需要处理
       if (!existingItem) {
+        tasksToProcess.push(obj)
+        continue
+      }
+
+      // 检查 3D 场景变化（新增/删除/替换）
+      const sceneObject = threeDSceneMap.get(key)
+      if (needsThreeDSceneUpdate(existingItem, sceneObject)) {
         tasksToProcess.push(obj)
         continue
       }

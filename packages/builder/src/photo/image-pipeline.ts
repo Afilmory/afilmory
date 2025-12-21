@@ -283,7 +283,7 @@ export async function processPhotoWithPipeline(
   type: 'new' | 'processed' | 'skipped' | 'failed'
   pluginData: Record<string, unknown>
 }> {
-  const { photoKey, existingItem, obj, options } = context
+  const { photoKey, existingItem, obj, options, threeDSceneMap } = context
   const { builder } = getPhotoExecutionContext()
   const loggers = getGlobalLoggers()
 
@@ -295,7 +295,13 @@ export async function processPhotoWithPipeline(
   })
 
   // 检查是否需要处理
-  const { shouldProcess, reason } = await shouldProcessPhoto(photoId, existingItem, obj, options)
+  const { shouldProcess, reason } = await shouldProcessPhoto(
+    photoId,
+    existingItem,
+    obj,
+    options,
+    threeDSceneMap.get(photoKey),
+  )
 
   if (!shouldProcess) {
     loggers.image.info(`⏭️ 跳过处理 (${reason}): ${photoKey}`)

@@ -3,6 +3,37 @@ import type { PhotoManifestItem } from '@afilmory/typing'
 import { thumbnailExists } from '../image/thumbnail.js'
 import type { PhotoProcessorOptions } from './processor.js'
 
+type ThreeDSceneObjectLike = {
+  Key?: string
+  key?: string
+} | null
+
+function resolveThreeDSceneKey(sceneObject: ThreeDSceneObjectLike | undefined): string | undefined {
+  if (!sceneObject) return undefined
+
+  if ('Key' in sceneObject && typeof sceneObject.Key === 'string') {
+    return sceneObject.Key
+  }
+
+  if ('key' in sceneObject && typeof sceneObject.key === 'string') {
+    return sceneObject.key
+  }
+
+  return undefined
+}
+
+export function needsThreeDSceneUpdate(
+  existingItem: PhotoManifestItem | undefined,
+  sceneObject: ThreeDSceneObjectLike | undefined,
+): boolean {
+  const currentSceneKey = resolveThreeDSceneKey(sceneObject)
+  const existingSceneKey = existingItem?.threeDScene?.s3Key
+
+  if (!currentSceneKey && !existingSceneKey) return false
+  if (currentSceneKey !== existingSceneKey) return true
+  return false
+}
+
 export interface CacheableData {
   thumbnail?: {
     thumbnailUrl: string
@@ -22,6 +53,7 @@ export async function shouldProcessPhoto(
   existingItem: PhotoManifestItem | undefined,
   obj: { LastModified?: Date; ETag?: string },
   options: PhotoProcessorOptions,
+  sceneObject?: ThreeDSceneObjectLike,
 ): Promise<{ shouldProcess: boolean; reason: string }> {
   // 强制模式下总是处理
   if (options.isForceMode) {
@@ -40,6 +72,14 @@ export async function shouldProcessPhoto(
     return {
       shouldProcess: true,
       reason: fileNeedsUpdate ? '文件已更新' : '强制更新清单',
+    }
+  }
+
+  // 检查 3D 场景是否发生变化（新增/删除/替换）
+  if (needsThreeDSceneUpdate(existingItem, sceneObject)) {
+    return {
+      shouldProcess: true,
+      reason: '3D 场景更新',
     }
   }
 
