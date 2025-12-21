@@ -56,6 +56,13 @@ type ParallaxState = {
   target: THREE.Vector2
 }
 
+const PARALLAX_DEADZONE_MOUSE = 0.06
+const PARALLAX_DEADZONE_MOTION = 0.12
+const ORIENTATION_RANGE = {
+  gamma: 30,
+  beta: 30,
+}
+
 // --- Metadata helpers (ported from ../browser-sharp) ---
 
 const toExtrinsic4x4RowMajor = (raw?: number[] | Float32Array | null): number[] => {
@@ -618,6 +625,8 @@ export const ThreeDSceneViewer = ({
   const resizeRef = useRef<(() => void) | null>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
   const parallaxRef = useRef<ParallaxState | null>(null)
+  const orientationZeroRef = useRef<{ beta: number; gamma: number } | null>(null)
+  const orientationPermissionRef = useRef<'unknown' | 'granted' | 'denied'>('unknown')
   const tempPositionRef = useRef(new THREE.Vector3())
 
   const [canvasBounds, setCanvasBounds] = useState<{ width: number; height: number } | null>(null)
@@ -693,25 +702,42 @@ export const ThreeDSceneViewer = ({
     }
   }, [])
 
+  const applyParallaxInput = useCallback((rawX: number, rawY: number, deadzone: number) => {
+    const parallax = parallaxRef.current
+    if (!parallax) return
+    const clampValue = (value: number) => THREE.MathUtils.clamp(value, -1, 1)
+    const applyDeadzone = (value: number) => {
+      const abs = Math.abs(value)
+      if (abs <= deadzone) return 0
+      const scaled = (abs - deadzone) / Math.max(1 - deadzone, 1e-6)
+      return Math.sign(value) * scaled
+    }
+    const x = applyDeadzone(clampValue(rawX))
+    const y = applyDeadzone(clampValue(rawY))
+    parallax.target.set(x, y)
+  }, [])
+
+  const resetParallaxTarget = useCallback(() => {
+    parallaxRef.current?.target.set(0, 0)
+  }, [])
+
   useEffect(() => {
     if (isMobileDevice) return
     const container = containerRef.current
     if (!container) return
 
     const handleMove = (event: MouseEvent) => {
-      const parallax = parallaxRef.current
-      if (!parallax) return
       const rect = container.getBoundingClientRect()
       if (!rect.width || !rect.height) return
       const x = (event.clientX - rect.left) / rect.width
       const y = (event.clientY - rect.top) / rect.height
       const nx = (x - 0.5) * 2
       const ny = (0.5 - y) * 2
-      parallax.target.set(THREE.MathUtils.clamp(nx, -1, 1), THREE.MathUtils.clamp(ny, -1, 1))
+      applyParallaxInput(nx, ny, PARALLAX_DEADZONE_MOUSE)
     }
 
     const handleLeave = () => {
-      parallaxRef.current?.target.set(0, 0)
+      resetParallaxTarget()
     }
 
     container.addEventListener('mousemove', handleMove)
@@ -721,7 +747,80 @@ export const ThreeDSceneViewer = ({
       container.removeEventListener('mousemove', handleMove)
       container.removeEventListener('mouseleave', handleLeave)
     }
-  }, [])
+  }, [applyParallaxInput, resetParallaxTarget])
+
+  useEffect(() => {
+    if (!isMobileDevice) return
+    if (typeof window === 'undefined' || typeof DeviceOrientationEvent === 'undefined') return
+    const container = containerRef.current
+    if (!container) return
+
+    let subscribed = false
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (event.beta == null || event.gamma == null) return
+      if (!orientationZeroRef.current) {
+        orientationZeroRef.current = { beta: event.beta, gamma: event.gamma }
+      }
+      const base = orientationZeroRef.current
+      const gamma = event.gamma - base.gamma
+      const beta = event.beta - base.beta
+      const nx = THREE.MathUtils.clamp(gamma / ORIENTATION_RANGE.gamma, -1, 1)
+      const ny = THREE.MathUtils.clamp(-beta / ORIENTATION_RANGE.beta, -1, 1)
+      applyParallaxInput(nx, ny, PARALLAX_DEADZONE_MOTION)
+    }
+
+    const subscribe = () => {
+      if (subscribed) return
+      window.addEventListener('deviceorientation', handleOrientation, true)
+      subscribed = true
+    }
+
+    const unsubscribe = () => {
+      if (!subscribed) return
+      window.removeEventListener('deviceorientation', handleOrientation, true)
+      subscribed = false
+    }
+
+    const {requestPermission} = (DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+        requestPermission?: () => Promise<'granted' | 'denied'>
+      })
+
+    const enableOrientation = async () => {
+      if (orientationPermissionRef.current === 'granted') return
+      if (typeof requestPermission !== 'function') {
+        orientationPermissionRef.current = 'granted'
+        subscribe()
+        return
+      }
+      try {
+        const result = await requestPermission()
+        orientationPermissionRef.current = result === 'granted' ? 'granted' : 'denied'
+        if (result === 'granted') {
+          orientationZeroRef.current = null
+          subscribe()
+        }
+      } catch {
+        orientationPermissionRef.current = 'denied'
+      }
+    }
+
+    if (typeof requestPermission !== 'function') {
+      orientationPermissionRef.current = 'granted'
+      subscribe()
+    }
+
+    const handlePointerDown = () => {
+      void enableOrientation()
+    }
+    container.addEventListener('pointerdown', handlePointerDown)
+
+    return () => {
+      container.removeEventListener('pointerdown', handlePointerDown)
+      unsubscribe()
+      orientationZeroRef.current = null
+      resetParallaxTarget()
+    }
+  }, [applyParallaxInput, resetParallaxTarget])
 
   // Initialize Three + Spark renderer once
   useEffect(() => {
@@ -905,6 +1004,9 @@ export const ThreeDSceneViewer = ({
       webglMessage: t('photo.3d.loading'),
       webglDetail: t('photo.3d.loadingDetail'),
       webglQuality: 'unknown',
+      loadingProgress: 0,
+      loadedBytes: 0,
+      totalBytes: 0,
     })
 
     const removeCurrentMesh = () => {
