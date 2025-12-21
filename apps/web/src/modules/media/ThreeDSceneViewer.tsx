@@ -781,9 +781,9 @@ export const ThreeDSceneViewer = ({
       subscribed = false
     }
 
-    const {requestPermission} = (DeviceOrientationEvent as typeof DeviceOrientationEvent & {
-        requestPermission?: () => Promise<'granted' | 'denied'>
-      })
+    const { requestPermission } = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+      requestPermission?: () => Promise<'granted' | 'denied'>
+    }
 
     const enableOrientation = async () => {
       if (orientationPermissionRef.current === 'granted') return
@@ -867,10 +867,6 @@ export const ThreeDSceneViewer = ({
 
     const spark = new SparkRenderer({ renderer })
     sceneObj.add(spark)
-
-    const grid = new THREE.GridHelper(2.5, 10, 0x2a2f3a, 0x151822)
-    grid.position.y = -0.5
-    sceneObj.add(grid)
 
     rendererRef.current = renderer
     sceneRef.current = sceneObj
