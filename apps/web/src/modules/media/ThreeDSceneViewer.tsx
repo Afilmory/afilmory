@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
+import { isMobileDevice } from '~/lib/device-viewport'
 import type { LoadingIndicatorRef } from '~/modules/inspector'
 import type { PhotoManifest } from '~/types/photo'
 
@@ -43,6 +44,16 @@ type DefaultControlsState = {
   rotateSpeed: number
   zoomSpeed: number
   panSpeed: number
+}
+
+type ParallaxState = {
+  basePosition: THREE.Vector3
+  baseTarget: THREE.Vector3
+  baseRight: THREE.Vector3
+  baseUp: THREE.Vector3
+  strength: number
+  current: THREE.Vector2
+  target: THREE.Vector2
 }
 
 // --- Metadata helpers (ported from ../browser-sharp) ---
@@ -571,6 +582,7 @@ interface ThreeDSceneViewerProps {
   className?: string
   imageWidth?: number
   imageHeight?: number
+  sceneBytes?: Uint8Array | null
   loadingIndicatorRef?: React.RefObject<LoadingIndicatorRef | null>
   onLoadingChange?: (isLoading: boolean) => void
   onError?: (error: Error) => void
@@ -582,6 +594,7 @@ export const ThreeDSceneViewer = ({
   className,
   imageWidth,
   imageHeight,
+  sceneBytes,
   loadingIndicatorRef,
   onLoadingChange,
   onError,
@@ -599,12 +612,13 @@ export const ThreeDSceneViewer = ({
   const controlsRef = useRef<OrbitControls | null>(null)
   const meshRef = useRef<SplatMesh | null>(null)
   const frameRef = useRef<number | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
   const defaultCameraRef = useRef<DefaultCameraState | null>(null)
   const defaultControlsRef = useRef<DefaultControlsState | null>(null)
   const activeCameraRef = useRef<ActiveCameraState | null>(null)
   const resizeRef = useRef<(() => void) | null>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
+  const parallaxRef = useRef<ParallaxState | null>(null)
+  const tempPositionRef = useRef(new THREE.Vector3())
 
   const [canvasBounds, setCanvasBounds] = useState<{ width: number; height: number } | null>(null)
   const [isReady, setIsReady] = useState(false)
@@ -643,6 +657,72 @@ export const ThreeDSceneViewer = ({
     updateBounds()
   }, [updateBounds])
 
+  const updateParallaxState = useCallback((mesh?: SplatMesh) => {
+    const camera = cameraRef.current
+    const controls = controlsRef.current
+    if (!camera || !controls) return
+
+    const basePosition = camera.position.clone()
+    const baseTarget = controls.target.clone()
+    const baseQuaternion = camera.quaternion.clone()
+    const baseRight = new THREE.Vector3(1, 0, 0).applyQuaternion(baseQuaternion)
+    const baseUp = new THREE.Vector3(0, 1, 0).applyQuaternion(baseQuaternion)
+
+    let radius = basePosition.distanceTo(baseTarget)
+    if (mesh?.getBoundingBox) {
+      const meshObject = mesh as unknown as THREE.Object3D
+      meshObject.updateMatrixWorld(true)
+      const box = mesh.getBoundingBox()
+      const worldBox = box.clone().applyMatrix4(meshObject.matrixWorld)
+      const size = new THREE.Vector3()
+      worldBox.getSize(size)
+      radius = Math.max(size.length() * 0.5, 0.25)
+    }
+
+    const distance = basePosition.distanceTo(baseTarget)
+    const strength = Math.max(0.003, Math.min(distance * 0.04, radius * 0.12))
+
+    parallaxRef.current = {
+      basePosition,
+      baseTarget,
+      baseRight,
+      baseUp,
+      strength,
+      current: new THREE.Vector2(0, 0),
+      target: new THREE.Vector2(0, 0),
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isMobileDevice) return
+    const container = containerRef.current
+    if (!container) return
+
+    const handleMove = (event: MouseEvent) => {
+      const parallax = parallaxRef.current
+      if (!parallax) return
+      const rect = container.getBoundingClientRect()
+      if (!rect.width || !rect.height) return
+      const x = (event.clientX - rect.left) / rect.width
+      const y = (event.clientY - rect.top) / rect.height
+      const nx = (x - 0.5) * 2
+      const ny = (0.5 - y) * 2
+      parallax.target.set(THREE.MathUtils.clamp(nx, -1, 1), THREE.MathUtils.clamp(ny, -1, 1))
+    }
+
+    const handleLeave = () => {
+      parallaxRef.current?.target.set(0, 0)
+    }
+
+    container.addEventListener('mousemove', handleMove)
+    container.addEventListener('mouseleave', handleLeave)
+
+    return () => {
+      container.removeEventListener('mousemove', handleMove)
+      container.removeEventListener('mouseleave', handleLeave)
+    }
+  }, [])
+
   // Initialize Three + Spark renderer once
   useEffect(() => {
     const container = containerRef.current
@@ -669,11 +749,14 @@ export const ThreeDSceneViewer = ({
     }
 
     const controls = new OrbitControls(camera, renderer.domElement)
-    controls.enableDamping = true
+    controls.enableDamping = false
     controls.dampingFactor = 0.08
     controls.rotateSpeed = 0.75
     controls.zoomSpeed = 0.6
     controls.panSpeed = 0.6
+    controls.enableRotate = false
+    controls.enablePan = false
+    controls.enableZoom = false
     controls.target.set(0, 0, 0)
     const defaultControls: DefaultControlsState = {
       dampingFactor: controls.dampingFactor,
@@ -738,6 +821,16 @@ export const ThreeDSceneViewer = ({
     }
 
     const animate = () => {
+      const parallax = parallaxRef.current
+      if (parallax) {
+        parallax.current.lerp(parallax.target, 0.08)
+        const tempPosition = tempPositionRef.current
+        tempPosition.copy(parallax.basePosition)
+        tempPosition.addScaledVector(parallax.baseRight, parallax.current.x * parallax.strength)
+        tempPosition.addScaledVector(parallax.baseUp, parallax.current.y * parallax.strength)
+        camera.position.copy(tempPosition)
+        camera.lookAt(parallax.baseTarget)
+      }
       controls.update()
       renderer.render(sceneObj, camera)
       frameRef.current = requestAnimationFrame(animate)
@@ -747,7 +840,6 @@ export const ThreeDSceneViewer = ({
     setIsReady(true)
 
     return () => {
-      abortRef.current?.abort()
       if (frameRef.current) cancelAnimationFrame(frameRef.current)
       window.removeEventListener('resize', handleResize)
       resizeObserver?.disconnect()
@@ -769,10 +861,11 @@ export const ThreeDSceneViewer = ({
     }
   }, [])
 
-  // Load SOG scene whenever mode toggles on the same url
+  // Load SOG scene from preloaded bytes
   useEffect(() => {
     if (!isReady) return
     if (!scene || scene.mode !== 'sog') return
+    if (!sceneBytes) return
     const container = containerRef.current
     const canvasContainer = canvasContainerRef.current
     const renderer = rendererRef.current
@@ -801,16 +894,6 @@ export const ThreeDSceneViewer = ({
     setError(null)
     setIsLoading(true)
     onLoadingChange?.(true)
-    loadingIndicatorRef?.current?.updateLoadingState({
-      isVisible: true,
-      isWebGLLoading: true,
-      webglMessage: t('photo.3d.loading'),
-      webglQuality: 'unknown',
-    })
-
-    abortRef.current?.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
 
     const removeCurrentMesh = () => {
       if (meshRef.current) {
@@ -821,23 +904,22 @@ export const ThreeDSceneViewer = ({
     }
 
     const load = async () => {
-      let finished = false
       try {
-        const response = await fetch(scene.url, { signal: controller.signal })
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
+        if (sceneBytes.byteLength === 0) {
+          throw new Error('Empty 3D scene buffer')
         }
-        const buffer = await response.arrayBuffer()
-        const bytes = new Uint8Array(buffer)
-        const cameraMetadata = await readSogMetadata(bytes)
+
+        const metadataBytes = sceneBytes
+        const meshBytes = sceneBytes.slice()
+        const cameraMetadata = await readSogMetadata(metadataBytes)
 
         const mesh = new SplatMesh({
-          fileBytes: bytes,
+          fileBytes: meshBytes,
           fileType: SplatFileType.PCSOGSZIP,
           fileName: scene.s3Key ?? scene.url,
         })
         await mesh.initialized
-        if (controller.signal.aborted || disposed) {
+        if (disposed) {
           mesh.dispose()
           return
         }
@@ -869,14 +951,16 @@ export const ThreeDSceneViewer = ({
           fitViewToMesh({ mesh, camera, controls })
         }
 
+        updateParallaxState(mesh)
         spark.update({ scene: sceneObj })
         resizeRef.current?.()
 
         loadingIndicatorRef?.current?.updateLoadingState({ isVisible: false })
+        setIsLoading(false)
+        onLoadingChange?.(false)
         onReady?.()
-        finished = true
       } catch (err) {
-        if (controller.signal.aborted || disposed) return
+        if (disposed) return
         console.error('[3D][sog] failed to load scene', err)
         loadingIndicatorRef?.current?.updateLoadingState({
           isVisible: true,
@@ -885,12 +969,9 @@ export const ThreeDSceneViewer = ({
         })
         const errorMsg = err instanceof Error ? err.message : 'Failed to load 3D scene'
         setError(errorMsg)
+        setIsLoading(false)
+        onLoadingChange?.(false)
         onError?.(err instanceof Error ? err : new Error(errorMsg))
-      } finally {
-        if (!controller.signal.aborted && !disposed && !finished) {
-          setIsLoading(false)
-          onLoadingChange?.(false)
-        }
       }
     }
 
@@ -898,9 +979,10 @@ export const ThreeDSceneViewer = ({
 
     return () => {
       disposed = true
-      controller.abort()
+      setIsLoading(false)
+      onLoadingChange?.(false)
     }
-  }, [isReady, scene, t, loadingIndicatorRef, onLoadingChange, onError, onReady])
+  }, [isReady, scene, sceneBytes, t, loadingIndicatorRef, onLoadingChange, onError, onReady, updateParallaxState])
 
   return (
     <div ref={containerRef} className={clsxm('relative h-full w-full overflow-hidden bg-[#0c1018]', className)}>
@@ -914,14 +996,6 @@ export const ThreeDSceneViewer = ({
           }}
         />
       </div>
-      {isLoading && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-          <div className="flex items-center gap-2 rounded-lg bg-black/60 px-3 py-2 text-sm text-white">
-            <i className="i-mingcute-loading-3-line animate-spin" />
-            <span>{t('photo.3d.loading')}</span>
-          </div>
-        </div>
-      )}
       {error && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <div className="flex items-center gap-2 rounded-lg bg-black/70 px-3 py-2 text-sm text-white">

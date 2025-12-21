@@ -31,6 +31,11 @@ export interface ImageLoadResult {
   convertedUrl?: string
 }
 
+export interface BinaryLoadResult {
+  bytes: Uint8Array
+  size: number
+}
+
 export interface VideoProcessResult {
   convertedVideoUrl?: string
   conversionMethod?: string
@@ -54,6 +59,18 @@ const regularImageCache: LRUCache<string, ImageCacheResult> = new LRUCache<strin
     }
   },
 )
+
+// Binary file cache (e.g., 3D assets)
+type BinaryCacheResult = {
+  bytes: Uint8Array
+  size: number
+}
+
+const binaryFileCache: LRUCache<string, BinaryCacheResult> = new LRUCache<string, BinaryCacheResult>(5)
+
+function generateBinaryCacheKey(url: string): string {
+  return url
+}
 
 /**
  * 生成普通图片的缓存键
@@ -174,6 +191,96 @@ export class ImageLoaderManager {
             isVisible: false,
           })
 
+          onError?.()
+          reject(new Error('Network error'))
+        }
+
+        xhr.send()
+        this.currentXHR = xhr
+      }, 300)
+    })
+  }
+
+  async loadBinary(src: string, callbacks: LoadingCallbacks = {}): Promise<BinaryLoadResult> {
+    const { onProgress, onError, onLoadingStateUpdate } = callbacks
+
+    const cacheKey = generateBinaryCacheKey(src)
+    const cachedResult = binaryFileCache.get(cacheKey)
+    if (cachedResult) {
+      if (cachedResult.bytes.byteLength === 0) {
+        binaryFileCache.delete(cacheKey)
+      } else {
+        onLoadingStateUpdate?.({
+          isVisible: false,
+        })
+        return {
+          bytes: cachedResult.bytes.slice(),
+          size: cachedResult.size,
+        }
+      }
+    }
+
+    onLoadingStateUpdate?.({
+      isVisible: true,
+    })
+
+    return new Promise((resolve, reject) => {
+      this.delayTimer = setTimeout(() => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('GET', src)
+        xhr.responseType = 'arraybuffer'
+
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              const buffer = xhr.response as ArrayBuffer
+              const bytes = new Uint8Array(buffer)
+              const cachedBytes = bytes.slice()
+              binaryFileCache.set(cacheKey, {
+                bytes: cachedBytes,
+                size: cachedBytes.byteLength,
+              })
+
+              onLoadingStateUpdate?.({
+                isVisible: false,
+              })
+
+              resolve({
+                bytes,
+                size: bytes.byteLength,
+              })
+            } catch (error) {
+              onLoadingStateUpdate?.({
+                isVisible: false,
+              })
+              onError?.()
+              reject(error)
+            }
+          } else {
+            onLoadingStateUpdate?.({
+              isVisible: false,
+            })
+            onError?.()
+            reject(new Error(`HTTP ${xhr.status}`))
+          }
+        }
+
+        xhr.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = (e.loaded / e.total) * 100
+            onLoadingStateUpdate?.({
+              loadingProgress: progress,
+              loadedBytes: e.loaded,
+              totalBytes: e.total,
+            })
+            onProgress?.(progress)
+          }
+        }
+
+        xhr.onerror = () => {
+          onLoadingStateUpdate?.({
+            isVisible: false,
+          })
           onError?.()
           reject(new Error('Network error'))
         }

@@ -64,9 +64,15 @@ export const ProgressiveImage = ({
   const [isThreeDMode, setIsThreeDMode] = useState(false)
   const [isThreeDLoading, setIsThreeDLoading] = useState(false)
   const [threeDError, setThreeDError] = useState<string | null>(null)
+  const [threeDLoadError, setThreeDLoadError] = useState<string | null>(null)
+  const [threeDBytes, setThreeDBytes] = useState<Uint8Array | null>(null)
+  const [threeDBytesForViewer, setThreeDBytesForViewer] = useState<Uint8Array | null>(null)
+  const [isThreeDBytesLoading, setIsThreeDBytesLoading] = useState(false)
+  const [isThreeDSceneReady, setIsThreeDSceneReady] = useState(false)
 
   const isActiveImage = Boolean(isCurrentImage && shouldRenderHighRes)
   const hasThreeDScene = Boolean(threeDScene && threeDScene.mode === 'sog')
+  const isThreeDAssetReady = hasThreeDScene && Boolean(threeDBytes?.byteLength) && !threeDLoadError
 
   // 判断是否有视频内容（Live Photo 或 Motion Photo）
   const hasVideo = Boolean(videoSource && videoSource.type !== 'none')
@@ -82,6 +88,10 @@ export const ProgressiveImage = ({
       setIsThreeDMode(false)
       setIsThreeDLoading(false)
       setThreeDError(null)
+      setThreeDLoadError(null)
+      setThreeDBytesForViewer(null)
+      setIsThreeDBytesLoading(false)
+      setIsThreeDSceneReady(false)
     }
   }, [isActiveImage])
 
@@ -89,6 +99,11 @@ export const ProgressiveImage = ({
     if (!hasThreeDScene) {
       setIsThreeDMode(false)
       setThreeDError(null)
+      setThreeDLoadError(null)
+      setThreeDBytes(null)
+      setThreeDBytesForViewer(null)
+      setIsThreeDBytesLoading(false)
+      setIsThreeDSceneReady(false)
     }
   }, [hasThreeDScene])
 
@@ -140,6 +155,7 @@ export const ProgressiveImage = ({
     setIsThreeDMode((prev) => {
       const next = !prev
       if (!next) {
+        setIsThreeDSceneReady(false)
         webglImageViewerRef.current?.resetView()
         domImageViewerRef.current?.resetTransform?.()
         setIsThreeDLoading(false)
@@ -151,16 +167,68 @@ export const ProgressiveImage = ({
     })
   }, [hasThreeDScene, isActiveImage, onZoomChange])
 
-  const shouldRenderThreeDScene = hasThreeDScene && isThreeDMode && isActiveImage && canUseWebGL
-  const shouldRenderHighResImage = highResLoaded && blobSrc && isActiveImage && !error && !isThreeDMode
+  useEffect(() => {
+    if (!hasThreeDScene || !threeDScene || !isActiveImage || !highResLoaded) return
+    if (!imageLoaderManagerRef.current) return
+    if (threeDBytes || threeDLoadError || isThreeDBytesLoading) return
+
+    let cancelled = false
+    const loader = imageLoaderManagerRef.current
+    setIsThreeDBytesLoading(true)
+    setThreeDLoadError(null)
+
+    const loadThreeD = async () => {
+      try {
+        const result = await loader.loadBinary(threeDScene.url)
+        if (cancelled) return
+        setThreeDBytes(result.bytes)
+      } catch (err) {
+        if (cancelled) return
+        const message = err instanceof Error ? err.message : 'Failed to load 3D scene'
+        setThreeDLoadError(message)
+      } finally {
+        if (!cancelled) {
+          setIsThreeDBytesLoading(false)
+        }
+      }
+    }
+
+    loadThreeD()
+
+    return () => {
+      cancelled = true
+      loader.cleanup()
+    }
+  }, [hasThreeDScene, threeDScene, isActiveImage, highResLoaded, threeDBytes, threeDLoadError])
+
+  useEffect(() => {
+    if (!isThreeDMode) {
+      setThreeDBytesForViewer(null)
+      return
+    }
+    if (!threeDBytes || !threeDBytes.byteLength) return
+    setThreeDBytesForViewer(threeDBytes.slice())
+  }, [isThreeDMode, threeDBytes])
+
+  const shouldRenderThreeDScene =
+    hasThreeDScene &&
+    isThreeDMode &&
+    isActiveImage &&
+    canUseWebGL &&
+    Boolean(threeDBytesForViewer?.byteLength) &&
+    !threeDLoadError
+  const shouldRenderHighResImage =
+    highResLoaded && blobSrc && isActiveImage && !error && (!isThreeDMode || !isThreeDSceneReady)
   const handleThreeDLoadingChange = useCallback((loading: boolean) => {
     setIsThreeDLoading(loading)
   }, [])
   const handleThreeDError = useCallback((err: Error) => {
     setThreeDError(err?.message ?? 'unknown')
+    setIsThreeDSceneReady(false)
   }, [])
   const handleThreeDReady = useCallback(() => {
     setThreeDError(null)
+    setIsThreeDSceneReady(true)
   }, [])
 
   return (
@@ -172,7 +240,7 @@ export const ProgressiveImage = ({
       onTouchStart={handleLongPressStart}
       onTouchEnd={handleLongPressEnd}
     >
-      {hasThreeDScene && (
+      {hasThreeDScene && isActiveImage && isThreeDAssetReady && (
         <button
           type="button"
           className={clsxm(
@@ -269,8 +337,12 @@ export const ProgressiveImage = ({
 
       {shouldRenderThreeDScene && threeDScene && (
         <ThreeDSceneViewer
-          className="absolute inset-0 h-full w-full"
+          className={clsxm(
+            'absolute inset-0 h-full w-full transition-opacity duration-200',
+            !isThreeDSceneReady && 'pointer-events-none opacity-0',
+          )}
           scene={threeDScene}
+          sceneBytes={threeDBytesForViewer}
           imageWidth={width}
           imageHeight={height}
           loadingIndicatorRef={loadingIndicatorRef}
@@ -304,7 +376,7 @@ export const ProgressiveImage = ({
           {t('photo.zoom.hint')}
         </div>
       )}
-      {shouldRenderThreeDScene && !threeDError && (
+      {shouldRenderThreeDScene && isThreeDSceneReady && !threeDError && (
         <div className="pointer-events-none absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded bg-black/50 px-2 py-1 text-xs text-white opacity-0 duration-200 group-hover:opacity-50">
           {t('photo.3d.hint')}
         </div>
