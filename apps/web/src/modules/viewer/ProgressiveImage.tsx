@@ -82,6 +82,7 @@ export const ProgressiveImage = ({
   const webglImageViewerRef = useRef<WebGLImageViewerRef | null>(null)
   const domImageViewerRef = useRef<ReactZoomPanPinchRef>(null)
   const livePhotoRef = useRef<any>(null)
+  const hasAutoEnteredThreeDRef = useRef(false)
 
   useEffect(() => {
     if (!isActiveImage) {
@@ -92,6 +93,7 @@ export const ProgressiveImage = ({
       setThreeDBytesForViewer(null)
       setIsThreeDBytesLoading(false)
       setIsThreeDSceneReady(false)
+      hasAutoEnteredThreeDRef.current = false
     }
   }, [isActiveImage])
 
@@ -104,6 +106,7 @@ export const ProgressiveImage = ({
       setThreeDBytesForViewer(null)
       setIsThreeDBytesLoading(false)
       setIsThreeDSceneReady(false)
+      hasAutoEnteredThreeDRef.current = false
     }
   }, [hasThreeDScene])
 
@@ -186,6 +189,15 @@ export const ProgressiveImage = ({
       return next
     })
   }, [hasThreeDScene, isActiveImage, onZoomChange])
+
+  useEffect(() => {
+    if (!hasThreeDScene || !isActiveImage || !canUseWebGL || !isThreeDAssetReady) return
+    if (hasAutoEnteredThreeDRef.current) return
+    hasAutoEnteredThreeDRef.current = true
+    setThreeDError(null)
+    setIsThreeDMode(true)
+    onZoomChange?.(true)
+  }, [hasThreeDScene, isActiveImage, isThreeDAssetReady, onZoomChange])
 
   useEffect(() => {
     if (!hasThreeDScene || !threeDScene || !isActiveImage || !highResLoaded) return
