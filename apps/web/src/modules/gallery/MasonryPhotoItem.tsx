@@ -97,6 +97,7 @@ export const MasonryPhotoItem = memo(({ data, width }: { data: PhotoManifest; wi
 
   // 检查是否有视频内容（Live Photo 或 Motion Photo）
   const hasVideo = data.video !== undefined
+  const hasThreeDScene = Boolean(data.threeDScene && data.threeDScene.mode === 'sog')
 
   // Live Photo/Motion Photo 视频加载逻辑
   useEffect(() => {
@@ -255,36 +256,51 @@ export const MasonryPhotoItem = memo(({ data, width }: { data: PhotoManifest; wi
         </div>
       )}
 
-      {/* Live Photo/Motion Photo 标识 */}
-      {hasVideo && (
-        <div
-          className={clsx(
-            'absolute z-20 flex items-center space-x-1 rounded-xl bg-black/50 px-1 py-1 text-xs text-white transition-all duration-200 hover:bg-black/70',
-            'top-2 left-2',
-            'flex-wrap gap-y-1',
-          )}
-          title={isMobileDevice ? t('photo.live.tooltip.mobile.main') : t('photo.live.tooltip.desktop.main')}
-        >
-          {isConvertingVideo ? (
-            <div className="flex items-center gap-1 px-1">
-              <i className="i-mingcute-loading-line animate-spin" />
-              <span>{t('loading.converting')}</span>
+      {/* Live Photo/Motion Photo & Spatial 标识 */}
+      {(hasVideo || hasThreeDScene) && (
+        <div className="absolute top-2 left-2 z-20 flex flex-col gap-1">
+          {hasVideo && (
+            <div
+              className={clsx(
+                'flex items-center space-x-1 rounded-xl bg-black/50 px-1 py-1 text-xs text-white transition-all duration-200 hover:bg-black/70',
+                'flex-wrap gap-y-1',
+              )}
+              title={isMobileDevice ? t('photo.live.tooltip.mobile.main') : t('photo.live.tooltip.desktop.main')}
+            >
+              {isConvertingVideo ? (
+                <div className="flex items-center gap-1 px-1">
+                  <i className="i-mingcute-loading-line animate-spin" />
+                  <span>{t('loading.converting')}</span>
+                </div>
+              ) : (
+                <Fragment>
+                  <i className="i-mingcute-live-photo-line size-4 shrink-0" />
+                  <span className="mr-1 shrink-0">{t('photo.live.badge')}</span>
+                  {videoConvertionError ? (
+                    <span className={'bg-warning/20 ml-0.5 rounded px-1 text-xs'}>
+                      <div
+                        className="text-yellow w-3 text-center font-bold"
+                        title={(videoConvertionError as Error).message}
+                      >
+                        !
+                      </div>
+                    </span>
+                  ) : null}
+                </Fragment>
+              )}
             </div>
-          ) : (
-            <Fragment>
-              <i className="i-mingcute-live-photo-line size-4 shrink-0" />
-              <span className="mr-1 shrink-0">{t('photo.live.badge')}</span>
-              {videoConvertionError ? (
-                <span className={'bg-warning/20 ml-0.5 rounded px-1 text-xs'}>
-                  <div
-                    className="text-yellow w-3 text-center font-bold"
-                    title={(videoConvertionError as Error).message}
-                  >
-                    !
-                  </div>
-                </span>
-              ) : null}
-            </Fragment>
+          )}
+          {hasThreeDScene && (
+            <div
+              className={clsx(
+                'flex items-center space-x-1 rounded-xl bg-black/50 px-1 py-1 text-xs text-white transition-all duration-200 hover:bg-black/70',
+                'flex-wrap gap-y-1',
+              )}
+              title={t('photo.3d.tooltip.enable')}
+            >
+              <i className="i-lucide-rotate-3d size-4 shrink-0" />
+              <span className="mr-1 shrink-0">{t('photo.3d.badge')}</span>
+            </div>
           )}
         </div>
       )}

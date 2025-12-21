@@ -359,7 +359,7 @@
   "minimap.loading": "Loading map...",
   "minimap.view.in.map": "View location in map",
   "photo.3d.badge": "Spatial",
-  "photo.3d.error": "Unable to load the 3D scene",
+  "photo.3d.error": "Unable to load the spatial scene",
   "photo.3d.fetching": "Fetching spatial scene…",
   "photo.3d.fetchingDetail": "Downloading from network…",
   "photo.3d.hint": "Move your cursor to explore depth",
