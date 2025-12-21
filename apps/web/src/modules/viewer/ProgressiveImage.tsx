@@ -143,7 +143,7 @@ export const ProgressiveImage = ({
 
   const handleWebGLLoadingStateChange = useWebGLLoadingState(loadingIndicatorRef)
   const handleThreeDLoadingStateUpdate = useCallback(
-    (state: { isVisible?: boolean }) => {
+    (state: { isVisible?: boolean; loadingProgress?: number; loadedBytes?: number; totalBytes?: number }) => {
       if (state.isVisible === false) {
         loadingIndicatorRef?.current?.updateLoadingState({ isVisible: false })
         return
@@ -158,6 +158,9 @@ export const ProgressiveImage = ({
         webglMessage: t('photo.3d.fetching'),
         webglDetail: t('photo.3d.fetchingDetail'),
         webglQuality: 'unknown',
+        loadingProgress: state.loadingProgress ?? 0,
+        loadedBytes: state.loadedBytes ?? 0,
+        totalBytes: state.totalBytes ?? 0,
       })
     },
     [loadingIndicatorRef, t],

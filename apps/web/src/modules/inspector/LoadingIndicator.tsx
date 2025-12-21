@@ -125,8 +125,20 @@ export const LoadingIndicator = ({ ref }: { ref?: React.Ref<LoadingIndicatorRef 
                     {loadingState.webglQuality}
                   </span>
                 )}
+                {loadingState.totalBytes > 0 && (
+                  <span className="text-xs text-white/60 tabular-nums">
+                    {Math.round(loadingState.loadingProgress)}%
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-white/70">{loadingState.webglDetail || t('loading.webgl.building')}</p>
+              {loadingState.totalBytes > 0 ? (
+                <p className="text-xs text-white/70 tabular-nums">
+                  {(loadingState.loadedBytes / 1024 / 1024).toFixed(1)}MB /{' '}
+                  {(loadingState.totalBytes / 1024 / 1024).toFixed(1)}MB
+                </p>
+              ) : (
+                <p className="text-xs text-white/70">{loadingState.webglDetail || t('loading.webgl.building')}</p>
+              )}
             </>
           ) : (
             // 图片加载状态
