@@ -271,6 +271,8 @@ export const ProgressiveImage = ({
         <ThreeDSceneViewer
           className="absolute inset-0 h-full w-full"
           scene={threeDScene}
+          imageWidth={width}
+          imageHeight={height}
           loadingIndicatorRef={loadingIndicatorRef}
           onLoadingChange={handleThreeDLoadingChange}
           onError={handleThreeDError}

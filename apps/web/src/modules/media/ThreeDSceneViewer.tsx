@@ -1,7 +1,7 @@
 import { clsxm } from '@afilmory/utils'
 import { SparkRenderer, SplatFileType, SplatMesh } from '@sparkjsdev/spark'
-import type {MutableRefObject} from 'react';
-import { useEffect, useRef, useState } from 'react'
+import type { MutableRefObject } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -305,7 +305,7 @@ const computeMlSharpDepthFocus = (mesh: SplatMesh, { qFocus = 0.1, minDepthFocus
   const depths: number[] = []
   for (let i = 0; i < numSplats; i += step) {
     const { center } = mesh.packedSplats.getSplat(i)
-    const {z} = center
+    const { z } = center
     if (Number.isFinite(z) && z > 0) depths.push(z)
   }
 
@@ -496,8 +496,8 @@ const applyMetadataCamera = ({
   camera.updateMatrix()
   camera.updateMatrixWorld(true)
 
-  let {near} = defaultCamera
-  let {far} = defaultCamera
+  let { near } = defaultCamera
+  let { far } = defaultCamera
 
   if (mesh?.getBoundingBox) {
     const box = mesh.getBoundingBox()
@@ -569,6 +569,8 @@ const fitViewToMesh = ({
 interface ThreeDSceneViewerProps {
   scene: ThreeDSceneSource
   className?: string
+  imageWidth?: number
+  imageHeight?: number
   loadingIndicatorRef?: React.RefObject<LoadingIndicatorRef | null>
   onLoadingChange?: (isLoading: boolean) => void
   onError?: (error: Error) => void
@@ -578,6 +580,8 @@ interface ThreeDSceneViewerProps {
 export const ThreeDSceneViewer = ({
   scene,
   className,
+  imageWidth,
+  imageHeight,
   loadingIndicatorRef,
   onLoadingChange,
   onError,
@@ -585,6 +589,9 @@ export const ThreeDSceneViewer = ({
 }: ThreeDSceneViewerProps) => {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const canvasContainerRef = useRef<HTMLDivElement | null>(null)
+  const canvasBoundsRef = useRef<{ width: number; height: number } | null>(null)
+  const updateBoundsRef = useRef<(() => void) | null>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
@@ -599,14 +606,48 @@ export const ThreeDSceneViewer = ({
   const resizeRef = useRef<(() => void) | null>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
 
+  const [canvasBounds, setCanvasBounds] = useState<{ width: number; height: number } | null>(null)
   const [isReady, setIsReady] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const updateBounds = useCallback(() => {
+    const container = containerRef.current
+    if (!container) return
+    const containerWidth = container.clientWidth || 1
+    const containerHeight = container.clientHeight || 1
+
+    let targetWidth = containerWidth
+    let targetHeight = containerHeight
+
+    if (typeof imageWidth === 'number' && typeof imageHeight === 'number' && imageWidth > 0 && imageHeight > 0) {
+      const scale = Math.min(containerWidth / imageWidth, containerHeight / imageHeight)
+      targetWidth = imageWidth * scale
+      targetHeight = imageHeight * scale
+    }
+
+    const next = {
+      width: Math.max(1, Math.round(targetWidth)),
+      height: Math.max(1, Math.round(targetHeight)),
+    }
+
+    const prev = canvasBoundsRef.current
+    if (prev && prev.width === next.width && prev.height === next.height) return
+    canvasBoundsRef.current = next
+    setCanvasBounds(next)
+    resizeRef.current?.()
+  }, [imageHeight, imageWidth])
+
+  useEffect(() => {
+    updateBoundsRef.current = updateBounds
+    updateBounds()
+  }, [updateBounds])
+
   // Initialize Three + Spark renderer once
   useEffect(() => {
     const container = containerRef.current
-    if (!container) return
+    const canvasContainer = canvasContainerRef.current
+    if (!container || !canvasContainer) return
 
     const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false })
     renderer.outputColorSpace = THREE.SRGBColorSpace
@@ -614,7 +655,7 @@ export const ThreeDSceneViewer = ({
     renderer.domElement.style.width = '100%'
     renderer.domElement.style.height = '100%'
     renderer.domElement.style.display = 'block'
-    container.append(renderer.domElement)
+    canvasContainer.append(renderer.domElement)
 
     const sceneObj = new THREE.Scene()
     sceneObj.background = new THREE.Color('#0c1018')
@@ -657,31 +698,41 @@ export const ThreeDSceneViewer = ({
     defaultControlsRef.current = defaultControls
 
     const resize = () => {
-      if (!container || !renderer || !camera) return
-      const { clientWidth, clientHeight } = container
-      renderer.setSize(clientWidth, clientHeight, false)
+      if (!renderer || !camera) return
+      const bounds = canvasBoundsRef.current
+      const width = (bounds?.width ?? canvasContainer.clientWidth) || 1
+      const height = (bounds?.height ?? canvasContainer.clientHeight) || 1
+      renderer.setSize(width, height, false)
       if (activeCameraRef.current && defaultCameraRef.current && defaultControlsRef.current) {
         applyCameraProjection({
           cameraMetadata: activeCameraRef.current,
           camera,
           controls,
-          viewportWidth: clientWidth || 1,
-          viewportHeight: clientHeight || 1,
+          viewportWidth: width,
+          viewportHeight: height,
           defaultCamera: defaultCameraRef.current,
           defaultControls: defaultControlsRef.current,
         })
       } else {
-        camera.aspect = clientWidth / Math.max(1, clientHeight)
+        camera.aspect = width / Math.max(1, height)
         camera.updateProjectionMatrix()
       }
     }
 
-    window.addEventListener('resize', resize)
-    resize()
+    const handleResize = () => {
+      if (updateBoundsRef.current) {
+        updateBoundsRef.current()
+        return
+      }
+      resize()
+    }
+
+    window.addEventListener('resize', handleResize)
+    handleResize()
     resizeRef.current = resize
     let resizeObserver: ResizeObserver | undefined
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => resize())
+      resizeObserver = new ResizeObserver(() => handleResize())
       resizeObserver.observe(container)
       resizeObserverRef.current = resizeObserver
     }
@@ -698,7 +749,7 @@ export const ThreeDSceneViewer = ({
     return () => {
       abortRef.current?.abort()
       if (frameRef.current) cancelAnimationFrame(frameRef.current)
-      window.removeEventListener('resize', resize)
+      window.removeEventListener('resize', handleResize)
       resizeObserver?.disconnect()
       controls.dispose()
       renderer.dispose()
@@ -712,7 +763,7 @@ export const ThreeDSceneViewer = ({
         sparkMaterial?.dispose?.()
       }
       sceneObj.clear()
-      if (renderer.domElement.parentElement === container) {
+      if (renderer.domElement.parentElement === canvasContainer) {
         renderer.domElement.remove()
       }
     }
@@ -723,6 +774,7 @@ export const ThreeDSceneViewer = ({
     if (!isReady) return
     if (!scene || scene.mode !== 'sog') return
     const container = containerRef.current
+    const canvasContainer = canvasContainerRef.current
     const renderer = rendererRef.current
     const sceneObj = sceneRef.current
     const camera = cameraRef.current
@@ -731,7 +783,17 @@ export const ThreeDSceneViewer = ({
     const defaultCamera = defaultCameraRef.current
     const defaultControls = defaultControlsRef.current
 
-    if (!container || !renderer || !sceneObj || !camera || !controls || !spark || !defaultCamera || !defaultControls) {
+    if (
+      !container ||
+      !canvasContainer ||
+      !renderer ||
+      !sceneObj ||
+      !camera ||
+      !controls ||
+      !spark ||
+      !defaultCamera ||
+      !defaultControls
+    ) {
       return
     }
 
@@ -798,7 +860,7 @@ export const ThreeDSceneViewer = ({
             cameraMetadata,
             camera,
             controls,
-            container,
+            container: canvasContainer,
             defaultCamera,
             defaultControls,
             activeCameraRef,
@@ -842,6 +904,16 @@ export const ThreeDSceneViewer = ({
 
   return (
     <div ref={containerRef} className={clsxm('relative h-full w-full overflow-hidden bg-[#0c1018]', className)}>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          ref={canvasContainerRef}
+          className="relative"
+          style={{
+            width: canvasBounds ? `${canvasBounds.width}px` : '100%',
+            height: canvasBounds ? `${canvasBounds.height}px` : '100%',
+          }}
+        />
+      </div>
       {isLoading && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <div className="flex items-center gap-2 rounded-lg bg-black/60 px-3 py-2 text-sm text-white">
