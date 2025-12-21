@@ -22,6 +22,7 @@ interface WorkerInitMessage {
 interface SharedData {
   existingManifestMap: Map<string, PhotoManifestItem>
   livePhotoMap: Map<string, StorageObject>
+  threeDSceneMap: Map<string, StorageObject>
   imageObjects: StorageObject[]
   builderConfig: BuilderConfig
 }
@@ -37,6 +38,7 @@ export async function runAsWorker() {
   let imageObjects: StorageObject[]
   let existingManifestMap: Map<string, PhotoManifestItem>
   let livePhotoMap: Map<string, StorageObject>
+  let threeDSceneMap: Map<string, StorageObject>
   let builder: AfilmoryBuilder
   let pluginRunState: PluginRunState
 
@@ -52,6 +54,7 @@ export async function runAsWorker() {
     imageObjects = sharedData.imageObjects
     existingManifestMap = sharedData.existingManifestMap
     livePhotoMap = sharedData.livePhotoMap
+    threeDSceneMap = sharedData.threeDSceneMap
     builder = new AfilmoryBuilder(sharedData.builderConfig)
     await builder.ensurePluginsReady()
     pluginRunState = builder.createPluginRunState()
@@ -95,6 +98,15 @@ export async function runAsWorker() {
           ETag: value.etag,
         })
       }
+      const legacyThreeDSceneMap = new Map()
+      for (const [key, value] of threeDSceneMap) {
+        legacyThreeDSceneMap.set(key, {
+          Key: value.key,
+          Size: value.size,
+          LastModified: value.lastModified,
+          ETag: value.etag,
+        })
+      }
 
       // 处理器选项（这些可以作为环境变量传递或使用默认值）
       const processorOptions = {
@@ -118,6 +130,7 @@ export async function runAsWorker() {
         imageObjects.length,
         existingManifestMap,
         legacyLivePhotoMap,
+        legacyThreeDSceneMap,
         processorOptions,
         builder,
         {
@@ -196,6 +209,15 @@ export async function runAsWorker() {
                 ETag: value.etag,
               })
             }
+            const legacyThreeDSceneMap = new Map()
+            for (const [key, value] of threeDSceneMap) {
+              legacyThreeDSceneMap.set(key, {
+                Key: value.key,
+                Size: value.size,
+                LastModified: value.lastModified,
+                ETag: value.etag,
+              })
+            }
 
             // 处理照片
             const { processPhoto } = await import('./photo/processor.js')
@@ -206,6 +228,7 @@ export async function runAsWorker() {
               imageObjects.length,
               existingManifestMap,
               legacyLivePhotoMap,
+              legacyThreeDSceneMap,
               batchProcessorOptions,
               builder,
               {

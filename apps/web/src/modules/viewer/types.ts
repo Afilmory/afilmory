@@ -1,4 +1,5 @@
 import type { ImageLoaderManager } from '~/lib/image-loader-manager'
+import type { PhotoManifest } from '~/types/photo'
 
 import type { LoadingIndicatorRef } from '../inspector'
 import type { LivePhotoVideoHandle } from '../media'
@@ -38,6 +39,7 @@ export interface ProgressiveImageProps {
 
   // HDR 相关 props
   isHDR?: boolean
+  threeDScene?: PhotoManifest['threeDScene']
 
   loadingIndicatorRef: React.RefObject<LoadingIndicatorRef | null>
 }

@@ -19,6 +19,7 @@ export interface ClusterPoolOptions<T> {
   sharedData?: {
     existingManifestMap: Map<string, any>
     livePhotoMap: Map<string, any>
+    threeDSceneMap: Map<string, any>
     imageObjects: any[]
     builderConfig: BuilderConfig
   }
@@ -270,6 +271,7 @@ export class ClusterPool<T> extends EventEmitter {
         const serializedBuffer = serialize({
           existingManifestMap: this.sharedData.existingManifestMap,
           livePhotoMap: this.sharedData.livePhotoMap,
+          threeDSceneMap: this.sharedData.threeDSceneMap,
           imageObjects: this.sharedData.imageObjects,
           builderConfig: this.sharedData.builderConfig,
         })

@@ -149,6 +149,11 @@ export class AfilmoryBuilder {
         livePhotoMap,
       })
 
+      const threeDSceneMap = await this.detectThreeDScenes(allObjects)
+      if (threeDSceneMap.size > 0) {
+        logger.main.info(`检测到 ${threeDSceneMap.size} 个 3D 场景文件`)
+      }
+
       // 列出存储中的所有图片文件
       const imageObjects = await storageManager.listImages()
       logger.main.info(`存储中找到 ${imageObjects.length} 张照片`)
@@ -314,6 +319,7 @@ export class AfilmoryBuilder {
             sharedData: {
               existingManifestMap,
               livePhotoMap,
+              threeDSceneMap,
               imageObjects: tasksToProcess,
               builderConfig: this.getConfig(),
             },
@@ -347,6 +353,15 @@ export class AfilmoryBuilder {
                 ETag: value.etag,
               })
             }
+            const legacyThreeDSceneMap = new Map()
+            for (const [key, value] of threeDSceneMap) {
+              legacyThreeDSceneMap.set(key, {
+                Key: value.key,
+                Size: value.size,
+                LastModified: value.lastModified,
+                ETag: value.etag,
+              })
+            }
 
             return await processPhoto(
               legacyObj,
@@ -355,6 +370,7 @@ export class AfilmoryBuilder {
               tasksToProcess.length,
               existingManifestMap,
               legacyLivePhotoMap,
+              legacyThreeDSceneMap,
               processorOptions,
               this,
               {
@@ -517,6 +533,12 @@ export class AfilmoryBuilder {
     }
 
     return await this.getStorageManager().detectLivePhotos(allObjects)
+  }
+
+  private async detectThreeDScenes(
+    allObjects: Awaited<ReturnType<StorageManager['listAllFiles']>>,
+  ): Promise<Map<string, (typeof allObjects)[0]>> {
+    return await this.getStorageManager().detectThreeDScenes(allObjects)
   }
 
   private logBuildStart(): void {

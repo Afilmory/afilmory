@@ -34,6 +34,7 @@ const DEFAULT_PROCESSOR_OPTIONS: PhotoProcessorOptions = {
 export type ProcessPhotoOptions = {
   existingItem?: PhotoManifestItem
   livePhotoMap?: Map<string, StorageObject>
+  threeDSceneMap?: Map<string, StorageObject>
   processorOptions?: Partial<PhotoProcessorOptions>
   builder?: AfilmoryBuilder
   builderConfig?: BuilderConfig
@@ -58,9 +59,24 @@ export class PhotoBuilderService {
     object: StorageObject,
     options?: ProcessPhotoOptions,
   ): Promise<Awaited<ReturnType<typeof processPhotoWithPipeline>>> {
-    const { existingItem, livePhotoMap, processorOptions, builder, builderConfig, prefetchedBuffers } = options ?? {}
+    const { existingItem, livePhotoMap, threeDSceneMap, processorOptions, builder, builderConfig, prefetchedBuffers } =
+      options ?? {}
     const activeBuilder = this.resolveBuilder(builder, builderConfig)
     await activeBuilder.ensurePluginsReady()
+    const storageManager = activeBuilder.getStorageManager()
+
+    let resolvedLivePhotoMap = livePhotoMap
+    let resolvedThreeDSceneMap = threeDSceneMap
+
+    if (!resolvedLivePhotoMap || !resolvedThreeDSceneMap) {
+      const allObjects = await storageManager.listAllFiles()
+      if (!resolvedLivePhotoMap) {
+        resolvedLivePhotoMap = await storageManager.detectLivePhotos(allObjects)
+      }
+      if (!resolvedThreeDSceneMap) {
+        resolvedThreeDSceneMap = await storageManager.detectThreeDScenes(allObjects)
+      }
+    }
 
     const mergedOptions: PhotoProcessorOptions = {
       ...DEFAULT_PROCESSOR_OPTIONS,
@@ -72,13 +88,13 @@ export class PhotoBuilderService {
       photoKey: object.key,
       obj: this.toLegacyObject(object),
       existingItem,
-      livePhotoMap: this.toLegacyLivePhotoMap(livePhotoMap),
+      livePhotoMap: this.toLegacyLivePhotoMap(resolvedLivePhotoMap),
+      threeDSceneMap: this.toLegacyThreeDSceneMap(resolvedThreeDSceneMap),
       options: mergedOptions,
       pluginData: {},
     }
 
     const runtime = this.createPluginRuntime(activeBuilder, mergedOptions, builderConfig)
-    const storageManager = activeBuilder.getStorageManager()
     const storageConfig = activeBuilder.getStorageConfig()
 
     return await runWithPhotoExecutionContext(
@@ -148,6 +164,18 @@ export class PhotoBuilderService {
       result.set(key, this.toLegacyObject(value))
     }
 
+    return result
+  }
+
+  private toLegacyThreeDSceneMap(sceneMap?: Map<string, StorageObject>): Map<string, S3ObjectLike> {
+    if (!sceneMap) {
+      return new Map()
+    }
+
+    const result = new Map<string, S3ObjectLike>()
+    for (const [key, value] of sceneMap) {
+      result.set(key, this.toLegacyObject(value))
+    }
     return result
   }
 

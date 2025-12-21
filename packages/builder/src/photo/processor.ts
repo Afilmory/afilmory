@@ -23,6 +23,7 @@ export async function processPhoto(
   totalImages: number,
   existingManifestMap: Map<string, PhotoManifestItem>,
   livePhotoMap: Map<string, S3ObjectLike>,
+  threeDSceneMap: Map<string, S3ObjectLike>,
   options: PhotoProcessorOptions,
   builder: AfilmoryBuilder,
   pluginRuntime: {
@@ -44,6 +45,7 @@ export async function processPhoto(
     obj,
     existingItem,
     livePhotoMap,
+    threeDSceneMap,
     options,
     pluginData: {},
   }

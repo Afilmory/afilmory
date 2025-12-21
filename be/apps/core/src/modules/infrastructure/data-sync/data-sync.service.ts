@@ -70,6 +70,8 @@ interface SyncPreparation {
   statusReconciliation: StatusReconciliationEntry[]
   db: ReturnType<DbAccessor['get']>
   livePhotoMap?: Map<string, StorageObject>
+  threeDSceneMap?: Map<string, StorageObject>
+  allStorageObjects?: StorageObject[]
 }
 
 @injectable()
@@ -434,6 +436,7 @@ export class DataSyncService {
     }
 
     const livePhotoMap = await this.ensureLivePhotoMap(context, dryRun)
+    const threeDSceneMap = await this.ensureThreeDSceneMap(context, dryRun)
     const { db, tenantId, effectiveStorageConfig, builder } = context
     let processed = 0
 
@@ -468,6 +471,7 @@ export class DataSyncService {
 
       const result = await this.safeProcessStorageObject(storageObject, builder, {
         livePhotoMap,
+        threeDSceneMap,
         progress: {
           emitter: onProgress,
           stage: 'missing-in-db',
@@ -1217,9 +1221,33 @@ export class DataSyncService {
       return context.livePhotoMap
     }
 
-    const allObjects = await context.storageManager.listAllFiles()
+    const allObjects = await this.ensureAllStorageObjects(context)
     context.livePhotoMap = await context.storageManager.detectLivePhotos(allObjects)
     return context.livePhotoMap
+  }
+
+  private async ensureThreeDSceneMap(
+    context: SyncPreparation,
+    dryRun: boolean,
+  ): Promise<Map<string, StorageObject> | undefined> {
+    if (dryRun || context.missingInDb.length === 0) {
+      return undefined
+    }
+
+    if (context.threeDSceneMap) {
+      return context.threeDSceneMap
+    }
+
+    const allObjects = await this.ensureAllStorageObjects(context)
+    context.threeDSceneMap = await context.storageManager.detectThreeDScenes(allObjects)
+    return context.threeDSceneMap
+  }
+
+  private async ensureAllStorageObjects(context: SyncPreparation): Promise<StorageObject[]> {
+    if (!context.allStorageObjects) {
+      context.allStorageObjects = await context.storageManager.listAllFiles()
+    }
+    return context.allStorageObjects
   }
 
   private buildInsertPayload(payload: {
@@ -1259,6 +1287,7 @@ export class DataSyncService {
     options: {
       existing?: PhotoManifestItem | null
       livePhotoMap?: Map<string, StorageObject>
+      threeDSceneMap?: Map<string, StorageObject>
       progress?: {
         emitter?: DataSyncProgressEmitter
         stage?: DataSyncProgressStage | null
@@ -1277,6 +1306,7 @@ export class DataSyncService {
       details: {
         hasExistingManifest: Boolean(options.existing),
         hasLivePhotoMap: Boolean(options.livePhotoMap),
+        hasThreeDSceneMap: Boolean(options.threeDSceneMap),
       },
     })
 
@@ -1284,6 +1314,7 @@ export class DataSyncService {
       const result = await this.photoBuilderService.processPhotoFromStorageObject(storageObject, {
         existingItem: options.existing ?? undefined,
         livePhotoMap: options.livePhotoMap,
+        threeDSceneMap: options.threeDSceneMap,
         processorOptions: {
           isForceMode: true,
           isForceManifest: true,
@@ -1610,6 +1641,17 @@ export class DataSyncService {
 
     await builder.ensurePluginsReady()
     const storageManager = builder.getStorageManager()
+    let cachedAllStorageObjects: StorageObject[] | undefined
+    let cachedThreeDSceneMap: Map<string, StorageObject> | undefined
+    const ensureThreeDSceneMap = async (): Promise<Map<string, StorageObject>> => {
+      if (!cachedThreeDSceneMap) {
+        if (!cachedAllStorageObjects) {
+          cachedAllStorageObjects = await storageManager.listAllFiles()
+        }
+        cachedThreeDSceneMap = await storageManager.detectThreeDScenes(cachedAllStorageObjects)
+      }
+      return cachedThreeDSceneMap
+    }
 
     if (payload.type === 'missing-in-storage') {
       if (dryRun) {
@@ -1664,6 +1706,7 @@ export class DataSyncService {
 
       const processResult = await this.safeProcessStorageObject(storageObject, builder, {
         existing: record.manifest?.data as PhotoManifestItem | undefined,
+        threeDSceneMap: await ensureThreeDSceneMap(),
       })
       if (!processResult?.item) {
         throw new BizException(ErrorCode.IMAGE_PROCESSING_FAILED, {
@@ -1724,6 +1767,7 @@ export class DataSyncService {
 
     const processResult = await this.safeProcessStorageObject(storageObject, builder, {
       existing: record.manifest?.data as PhotoManifestItem | undefined,
+      threeDSceneMap: await ensureThreeDSceneMap(),
     })
     if (!processResult?.item) {
       throw new BizException(ErrorCode.IMAGE_PROCESSING_FAILED, { message: 'Failed to reprocess storage object.' })

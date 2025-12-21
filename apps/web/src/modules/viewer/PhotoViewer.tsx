@@ -347,6 +347,7 @@ export const PhotoViewer = ({
                               shouldAutoPlayVideoOnce={isCurrentImage}
                               // HDR props
                               isHDR={photo.isHDR}
+                              threeDScene={photo.threeDScene}
                             />
                           </m.div>
                         </SwiperSlide>

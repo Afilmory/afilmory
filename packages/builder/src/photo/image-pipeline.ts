@@ -24,6 +24,7 @@ import { processLivePhoto } from './live-photo-handler.js'
 import { getGlobalLoggers } from './logger-adapter.js'
 import { detectMotionPhoto } from './motion-photo-detector.js'
 import type { PhotoProcessorOptions } from './processor.js'
+import { processThreeDScene } from './three-d-scene-handler.js'
 
 export interface ProcessedImageData {
   sharpInstance: sharp.Sharp
@@ -36,6 +37,7 @@ export interface PhotoProcessingContext {
   obj: S3ObjectLike
   existingItem: PhotoManifestItem | undefined
   livePhotoMap: Map<string, S3ObjectLike>
+  threeDSceneMap: Map<string, S3ObjectLike>
   options: PhotoProcessorOptions
   pluginData: Record<string, unknown>
 }
@@ -149,7 +151,7 @@ async function generatePhotoId(s3Key: string): Promise<string> {
 export async function executePhotoProcessingPipeline(
   context: PhotoProcessingContext,
 ): Promise<PhotoManifestItem | null> {
-  const { photoKey, obj, existingItem, livePhotoMap, options } = context
+  const { photoKey, obj, existingItem, livePhotoMap, threeDSceneMap, options } = context
   const { storageManager } = getPhotoExecutionContext()
   const loggers = getGlobalLoggers()
   // Generate the actual photo ID with digest suffix
@@ -193,6 +195,7 @@ export async function executePhotoProcessingPipeline(
 
     // 7. 处理 Live Photo（独立的视频文件）
     const livePhotoResult = await processLivePhoto(photoKey, livePhotoMap, storageManager)
+    const threeDSceneResult = await processThreeDScene(photoKey, threeDSceneMap, storageManager)
 
     // 检测冲突：不允许同时存在 Motion Photo 和 Live Photo
     if (motionPhotoMetadata?.isMotionPhoto && livePhotoResult.isLivePhoto) {
@@ -246,6 +249,14 @@ export async function executePhotoProcessingPipeline(
                 s3Key: livePhotoResult.livePhotoVideoS3Key!,
               }
             : undefined,
+      threeDScene:
+        threeDSceneResult.hasScene && threeDSceneResult.sceneUrl && threeDSceneResult.sceneS3Key
+          ? {
+              mode: threeDSceneResult.mode ?? 'sog',
+              url: threeDSceneResult.sceneUrl,
+              s3Key: threeDSceneResult.sceneS3Key,
+            }
+          : undefined,
       // HDR 相关字段
       isHDR:
         exifData?.MPImageType === 'Gain Map Image' ||

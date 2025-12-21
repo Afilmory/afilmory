@@ -1,3 +1,6 @@
+import path from 'node:path'
+
+import { SUPPORTED_FORMATS,THREE_D_SCENE_EXTENSIONS } from '../constants/index.js'
 import { StorageFactory } from './factory.js'
 import type {
   StorageConfig,
@@ -104,6 +107,50 @@ export class StorageManager {
     const sourceObjects = allObjects ?? (await this.provider.listAllFiles())
     const filtered = this.applyExcludes(sourceObjects)
     return this.provider.detectLivePhotos(filtered)
+  }
+
+  /**
+   * 检测 3D Gaussian Splat 资源（.sog）
+   * @param allObjects 可选的文件列表
+   * @returns 图片 key -> 3D 场景文件 的映射
+   */
+  async detectThreeDScenes(allObjects?: StorageObject[]): Promise<Map<string, StorageObject>> {
+    const sourceObjects = allObjects ?? (await this.provider.listAllFiles())
+    const filtered = this.applyExcludes(sourceObjects)
+    const result = new Map<string, StorageObject>()
+    const groups = new Map<
+      string,
+      {
+        image?: StorageObject
+        scene?: StorageObject
+      }
+    >()
+
+    for (const obj of filtered) {
+      const {key} = obj
+      if (!key) continue
+      const normalized = key.replaceAll('\\', '/')
+      const ext = path.posix.extname(normalized).toLowerCase()
+      const parsed = path.posix.parse(normalized)
+      const groupKey = parsed.dir ? `${parsed.dir}/${parsed.name}` : parsed.name
+      const group = groups.get(groupKey) ?? {}
+
+      if (SUPPORTED_FORMATS.has(ext)) {
+        group.image = obj
+      } else if (THREE_D_SCENE_EXTENSIONS.has(ext)) {
+        group.scene = obj
+      }
+
+      groups.set(groupKey, group)
+    }
+
+    for (const value of groups.values()) {
+      if (value.image?.key && value.scene) {
+        result.set(value.image.key, value.scene)
+      }
+    }
+
+    return result
   }
 
   async deleteFile(key: string): Promise<void> {

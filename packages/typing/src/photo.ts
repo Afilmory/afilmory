@@ -42,6 +42,13 @@ export type VideoSource =
   | { type: 'live-photo'; videoUrl: string; s3Key: string }
   | { type: 'motion-photo'; offset: number; size?: number; presentationTimestamp?: number }
 
+export interface ThreeDSceneSource {
+  mode: 'sog'
+  url: string
+  s3Key: string
+  size?: number
+}
+
 export interface PhotoInfo {
   title: string
   dateTaken: string
@@ -75,6 +82,8 @@ export interface PhotoManifestItem extends PhotoInfo {
   isHDR?: boolean
   // Video source (Live Photo or Motion Photo)
   video?: VideoSource
+  // 3D Gaussian Splat source
+  threeDScene?: ThreeDSceneSource
 }
 
 export interface ProcessPhotoResult {
