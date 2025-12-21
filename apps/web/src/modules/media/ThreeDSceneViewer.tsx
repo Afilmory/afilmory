@@ -58,6 +58,7 @@ type ParallaxState = {
 
 const PARALLAX_DEADZONE_MOUSE = 0.06
 const PARALLAX_DEADZONE_MOTION = 0.12
+const PARALLAX_STRENGTH_MOBILE_MULTIPLIER = 1.5
 const ORIENTATION_RANGE = {
   gamma: 30,
   beta: 30,
@@ -689,7 +690,8 @@ export const ThreeDSceneViewer = ({
     }
 
     const distance = basePosition.distanceTo(baseTarget)
-    const strength = Math.max(0.003, Math.min(distance * 0.04, radius * 0.12))
+    const baseStrength = Math.max(0.003, Math.min(distance * 0.04, radius * 0.12))
+    const strength = baseStrength * (isMobileDevice ? PARALLAX_STRENGTH_MOBILE_MULTIPLIER : 1)
 
     parallaxRef.current = {
       basePosition,
