@@ -1,7 +1,7 @@
 import { clsxm } from '@afilmory/utils'
 import { WebGLImageViewer } from '@afilmory/webgl-viewer'
 import { AnimatePresence, m } from 'motion/react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import { useMediaQuery } from 'usehooks-ts'
@@ -12,7 +12,6 @@ import { canUseWebGL } from '~/lib/feature'
 import { HDRBadge } from '~/modules/media/HDRBadge'
 import { LivePhotoBadge } from '~/modules/media/LivePhotoBadge'
 import { LivePhotoVideo } from '~/modules/media/LivePhotoVideo'
-import { ThreeDSceneViewer } from '~/modules/media/ThreeDSceneViewer'
 
 import { DOMImageViewer } from './DOMImageViewer'
 import {
@@ -24,6 +23,11 @@ import {
   useWebGLLoadingState,
 } from './hooks'
 import type { ProgressiveImageProps, WebGLImageViewerRef } from './types'
+
+const ThreeDSceneViewer = lazy(async () => {
+  const module = await import('~/modules/media/ThreeDSceneViewer')
+  return { default: module.ThreeDSceneViewer }
+})
 
 export const ProgressiveImage = ({
   src,
@@ -382,20 +386,22 @@ export const ProgressiveImage = ({
       )}
 
       {shouldRenderThreeDScene && threeDScene && (
-        <ThreeDSceneViewer
-          className={clsxm(
-            'absolute inset-0 h-full w-full transition-opacity duration-200',
-            !isThreeDSceneReady && 'pointer-events-none opacity-0',
-          )}
-          scene={threeDScene}
-          sceneBytes={threeDBytesForViewer}
-          imageWidth={width}
-          imageHeight={height}
-          loadingIndicatorRef={loadingIndicatorRef}
-          onLoadingChange={handleThreeDLoadingChange}
-          onError={handleThreeDError}
-          onReady={handleThreeDReady}
-        />
+        <Suspense fallback={null}>
+          <ThreeDSceneViewer
+            className={clsxm(
+              'absolute inset-0 h-full w-full transition-opacity duration-200',
+              !isThreeDSceneReady && 'pointer-events-none opacity-0',
+            )}
+            scene={threeDScene}
+            sceneBytes={threeDBytesForViewer}
+            imageWidth={width}
+            imageHeight={height}
+            loadingIndicatorRef={loadingIndicatorRef}
+            onLoadingChange={handleThreeDLoadingChange}
+            onError={handleThreeDError}
+            onReady={handleThreeDReady}
+          />
+        </Suspense>
       )}
 
       {hasVideo && shouldRenderHighResImage && (
