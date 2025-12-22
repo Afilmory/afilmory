@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsdown",
     "bump": "nbump",
-    "cli": "tsx src/cli.ts"
+    "cli": "tsx src/cli.ts",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@vingle/bmp-js": "^0.2.5",
@@ -23,7 +24,8 @@
     "heic-convert": "2.1.0",
     "heic-to": "1.3.0",
     "sharp": "0.34.5",
-    "thumbhash": "0.1.1"
+    "thumbhash": "0.1.1",
+    "undici": "^7.16.0"
   },
   "devDependencies": {
     "@afilmory/utils": "workspace:*",

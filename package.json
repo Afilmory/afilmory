@@ -27,6 +27,7 @@
     "preinstall": "sh scripts/preinstall.sh",
     "prepare": "simple-git-hooks",
     "reinstall": "rm -rf **/*/node_modules && rm -rf node_modules && pnpm install",
+    "type-check": "pnpm run -r type-check",
     "update:lastmodified": "tsx scripts/update-lastmodified.ts"
   },
   "dependencies": {
