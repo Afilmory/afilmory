@@ -11,7 +11,8 @@
     "dev": "vite",
     "lint": "eslint .",
     "output": "tsx scripts/build.ts",
-    "preview": "pnpm dlx serve dist"
+    "preview": "pnpm dlx serve dist",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@afilmory/ui": "workspace:*",

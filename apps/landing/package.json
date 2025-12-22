@@ -10,7 +10,8 @@
     "dev": "cross-env NODE_ENV=development next dev --turbopack -p 1111",
     "lint": "eslint --cache --fix",
     "prepare": "pnpm exec simple-git-hooks && test -f .env || cp .env.template .env",
-    "start": "npm run dev"
+    "start": "npm run dev",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@floating-ui/react-dom": "2.1.6",
