@@ -42,4 +42,5 @@ jobs:
       - name: Type check
         run: |
           pnpm type-check
-      - run: cd apps/web && pnpm vite build
+      - run: pnpm vite build
+        working-directory: ./apps/web
