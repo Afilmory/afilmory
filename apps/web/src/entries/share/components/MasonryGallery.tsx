@@ -19,7 +19,7 @@ export function MasonryGallery({ photos }: MasonryGalleryProps) {
   }, [width])
   return (
     <div className="scrollbar-none h-screen overflow-auto">
-      <Masonry gutter={4} columnsCount={columnsCount}>
+      <Masonry gutter="4px" columnsCount={columnsCount}>
         {photos.map((photo) => (
           <PhotoItem key={photo.id} photo={photo} />
         ))}
