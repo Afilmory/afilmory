@@ -193,6 +193,7 @@ const PhotoCard = ({ photo }: { photo: PhotoManifest }) => {
         className="relative w-full shrink-0 cursor-pointer overflow-hidden lg:h-full lg:w-56"
         role="button"
         tabIndex={0}
+        data-photo-id={photo.id}
         style={
           // 移动端：根据宽高比计算高度
           {

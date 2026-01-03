@@ -69,7 +69,11 @@ export const usePhotoViewerTransitions = ({
   const resolveTriggerElement = useCallback((): HTMLElement | null => {
     if (!currentPhoto) return null
 
-    if (triggerElement && triggerElement.isConnected) {
+    const isElementForCurrentPhoto = (el: HTMLElement) => {
+      return el.dataset.photoId === currentPhoto.id
+    }
+
+    if (triggerElement && triggerElement.isConnected && isElementForCurrentPhoto(triggerElement)) {
       cachedTriggerRef.current = triggerElement
       return triggerElement
     }
@@ -82,7 +86,11 @@ export const usePhotoViewerTransitions = ({
       return liveTriggerEl
     }
 
-    if (cachedTriggerRef.current && cachedTriggerRef.current.isConnected) {
+    if (
+      cachedTriggerRef.current &&
+      cachedTriggerRef.current.isConnected &&
+      isElementForCurrentPhoto(cachedTriggerRef.current)
+    ) {
       return cachedTriggerRef.current
     }
 
