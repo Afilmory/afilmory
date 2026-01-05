@@ -4,6 +4,10 @@
 
 # <p align="center">Afilmory</p>
 
+## <p align="center">
+<a href="/README.md"><img alt="English" src="https://img.shields.io/badge/English-d9d9d9"></a> <a href="/docs/README.zh_CN.md"><img alt="中文(简体)" src="https://img.shields.io/badge/中文(简体)-d9d9d9"></a>
+</p>
+
 Afilmory (/əˈfɪlməri/, "uh-FIL-muh-ree") is a term created for personal photography websites, blending Auto Focus (AF), aperture (light control), film (vintage medium), and memory (captured moments).
 
 A modern photo gallery website built with React + TypeScript, supporting automatic photo synchronization from multiple storage sources (S3, GitHub), featuring high-performance WebGL rendering, masonry layout, EXIF information display, thumbnail generation, and more.

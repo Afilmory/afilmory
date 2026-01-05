@@ -1,0 +1,176 @@
+<p align="center">
+  <img src="https://github.com/Afilmory/assets/blob/main/afilmory-readme-2:1.webp?raw=true" alt="Afilmory" width="100%" />
+</p>
+
+# <p align="center">Afilmory</p>
+
+## <p align="center">
+<a href="/README.md"><img alt="English" src="https://img.shields.io/badge/English-d9d9d9"></a> <a href="/docs/README.zh_CN.md"><img alt="中文(简体)" src="https://img.shields.io/badge/中文(简体)-d9d9d9"></a>
+</p>
+
+Afilmory（/əˈfɪlməri/）是一个为个人摄影网站创造的词，融合了AF（自动对焦）、aperture（光线控制）、film（复古媒介）与 memory（被捕捉的瞬间）。
+
+一个使用 React + TypeScript 构建的现代照片图库网站，支持从多种存储源（S3、GitHub）自动同步照片，提供高性能 WebGL 渲染、瀑布流布局、EXIF 信息展示、缩略图生成等功能。
+
+## 🚀 秒级上手
+
+**👉 [使用官方 SaaS](https://afilmory.art/) —— 无需任何配置！**
+
+创建你的相册最简单的方式是使用我们的托管服务 **[afilmory.art](https://afilmory.art/)**。注册账号，连接你的存储，几分钟内你的相册即可上线——无需部署、无需服务器、无需维护。
+
+### 为什么选择官方 SaaS？
+
+- ✅ **零配置** —— 无需设置、无需部署、无需管理基础设施
+- ✅ **在线 CMS** —— 实时编辑照片、标题与元数据，无需重新构建
+- ✅ **自定义域名** —— 支持绑定自有域名并进行 DNS 验证
+- ✅ **自动更新** —— 始终运行最新版本与新功能
+- ✅ **托管基础设施** —— 我们负责扩容、备份与维护
+
+[**立即开始 →**](https://afilmory.art/)
+
+---
+
+### 在线示例
+
+- https://afilmory.innei.in
+- https://gallery.mxte.cc
+- https://photography.pseudoyu.com
+- https://afilmory.magren.cc
+
+## 🌟 特性
+
+### 核心功能
+
+- 🖼️ **高性能 WebGL 图像渲染器** —— 自研 WebGL 组件，支持顺滑的缩放与平移
+- 📱 **响应式瀑布流布局** —— 基于 Masonic，适配不同屏幕尺寸
+- 🎨 **现代化 UI 设计** —— 使用 Tailwind CSS 与 Radix UI 组件库
+- ⚡ **增量同步** —— 智能变更检测，仅处理新增或修改的照片
+- 🌐 **多语言支持（i18n）**
+- 🔗 **OpenGraph 元数据** —— 适配社交平台分享
+
+### 图像处理
+
+- 🔄 **HEIC/HEIF 格式支持** —— 自动转换苹果设备的 HEIC 格式
+- 📷 **TIFF 格式支持** —— 自动转换 TIFF 格式
+- 🖼️ **智能缩略图生成** —— 多尺寸缩略图，优化加载性能
+- 📊 **EXIF 信息展示** —— 完整拍摄参数，包括机型、焦距、光圈等
+- 🌈 **Blurhash 占位图** —— 优雅的图片加载体验
+- 📱 **实况照片（Live Photo）支持** —— 识别与展示 iPhone 实况照片
+- ☀️ **HDR 图像支持** —— 支持展示 HDR 图像
+
+### 高级功能
+
+- 🎛️ **富士胶片配方（Fujifilm Recipe）** —— 读取并展示富士相机胶片模拟设置
+- 🔍 **全屏查看器** —— 支持手势操作的图片查看器
+- 🏷️ **文件系统标签** —— 基于文件系统自动生成标签
+- ⚡ **并发处理** —— 支持多进程/多线程并发处理
+- 🗂️ **多存储支持** —— S3、GitHub 等后端存储
+- 📷 **图片分享** —— 分享到社交平台或以 iframe 嵌入到网站
+- 🗺️ **交互式地图浏览器** —— 通过 EXIF GPS 坐标使用 MapLibre 进行地理可视化
+
+## 🏗️ 技术架构
+
+### 前端技术栈
+
+- **React 19** —— 最新版本，内置 Compiler
+- **TypeScript** —— 完整的类型安全
+- **Vite** —— 现代化构建工具
+- **Tailwind CSS** —— Atomic CSS 框架
+- **Radix UI** —— 可访问性优秀的组件库
+- **Jotai** —— 状态管理
+- **TanStack Query** —— 数据请求与缓存
+- **React Router 7** —— 路由管理
+- **i18next** —— 国际化支持
+
+### 构建系统
+
+- **Node.js** —— 服务端运行时
+- **Sharp** —— 高性能图片处理
+- **AWS SDK** —— S3 存储操作
+- **Worker Threads/Cluster** —— 并发处理
+- **EXIF-Reader** —— EXIF 数据解析
+
+### 存储架构
+
+采用适配器模式设计，支持多种存储后端：
+
+- **S3 兼容存储** —— AWS S3、MinIO、阿里云 OSS 等
+- **GitHub 存储** —— 使用 GitHub 仓库作为图片存储
+- **Eagle 存储** —— 使用 Eagle 应用素材库作为存储
+- **本地文件系统** —— 本地存储适用于开发与测试
+
+## 🛠️ 自托管（高级）
+
+如果你更倾向于自行托管 Afilmory，你可以在自有基础设施上部署。这需要更多的技术知识与持续维护。
+
+> **💡 提示**：对大多数用户而言，我们建议使用 [官方 SaaS](https://afilmory.art/)。自托管更适合需要完全掌控部署或有特定基础设施需求的开发者。
+
+### 方案 A：Docker（推荐）
+
+[Docker 部署指南](https://github.com/Afilmory/docker) 提供了预构建镜像，几乎零配置即可使用。
+
+### 方案 B：手动安装
+
+1. 将 `config.example.json` 复制为 `config.json`，并填写站点名称、描述与社交链接。
+2. 准备你的照片存储（S3/B2/GitHub/本地）。构建器会读取照片并生成缩略图与 `photos-manifest.json`。
+3. 运行构建器生成资源，然后启动站点。
+
+需要开发者命令、环境变量与构建器配置细节？请查看 `DEVELOPMENT.md`。
+
+详细的自托管说明请参阅 [文档](https://docs.afilmory.art)。
+
+## 🔧 高级用法
+
+### 自定义存储提供者
+
+实现 `StorageProvider` 接口以支持新的存储后端：
+
+```typescript
+import { StorageProvider } from './src/core/storage/interfaces'
+
+class MyStorageProvider implements StorageProvider {
+  async getFile(key: string): Promise<Buffer | null> {
+    // 在此实现文件读取逻辑
+  }
+
+  async listImages(): Promise<StorageObject[]> {
+    // 在此实现图片列表读取逻辑
+  }
+
+  // ... 其他方法
+}
+```
+
+### 自定义图像处理
+
+在 `src/core/image/` 目录中添加自定义处理器：
+
+```typescript
+export async function customImageProcessor(buffer: Buffer) {
+  // 在此实现自定义图像处理逻辑
+  return processedBuffer
+}
+```
+
+## 📄 许可协议
+
+Attribution Network License（ANL）v1.0 © 2025 Afilmory 团队。详见 [LICENSE](LICENSE)。
+
+## 📚 文档
+
+- **[官方文档](https://docs.afilmory.art/)** —— 完整指南、API 参考与教程
+- **[快速开始](https://docs.afilmory.art/getting-started/quick-start)** —— 5 分钟搭建你的相册
+- **[SaaS 模式](https://docs.afilmory.art/saas)** —— 了解托管图库与多租户特性
+- **[存储提供者](https://docs.afilmory.art/storage/providers)** —— 配置 S3、GitHub、B2 等
+- **[部署指南](https://docs.afilmory.art/deployment)** —— 部署到 Vercel、Cloudflare Pages、Docker 等
+
+## 🔗 相关链接
+
+- [官方 SaaS](https://afilmory.art/) 
+- [个人网站](https://innei.in)
+- [GitHub](https://github.com/innei)
+
+---
+
+如果这个项目对你有帮助，请为它点一个 ⭐️ Star 支持！
+
