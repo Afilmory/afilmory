@@ -6,6 +6,17 @@ import type { LivePhotoVideoHandle } from '../media'
 
 export const SHOW_SCALE_INDICATOR_DURATION = 1000
 
+export type WebGLLoadState = 'idle' | 'loading' | 'done'
+
+export type ThreeDLoadState =
+  | { status: 'idle' }
+  | { status: 'fetching' }
+  | { status: 'fetchError'; message: string }
+  | { status: 'bytesReady' }
+  | { status: 'rendering' }
+  | { status: 'renderError'; message: string }
+  | { status: 'ready' }
+
 // Video source 的 sum type：Live Photo 或 Motion Photo
 export type VideoSource =
   | { type: 'live-photo'; videoUrl: string }
@@ -78,4 +89,11 @@ export interface ProgressiveImageState {
   showScaleIndicator: boolean
   isThumbnailLoaded: boolean
   isLivePhotoPlaying: boolean
+}
+
+export interface ThreeDSceneState {
+  isThreeDMode: boolean
+  threeDBytes: Uint8Array | null
+  threeDLoadState: ThreeDLoadState
+  webglLoadState: WebGLLoadState
 }

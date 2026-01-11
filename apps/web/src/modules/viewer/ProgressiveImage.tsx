@@ -1,7 +1,7 @@
 import { clsxm } from '@afilmory/utils'
 import { WebGLImageViewer } from '@afilmory/webgl-viewer'
 import { AnimatePresence, m } from 'motion/react'
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
 import { useMediaQuery } from 'usehooks-ts'
@@ -20,6 +20,7 @@ import {
   useLivePhotoControls,
   useProgressiveImageState,
   useScaleIndicator,
+  useThreeDSceneState,
   useWebGLLoadingState,
 } from './hooks'
 import type { ProgressiveImageProps, WebGLImageViewerRef } from './types'
@@ -54,6 +55,7 @@ export const ProgressiveImage = ({
 
   // State management
   const [state, setState] = useProgressiveImageState()
+  const [threeDState, setThreeDState] = useThreeDSceneState()
   const {
     blobSrc,
     highResLoaded,
@@ -64,19 +66,23 @@ export const ProgressiveImage = ({
     isThumbnailLoaded,
     isLivePhotoPlaying,
   } = state
-
-  const [isThreeDMode, setIsThreeDMode] = useState(false)
-  const [isThreeDLoading, setIsThreeDLoading] = useState(false)
-  const [threeDError, setThreeDError] = useState<string | null>(null)
-  const [threeDLoadError, setThreeDLoadError] = useState<string | null>(null)
-  const [threeDBytes, setThreeDBytes] = useState<Uint8Array | null>(null)
-  const [threeDBytesForViewer, setThreeDBytesForViewer] = useState<Uint8Array | null>(null)
-  const [isThreeDBytesLoading, setIsThreeDBytesLoading] = useState(false)
-  const [isThreeDSceneReady, setIsThreeDSceneReady] = useState(false)
-  const [webglLoadState, setWebglLoadState] = useState<'idle' | 'loading' | 'done'>('idle')
+  const { isThreeDMode, threeDBytes, threeDLoadState, webglLoadState } = threeDState
+  const {
+    setIsThreeDMode,
+    setThreeDBytes,
+    setThreeDLoadState,
+    setWebglLoadState,
+    resetForInactive: resetThreeDForInactive,
+    resetForMissingScene: resetThreeDForMissingScene,
+  } = setThreeDState
 
   const isActiveImage = Boolean(isCurrentImage && shouldRenderHighRes)
   const hasThreeDScene = Boolean(threeDScene && threeDScene.mode === 'sog')
+  const isThreeDBytesLoading = threeDLoadState.status === 'fetching'
+  const isThreeDLoading = threeDLoadState.status === 'rendering'
+  const isThreeDSceneReady = threeDLoadState.status === 'ready'
+  const threeDLoadError = threeDLoadState.status === 'fetchError' ? threeDLoadState.message : null
+  const threeDError = threeDLoadState.status === 'renderError' ? threeDLoadState.message : null
   const isThreeDAssetReady = hasThreeDScene && Boolean(threeDBytes?.byteLength) && !threeDLoadError
 
   // 判断是否有视频内容（Live Photo 或 Motion Photo）
@@ -91,31 +97,17 @@ export const ProgressiveImage = ({
 
   useEffect(() => {
     if (!isActiveImage) {
-      setIsThreeDMode(false)
-      setIsThreeDLoading(false)
-      setThreeDError(null)
-      setThreeDLoadError(null)
-      setThreeDBytesForViewer(null)
-      setIsThreeDBytesLoading(false)
-      setIsThreeDSceneReady(false)
-      setWebglLoadState('idle')
+      resetThreeDForInactive()
       hasAutoEnteredThreeDRef.current = false
     }
-  }, [isActiveImage])
+  }, [isActiveImage, resetThreeDForInactive])
 
   useEffect(() => {
     if (!hasThreeDScene) {
-      setIsThreeDMode(false)
-      setThreeDError(null)
-      setThreeDLoadError(null)
-      setThreeDBytes(null)
-      setThreeDBytesForViewer(null)
-      setIsThreeDBytesLoading(false)
-      setIsThreeDSceneReady(false)
-      setWebglLoadState('idle')
+      resetThreeDForMissingScene()
       hasAutoEnteredThreeDRef.current = false
     }
-  }, [hasThreeDScene])
+  }, [hasThreeDScene, resetThreeDForMissingScene])
 
   const resolvedSrc = useMemo(() => {
     if (src.startsWith('/')) {
@@ -155,7 +147,7 @@ export const ProgressiveImage = ({
       setWebglLoadState(isLoading ? 'loading' : 'done')
       handleWebGLLoadingStateChangeBase(...args)
     },
-    [handleWebGLLoadingStateChangeBase],
+    [handleWebGLLoadingStateChangeBase, setWebglLoadState],
   )
   const handleThreeDLoadingStateUpdate = useCallback(
     (state: { isVisible?: boolean; loadingProgress?: number; loadedBytes?: number; totalBytes?: number }) => {
@@ -193,30 +185,42 @@ export const ProgressiveImage = ({
   const usesWebGLViewer = !hasVideo && !shouldUseHDR && canUseWebGL
   const handleToggleThreeD = useCallback(() => {
     if (!hasThreeDScene || !isActiveImage || !canUseWebGL) return
-    setThreeDError(null)
     setIsThreeDMode((prev) => {
       const next = !prev
+      setThreeDLoadState((prevState) => {
+        if (prevState.status === 'fetchError') return prevState
+        if (!next) {
+          return threeDBytes?.byteLength ? { status: 'bytesReady' } : { status: 'idle' }
+        }
+        return prevState.status === 'renderError' ? { status: 'bytesReady' } : prevState
+      })
       if (!next) {
-        setIsThreeDSceneReady(false)
         webglImageViewerRef.current?.resetView()
         domImageViewerRef.current?.resetTransform?.()
-        setIsThreeDLoading(false)
         onZoomChange?.(false)
       } else {
         onZoomChange?.(true)
       }
       return next
     })
-  }, [hasThreeDScene, isActiveImage, onZoomChange])
+  }, [hasThreeDScene, isActiveImage, canUseWebGL, onZoomChange, setIsThreeDMode, setThreeDLoadState, threeDBytes])
 
   useEffect(() => {
     if (!hasThreeDScene || !isActiveImage || !canUseWebGL || !isThreeDAssetReady) return
     if (hasAutoEnteredThreeDRef.current) return
     hasAutoEnteredThreeDRef.current = true
-    setThreeDError(null)
+    setThreeDLoadState((prevState) => (prevState.status === 'renderError' ? { status: 'bytesReady' } : prevState))
     setIsThreeDMode(true)
     onZoomChange?.(true)
-  }, [hasThreeDScene, isActiveImage, isThreeDAssetReady, onZoomChange])
+  }, [
+    hasThreeDScene,
+    isActiveImage,
+    canUseWebGL,
+    isThreeDAssetReady,
+    onZoomChange,
+    setIsThreeDMode,
+    setThreeDLoadState,
+  ])
 
   useEffect(() => {
     if (!hasThreeDScene || !threeDScene || !isActiveImage || !highResLoaded) return
@@ -226,8 +230,7 @@ export const ProgressiveImage = ({
 
     let cancelled = false
     const loader = imageLoaderManagerRef.current
-    setIsThreeDBytesLoading(true)
-    setThreeDLoadError(null)
+    setThreeDLoadState({ status: 'fetching' })
 
     const loadThreeD = async () => {
       try {
@@ -239,11 +242,11 @@ export const ProgressiveImage = ({
       } catch (err) {
         if (cancelled) return
         const message = err instanceof Error ? err.message : 'Failed to load 3D scene'
-        setThreeDLoadError(message)
-      } finally {
-        if (!cancelled) {
-          setIsThreeDBytesLoading(false)
-        }
+        setThreeDLoadState({ status: 'fetchError', message })
+        return
+      }
+      if (!cancelled) {
+        setThreeDLoadState({ status: 'bytesReady' })
       }
     }
 
@@ -264,37 +267,41 @@ export const ProgressiveImage = ({
     threeDBytes,
     threeDLoadError,
     handleThreeDLoadingStateUpdate,
+    setThreeDBytes,
+    setThreeDLoadState,
   ])
-
-  useEffect(() => {
-    if (!isThreeDMode) {
-      setThreeDBytesForViewer(null)
-      return
-    }
-    if (!threeDBytes || !threeDBytes.byteLength) return
-    setThreeDBytesForViewer(threeDBytes.slice())
-  }, [isThreeDMode, threeDBytes])
 
   const shouldRenderThreeDScene =
     hasThreeDScene &&
     isThreeDMode &&
     isActiveImage &&
     canUseWebGL &&
-    Boolean(threeDBytesForViewer?.byteLength) &&
+    Boolean(threeDBytes?.byteLength) &&
     !threeDLoadError
   const shouldRenderHighResImage =
     highResLoaded && blobSrc && isActiveImage && !error && (!isThreeDMode || !isThreeDSceneReady)
-  const handleThreeDLoadingChange = useCallback((loading: boolean) => {
-    setIsThreeDLoading(loading)
-  }, [])
-  const handleThreeDError = useCallback((err: Error) => {
-    setThreeDError(err?.message ?? 'unknown')
-    setIsThreeDSceneReady(false)
-  }, [])
+  const handleThreeDLoadingChange = useCallback(
+    (loading: boolean) => {
+      if (loading) {
+        setThreeDLoadState({ status: 'rendering' })
+        return
+      }
+      setThreeDLoadState((prevState) => {
+        if (prevState.status !== 'rendering') return prevState
+        return threeDBytes?.byteLength ? { status: 'bytesReady' } : { status: 'idle' }
+      })
+    },
+    [setThreeDLoadState, threeDBytes],
+  )
+  const handleThreeDError = useCallback(
+    (err: Error) => {
+      setThreeDLoadState({ status: 'renderError', message: err?.message ?? 'unknown' })
+    },
+    [setThreeDLoadState],
+  )
   const handleThreeDReady = useCallback(() => {
-    setThreeDError(null)
-    setIsThreeDSceneReady(true)
-  }, [])
+    setThreeDLoadState({ status: 'ready' })
+  }, [setThreeDLoadState])
 
   return (
     <div
@@ -408,7 +415,7 @@ export const ProgressiveImage = ({
               !isThreeDSceneReady && 'pointer-events-none opacity-0',
             )}
             scene={threeDScene}
-            sceneBytes={threeDBytesForViewer}
+            sceneBytes={threeDBytes}
             imageWidth={width}
             imageHeight={height}
             loadingIndicatorRef={loadingIndicatorRef}

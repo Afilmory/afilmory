@@ -10,7 +10,7 @@ import { ImageLoaderManager } from '~/lib/image-loader-manager'
 import type { LoadingIndicatorRef } from '~/modules/inspector/LoadingIndicator'
 import type { LivePhotoVideoHandle } from '~/modules/media/LivePhotoVideo'
 
-import type { ProgressiveImageState } from './types'
+import type { ProgressiveImageState, ThreeDLoadState, ThreeDSceneState, WebGLLoadState } from './types'
 import { SHOW_SCALE_INDICATOR_DURATION } from './types'
 
 export const useProgressiveImageState = (): [
@@ -55,6 +55,53 @@ export const useProgressiveImageState = (): [
       setShowScaleIndicator,
       setIsThumbnailLoaded,
       setIsLivePhotoPlaying,
+    },
+  ]
+}
+
+export const useThreeDSceneState = (): [
+  ThreeDSceneState,
+  {
+    setIsThreeDMode: (value: boolean | ((prev: boolean) => boolean)) => void
+    setThreeDBytes: (bytes: Uint8Array | null) => void
+    setThreeDLoadState: (value: ThreeDLoadState | ((prev: ThreeDLoadState) => ThreeDLoadState)) => void
+    setWebglLoadState: (state: WebGLLoadState) => void
+    resetForInactive: () => void
+    resetForMissingScene: () => void
+  },
+] => {
+  const [isThreeDMode, setIsThreeDMode] = useState(false)
+  const [threeDBytes, setThreeDBytes] = useState<Uint8Array | null>(null)
+  const [threeDLoadState, setThreeDLoadState] = useState<ThreeDLoadState>({ status: 'idle' })
+  const [webglLoadState, setWebglLoadState] = useState<WebGLLoadState>('idle')
+
+  const resetForInactive = useCallback(() => {
+    setIsThreeDMode(false)
+    setThreeDLoadState(threeDBytes?.byteLength ? { status: 'bytesReady' } : { status: 'idle' })
+    setWebglLoadState('idle')
+  }, [setIsThreeDMode, setThreeDLoadState, setWebglLoadState, threeDBytes])
+
+  const resetForMissingScene = useCallback(() => {
+    setIsThreeDMode(false)
+    setThreeDBytes(null)
+    setThreeDLoadState({ status: 'idle' })
+    setWebglLoadState('idle')
+  }, [setIsThreeDMode, setThreeDBytes, setThreeDLoadState, setWebglLoadState])
+
+  return [
+    {
+      isThreeDMode,
+      threeDBytes,
+      threeDLoadState,
+      webglLoadState,
+    },
+    {
+      setIsThreeDMode,
+      setThreeDBytes,
+      setThreeDLoadState,
+      setWebglLoadState,
+      resetForInactive,
+      resetForMissingScene,
     },
   ]
 }
