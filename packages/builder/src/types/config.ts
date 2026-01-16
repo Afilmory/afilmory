@@ -20,6 +20,14 @@ export interface SystemProcessingSettings {
   enableLivePhotoDetection: boolean
   supportedFormats?: Set<string>
   digestSuffixLength?: number
+  /**
+   * Do not process input images where the number of pixels (width x height) exceeds this limit.
+   * - `number`: An integral Number of pixels as the limit
+   * - `false` or `0`: Remove limit entirely
+   * - `true` or `undefined`: Use sharp's default limit of 268402689 (0x3FFF x 0x3FFF)
+   * @default undefined (uses sharp's default: 268402689)
+   */
+  limitInputPixels?: number | boolean
 }
 
 export interface SystemObservabilitySettings {

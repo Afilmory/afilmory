@@ -79,7 +79,11 @@ async function processExistingThumbnail(photoId: string): Promise<ThumbnailResul
 }
 
 // 生成新的缩略图
-async function generateNewThumbnail(imageBuffer: Buffer, photoId: string): Promise<ThumbnailResult> {
+async function generateNewThumbnail(
+  imageBuffer: Buffer,
+  photoId: string,
+  limitInputPixels?: number | boolean,
+): Promise<ThumbnailResult> {
   const { thumbnailPath, thumbnailUrl } = getThumbnailPaths(photoId)
 
   const log = getGlobalLoggers().thumbnail
@@ -88,7 +92,7 @@ async function generateNewThumbnail(imageBuffer: Buffer, photoId: string): Promi
 
   try {
     // 创建 Sharp 实例，复用于缩略图和 blurhash 生成
-    const sharpInstance = sharp(imageBuffer).rotate() // 自动根据 EXIF 旋转
+    const sharpInstance = sharp(imageBuffer, { limitInputPixels }).rotate() // 自动根据 EXIF 旋转
 
     // 生成缩略图
     const thumbnailBuffer = await sharpInstance
@@ -122,6 +126,7 @@ export async function generateThumbnailAndBlurhash(
   imageBuffer: Buffer,
   photoId: string,
   forceRegenerate = false,
+  limitInputPixels?: number | boolean,
 ): Promise<ThumbnailResult> {
   const thumbnailLog = getGlobalLoggers().thumbnail
 
@@ -139,7 +144,7 @@ export async function generateThumbnailAndBlurhash(
     }
 
     // 生成新的缩略图
-    return await generateNewThumbnail(imageBuffer, photoId)
+    return await generateNewThumbnail(imageBuffer, photoId, limitInputPixels)
   } catch (error) {
     thumbnailLog.error(`处理失败：${photoId}`, error)
     return createFailureResult()

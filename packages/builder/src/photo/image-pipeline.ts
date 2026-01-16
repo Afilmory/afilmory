@@ -83,10 +83,12 @@ export async function preprocessImage(
  */
 export async function processImageWithSharp(imageBuffer: Buffer, photoKey: string): Promise<ProcessedImageData | null> {
   const loggers = getGlobalLoggers()
+  const { builder } = getPhotoExecutionContext()
+  const { limitInputPixels } = builder.getConfig().system.processing
 
   try {
     // 创建 Sharp 实例，复用于多个操作
-    let sharpInstance = sharp(imageBuffer)
+    let sharpInstance = sharp(imageBuffer, { limitInputPixels })
     let processedBuffer = imageBuffer
 
     // 处理 BMP

@@ -10,6 +10,7 @@ import { extractExifData } from '../image/exif.js'
 import { calculateHistogramAndAnalyzeTone } from '../image/histogram.js'
 import { generateThumbnailAndBlurhash, thumbnailExists } from '../image/thumbnail.js'
 import { workdir } from '../path.js'
+import { getPhotoExecutionContext } from './execution-context.js'
 import { getGlobalLoggers } from './logger-adapter.js'
 import type { PhotoProcessorOptions } from './processor.js'
 
@@ -30,6 +31,8 @@ export async function processThumbnailAndBlurhash(
   options: PhotoProcessorOptions,
 ): Promise<ThumbnailResult> {
   const loggers = getGlobalLoggers()
+  const { builder } = getPhotoExecutionContext()
+  const { limitInputPixels } = builder.getConfig().system.processing
 
   // 检查是否可以复用现有数据
   if (
@@ -62,6 +65,7 @@ export async function processThumbnailAndBlurhash(
     imageBuffer,
     photoId,
     options.isForceMode || options.isForceThumbnails,
+    limitInputPixels,
   )
 
   return {
