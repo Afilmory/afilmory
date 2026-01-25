@@ -2,7 +2,7 @@
 
 import { clsxm, Spring } from '@afilmory/utils'
 import type { MotionValue, SpringOptions, UseInViewOptions } from 'motion/react'
-import { m as motion, useInView, useSpring, useTransform } from 'motion/react'
+import { m as motion, useInView, useReducedMotion, useSpring, useTransform } from 'motion/react'
 import * as React from 'react'
 import useMeasure from 'react-use-measure'
 
@@ -16,7 +16,12 @@ type SlidingNumberRollerProps = {
 function SlidingNumberRoller({ prevValue, value, place, transition }: SlidingNumberRollerProps) {
   const startNumber = Math.floor(prevValue / place) % 10
   const targetNumber = Math.floor(value / place) % 10
-  const animatedValue = useSpring(startNumber, transition)
+  const shouldReduceMotion = useReducedMotion()
+
+  const animatedValue = useSpring(
+    shouldReduceMotion ? targetNumber : startNumber,
+    shouldReduceMotion ? { duration: 0 } : transition,
+  )
 
   React.useEffect(() => {
     animatedValue.set(targetNumber)

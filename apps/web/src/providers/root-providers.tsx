@@ -19,7 +19,7 @@ const CloudSessionProvider = withCloud(SessionProvider)
 export const RootProviders: FC<PropsWithChildren> = ({ children }) => {
   return (
     <LazyMotion features={domMax} strict key="framer">
-      <MotionConfig transition={Spring.presets.smooth}>
+      <MotionConfig transition={Spring.presets.smooth} reducedMotion="user">
         <Provider store={jotaiStore}>
           <QueryProvider>
             <CloudSessionProvider />
