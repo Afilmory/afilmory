@@ -67,7 +67,7 @@ function generateSitemap(photos: PhotoManifestItem[], config: SiteConfig): strin
     .map((photo) => {
       const lastmod = new Date(photo.lastModified || photo.dateTaken).toISOString()
       return `  <url>
-    <loc>${config.url}/photos/${photo.id}</loc>
+    <loc>${config.url}/photos/${encodeURIComponent(photo.id)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
