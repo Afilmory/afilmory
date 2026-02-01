@@ -49,7 +49,7 @@ ${itemsXml}
 }
 
 function createItemXml(photo: PhotoManifestItem, baseUrl: string): string {
-  const link = `${baseUrl}/${encodeURIComponent(photo.id)}`
+  const link = `${baseUrl}/photos/${encodeURIComponent(photo.id)}`
   const pubDate = new Date(resolveDate(photo)).toUTCString()
   const title = escapeXml(photo.title ?? photo.id)
   const summary = buildDescription(photo)
