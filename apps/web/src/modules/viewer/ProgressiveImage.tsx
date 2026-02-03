@@ -42,6 +42,7 @@ export const ProgressiveImage = ({
   videoSource,
   shouldAutoPlayVideoOnce = false,
   isHDR = false,
+  isGIF = false,
   loadingIndicatorRef,
 }: ProgressiveImageProps) => {
   const { t } = useTranslation()
@@ -171,6 +172,14 @@ export const ProgressiveImage = ({
                 />
               )}
             </DOMImageViewer>
+          ) : isGIF ? (
+            <img
+              src={blobSrc}
+              alt={alt}
+              className="absolute inset-0 h-full w-full object-contain"
+              width={width}
+              height={height}
+            />
           ) : (
             /* 非 LivePhoto 模式使用 WebGLImageViewer */
             <WebGLImageViewer
