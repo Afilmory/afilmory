@@ -148,7 +148,7 @@ export const ProgressiveImage = ({
           }}
         >
           {/* LivePhoto/Motion Photo 或 HDR 模式使用 DOMImageViewer */}
-          {hasVideo || shouldUseHDR ? (
+          {hasVideo || shouldUseHDR || isGIF ? (
             <DOMImageViewer
               ref={domImageViewerRef}
               onZoomChange={onDOMTransformed}
@@ -172,14 +172,6 @@ export const ProgressiveImage = ({
                 />
               )}
             </DOMImageViewer>
-          ) : isGIF ? (
-            <img
-              src={blobSrc}
-              alt={alt}
-              className="absolute inset-0 h-full w-full object-contain"
-              width={width}
-              height={height}
-            />
           ) : (
             /* 非 LivePhoto 模式使用 WebGLImageViewer */
             <WebGLImageViewer
