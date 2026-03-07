@@ -71,7 +71,15 @@ export function LinearBlur({
             />
           ))}
         <div
-          className="absolute -top-full left-0 size-full"
+          className={`absolute size-full ${
+            side === 'top'
+              ? '-top-full left-0'
+              : side === 'bottom'
+                ? '-bottom-full left-0'
+                : side === 'left'
+                  ? '-left-full top-0'
+                  : '-right-full top-0'
+          }`}
           style={{ boxShadow: `0 0 60px ${tint}, 0 0 100px ${tint}` }}
         />
       </div>

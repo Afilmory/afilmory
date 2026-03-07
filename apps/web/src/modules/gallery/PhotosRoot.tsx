@@ -13,6 +13,7 @@ import { ActionPanel } from './ActionPanel'
 import { ActiveFiltersHero } from './ActiveFiltersHero'
 import { ListView } from './ListView'
 import { MasonryView } from './MasonryView'
+import { PageFooter } from './PageFooter'
 import { PageHeader } from './PageHeader'
 
 export const PhotosRoot = () => {
@@ -52,9 +53,11 @@ export const PhotosRoot = () => {
 
       {hasActiveFilters && <ActiveFiltersHero />}
 
-      <div className={clsx('p-1 **:select-none! lg:px-0 lg:pb-0', !hasActiveFilters && 'mt-12')}>
+      <div className={clsx('p-1 **:select-none! lg:px-0', 'pb-20 lg:pb-24', !hasActiveFilters && 'mt-12')}>
         {viewMode === 'list' ? <ListView photos={photos} /> : <MasonryView photos={photos} onRender={handleRender} />}
       </div>
+
+      <PageFooter />
 
       <ActionPanel
         open={!!activePanel}

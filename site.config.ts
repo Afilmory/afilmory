@@ -14,6 +14,43 @@ export interface SiteConfig {
   map?: MapConfig
   mapStyle?: string
   mapProjection?: 'globe' | 'mercator'
+  beian?: BeianConfig
+}
+
+/**
+ * ICP备案配置（中国大陆网站备案）
+ */
+interface ICPBeian {
+  /** 是否启用ICP备案显示 */
+  enabled?: boolean
+  /** ICP备案号 */
+  number?: string
+  /** ICP备案查询链接（默认：https://beian.miit.gov.cn/） */
+  link?: string
+}
+
+/**
+ * 公安备案配置
+ */
+interface PoliceBeian {
+  /** 是否启用公安备案显示 */
+  enabled?: boolean
+  /** 公安备案号文本 */
+  number?: string
+  /** 公安备案代码（用于查询链接） */
+  code?: string
+  /** 公安备案图标链接 */
+  icon?: string
+}
+
+/**
+ * 备案配置（中国大陆网站需要）
+ */
+interface BeianConfig {
+  /** ICP备案配置 */
+  icp?: ICPBeian
+  /** 公安备案配置 */
+  police?: PoliceBeian
 }
 
 /**

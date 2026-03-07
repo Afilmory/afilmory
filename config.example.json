@@ -25,5 +25,18 @@
     "maplibre"
   ],
   "mapStyle": "builtin",
-  "mapProjection": "mercator"
+  "mapProjection": "mercator",
+  "beian": {
+    "icp": {
+      "enabled": false,
+      "number": "XICP备xxxxxxxx号",
+      "link": "https://beian.miit.gov.cn/"
+    },
+    "police": {
+      "enabled": false,
+      "number": "X公网安备xxxxxxxxxxxxxx号",
+      "code": "xxxxxxxxxxxxxx",
+      "icon": "https://example.com/beian.png"
+    }
+  }
 }
