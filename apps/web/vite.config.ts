@@ -98,7 +98,8 @@ const staticWebBuildPlugins: PluginOption[] = [
     },
     workbox: {
       maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
-      globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+      navigateFallback: '',
+      globPatterns: ['**/*.{js,css,ico,png,svg,webp}'],
       globIgnores: ['**/*.{jpg,jpeg}'], // 忽略大图片文件
       runtimeCaching: [
         {
