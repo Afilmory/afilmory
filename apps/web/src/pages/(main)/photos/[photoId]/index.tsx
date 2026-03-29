@@ -24,18 +24,34 @@ export const Component = () => {
 
   const [accentColor, setAccentColor] = useState<string | null>(null)
 
-  // Track closing state to allow exit animation before navigation
+  // Track closing state to allow exit animation before navigation.
+  // isCloseActiveRef is set when a close is requested and cleared when the
+  // photo route changes, so a stale animation completion cannot navigate away.
   const [isClosing, setIsClosing] = useState(false)
   const closeViewerRef = useRef(photoViewer.closeViewer)
   closeViewerRef.current = photoViewer.closeViewer
+  const isCloseActiveRef = useRef(false)
+
+  // Cancel a pending close when the viewed photo changes (e.g. browser back/forward)
+  useEffect(() => {
+    if (isClosing) {
+      isCloseActiveRef.current = false
+      setIsClosing(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photoViewer.currentIndex])
 
   const handleClose = useCallback(() => {
+    isCloseActiveRef.current = true
     setIsClosing(true)
   }, [])
 
   const handleExitComplete = useCallback(() => {
     setIsClosing(false)
-    closeViewerRef.current()
+    if (isCloseActiveRef.current) {
+      isCloseActiveRef.current = false
+      closeViewerRef.current()
+    }
   }, [])
 
   useEffect(() => {
