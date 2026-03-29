@@ -47,10 +47,14 @@ export const Component = () => {
   }, [])
 
   const handleExitComplete = useCallback(() => {
-    setIsClosing(false)
     if (isCloseActiveRef.current) {
       isCloseActiveRef.current = false
+      // Navigate away — the component unmounts so no need to reset isClosing.
+      // Resetting it before navigation would momentarily flip isOpen back to true
+      // (the URL still has the photoId), causing the backdrop to flash.
       closeViewerRef.current()
+    } else {
+      setIsClosing(false)
     }
   }, [])
 
