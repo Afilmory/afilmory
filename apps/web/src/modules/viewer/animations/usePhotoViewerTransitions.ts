@@ -210,7 +210,6 @@ export const usePhotoViewerTransitions = ({
     if (!wasOpenRef.current || !currentPhoto) {
       wasOpenRef.current = false
       restoreTriggerElementVisibility()
-      onExitComplete?.()
       return
     }
 
