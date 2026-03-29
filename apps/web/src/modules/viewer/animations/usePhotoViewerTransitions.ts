@@ -12,6 +12,7 @@ interface UsePhotoViewerTransitionsParams {
   currentPhoto: PhotoManifest | undefined
   currentBlobSrc: string | null
   isMobile: boolean
+  onExitComplete?: () => void
 }
 
 interface UsePhotoViewerTransitionsResult {
@@ -33,6 +34,7 @@ export const usePhotoViewerTransitions = ({
   currentPhoto,
   currentBlobSrc,
   isMobile,
+  onExitComplete,
 }: UsePhotoViewerTransitionsParams): UsePhotoViewerTransitionsResult => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const cachedTriggerRef = useRef<HTMLElement | null>(triggerElement)
@@ -208,6 +210,7 @@ export const usePhotoViewerTransitions = ({
     if (!wasOpenRef.current || !currentPhoto) {
       wasOpenRef.current = false
       restoreTriggerElementVisibility()
+      onExitComplete?.()
       return
     }
 
@@ -217,6 +220,7 @@ export const usePhotoViewerTransitions = ({
       wasOpenRef.current = false
       restoreTriggerElementVisibility()
       setExitTransition(null)
+      onExitComplete?.()
       return
     }
 
@@ -225,6 +229,7 @@ export const usePhotoViewerTransitions = ({
       wasOpenRef.current = false
       restoreTriggerElementVisibility()
       setExitTransition(null)
+      onExitComplete?.()
       return
     }
 
@@ -242,6 +247,7 @@ export const usePhotoViewerTransitions = ({
       wasOpenRef.current = false
       restoreTriggerElementVisibility()
       setExitTransition(null)
+      onExitComplete?.()
       return
     }
 
@@ -257,6 +263,7 @@ export const usePhotoViewerTransitions = ({
       wasOpenRef.current = false
       restoreTriggerElementVisibility()
       setExitTransition(null)
+      onExitComplete?.()
       return
     }
 
@@ -294,6 +301,7 @@ export const usePhotoViewerTransitions = ({
     resolveTriggerElement,
     restoreTriggerElementVisibility,
     hideTriggerElement,
+    onExitComplete,
   ])
 
   useLayoutEffect(() => {
@@ -321,7 +329,8 @@ export const usePhotoViewerTransitions = ({
   const handleExitAnimationComplete = useCallback(() => {
     restoreTriggerElementVisibility()
     setExitTransition(null)
-  }, [restoreTriggerElementVisibility])
+    onExitComplete?.()
+  }, [restoreTriggerElementVisibility, onExitComplete])
 
   const isEntryAnimating = Boolean(entryTransition)
   const shouldRenderBackdrop = isOpen || Boolean(exitTransition) || Boolean(entryTransition)

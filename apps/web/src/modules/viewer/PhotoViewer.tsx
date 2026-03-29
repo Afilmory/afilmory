@@ -32,6 +32,7 @@ interface PhotoViewerProps {
   onClose: () => void
   onIndexChange: (index: number) => void
   triggerElement: HTMLElement | null
+  onExitComplete?: () => void
 }
 
 export const PhotoViewer = ({
@@ -41,6 +42,7 @@ export const PhotoViewer = ({
   onClose,
   onIndexChange,
   triggerElement,
+  onExitComplete,
 }: PhotoViewerProps) => {
   const { t } = useTranslation()
   const isMobile = useMobile()
@@ -68,6 +70,7 @@ export const PhotoViewer = ({
     currentPhoto,
     currentBlobSrc,
     isMobile,
+    onExitComplete,
   })
 
   useEffect(() => {
