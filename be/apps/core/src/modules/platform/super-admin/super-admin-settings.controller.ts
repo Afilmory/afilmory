@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch } from '@afilmory/framework'
+import { Body, Controller, Get, Patch } from '@tsuki/framework'
 import { Roles } from 'core/guards/roles.decorator'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'
 import { parseStorageProviders } from 'core/modules/configuration/setting/storage-provider.utils'

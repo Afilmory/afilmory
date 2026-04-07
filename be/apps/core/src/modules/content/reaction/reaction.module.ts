@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 
 import { ReactionController } from './reaction.controller'
 import { ReactionService } from './reaction.service'

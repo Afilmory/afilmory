@@ -1,4 +1,4 @@
-import { createZodDto } from '@afilmory/framework'
+import { createZodDto } from '@tsuki/framework'
 import { z } from 'zod'
 
 import { SETTING_SCHEMAS } from '../setting/setting.constant'

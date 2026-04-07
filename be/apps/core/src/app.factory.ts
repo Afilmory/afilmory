@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 
 import { env } from '@afilmory/env'
-import type { HonoHttpApplication } from '@afilmory/framework'
-import { createApplication, createLogger, createZodValidationPipe, HttpException } from '@afilmory/framework'
+import type { HonoHttpApplication } from '@tsuki/framework'
+import { createApplication, createLogger, createZodValidationPipe, HttpException } from '@tsuki/framework'
 import { BizException } from 'core/errors'
 import { Hono } from 'hono'
 

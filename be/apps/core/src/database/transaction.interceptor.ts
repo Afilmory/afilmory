@@ -1,5 +1,5 @@
-import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@afilmory/framework'
-import { createLogger } from '@afilmory/framework'
+import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@tsuki/framework'
+import { createLogger } from '@tsuki/framework'
 import { getTenantContext } from 'core/modules/platform/tenant/tenant.context'
 import type { PoolClient } from 'pg'
 import { injectable } from 'tsyringe'

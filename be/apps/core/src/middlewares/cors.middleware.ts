@@ -1,5 +1,5 @@
-import type { HttpMiddleware } from '@afilmory/framework'
-import { Middleware } from '@afilmory/framework'
+import type { HttpMiddleware } from '@tsuki/framework'
+import { Middleware } from '@tsuki/framework'
 import type { Context, Next } from 'hono'
 import { cors } from 'hono/cors'
 import { injectable } from 'tsyringe'

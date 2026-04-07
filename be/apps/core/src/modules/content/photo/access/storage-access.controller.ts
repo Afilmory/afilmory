@@ -1,4 +1,4 @@
-import { ContextParam, Controller, Get, Query } from '@afilmory/framework'
+import { ContextParam, Controller, Get, Query } from '@tsuki/framework'
 import { getClientIp } from 'core/context/http-context.helper'
 import { BizException, ErrorCode } from 'core/errors'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'

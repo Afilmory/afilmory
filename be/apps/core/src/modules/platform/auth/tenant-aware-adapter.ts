@@ -1,4 +1,4 @@
-import { HttpContext } from '@afilmory/framework'
+import { HttpContext } from '@tsuki/framework'
 import type { Adapter, Where } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { BizException, ErrorCode } from 'core/errors'

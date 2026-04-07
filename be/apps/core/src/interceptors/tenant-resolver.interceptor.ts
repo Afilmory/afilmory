@@ -1,4 +1,4 @@
-import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@afilmory/framework'
+import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@tsuki/framework'
 import { injectable } from 'tsyringe'
 
 import { shouldSkipTenant } from '../decorators/skip-tenant.decorator'

@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { BillingModule } from 'core/modules/platform/billing/billing.module'
 
 import { SettingModule } from '../setting/setting.module'

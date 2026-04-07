@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { DatabaseModule } from 'core/database/database.module'
 import { SystemSettingModule } from 'core/modules/configuration/system-setting/system-setting.module'
 import { PhotoBuilderService } from 'core/modules/content/photo/builder/photo-builder.service'

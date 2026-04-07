@@ -79,7 +79,7 @@ PG_CONN_TIMEOUT=5000
 ### 1) Modules and Controllers
 
 ```ts
-import { Controller, Get, Query, UseGuards, Module } from '@afilmory/framework'
+import { Controller, Get, Query, UseGuards, Module } from '@tsuki/framework'
 
 @Controller('demo')
 export class DemoController {
@@ -137,7 +137,7 @@ Both the database and Redis are registered as DI-driven modules in the demo app.
 Ensure `DatabaseModule` and `RedisModule` are imported by your root module (already wired in the demo):
 
 ```ts
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { DatabaseModule } from '../database/module'
 import { RedisModule } from '../redis/module'
 import { AppModule } from './app/app.module'
@@ -178,7 +178,7 @@ The `@afilmory/task-queue` package ships with a decorator-driven registration mo
 
 ```ts
 import { injectable } from 'tsyringe'
-import { OnModuleDestroy, OnModuleInit } from '@afilmory/framework'
+import { OnModuleDestroy, OnModuleInit } from '@tsuki/framework'
 import { RedisQueueDriver, TaskContext, TaskProcessor, TaskQueue, TaskQueueManager } from '@afilmory/task-queue'
 
 @injectable()
@@ -248,7 +248,7 @@ The framework can build an OpenAPI 3.1 document directly from module and control
 
 ```ts
 import type { Hono } from 'hono'
-import { ApiDoc, ApiTags, createOpenApiDocument } from '@afilmory/framework'
+import { ApiDoc, ApiTags, createOpenApiDocument } from '@tsuki/framework'
 
 import { AppModules } from './modules/index.module'
 
@@ -280,7 +280,7 @@ Handlers may return `Response`, `string`, `ArrayBuffer`, `ArrayBufferView`, `Rea
 ### 4) Logger
 
 ```ts
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 
 const logger = createLogger('App')
 logger.info('Service started')
@@ -309,7 +309,7 @@ Logger options include custom writer, color strategy, clock, per-level colors, a
 ```ts
 import 'reflect-metadata'
 import { serve } from '@hono/node-server'
-import { createApplication, createZodValidationPipe } from '@afilmory/framework'
+import { createApplication, createZodValidationPipe } from '@tsuki/framework'
 import { AppModule } from './app.module'
 
 const ValidationPipe = createZodValidationPipe({
@@ -336,7 +336,7 @@ Use `tsyringe` decorators for providers and constructor injection. When running 
 ```ts
 import 'reflect-metadata'
 import { injectable } from 'tsyringe'
-import { Controller, Get } from '@afilmory/framework'
+import { Controller, Get } from '@tsuki/framework'
 
 @injectable()
 class AppService {
@@ -374,7 +374,7 @@ Throw `HttpException` or built-ins like `BadRequestException`, `ForbiddenExcepti
 
 ```ts
 import { z } from 'zod'
-import { Body, Controller, Post, createZodSchemaDto } from '@afilmory/framework'
+import { Body, Controller, Post, createZodSchemaDto } from '@tsuki/framework'
 
 const CreateMessageSchema = z.object({
   message: z.string().min(1),

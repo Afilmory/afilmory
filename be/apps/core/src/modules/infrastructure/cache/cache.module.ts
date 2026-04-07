@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { RedisModule } from 'core/redis/redis.module'
 
 import { CacheService } from './cache.service'

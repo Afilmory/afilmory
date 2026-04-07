@@ -1,4 +1,4 @@
-import { createLogger, EventEmitterService } from '@afilmory/framework'
+import { createLogger, EventEmitterService } from '@tsuki/framework'
 import { SystemSettingService } from 'core/modules/configuration/system-setting/system-setting.service'
 import { injectable } from 'tsyringe'
 

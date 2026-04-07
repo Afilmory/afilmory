@@ -1,6 +1,6 @@
 import { decodeGatewayState } from '@afilmory/be-utils'
 import { env } from '@afilmory/env'
-import { HttpContext } from '@afilmory/framework'
+import { HttpContext } from '@tsuki/framework'
 import { DEFAULT_BASE_DOMAIN, isTenantSlugReserved } from '@afilmory/utils'
 import { BizException, ErrorCode } from 'core/errors'
 import { logger } from 'core/helpers/logger.helper'

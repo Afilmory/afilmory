@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 
 import { SettingModule } from '../setting/setting.module'
 import { BuilderSettingController } from './builder-setting.controller'

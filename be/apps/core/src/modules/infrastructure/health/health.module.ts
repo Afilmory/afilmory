@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { DatabaseModule } from 'core/database/database.module'
 import { RedisModule } from 'core/redis/redis.module'
 

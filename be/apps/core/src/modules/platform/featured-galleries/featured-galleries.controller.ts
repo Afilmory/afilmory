@@ -1,4 +1,4 @@
-import { Controller, Get } from '@afilmory/framework'
+import { Controller, Get } from '@tsuki/framework'
 import { AllowPlaceholderTenant } from 'core/decorators/allow-placeholder.decorator'
 import { SkipTenantGuard } from 'core/decorators/skip-tenant.decorator'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'

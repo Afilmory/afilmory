@@ -1,5 +1,5 @@
 import { env } from '@afilmory/env'
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import ejs from 'ejs'
 import { Resend } from 'resend'
 import { injectable } from 'tsyringe'

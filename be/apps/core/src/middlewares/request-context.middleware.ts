@@ -1,5 +1,5 @@
-import type { HttpMiddleware } from '@afilmory/framework'
-import { HttpContext, Middleware } from '@afilmory/framework'
+import type { HttpMiddleware } from '@tsuki/framework'
+import { HttpContext, Middleware } from '@tsuki/framework'
 import { logger } from 'core/helpers/logger.helper'
 import type { AuthSession } from 'core/modules/platform/auth/auth.provider'
 import { AuthProvider } from 'core/modules/platform/auth/auth.provider'

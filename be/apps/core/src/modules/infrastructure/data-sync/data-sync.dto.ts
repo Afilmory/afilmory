@@ -1,4 +1,4 @@
-import { createZodDto } from '@afilmory/framework'
+import { createZodDto } from '@tsuki/framework'
 import { z } from 'zod'
 
 import { ConflictResolutionStrategy } from './data-sync.types'

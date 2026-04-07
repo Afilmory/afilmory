@@ -1,4 +1,4 @@
-import type { CanActivate, ExecutionContext } from '@afilmory/framework'
+import type { CanActivate, ExecutionContext } from '@tsuki/framework'
 import { isPlaceholderTenantAllowed } from 'core/decorators/allow-placeholder.decorator'
 import { BizException, ErrorCode } from 'core/errors'
 import { logger } from 'core/helpers/logger.helper'

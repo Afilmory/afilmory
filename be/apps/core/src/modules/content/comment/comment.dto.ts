@@ -1,4 +1,4 @@
-import { createZodSchemaDto } from '@afilmory/framework'
+import { createZodSchemaDto } from '@tsuki/framework'
 import { z } from 'zod'
 
 export const CreateCommentSchema = z.object({

@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { SiteSettingModule } from 'core/modules/configuration/site-setting/site-setting.module'
 
 import { ManifestModule } from '../manifest/manifest.module'

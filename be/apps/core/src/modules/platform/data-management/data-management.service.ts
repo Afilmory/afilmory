@@ -11,7 +11,7 @@ import {
   tenantDomains,
   tenants,
 } from '@afilmory/db'
-import { EventEmitterService } from '@afilmory/framework'
+import { EventEmitterService } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
 import { SystemSettingService } from 'core/modules/configuration/system-setting/system-setting.service'

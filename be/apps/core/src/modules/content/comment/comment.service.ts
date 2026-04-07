@@ -1,5 +1,5 @@
 import { authAccounts, authUsers, commentReactions, comments, photoAssets, tenantDomains, tenants } from '@afilmory/db'
-import { EventEmitterService, HttpContext } from '@afilmory/framework'
+import { EventEmitterService, HttpContext } from '@tsuki/framework'
 import { DEFAULT_BASE_DOMAIN } from '@afilmory/utils'
 import { getClientIp } from 'core/context/http-context.helper'
 import { DbAccessor } from 'core/database/database.provider'

@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 
 import { AuthModule } from '../platform/auth/auth.module'
 import { RootAccountProvisioner } from '../platform/auth/root-account.service'

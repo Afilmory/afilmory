@@ -142,7 +142,7 @@ export class HonoHttpApplication {
   constructor(
     private readonly rootModule: Constructor,
     private readonly options: ApplicationOptions = {},
-    private readonly app: Hono,
+    private readonly app: Hono = new Hono(),
   ) {
     this.logger = options.logger ?? createLogger('Framework')
     this.diLogger = this.logger.extend('DI')

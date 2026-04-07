@@ -1,5 +1,5 @@
 import { authUsers, creemSubscriptions, tenants } from '@afilmory/db'
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
 import { SystemSettingService } from 'core/modules/configuration/system-setting/system-setting.service'

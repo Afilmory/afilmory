@@ -1,4 +1,4 @@
-import { createZodSchemaDto } from '@afilmory/framework'
+import { createZodSchemaDto } from '@tsuki/framework'
 import { z } from 'zod'
 
 const storageSignQuerySchema = z

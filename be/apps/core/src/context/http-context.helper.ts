@@ -1,4 +1,4 @@
-import { HttpContext } from '@afilmory/framework'
+import { HttpContext } from '@tsuki/framework'
 import type { Context } from 'hono'
 
 /**

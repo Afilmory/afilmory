@@ -1,3 +1,3 @@
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 
 export const logger = createLogger('Global')

@@ -20,7 +20,7 @@
     "@afilmory/builder": "workspace:*",
     "@afilmory/db": "workspace:*",
     "@afilmory/env": "workspace:*",
-    "@afilmory/framework": "workspace:*",
+    "@tsuki/framework": "workspace:*",
     "@afilmory/og-renderer": "workspace:*",
     "@afilmory/redis": "workspace:*",
     "@afilmory/sdk": "workspace:*",

@@ -1,4 +1,4 @@
-import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@afilmory/framework'
+import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@tsuki/framework'
 import { BizException, ErrorCode } from 'core/errors'
 import { injectable } from 'tsyringe'
 

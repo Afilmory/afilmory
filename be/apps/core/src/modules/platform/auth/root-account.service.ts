@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto'
 
 import { authUsers } from '@afilmory/db'
 import { env } from '@afilmory/env'
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { STATIC_DASHBOARD_BASENAME } from 'core/modules/infrastructure/static-web/static-dashboard.service'
 import { ROOT_TENANT_SLUG } from 'core/modules/platform/tenant/tenant.constants'

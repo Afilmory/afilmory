@@ -1,5 +1,5 @@
 import type { BuilderConfig, StorageConfig } from '@afilmory/builder'
-import { Body, ContextParam, Controller, createLogger, Get, Param, Post } from '@afilmory/framework'
+import { Body, ContextParam, Controller, createLogger, Get, Param, Post } from '@tsuki/framework'
 import { Roles } from 'core/guards/roles.decorator'
 import { createProgressSseResponse } from 'core/modules/shared/http/sse'
 import type { Context } from 'hono'

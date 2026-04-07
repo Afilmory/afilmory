@@ -1,6 +1,6 @@
 <div align="center">
 
-# @afilmory/framework
+# @tsuki/framework
 
 A lightweight yet feature-complete enterprise framework built on Hono, providing NestJS-like modularity, decorators, and dependency injection while retaining Hono's performance and flexibility.
 
@@ -31,7 +31,7 @@ A lightweight yet feature-complete enterprise framework built on Hono, providing
 
 ## Framework Positioning & Features
 
-`@afilmory/framework` is a server-side framework built around Hono, aimed at providing an enterprise-grade development experience while maintaining performance:
+`@tsuki/framework` is a server-side framework built around Hono, aimed at providing an enterprise-grade development experience while maintaining performance:
 
 - **Decorator-Driven**: Modules, controllers, routes, parameters, and enhancers are all declared using decorators.
 - **Dependency Injection**: Container based on `tsyringe`, supporting singleton/factory/provider configurations with strict checking for unregistered dependencies.
@@ -48,7 +48,7 @@ A lightweight yet feature-complete enterprise framework built on Hono, providing
 // main.ts
 import 'reflect-metadata'
 import { serve } from '@hono/node-server'
-import { createApplication } from '@afilmory/framework'
+import { createApplication } from '@tsuki/framework'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
@@ -70,7 +70,7 @@ bootstrap()
 
 ```ts
 // app.module.ts
-import { Module, Controller, Get } from '@afilmory/framework'
+import { Module, Controller, Get } from '@tsuki/framework'
 
 @Controller('hello')
 class HelloController {
@@ -149,7 +149,7 @@ export class UserService implements OnModuleInit, OnModuleDestroy {
   2. **Module-based** via `APP_*` tokens in providers (NestJS-style):
 
      ```ts
-     import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_MIDDLEWARE, APP_PIPE } from '@afilmory/framework'
+     import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_MIDDLEWARE, APP_PIPE } from '@tsuki/framework'
 
      @Module({
        providers: [
@@ -184,7 +184,7 @@ export class UserService implements OnModuleInit, OnModuleDestroy {
 
 ```ts
 import type { Context, Next } from 'hono'
-import { APP_MIDDLEWARE, Middleware } from '@afilmory/framework'
+import { APP_MIDDLEWARE, Middleware } from '@tsuki/framework'
 import { injectable } from 'tsyringe'
 
 // Logger, CacheService, and LegacyMiddleware are regular injectables.
@@ -237,7 +237,7 @@ app.useGlobalMiddlewares({ handler: new LegacyMiddleware(), path: '/legacy' })
 - Supports `HttpContext.assign({ userId })` to extend custom values, with type augmentation via module declaration.
 
 ```ts
-declare module '@afilmory/framework' {
+declare module '@tsuki/framework' {
   interface HttpContextValues {
     userId?: string
   }
@@ -346,7 +346,7 @@ app.useGlobalMiddlewares({ handler: new LegacyMiddleware(), path: '/*' })
 **If your enhancer needs DI**, prefer using `APP_*` tokens in module providers instead:
 
 ```ts
-import { APP_GUARD, APP_INTERCEPTOR } from '@afilmory/framework'
+import { APP_GUARD, APP_INTERCEPTOR } from '@tsuki/framework'
 
 @Module({
   providers: [

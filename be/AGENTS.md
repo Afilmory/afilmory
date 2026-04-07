@@ -30,7 +30,7 @@ This is a custom web framework built on top of Hono that provides:
 
 | Package                | Purpose                                                        |
 | ---------------------- | -------------------------------------------------------------- |
-| `@afilmory/framework`  | Core framework with decorators, DI, HTTP context, logger, etc. |
+| `@tsuki/framework`  | Core framework with decorators, DI, HTTP context, logger, etc. |
 | `@afilmory/db`         | Drizzle ORM schema and migrations                              |
 | `@afilmory/env`        | Runtime environment validation                                 |
 | `@afilmory/redis`      | Redis client factory with strong typing                        |
@@ -46,7 +46,7 @@ Modules are the fundamental building blocks that organize your application into 
 **Module Structure:**
 
 ```typescript
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 
 @Module({
   imports: [OtherModule], // Import other modules
@@ -71,7 +71,7 @@ Controllers handle HTTP requests and define routes using decorators.
 **Basic Controller:**
 
 ```typescript
-import { Controller, Get, Post, Body, Param, Query } from '@afilmory/framework'
+import { Controller, Get, Post, Body, Param, Query } from '@tsuki/framework'
 
 @Controller('users') // Base path: /users
 export class UserController {
@@ -144,7 +144,7 @@ The framework provides a request-scoped context using Node's `AsyncLocalStorage`
 **Accessing Context:**
 
 ```typescript
-import { HttpContext } from '@afilmory/framework'
+import { HttpContext } from '@tsuki/framework'
 
 // In any service, guard, interceptor, or pipe
 @injectable()
@@ -166,7 +166,7 @@ const honoContext = context.hono
 
 ```typescript
 // Extend the context type
-declare module '@afilmory/framework' {
+declare module '@tsuki/framework' {
   interface HttpContextValues {
     userId?: string
     requestId?: string
@@ -194,7 +194,7 @@ HttpContext.assign({ userId: '123', requestId: 'abc' })
 ```typescript
 import 'reflect-metadata'
 import { serve } from '@hono/node-server'
-import { createApplication } from '@afilmory/framework'
+import { createApplication } from '@tsuki/framework'
 
 async function bootstrap() {
   // Create the application
@@ -234,7 +234,7 @@ bootstrap()
 **Root Module Pattern:**
 
 ```typescript
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { DatabaseModule } from './database/database.module'
 import { RedisModule } from './redis/redis.module'
 import { UserModule } from './modules/user/user.module'
@@ -263,7 +263,7 @@ export class AppModule {}
 **Database Module Pattern:**
 
 ```typescript
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { DbAccessor } from './database.provider'
 
 @Module({
@@ -294,7 +294,7 @@ export class DbAccessor {
 **Redis Module Pattern:**
 
 ```typescript
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { RedisAccessor } from './redis.provider'
 
 @Module({
@@ -431,7 +431,7 @@ async riskyOperation() {}
 
 ```typescript
 import { z } from 'zod'
-import { createZodSchemaDto } from '@afilmory/framework'
+import { createZodSchemaDto } from '@tsuki/framework'
 
 // Define schema
 const CreateUserSchema = z.object({
@@ -487,7 +487,7 @@ Guards determine whether a request should be handled by the route.
 
 ```typescript
 import { injectable } from 'tsyringe'
-import { CanActivate, ExecutionContext, UnauthorizedException, HttpContext } from '@afilmory/framework'
+import { CanActivate, ExecutionContext, UnauthorizedException, HttpContext } from '@tsuki/framework'
 
 @injectable()
 export class AuthGuard implements CanActivate {
@@ -553,7 +553,7 @@ Pipes transform and validate input data.
 
 ```typescript
 import { injectable } from 'tsyringe'
-import { PipeTransform, ArgumentMetadata, BadRequestException } from '@afilmory/framework'
+import { PipeTransform, ArgumentMetadata, BadRequestException } from '@tsuki/framework'
 
 @injectable()
 export class ParseIntPipe implements PipeTransform<string, number> {
@@ -572,7 +572,7 @@ export class ParseIntPipe implements PipeTransform<string, number> {
 **Built-in Validation Pipe:**
 
 ```typescript
-import { createZodValidationPipe } from '@afilmory/framework'
+import { createZodValidationPipe } from '@tsuki/framework'
 
 // Create configured validation pipe
 const ValidationPipe = createZodValidationPipe({
@@ -602,7 +602,7 @@ Interceptors wrap the request/response flow and can modify both.
 
 ```typescript
 import { injectable } from 'tsyringe'
-import { Interceptor, ExecutionContext, CallHandler, FrameworkResponse } from '@afilmory/framework'
+import { Interceptor, ExecutionContext, CallHandler, FrameworkResponse } from '@tsuki/framework'
 
 @injectable()
 export class LoggingInterceptor implements Interceptor {
@@ -666,7 +666,7 @@ Filters catch and handle exceptions thrown during request processing.
 
 ```typescript
 import { injectable } from 'tsyringe'
-import { ExceptionFilter, ArgumentsHost, HttpException } from '@afilmory/framework'
+import { ExceptionFilter, ArgumentsHost, HttpException } from '@tsuki/framework'
 
 @injectable()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -790,7 +790,7 @@ export class OrderService {
 
 ```typescript
 import { z } from 'zod'
-import { createZodSchemaDto } from '@afilmory/framework'
+import { createZodSchemaDto } from '@tsuki/framework'
 
 // DTOs for request validation
 const PaginationQuerySchema = z.object({
@@ -1089,7 +1089,7 @@ The `@afilmory/websocket` package provides a Redis-backed WebSocket gateway with
 **WebSocket Module Setup:**
 
 ```typescript
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { RedisModule } from '../redis/redis.module'
 import { WebSocketGatewayProvider } from './websocket.provider'
 import { WebSocketService } from './websocket.service'
@@ -1105,7 +1105,7 @@ export class WebSocketModule {}
 
 ```typescript
 import { injectable } from 'tsyringe'
-import { OnModuleInit, OnModuleDestroy, createLogger } from '@afilmory/framework'
+import { OnModuleInit, OnModuleDestroy, createLogger } from '@tsuki/framework'
 import { RedisPubSubBroker, RedisWebSocketGateway } from '@afilmory/websocket'
 import { RedisAccessor } from '../redis/redis.provider'
 
@@ -1199,7 +1199,7 @@ export class WebSocketService {
 
 ```typescript
 import { serve } from '@hono/node-server'
-import { createApplication } from '@afilmory/framework'
+import { createApplication } from '@tsuki/framework'
 
 async function bootstrap() {
   const app = await createApplication(AppModule)
@@ -1276,7 +1276,7 @@ The `@afilmory/task-queue` package provides a robust task queue system with supp
 **Task Queue Module Setup:**
 
 ```typescript
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { TaskQueueModule } from '@afilmory/task-queue'
 import { TaskQueueManager } from './task-queue.manager'
 import { TaskQueueService } from './task-queue.service'
@@ -1294,7 +1294,7 @@ export class QueueModule {}
 
 ```typescript
 import { injectable } from 'tsyringe'
-import { OnModuleDestroy, OnModuleInit, createLogger } from '@afilmory/framework'
+import { OnModuleDestroy, OnModuleInit, createLogger } from '@tsuki/framework'
 import { RedisQueueDriver, TaskContext, TaskProcessor, TaskQueue, TaskQueueManager } from '@afilmory/task-queue'
 import { RedisAccessor } from '../redis/redis.provider'
 
@@ -1593,7 +1593,7 @@ describe('UserService', () => {
 
 ```typescript
 import { describe, it, expect } from 'vitest'
-import { createApplication } from '@afilmory/framework'
+import { createApplication } from '@tsuki/framework'
 
 describe('UserController', () => {
   let app: HonoHttpApplication
@@ -1759,7 +1759,7 @@ import {
   createApplication,
   createZodValidationPipe,
   createZodSchemaDto,
-} from '@afilmory/framework'
+} from '@tsuki/framework'
 
 // DI
 import { injectable } from 'tsyringe'
@@ -1775,7 +1775,7 @@ import type { Context } from 'hono'
 
 ```typescript
 // app.module.ts
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 
@@ -1796,7 +1796,7 @@ export class AppService {
 }
 
 // app.controller.ts
-import { Controller, Get } from '@afilmory/framework'
+import { Controller, Get } from '@tsuki/framework'
 import { AppService } from './app.service'
 
 @Controller('app')
@@ -1812,7 +1812,7 @@ export class AppController {
 // index.ts
 import 'reflect-metadata'
 import { serve } from '@hono/node-server'
-import { createApplication } from '@afilmory/framework'
+import { createApplication } from '@tsuki/framework'
 import { AppModule } from './app.module'
 
 async function bootstrap() {

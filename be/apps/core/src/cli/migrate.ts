@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'

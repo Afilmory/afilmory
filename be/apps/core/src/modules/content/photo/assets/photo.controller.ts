@@ -10,7 +10,7 @@ import {
   Post,
   Query,
   UseInterceptors,
-} from '@afilmory/framework'
+} from '@tsuki/framework'
 import { getOptionalDbContext } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
 import { Roles } from 'core/guards/roles.decorator'

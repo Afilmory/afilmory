@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 
 import { PhotoModule } from '../photo/photo.module'
 import { ManifestPublicController } from './manifest.public.controller'

@@ -1,4 +1,4 @@
-import { APP_GUARD, APP_INTERCEPTOR, APP_MIDDLEWARE, EventModule, Module } from '@afilmory/framework'
+import { APP_GUARD, APP_INTERCEPTOR, APP_MIDDLEWARE, EventModule, Module } from '@tsuki/framework'
 import { AuthGuard } from 'core/guards/auth.guard'
 import { PlaceholderTenantGuard } from 'core/guards/placeholder-tenant.guard'
 import { RolesGuard } from 'core/guards/roles.guard'

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@afilmory/framework'
+import { Body, Controller, Delete, Get, Param, Post } from '@tsuki/framework'
 import { BizException, ErrorCode } from 'core/errors'
 import { Roles } from 'core/guards/roles.decorator'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'

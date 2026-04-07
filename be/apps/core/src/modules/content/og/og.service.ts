@@ -2,7 +2,7 @@ import { readFile, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import type { PhotoManifestItem } from '@afilmory/builder'
-import type { OnModuleDestroy } from '@afilmory/framework'
+import type { OnModuleDestroy } from '@tsuki/framework'
 import type { ExifInfo, HomepageOgTemplateProps, PhotoDimensions } from '@afilmory/og-renderer'
 import { renderHomepageOgImage, renderOgImage } from '@afilmory/og-renderer'
 import { BizException, ErrorCode } from 'core/errors'

@@ -7,7 +7,7 @@ export interface HttpContextAuth {
   user?: AuthSession['user']
   session?: Session
 }
-declare module '@afilmory/framework' {
+declare module '@tsuki/framework' {
   interface HttpContextValues {
     tenant?: TenantContext
     auth?: HttpContextAuth

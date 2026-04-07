@@ -1,5 +1,5 @@
-import type { PipeTransform } from '@afilmory/framework'
-import { BadRequestException } from '@afilmory/framework'
+import type { PipeTransform } from '@tsuki/framework'
+import { BadRequestException } from '@tsuki/framework'
 import { injectable } from 'tsyringe'
 
 @injectable()

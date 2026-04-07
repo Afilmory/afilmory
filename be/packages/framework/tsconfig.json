@@ -8,8 +8,8 @@
     "experimentalDecorators": true,
     "baseUrl": "./src",
     "paths": {
-      "@afilmory/framework": ["./index.ts"],
-      "@afilmory/framework/*": ["./*"],
+      "@tsuki/framework": ["./index.ts"],
+      "@tsuki/framework/*": ["./*"],
       "~": ["./"],
       "~/*": ["./*"]
     },

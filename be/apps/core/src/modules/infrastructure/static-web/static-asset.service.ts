@@ -4,8 +4,8 @@ import { readFile, stat } from 'node:fs/promises'
 import { extname, isAbsolute, join, normalize, relative, resolve } from 'node:path'
 import { Readable } from 'node:stream'
 
-import type { PrettyLogger } from '@afilmory/framework'
-import { createLogger, HttpContext } from '@afilmory/framework'
+import type { PrettyLogger } from '@tsuki/framework'
+import { createLogger, HttpContext } from '@tsuki/framework'
 import { DOMParser } from 'linkedom'
 import { lookup as lookupMimeType } from 'mime-types'
 

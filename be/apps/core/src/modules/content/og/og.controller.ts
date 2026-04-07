@@ -1,4 +1,4 @@
-import { ContextParam, Controller, Get, Param } from '@afilmory/framework'
+import { ContextParam, Controller, Get, Param } from '@tsuki/framework'
 import type { Context } from 'hono'
 
 import { OgService } from './og.service'

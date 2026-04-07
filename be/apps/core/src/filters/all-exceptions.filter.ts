@@ -1,5 +1,5 @@
-import type { ArgumentsHost, ExceptionFilter } from '@afilmory/framework'
-import { createLogger, HttpException } from '@afilmory/framework'
+import type { ArgumentsHost, ExceptionFilter } from '@tsuki/framework'
+import { createLogger, HttpException } from '@tsuki/framework'
 import { BizException } from 'core/errors'
 import { toUri } from 'core/helpers/url.helper'
 import { injectable } from 'tsyringe'

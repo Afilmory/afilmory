@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { dbSchema } from '@afilmory/db'
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import { BizException, ErrorCode } from 'core/errors'
 import { getTenantContext } from 'core/modules/platform/tenant/tenant.context'
 import { drizzle } from 'drizzle-orm/node-postgres'

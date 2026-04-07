@@ -1,4 +1,4 @@
-import { Body, Controller, createZodSchemaDto, Delete, Get, Param, Post } from '@afilmory/framework'
+import { Body, Controller, createZodSchemaDto, Delete, Get, Param, Post } from '@tsuki/framework'
 import { isTenantSlugReserved } from '@afilmory/utils'
 import { AllowPlaceholderTenant } from 'core/decorators/allow-placeholder.decorator'
 import { SkipTenantGuard } from 'core/decorators/skip-tenant.decorator'

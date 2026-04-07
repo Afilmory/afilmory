@@ -1,4 +1,4 @@
-import { HttpContext, registerLoggerContextProvider } from '@afilmory/framework'
+import { HttpContext, registerLoggerContextProvider } from '@tsuki/framework'
 import type { TenantContext } from 'core/modules/platform/tenant/tenant.types'
 
 registerLoggerContextProvider(() => {

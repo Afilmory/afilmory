@@ -10,7 +10,7 @@ import { StorageManager } from '@afilmory/builder/storage/index.js'
 import type { GitHubConfig, ManagedStorageConfig, S3CompatibleConfig } from '@afilmory/builder/storage/interfaces.js'
 import type { PhotoAssetManifest } from '@afilmory/db'
 import { CURRENT_PHOTO_MANIFEST_VERSION, DATABASE_ONLY_PROVIDER, photoAssets } from '@afilmory/db'
-import { EventEmitterService } from '@afilmory/framework'
+import { EventEmitterService } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
 import { runWithBuilderLogRelay } from 'core/modules/infrastructure/data-sync/builder-log-relay'
@@ -65,7 +65,7 @@ type UploadAssetsOptions = {
   abortSignal?: AbortSignal
 }
 
-declare module '@afilmory/framework' {
+declare module '@tsuki/framework' {
   interface Events {
     'photo.manifest.changed': { tenantId: string }
   }

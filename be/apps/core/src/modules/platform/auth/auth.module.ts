@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { DatabaseModule } from 'core/database/database.module'
 import { AppStateModule } from 'core/modules/app/app-state/app-state.module'
 import { SettingModule } from 'core/modules/configuration/setting/setting.module'

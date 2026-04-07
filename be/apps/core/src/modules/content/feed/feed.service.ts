@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 
-import type { OnModuleDestroy, OnModuleInit } from '@afilmory/framework'
-import { createLogger, EventEmitterService, HttpContext } from '@afilmory/framework'
+import type { OnModuleDestroy, OnModuleInit } from '@tsuki/framework'
+import { createLogger, EventEmitterService, HttpContext } from '@tsuki/framework'
 import type { FeedSiteConfig } from '@afilmory/utils'
 import { generateRSSFeed } from '@afilmory/utils'
 import { SiteSettingService } from 'core/modules/configuration/site-setting/site-setting.service'

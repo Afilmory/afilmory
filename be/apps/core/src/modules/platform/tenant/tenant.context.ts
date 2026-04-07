@@ -1,4 +1,4 @@
-import { HttpContext } from '@afilmory/framework'
+import { HttpContext } from '@tsuki/framework'
 import { BizException, ErrorCode } from 'core/errors'
 
 import type { TenantContext } from './tenant.types'

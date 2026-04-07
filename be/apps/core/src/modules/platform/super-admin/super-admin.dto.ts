@@ -1,4 +1,4 @@
-import { createZodDto, createZodSchemaDto } from '@afilmory/framework'
+import { createZodDto, createZodSchemaDto } from '@tsuki/framework'
 import { BILLING_PLAN_IDS } from 'core/modules/platform/billing/billing-plan.constants'
 import type { BillingPlanId } from 'core/modules/platform/billing/billing-plan.types'
 import { z } from 'zod'

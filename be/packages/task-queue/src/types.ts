@@ -1,4 +1,4 @@
-import type { PrettyLogger } from '@afilmory/framework'
+import type { PrettyLogger } from '@tsuki/framework'
 
 export interface TaskMetadata {
   attempts: number

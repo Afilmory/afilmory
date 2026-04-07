@@ -1,5 +1,5 @@
 import { photoAssets } from '@afilmory/db'
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import { eq, gt, sql } from 'drizzle-orm'
 
 import { APP_GLOBAL_PREFIX } from '../app.constants'

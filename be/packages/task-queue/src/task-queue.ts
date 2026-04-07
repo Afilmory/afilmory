@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
-import type { PrettyLogger } from '@afilmory/framework'
-import { createLogger } from '@afilmory/framework'
+import type { PrettyLogger } from '@tsuki/framework'
+import { createLogger } from '@tsuki/framework'
 
 import { InMemoryQueueDriver } from './drivers/in-memory.driver'
 import type {

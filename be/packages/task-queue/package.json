@@ -16,7 +16,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@afilmory/framework": "workspace:*",
+    "@tsuki/framework": "workspace:*",
     "tsyringe": "^4.10.0"
   },
   "devDependencies": {

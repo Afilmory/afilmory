@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { createApplication, Module } from '@afilmory/framework'
+import { createApplication, Module } from '@tsuki/framework'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { InMemoryQueueDriver } from '../src/drivers/in-memory.driver'

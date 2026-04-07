@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { SystemSettingModule } from 'core/modules/configuration/system-setting/system-setting.module'
 
 import { CommentNotificationListener } from './listeners/comment-notification.listener'

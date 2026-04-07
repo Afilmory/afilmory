@@ -1,5 +1,5 @@
 import { env } from '@afilmory/env'
-import { createOpenApiDocument } from '@afilmory/framework'
+import { createOpenApiDocument } from '@tsuki/framework'
 import type { Hono } from 'hono'
 
 import { logger } from './helpers/logger.helper'

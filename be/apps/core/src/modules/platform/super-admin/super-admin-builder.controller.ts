@@ -8,7 +8,7 @@ import {
   DEFAULT_DIRECTORY as DEFAULT_THUMBNAIL_DIRECTORY,
   THUMBNAIL_PLUGIN_DATA_KEY,
 } from '@afilmory/builder/plugins/thumbnail-storage/shared.js'
-import { ContextParam, Controller, createLogger, Post } from '@afilmory/framework'
+import { ContextParam, Controller, createLogger, Post } from '@tsuki/framework'
 import { BizException, ErrorCode } from 'core/errors'
 import { Roles } from 'core/guards/roles.decorator'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'

@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { SiteSettingModule } from 'core/modules/configuration/site-setting/site-setting.module'
 import { CacheModule } from 'core/modules/infrastructure/cache/cache.module'
 

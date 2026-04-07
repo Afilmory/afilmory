@@ -1,6 +1,6 @@
 import { authUsers } from '@afilmory/db'
-import type { CanActivate, ExecutionContext } from '@afilmory/framework'
-import { HttpContext } from '@afilmory/framework'
+import type { CanActivate, ExecutionContext } from '@tsuki/framework'
+import { HttpContext } from '@tsuki/framework'
 import type { HttpContextAuth } from 'core/context/http-context.values'
 import { applyTenantIsolationContext, DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'

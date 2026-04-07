@@ -1,4 +1,4 @@
-import { HttpContext } from '@afilmory/framework'
+import { HttpContext } from '@tsuki/framework'
 
 import enUiSchema from '../../../locales/ui-schema/en'
 import zhCnUiSchema from '../../../locales/ui-schema/zh-CN'

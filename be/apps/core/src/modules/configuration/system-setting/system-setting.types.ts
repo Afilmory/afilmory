@@ -62,7 +62,7 @@ export type UpdateSystemSettingsInput = Partial<SystemSettings> &
 
 export { type SystemSettingField } from './system-setting.constants'
 
-declare module '@afilmory/framework' {
+declare module '@tsuki/framework' {
   interface Events {
     'system.setting.updated': { key: SystemSettingKey; value: unknown }
   }

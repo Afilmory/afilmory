@@ -1,4 +1,4 @@
-import { Module } from '@afilmory/framework'
+import { Module } from '@tsuki/framework'
 import { DatabaseModule } from 'core/database/database.module'
 
 import { SystemSettingService } from './system-setting.service'

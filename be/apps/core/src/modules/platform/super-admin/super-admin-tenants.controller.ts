@@ -1,5 +1,5 @@
 import { photoAssets } from '@afilmory/db'
-import { Body, Controller, Delete, Get, Param, Patch, Query } from '@afilmory/framework'
+import { Body, Controller, Delete, Get, Param, Patch, Query } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { Roles } from 'core/guards/roles.decorator'
 import { BypassResponseTransform } from 'core/interceptors/response-transform.decorator'

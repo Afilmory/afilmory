@@ -1,4 +1,4 @@
-import { Controller, Get } from '@afilmory/framework'
+import { Controller, Get } from '@tsuki/framework'
 import { Roles } from 'core/guards/roles.decorator'
 
 import { DashboardService } from './dashboard.service'

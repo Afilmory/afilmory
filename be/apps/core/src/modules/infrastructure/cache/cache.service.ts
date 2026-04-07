@@ -1,4 +1,4 @@
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import { RedisAccessor } from 'core/redis/redis.provider'
 import { injectable } from 'tsyringe'
 

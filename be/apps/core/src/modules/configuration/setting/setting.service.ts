@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 
 import { settings } from '@afilmory/db'
 import { env } from '@afilmory/env'
-import { EventEmitterService } from '@afilmory/framework'
+import { EventEmitterService } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
 import { getTenantContext } from 'core/modules/platform/tenant/tenant.context'
@@ -31,7 +31,7 @@ export type SetSettingOptions = {
   description?: string | null
 } & SettingOption
 
-declare module '@afilmory/framework' {
+declare module '@tsuki/framework' {
   interface Events {
     'setting.updated': { tenantId: string; key: string; value: string }
     'setting.deleted': { tenantId: string; key: string }

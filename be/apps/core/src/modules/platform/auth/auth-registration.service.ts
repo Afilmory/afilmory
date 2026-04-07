@@ -1,5 +1,5 @@
 import { authUsers, tenants } from '@afilmory/db'
-import { HttpContext } from '@afilmory/framework'
+import { HttpContext } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { BizException, ErrorCode } from 'core/errors'
 import { SETTING_SCHEMAS } from 'core/modules/configuration/setting/setting.constant'

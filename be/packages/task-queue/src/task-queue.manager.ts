@@ -1,4 +1,4 @@
-import { createLogger } from '@afilmory/framework'
+import { createLogger } from '@tsuki/framework'
 import { injectable } from 'tsyringe'
 
 import { InMemoryQueueDriver } from './drivers/in-memory.driver'

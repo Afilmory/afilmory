@@ -1,5 +1,5 @@
-import type { OnModuleInit } from '@afilmory/framework'
-import { createLogger } from '@afilmory/framework'
+import type { OnModuleInit } from '@tsuki/framework'
+import { createLogger } from '@tsuki/framework'
 import { AppStateService } from 'core/modules/app/app-state/app-state.service'
 import { TenantService } from 'core/modules/platform/tenant/tenant.service'
 import { injectable } from 'tsyringe'

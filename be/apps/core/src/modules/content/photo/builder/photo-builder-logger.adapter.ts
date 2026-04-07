@@ -1,6 +1,6 @@
 import type { Logger as BuilderLogger } from '@afilmory/builder/logger/index.js'
 import { relayLogMessage } from '@afilmory/builder/logger/index.js'
-import type { PrettyLogger } from '@afilmory/framework'
+import type { PrettyLogger } from '@tsuki/framework'
 import type { ConsolaInstance } from 'consola'
 
 class ConsolaCompatibleLogger {

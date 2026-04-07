@@ -1,4 +1,4 @@
-import { Controller, Delete, Post } from '@afilmory/framework'
+import { Controller, Delete, Post } from '@tsuki/framework'
 import { Roles } from 'core/guards/roles.decorator'
 
 import { DataManagementService } from './data-management.service'

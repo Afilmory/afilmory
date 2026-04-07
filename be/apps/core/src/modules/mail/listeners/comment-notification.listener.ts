@@ -1,5 +1,5 @@
 import { authUsers, comments } from '@afilmory/db'
-import { createLogger, OnEvent } from '@afilmory/framework'
+import { createLogger, OnEvent } from '@tsuki/framework'
 import { DbAccessor } from 'core/database/database.provider'
 import { SystemSettingService } from 'core/modules/configuration/system-setting/system-setting.service'
 import { CommentCreatedEvent } from 'core/modules/content/comment/events/comment-created.event'

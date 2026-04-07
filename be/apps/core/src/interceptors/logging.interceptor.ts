@@ -1,5 +1,5 @@
-import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@afilmory/framework'
-import { createLogger } from '@afilmory/framework'
+import type { CallHandler, ExecutionContext, FrameworkResponse, Interceptor } from '@tsuki/framework'
+import { createLogger } from '@tsuki/framework'
 import { toUri } from 'core/helpers/url.helper'
 import { green } from 'picocolors'
 import { injectable } from 'tsyringe'
