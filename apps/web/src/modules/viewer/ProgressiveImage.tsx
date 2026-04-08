@@ -42,6 +42,7 @@ export const ProgressiveImage = ({
   videoSource,
   shouldAutoPlayVideoOnce = false,
   isHDR = false,
+  isGIF = false,
   loadingIndicatorRef,
 }: ProgressiveImageProps) => {
   const { t } = useTranslation()
@@ -147,7 +148,7 @@ export const ProgressiveImage = ({
           }}
         >
           {/* LivePhoto/Motion Photo 或 HDR 模式使用 DOMImageViewer */}
-          {hasVideo || shouldUseHDR ? (
+          {hasVideo || shouldUseHDR || isGIF ? (
             <DOMImageViewer
               ref={domImageViewerRef}
               onZoomChange={onDOMTransformed}

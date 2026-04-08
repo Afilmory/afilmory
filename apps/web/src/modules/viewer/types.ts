@@ -39,6 +39,8 @@ export interface ProgressiveImageProps {
   // HDR 相关 props
   isHDR?: boolean
 
+  isGIF?: boolean
+
   loadingIndicatorRef: React.RefObject<LoadingIndicatorRef | null>
 }
 

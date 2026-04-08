@@ -346,6 +346,7 @@ export const PhotoViewer = ({
                               shouldAutoPlayVideoOnce={isCurrentImage}
                               // HDR props
                               isHDR={photo.isHDR}
+                              isGIF={photo.format === 'GIF'}
                             />
                           </m.div>
                         </SwiperSlide>
