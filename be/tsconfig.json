@@ -4,19 +4,10 @@
     "target": "es2022",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "allowJs": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "declaration": false,
-    "outDir": "./dist",
-    "removeComments": true,
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
     "paths": {
       "@afilmory/env": ["packages/env/src"],
       "@afilmory/env/*": ["packages/env/src/*"],
@@ -28,6 +19,16 @@
       "@afilmory/task-queue/*": ["packages/task-queue/src/*"],
       "@afilmory/websocket": ["packages/websocket/src"],
       "@afilmory/websocket/*": ["packages/websocket/src/*"]
-    }
+    },
+    "allowJs": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "declaration": false,
+    "outDir": "./dist",
+    "removeComments": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   }
 }

@@ -1,13 +1,13 @@
 {
   "name": "@afilmory/typing",
+  "type": "module",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*"
   },
   "dependencies": {
-    "exiftool-vendored": "33.5.0"
+    "exiftool-vendored": "35.20.0"
   }
 }

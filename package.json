@@ -1,18 +1,20 @@
 {
   "name": "@afilmory/monorepo",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.1.2",
+  "license": "SEE LICENSE IN LICENSE.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/Afilmory/Afilmory"
   },
-  "license": "SEE LICENSE IN LICENSE.md",
-  "type": "module",
   "scripts": {
     "build": "pnpm --filter @afilmory/ssr build",
     "build:demo": "sh scripts/prepare-demo-data.sh && pnpm --filter web build",
     "build:manifest": "pnpm --filter @afilmory/builder cli",
     "build:update-remote-repo": "sh scripts/build-update-remote-repo.sh",
+    "build:variant-report": "pnpm --filter @afilmory/builder cluster",
     "create:doc": "tsx scripts/create-doc.ts",
     "dev": "pnpm --filter @afilmory/ssr dev",
     "dev:be": "pnpm --filter @afilmory/be dev",
@@ -29,6 +31,44 @@
     "type-check": "pnpm run -r type-check",
     "update:lastmodified": "tsx scripts/update-lastmodified.ts"
   },
+  "dependencies": {
+    "@afilmory/builder": "workspace:*",
+    "@afilmory/hooks": "workspace:*",
+    "@afilmory/ui": "workspace:*",
+    "@t3-oss/env-core": "catalog:",
+    "dotenv": "17.4.2",
+    "es-toolkit": "1.46.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@innei/prettier": "1.0.0",
+    "@types/node": "25.8.0",
+    "ast-kit": "2.2.0",
+    "dotenv-expand": "catalog:",
+    "eslint": "10.4.0",
+    "eslint-config-hyoban": "7.0.3",
+    "fast-glob": "3.3.3",
+    "lint-staged": "17.0.4",
+    "nbump": "2.1.8",
+    "prettier": "3.8.3",
+    "sharp": "0.34.5",
+    "simple-git-hooks": "2.13.1",
+    "tailwindcss": "catalog:",
+    "tsx": "4.22.0",
+    "typescript": "catalog:",
+    "unplugin-ast": "0.17.0",
+    "vite": "8.0.13",
+    "vite-bundle-analyzer": "1.3.8",
+    "vite-plugin-babel": "1.7.1",
+    "vite-plugin-checker": "0.13.0",
+    "vite-tsconfig-paths": "6.1.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "motion": "12.38.0",
+      "motion-dom": "12.38.0"
+    }
+  },
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged"
   },
@@ -42,44 +82,5 @@
     "*.{md,mdx}": [
       "pnpm update:lastmodified"
     ]
-  },
-  "dependencies": {
-    "@afilmory/builder": "workspace:*",
-    "@afilmory/hooks": "workspace:*",
-    "@afilmory/ui": "workspace:*",
-    "@t3-oss/env-core": "catalog:",
-    "dotenv": "17.3.1",
-    "es-toolkit": "1.44.0",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@innei/prettier": "1.0.0",
-    "@types/node": "25.2.3",
-    "ast-kit": "2.2.0",
-    "dotenv-expand": "catalog:",
-    "eslint": "10.0.0",
-    "eslint-config-hyoban": "5.0.6",
-    "fast-glob": "3.3.3",
-    "lint-staged": "16.2.7",
-    "nbump": "2.1.8",
-    "prettier": "3.8.1",
-    "sharp": "0.34.5",
-    "simple-git-hooks": "2.13.1",
-    "tailwindcss": "catalog:",
-    "tsx": "4.21.0",
-    "typescript": "catalog:",
-    "unplugin-ast": "0.16.0",
-    "vite": "8.0.0-beta.0",
-    "vite-bundle-analyzer": "1.3.6",
-    "vite-plugin-babel": "1.5.1",
-    "vite-plugin-checker": "0.12.0",
-    "vite-tsconfig-paths": "6.1.1"
-  },
-  "packageManager": "pnpm@10.29.3",
-  "pnpm": {
-    "overrides": {
-      "motion": "12.34.0",
-      "motion-dom": "12.34.0"
-    }
   }
 }

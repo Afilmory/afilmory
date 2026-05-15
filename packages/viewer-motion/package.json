@@ -1,9 +1,9 @@
 {
   "name": "@afilmory/viewer-motion",
+  "type": "module",
   "version": "0.0.5",
   "description": "Reusable motion primitives for fullscreen media viewers",
   "license": "MIT",
-  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*"
@@ -17,20 +17,20 @@
     "test": "tsx --test src/*.test.ts",
     "type-check": "tsc --noEmit"
   },
+  "peerDependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
   "dependencies": {
     "@use-gesture/react": "^10.3.1",
-    "motion": "^12.34.0"
+    "motion": "^12.38.0"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "tsdown": "0.18.0"
-  },
-  "peerDependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tsdown": "0.22.0"
   },
   "publishConfig": {
     "access": "public",

@@ -37,7 +37,8 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
         const actualScale = state.scale * fit
         const isZoomed = Math.abs(actualScale - fit) > 0.01
         onZoomChange?.(isZoomed, actualScale)
-      } else {
+      }
+      else {
         const isZoomed = state.scale !== 1
         onZoomChange?.(isZoomed, state.scale)
       }
@@ -54,13 +55,21 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
   // 双击切换 1x/fitToScreenScale，缩放中心为指针位置
   const handleDoubleClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (!enableZoom) return
+      if (!enableZoom) {
+        return
+      }
       const instance = activeRef.current?.instance
-      if (!instance) return
+      if (!instance) {
+        return
+      }
       const wrapper = instance.wrapperComponent
-      if (!wrapper) return
+      if (!wrapper) {
+        return
+      }
       const img = wrapper.querySelector('img') as HTMLImageElement | null
-      if (!img || img.naturalWidth === 0 || img.naturalHeight === 0) return
+      if (!img || img.naturalWidth === 0 || img.naturalHeight === 0) {
+        return
+      }
       const containerRect = wrapper.getBoundingClientRect()
       // 指针在容器内的坐标
       const pointerX = event.clientX - containerRect.left
@@ -68,9 +77,9 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
       const containerWidth = wrapper.clientWidth || 1
       const containerHeight = wrapper.clientHeight || 1
       const fit = Math.min(containerWidth / img.naturalWidth, containerHeight / img.naturalHeight)
-      const scale0 = instance.transformState.scale
-      const x0 = instance.transformState.positionX
-      const y0 = instance.transformState.positionY
+      const scale0 = instance.state.scale
+      const x0 = instance.state.positionX
+      const y0 = instance.state.positionY
       // 判断当前是否为 fitToScreen 或 1x
       const isAtFit = Math.abs(scale0 - 1) < 0.01
       const isAt1x = Math.abs(scale0 * fit - 1) < 0.01
@@ -80,7 +89,8 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
         const x1 = pointerX - (pointerX - x0) * (scale1 / scale0)
         const y1 = pointerY - (pointerY - y0) * (scale1 / scale0)
         activeRef.current?.setTransform(x1, y1, scale1, 200, 'easeInOutCubic')
-      } else if (isAt1x) {
+      }
+      else if (isAt1x) {
         // 1x -> 回到 fitToScreen
         activeRef.current?.setTransform(0, 0, 1, 200, 'easeInOutCubic')
       }
@@ -112,17 +122,18 @@ export const DOMImageViewer: FC<DOMImageViewerProps> = ({
         limitToBounds={true}
         centerOnInit={true}
         smooth={true}
-        alignmentAnimation={{
+        autoAlignment={{
           sizeX: 0,
           sizeY: 0,
           velocityAlignmentTime: 0.2,
         }}
         velocityAnimation={{
-          sensitivity: 1,
+          sensitivityTouch: 1,
+          sensitivityMouse: 1,
           animationTime: 0.2,
         }}
         centerZoomedOut={true}
-        onTransformed={onTransformed}
+        onTransform={onTransformed}
       >
         <TransformComponent
           wrapperClass="!w-full !h-full !absolute !inset-0"

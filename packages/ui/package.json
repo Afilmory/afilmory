@@ -1,11 +1,15 @@
 {
   "name": "@afilmory/ui",
+  "type": "module",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*"
+  },
+  "peerDependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "dependencies": {
     "@afilmory/hooks": "workspace:*",
@@ -23,11 +27,11 @@
     "@radix-ui/react-switch": "1.2.6",
     "@radix-ui/react-tooltip": "1.2.8",
     "clsx": "^2.1.1",
-    "jotai": "^2.17.1",
-    "motion": "12.34.0",
-    "react-intersection-observer": "10.0.2",
+    "jotai": "^2.20.0",
+    "motion": "12.38.0",
+    "react-intersection-observer": "10.0.3",
     "sonner": "2.0.7",
-    "tailwind-merge": "^3.4.0",
+    "tailwind-merge": "^3.6.0",
     "tailwind-variants": "^3.2.2",
     "thumbhash": "0.1.1",
     "usehooks-ts": "^3.1.1"
@@ -35,11 +39,7 @@
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
-  },
-  "peerDependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   }
 }

@@ -1,14 +1,15 @@
 {
   "name": "@afilmory/dashboard",
+  "type": "module",
   "version": "0.0.0",
   "private": true,
+  "packageManager": "pnpm@11.1.2",
   "description": "Backend administration panel",
+  "license": "SEE LICENSE IN LICENSE.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/afilmory/afilmory"
   },
-  "license": "SEE LICENSE IN LICENSE.md",
-  "type": "module",
   "scripts": {
     "build": "vite build",
     "build:prod:saas": "SAAS=1 vite build",
@@ -18,25 +19,14 @@
     "prepare": "simple-git-hooks",
     "serve": "vite preview"
   },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm exec lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "prettier --ignore-path ./.gitignore --write "
-    ],
-    "*.{js,ts,cjs,mjs,jsx,tsx,json}": [
-      "eslint --fix"
-    ]
-  },
   "dependencies": {
     "@afilmory/hooks": "workspace:*",
     "@afilmory/ui": "workspace:*",
     "@afilmory/utils": "workspace:*",
     "@base-ui-components/react": "1.0.0-rc.0",
-    "@creem_io/better-auth": "0.0.12",
+    "@creem_io/better-auth": "1.1.1",
     "@essentials/request-timeout": "1.3.0",
-    "@headlessui/react": "2.2.9",
+    "@headlessui/react": "2.2.10",
     "@pastel-palette/tailwindcss": "1.0.0-canary.3",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-checkbox": "1.3.3",
@@ -49,67 +39,77 @@
     "@radix-ui/react-switch": "1.2.6",
     "@radix-ui/react-tooltip": "1.2.8",
     "@react-hook/window-size": "3.1.1",
-    "@tanstack/react-form": "1.28.1",
-    "@tanstack/react-query": "5.90.21",
-    "better-auth": "1.4.7",
+    "@tanstack/react-form": "1.32.0",
+    "@tanstack/react-query": "5.100.10",
+    "better-auth": "1.6.11",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "es-toolkit": "1.44.0",
-    "foxact": "0.2.51",
-    "i18next": "25.8.7",
+    "es-toolkit": "1.46.1",
+    "foxact": "0.3.4",
+    "i18next": "26.2.0",
     "i18next-browser-languagedetector": "8.2.1",
-    "immer": "11.1.4",
-    "jotai": "2.17.1",
-    "lucide-react": "0.564.0",
-    "motion": "12.34.0",
-    "nanoid": "5.1.6",
+    "immer": "11.1.8",
+    "jotai": "2.20.0",
+    "lucide-react": "1.16.0",
+    "motion": "12.38.0",
+    "nanoid": "5.1.11",
     "ofetch": "1.5.1",
     "radix-ui": "1.4.3",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-i18next": "16.5.4",
-    "react-router": "7.13.0",
-    "react-scan": "0.4.3",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "react-i18next": "17.0.8",
+    "react-router": "7.15.1",
+    "react-scan": "0.5.6",
     "sonner": "2.0.7",
-    "tailwind-merge": "3.4.0",
+    "tailwind-merge": "3.6.0",
     "usehooks-ts": "3.1.1",
-    "zustand": "5.0.11"
+    "zustand": "5.0.13"
   },
   "devDependencies": {
     "@egoist/tailwindcss-icons": "catalog:",
     "@iconify-json/mingcute": "catalog:",
-    "@iconify-json/simple-icons": "1.2.70",
+    "@iconify-json/simple-icons": "1.2.82",
     "@tailwindcss/container-queries": "0.1.1",
     "@tailwindcss/postcss": "catalog:",
-    "@tailwindcss/typography": "0.5.19",
-    "@tailwindcss/vite": "4.1.18",
-    "@types/node": "25.2.3",
+    "@tailwindcss/typography": "catalog:",
+    "@tailwindcss/vite": "4.3.0",
+    "@types/node": "25.8.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vitejs/plugin-react": "^5.1.4",
-    "autoprefixer": "10.4.24",
+    "@vitejs/plugin-react": "^6.0.2",
+    "autoprefixer": "10.5.0",
     "babel-plugin-react-compiler": "1.0.0",
-    "code-inspector-plugin": "1.4.2",
-    "eslint": "10.0.0",
-    "eslint-config-hyoban": "5.0.6",
-    "lint-staged": "16.2.7",
+    "code-inspector-plugin": "1.5.1",
+    "eslint": "10.4.0",
+    "eslint-config-hyoban": "7.0.3",
+    "lint-staged": "17.0.4",
     "masonic": "4.1.0",
-    "postcss": "8.5.6",
+    "postcss": "8.5.14",
     "postcss-import": "16.1.1",
-    "prettier": "3.8.1",
+    "prettier": "3.8.3",
     "react-compiler-runtime": "1.0.0",
     "simple-git-hooks": "2.13.1",
-    "tailwind-scrollbar": "4.0.2",
+    "tailwind-scrollbar": "catalog:",
     "tailwind-variants": "catalog:",
     "tailwindcss": "catalog:",
-    "tailwindcss-animate": "1.0.7",
+    "tailwindcss-animate": "catalog:",
     "tailwindcss-safe-area": "catalog:",
     "tw-animate-css": "1.4.0",
-    "typescript": "5.9.3",
-    "vite": "8.0.0-beta.0",
-    "vite-plugin-checker": "0.12.0",
+    "typescript": "6.0.3",
+    "vite": "8.0.13",
+    "vite-plugin-checker": "0.13.0",
     "vite-plugin-route-builder": "0.5.0-alpha.1",
     "vite-tsconfig-paths": "6.1.1"
   },
-  "packageManager": "pnpm@10.29.3"
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --ignore-path ./.gitignore --write "
+    ],
+    "*.{js,ts,cjs,mjs,jsx,tsx,json}": [
+      "eslint --fix"
+    ]
+  }
 }

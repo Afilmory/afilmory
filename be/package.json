@@ -1,9 +1,9 @@
 {
   "name": "@afilmory/be",
+  "type": "module",
   "version": "1.0.0",
   "private": true,
   "author": "Innei",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "db:generate": "pnpm --filter core db:generate",
@@ -14,22 +14,22 @@
     "prepare": "simple-git-hooks",
     "test": "pnpm run -r test"
   },
+  "dependencies": {
+    "prettier": "3.8.3"
+  },
+  "devDependencies": {
+    "eslint": "10.4.0",
+    "eslint-config-hyoban": "7.0.3",
+    "jiti": "2.7.0",
+    "lint-staged": "17.0.4",
+    "simple-git-hooks": "2.13.1",
+    "typescript": "catalog:"
+  },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
     "*": "eslint --fix",
     "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
-  },
-  "dependencies": {
-    "prettier": "3.8.1"
-  },
-  "devDependencies": {
-    "eslint": "10.0.0",
-    "eslint-config-hyoban": "5.0.6",
-    "jiti": "2.6.1",
-    "lint-staged": "16.2.7",
-    "simple-git-hooks": "2.13.1",
-    "typescript": "catalog:"
   }
 }

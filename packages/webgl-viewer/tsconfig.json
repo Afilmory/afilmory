@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
+    "target": "ESNext",
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "target": "ESNext",
-    "lib": ["ESNext", "DOM"],
     "types": ["vite/client"],
-    "jsx": "react-jsx"
+    "skipLibCheck": true
   }
 }

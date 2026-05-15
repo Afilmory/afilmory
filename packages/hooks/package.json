@@ -1,23 +1,23 @@
 {
   "name": "@afilmory/hooks",
+  "type": "module",
   "version": "0.0.1",
   "private": true,
-  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*"
   },
+  "peerDependencies": {
+    "react": "^19.1.1"
+  },
   "dependencies": {
-    "jotai": "^2.17.1",
+    "jotai": "^2.20.0",
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
-  },
-  "peerDependencies": {
-    "react": "^19.1.1"
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   }
 }
