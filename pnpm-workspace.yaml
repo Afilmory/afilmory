@@ -31,6 +31,6 @@ catalog:
 allowBuilds:
   '@swc/core': true
   esbuild: true
-  libpq: true
+  libpq: false
   sharp: true
   simple-git-hooks: true
