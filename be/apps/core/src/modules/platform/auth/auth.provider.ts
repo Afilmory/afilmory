@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 
 import { authAccounts, authSessions, authUsers, authVerifications, creemSubscriptions, generateId } from '@afilmory/db'
 import { env } from '@afilmory/env'
+import { expo } from '@better-auth/expo'
 import { DrizzleProvider } from '@core/database/database.provider'
 import { BizException } from '@core/errors'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
@@ -16,6 +17,7 @@ import { createLogger, HttpContext } from '@tsuki-hono/common'
 import { betterAuth } from 'better-auth'
 import { APIError, createAuthMiddleware } from 'better-auth/api'
 import { admin } from 'better-auth/plugins'
+import { eq } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { injectable } from 'tsyringe'
 
@@ -23,12 +25,18 @@ import { TenantService } from '../tenant/tenant.service'
 import { extractTenantSlugFromHost } from '../tenant/tenant-host.utils'
 import type { AuthModuleOptions, SocialProviderOptions, SocialProvidersConfig } from './auth.config'
 import { AuthConfig } from './auth.config'
+import { brokerDrizzleAdapter } from './broker-adapter'
 import { tenantAwareDrizzleAdapter } from './tenant-aware-adapter'
 
 export type BetterAuthInstance = ReturnType<typeof betterAuth>
 
 const logger = createLogger('Auth')
 const TRAILING_SLASHES_PATTERN = /\/+$/
+
+// The reserved `api` slug never resolves to a tenant, which makes its host the
+// natural home for the mobile login broker: OAuth completes there, the provider
+// identity is matched globally, and a session for the matched tenant is issued.
+const MOBILE_AUTH_BROKER_SLUG = 'api'
 
 @injectable()
 export class AuthProvider implements OnModuleInit {
@@ -147,8 +155,16 @@ export class AuthProvider implements OnModuleInit {
   }
 
   private async buildTrustedOrigins(): Promise<string[]> {
+    const mobileOrigins = ['afilmory://']
+
     if (env.NODE_ENV !== 'production') {
-      return ['http://*.localhost:*', 'https://*.localhost:*', 'http://localhost:*', 'https://localhost:*']
+      return [
+        'http://*.localhost:*',
+        'https://*.localhost:*',
+        'http://localhost:*',
+        'https://localhost:*',
+        ...mobileOrigins,
+      ]
     }
 
     const settings = await this.systemSettings.getSettings()
@@ -157,6 +173,7 @@ export class AuthProvider implements OnModuleInit {
       `http://*.${settings.baseDomain}`,
       `https://${settings.baseDomain}`,
       `http://${settings.baseDomain}`,
+      ...mobileOrigins,
     ]
   }
 
@@ -283,6 +300,7 @@ export class AuthProvider implements OnModuleInit {
         },
       },
       plugins: [
+        expo(),
         admin({
           adminRoles: ['admin'],
           defaultRole: 'user',
@@ -349,8 +367,80 @@ export class AuthProvider implements OnModuleInit {
     const requestedHost = (endpoint.host ?? fallbackHost).trim().toLowerCase()
     const tenantSlugFromContext = this.resolveTenantSlugFromContext()
     const tenantSlug = tenantSlugFromContext ?? extractTenantSlugFromHost(requestedHost, options.baseDomain)
+    if (tenantSlug === MOBILE_AUTH_BROKER_SLUG) {
+      return await this.createAuthForBroker(options)
+    }
     const instancePromise = this.createAuthForEndpoint(tenantSlug, options)
     return await instancePromise
+  }
+
+  private async createAuthForBroker(options: AuthModuleOptions): Promise<BetterAuthInstance> {
+    const db = this.drizzleProvider.getDb()
+    const socialProviders = this.buildBetterAuthProvidersForHost(options.socialProviders, options.oauthGatewayUrl)
+
+    return betterAuth({
+      database: brokerDrizzleAdapter(db, {
+        provider: 'pg',
+        schema: {
+          user: authUsers,
+          session: authSessions,
+          account: authAccounts,
+          verification: authVerifications,
+        },
+      }),
+      socialProviders: socialProviders as any,
+      emailAndPassword: { enabled: false },
+      trustedOrigins: await this.buildTrustedOrigins(),
+      session: {
+        freshAge: 0,
+        additionalFields: {
+          tenantId: { type: 'string', input: false },
+        },
+      },
+      account: {
+        skipStateCookieCheck: true,
+        additionalFields: {
+          tenantId: { type: 'string', input: false },
+        },
+      },
+      user: {
+        additionalFields: {
+          tenantId: { type: 'string', input: false },
+          role: { type: 'string', input: false },
+          creemCustomerId: { type: 'string', input: false },
+        },
+      },
+      databaseHooks: {
+        session: {
+          create: {
+            before: async (session) => {
+              const [user] = await db
+                .select({ tenantId: authUsers.tenantId })
+                .from(authUsers)
+                .where(eq(authUsers.id, session.userId))
+                .limit(1)
+              if (!user?.tenantId) {
+                throw new APIError('UNAUTHORIZED', {
+                  message: 'No workspace is linked to this account. Create your gallery on the web first.',
+                })
+              }
+              return {
+                data: {
+                  ...session,
+                  tenantId: user.tenantId,
+                },
+              }
+            },
+          },
+        },
+      },
+      advanced: {
+        database: {
+          generateId: () => generateId(),
+        },
+      },
+      plugins: [expo()],
+    })
   }
 
   async getAuthForTenant(tenant: { id: string, slug?: string | null }): Promise<BetterAuthInstance> {

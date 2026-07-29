@@ -485,6 +485,7 @@ export class AuthController {
 
   @AllowPlaceholderTenant()
   @SkipTenantGuard()
+  @BypassResponseTransform()
   @Get('/*')
   async passthroughGet(@ContextParam() context: Context) {
     return await this.auth.handler(context)
@@ -492,6 +493,7 @@ export class AuthController {
 
   @AllowPlaceholderTenant()
   @SkipTenantGuard()
+  @BypassResponseTransform()
   @Post('/*')
   async passthroughPost(@ContextParam() context: Context) {
     return await this.auth.handler(context)
