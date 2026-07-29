@@ -19,7 +19,7 @@ export function GalleriesScreen() {
   const openGallery = useCallback(
     (gallery: FeaturedGallery) => {
       router.push({
-        pathname: '/galleries/[slug]',
+        pathname: '/explore/[slug]',
         params: { slug: gallery.slug, gallery: JSON.stringify(gallery) },
       })
     },

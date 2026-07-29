@@ -1,14 +1,19 @@
 import { DarkTheme, Slot, ThemeProvider } from 'expo-router'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
+import { hydrateAuth } from '@/modules/auth/sessionStore'
 import { PresentationHost } from '@/presentation'
 import { useTheme as useAppTheme } from '@/theme/useTheme'
 
 export default function RootLayout() {
   const { palette } = useAppTheme()
+
+  useEffect(() => {
+    void hydrateAuth()
+  }, [])
   const navigationTheme = useMemo(
     () => ({
       ...DarkTheme,

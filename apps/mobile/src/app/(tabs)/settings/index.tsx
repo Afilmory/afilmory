@@ -1,11 +1,3 @@
-import { PlaceholderTabScreen } from '@/modules/placeholder/PlaceholderTabScreen'
+import { settingsPage } from '@/modules/settings/settingsPage'
 
-export default function SettingsScreen() {
-  return (
-    <PlaceholderTabScreen
-      description="Account, appearance and sync options will live here."
-      icon="gearshape"
-      title="Settings"
-    />
-  )
-}
+export default settingsPage.Route

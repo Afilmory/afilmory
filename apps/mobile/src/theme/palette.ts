@@ -10,6 +10,7 @@ export interface Palette {
   bgSurface: string
   border: string
   borderStrong: string
+  danger: string
   textMuted: string
   textPrimary: string
   textSecondary: string
@@ -32,4 +33,5 @@ export const palette: Palette = {
   accentDim: 'rgba(0, 123, 255, 0.13)',
   accentLine: 'rgba(0, 123, 255, 0.45)',
   accentContrast: '#ffffff',
+  danger: '#ff453a',
 }

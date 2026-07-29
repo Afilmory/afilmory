@@ -7,15 +7,15 @@ export default function TabLayout() {
 
   return (
     <NativeTabs iconColor={{ default: palette.textSecondary, selected: palette.accent }} tintColor={palette.accent}>
-      <NativeTabs.Trigger name="galleries">
+      <NativeTabs.Trigger name="photos">
         <NativeTabs.Trigger.Icon
           md="photo_library"
           sf={{ default: 'photo.on.rectangle', selected: 'photo.fill.on.rectangle.fill' }}
         />
-        <NativeTabs.Trigger.Label>Galleries</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Photos</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Icon md="explore" sf={{ default: 'map', selected: 'map.fill' }} />
+        <NativeTabs.Trigger.Icon md="explore" sf="safari" />
         <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
