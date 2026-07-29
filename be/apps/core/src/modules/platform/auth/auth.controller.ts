@@ -19,7 +19,7 @@ import { getTenantContext, isPlaceholderTenantContext } from '../tenant/tenant.c
 import { TenantService } from '../tenant/tenant.service'
 import type { TenantRecord } from '../tenant/tenant.types'
 import type { SocialProvidersConfig } from './auth.config'
-import { AuthProvider } from './auth.provider'
+import { AuthProvider, MOBILE_AUTH_BROKER_SLUG } from './auth.provider'
 import { AuthRegistrationService } from './auth-registration.service'
 
 const logger = createLogger('AuthController')
@@ -336,7 +336,10 @@ export class AuthController {
     return response
   }
 
+  // SkipTenantGuard: the mobile login broker host resolves to no tenant at all,
+  // and AllowPlaceholderTenant alone cannot rescue a missing tenant context.
   @AllowPlaceholderTenant()
+  @SkipTenantGuard()
   @Post('/social')
   async signInSocial(@ContextParam() context: Context, @Body() body: SocialSignInRequest) {
     return await this.handleSocialSignIn(context, body)
@@ -344,6 +347,7 @@ export class AuthController {
 
   // Compatibility for Better Auth client default path
   @AllowPlaceholderTenant()
+  @SkipTenantGuard()
   @Post('/sign-in/social')
   async signInSocialCompat(@ContextParam() context: Context, @Body() body: SocialSignInRequest) {
     return await this.handleSocialSignIn(context, body)
@@ -357,7 +361,13 @@ export class AuthController {
 
     const { headers } = context.req.raw
     const tenantContext = getTenantContext()
-    const tenantSlug = tenantContext?.requestedSlug ?? tenantContext?.tenant?.slug ?? null
+    let tenantSlug = tenantContext?.requestedSlug ?? tenantContext?.tenant?.slug ?? null
+    if (!tenantSlug && (await this.auth.isBrokerRequest())) {
+      // The broker host has no tenant context; without this marker the gateway
+      // would bounce the OAuth callback to the bare base domain and the broker
+      // instance would never see it.
+      tenantSlug = MOBILE_AUTH_BROKER_SLUG
+    }
 
     // Only allow auto sign-up on real tenants (not placeholder)
     // On placeholder tenant, users must explicitly register first

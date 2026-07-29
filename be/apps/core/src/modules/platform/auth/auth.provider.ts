@@ -36,7 +36,7 @@ const TRAILING_SLASHES_PATTERN = /\/+$/
 // The reserved `api` slug never resolves to a tenant, which makes its host the
 // natural home for the mobile login broker: OAuth completes there, the provider
 // identity is matched globally, and a session for the matched tenant is issued.
-const MOBILE_AUTH_BROKER_SLUG = 'api'
+export const MOBILE_AUTH_BROKER_SLUG = 'api'
 
 @injectable()
 export class AuthProvider implements OnModuleInit {
@@ -360,13 +360,21 @@ export class AuthProvider implements OnModuleInit {
     })
   }
 
-  async getAuth(): Promise<BetterAuthInstance> {
-    const options = await this.config.getOptions()
+  private resolveRequestSlug(options: AuthModuleOptions): string | null {
     const endpoint = this.resolveRequestEndpoint()
     const fallbackHost = options.baseDomain.trim().toLowerCase()
     const requestedHost = (endpoint.host ?? fallbackHost).trim().toLowerCase()
-    const tenantSlugFromContext = this.resolveTenantSlugFromContext()
-    const tenantSlug = tenantSlugFromContext ?? extractTenantSlugFromHost(requestedHost, options.baseDomain)
+    return this.resolveTenantSlugFromContext() ?? extractTenantSlugFromHost(requestedHost, options.baseDomain)
+  }
+
+  async isBrokerRequest(): Promise<boolean> {
+    const options = await this.config.getOptions()
+    return this.resolveRequestSlug(options) === MOBILE_AUTH_BROKER_SLUG
+  }
+
+  async getAuth(): Promise<BetterAuthInstance> {
+    const options = await this.config.getOptions()
+    const tenantSlug = this.resolveRequestSlug(options)
     if (tenantSlug === MOBILE_AUTH_BROKER_SLUG) {
       return await this.createAuthForBroker(options)
     }
