@@ -70,7 +70,7 @@ export async function exchangeAppleAuthorization(
   cookie: string,
   input: { authorizationCode: string, identityToken: string, nonce: string },
 ): Promise<void> {
-  await ofetch(`${getApiBaseUrl()}/auth/apple/exchange`, {
+  await ofetch(`${getApiBaseUrl()}/mobile-auth/apple/exchange`, {
     body: input,
     headers: { cookie },
     method: 'POST',
@@ -78,7 +78,7 @@ export async function exchangeAppleAuthorization(
 }
 
 export async function fetchAppleAuthenticationConfiguration(): Promise<AppleAuthenticationConfiguration> {
-  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/auth/apple/configuration`)
+  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/mobile-auth/apple/configuration`)
   return camelCaseKeys<AppleAuthenticationConfiguration>(raw)
 }
 
@@ -94,7 +94,7 @@ export async function createWorkspace(cookie: string, input: { name: string, slu
 }
 
 export async function fetchAccountDeletionImpact(cookie: string): Promise<AccountDeletionImpact> {
-  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/auth/account-deletion/impact`, {
+  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/account-deletion/impact`, {
     headers: { cookie },
   })
   return camelCaseKeys<AccountDeletionImpact>(raw)
@@ -104,7 +104,7 @@ export async function requestAccountDeletion(
   cookie: string,
   proof: AccountDeletionProof,
 ): Promise<AccountDeletionRequestResult> {
-  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/auth/account-deletion/request`, {
+  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/account-deletion/request`, {
     body: { proof },
     headers: { cookie },
     method: 'POST',

@@ -272,6 +272,12 @@ A native-only deletion call that leaves the JavaScript session intact is not acc
 | Native workspace and profile entry points               | `PhotosHomeController.swift`, `PageControllerHostView.swift`, `ProfileSheetView.swift`, and supporting sheet records                                                                                            |
 | Release operations                                      | `apps/mobile/RELEASE.md` and App Store Connect review metadata                                                                                                                                                  |
 
+Custom mobile authentication endpoints use `/api/mobile-auth/apple/*`, while
+account-deletion endpoints use `/api/account-deletion/*`. They intentionally do
+not live below `/api/auth/*`: that namespace terminates in Better Auth's
+registration-order-sensitive passthrough route and cannot safely host custom
+controllers.
+
 ## Out of Scope
 
 - Public email/password registration, verification email, password reset, and account recovery.

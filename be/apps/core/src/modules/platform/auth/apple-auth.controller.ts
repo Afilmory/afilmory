@@ -9,7 +9,10 @@ import type { AppleAuthorizationInput } from './apple-authorization.service'
 import { AppleAuthorizationService } from './apple-authorization.service'
 
 @injectable()
-@Controller('auth/apple')
+// Keep native Apple exchange routes outside Better Auth's `/auth/*` passthrough.
+// Hono resolves routes in registration order, so placing custom endpoints below
+// that namespace makes them unreachable once the passthrough is registered.
+@Controller('mobile-auth/apple')
 export class AppleAuthController {
   constructor(private readonly apple: AppleAuthorizationService) {}
 

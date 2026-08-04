@@ -10,7 +10,8 @@ import { parseAccountDeletionProof } from './account-deletion-proof'
 import { AccountDeletionRequestService } from './account-deletion-request.service'
 
 @injectable()
-@Controller('auth/account-deletion')
+// This domain endpoint must not sit below Better Auth's `/auth/*` passthrough.
+@Controller('account-deletion')
 export class AccountDeletionController {
   constructor(
     private readonly impact: AccountDeletionImpactService,
