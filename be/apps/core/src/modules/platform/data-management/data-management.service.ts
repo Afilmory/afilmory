@@ -89,7 +89,7 @@ export class DataManagementService {
     return { deletedTenantId: tenantId }
   }
 
-  private async deleteManagedStorageSpace(tenantId: string): Promise<void> {
+  async deleteManagedStorageForTenantId(tenantId: string): Promise<void> {
     const managedConfig = await this.buildManagedStorageConfig(tenantId)
 
     if (!managedConfig) {
@@ -131,10 +131,10 @@ export class DataManagementService {
     }
   }
 
-  private async deleteTenantWithMetadata(options: { tenantId: string; tenantSlug: string | null; status: string }) {
+  private async deleteTenantWithMetadata(options: { tenantId: string, tenantSlug: string | null, status: string }) {
     this.assertTenantDeletable(options.tenantSlug, options.status)
 
-    await this.deleteManagedStorageSpace(options.tenantId)
+    await this.deleteManagedStorageForTenantId(options.tenantId)
 
     const db = this.dbAccessor.get()
 

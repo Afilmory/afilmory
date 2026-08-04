@@ -7,7 +7,8 @@ Trigger: push a `mobile-v*` tag, or run manually via workflow_dispatch.
 
 ### Apple Developer portal ([developer.apple.com](https://developer.apple.com/account))
 
-1. **Identifiers → +** — register App ID `app.afilmory` (explicit, no extra capabilities).
+1. **Identifiers → +** — register App ID `app.afilmory` (explicit) and enable
+   **Sign in with Apple** and **Push Notifications**.
 2. **Certificates** — create an **Apple Distribution** certificate. Easiest via Xcode:
    Settings → Accounts → team → Manage Certificates → + → Apple Distribution.
    Then export it from Keychain Access as `.p12` with a password.
@@ -15,6 +16,17 @@ Trigger: push a `mobile-v*` tag, or run manually via workflow_dispatch.
 No provisioning profiles to create: CI archives with automatic signing
 (`-allowProvisioningUpdates` + the ASC API key), so Xcode registers the App ID and
 fetches a profile for every target — app and extensions alike — at build time.
+
+### Sign in with Apple backend
+
+1. Create a Sign in with Apple key for the same Apple Developer team and record
+   its Team ID and Key ID.
+2. Store the raw `.p8` value as the deployment secret `APPLE_PRIVATE_KEY`.
+3. Configure the non-secret App Bundle ID (`app.afilmory`), Team ID, and Key ID
+   in Super Admin → System Settings. A Services ID is optional and is needed only
+   when Apple login is also enabled for the web dashboard.
+4. Apply the latest Core database migration before enabling the provider. It
+   creates the encrypted Apple authorization and durable account-deletion tables.
 
 ### App Store Connect ([appstoreconnect.apple.com](https://appstoreconnect.apple.com))
 
@@ -62,7 +74,9 @@ submitting a build:
 - App Privacy declarations (account data: email/name via sign-in; photos the user uploads).
 - Privacy policy URL + support URL (App Information).
 - Screenshots: 6.9" iPhone set (capture on iPhone Pro Max simulator).
-- App Review: demo account credentials — the app requires sign-in.
+- App Review: provide the seeded email/password review account, representative
+  gallery navigation notes, and a separately documented spare account. Reset or
+  reseed the account after any review pass that exercises in-app deletion.
 
 ## Per release
 

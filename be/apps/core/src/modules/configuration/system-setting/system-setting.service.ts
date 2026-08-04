@@ -51,6 +51,41 @@ import type {
 } from './system-setting.types'
 import { createSystemSettingUiSchema } from './system-setting.ui-schema'
 
+const TRAILING_SLASHES_REGEX = /\/+$/
+
+const PLAN_OVERRIDE_ENTRY_SCHEMA = z.object({
+  monthlyAssetProcessLimit: z.number().int().min(0).nullable().optional(),
+  libraryItemLimit: z.number().int().min(0).nullable().optional(),
+  maxUploadSizeMb: z.number().int().min(1).nullable().optional(),
+  maxSyncObjectSizeMb: z.number().int().min(1).nullable().optional(),
+})
+
+const BILLING_PLAN_OVERRIDES_SCHEMA = z.record(z.string(), PLAN_OVERRIDE_ENTRY_SCHEMA).default({})
+
+const PLAN_PRODUCT_ENTRY_SCHEMA = z.object({
+  creemProductId: z.string().trim().min(1).optional(),
+})
+
+const BILLING_PLAN_PRODUCTS_SCHEMA = z.record(z.string(), PLAN_PRODUCT_ENTRY_SCHEMA).default({})
+
+const PLAN_PRICING_ENTRY_SCHEMA = z.object({
+  monthlyPrice: z.number().min(0).nullable().optional(),
+  currency: z.string().trim().min(1).nullable().optional(),
+})
+
+const BILLING_PLAN_PRICING_SCHEMA = z.record(z.string(), PLAN_PRICING_ENTRY_SCHEMA).default({})
+
+const STORAGE_PLAN_CATALOG_ENTRY_SCHEMA = z.object({
+  name: z.string().trim().min(1),
+  description: z.string().trim().nullable().optional(),
+  capacityBytes: z.number().int().min(0).nullable().optional(),
+  isActive: z.boolean().optional(),
+})
+
+const STORAGE_PLAN_CATALOG_SCHEMA = z.record(z.string(), STORAGE_PLAN_CATALOG_ENTRY_SCHEMA).default({})
+const STORAGE_PLAN_PRODUCTS_SCHEMA = z.record(z.string(), PLAN_PRODUCT_ENTRY_SCHEMA).default({})
+const STORAGE_PLAN_PRICING_SCHEMA = z.record(z.string(), PLAN_PRICING_ENTRY_SCHEMA).default({})
+
 @injectable()
 export class SystemSettingService {
   constructor(
@@ -133,6 +168,26 @@ export class SystemSettingService {
       SYSTEM_SETTING_DEFINITIONS.oauthGithubClientSecret.schema,
       SYSTEM_SETTING_DEFINITIONS.oauthGithubClientSecret.defaultValue,
     )
+    const oauthAppleWebClientId = this.parseSetting(
+      rawValues[SYSTEM_SETTING_DEFINITIONS.oauthAppleWebClientId.key],
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleWebClientId.schema,
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleWebClientId.defaultValue,
+    )
+    const oauthAppleAppBundleId = this.parseSetting(
+      rawValues[SYSTEM_SETTING_DEFINITIONS.oauthAppleAppBundleId.key],
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleAppBundleId.schema,
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleAppBundleId.defaultValue,
+    )
+    const oauthAppleTeamId = this.parseSetting(
+      rawValues[SYSTEM_SETTING_DEFINITIONS.oauthAppleTeamId.key],
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleTeamId.schema,
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleTeamId.defaultValue,
+    )
+    const oauthAppleKeyId = this.parseSetting(
+      rawValues[SYSTEM_SETTING_DEFINITIONS.oauthAppleKeyId.key],
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleKeyId.schema,
+      SYSTEM_SETTING_DEFINITIONS.oauthAppleKeyId.defaultValue,
+    )
     const billingPlanOverrides = this.parseSetting(
       rawValues[SYSTEM_SETTING_DEFINITIONS.billingPlanOverrides.key],
       BILLING_PLAN_OVERRIDES_SCHEMA,
@@ -189,6 +244,10 @@ export class SystemSettingService {
       oauthGoogleClientSecret,
       oauthGithubClientId,
       oauthGithubClientSecret,
+      oauthAppleWebClientId,
+      oauthAppleAppBundleId,
+      oauthAppleTeamId,
+      oauthAppleKeyId,
       billingPlanOverrides,
       billingPlanProducts,
       billingPlanPricing,
@@ -247,7 +306,7 @@ export class SystemSettingService {
     if (!providerKey) {
       return null
     }
-    return (settings.managedStorageProviders ?? []).find((provider) => provider.id === providerKey) ?? null
+    return (settings.managedStorageProviders ?? []).find(provider => provider.id === providerKey) ?? null
   }
 
   async getOverview(): Promise<SystemSettingOverview> {
@@ -263,7 +322,7 @@ export class SystemSettingService {
   }
 
   async updateSettings(patch: UpdateSystemSettingsInput): Promise<SystemSettings> {
-    if (!patch || Object.values(patch).every((value) => value === undefined)) {
+    if (!patch || Object.values(patch).every(value => value === undefined)) {
       return await this.getSettings()
     }
 
@@ -273,7 +332,7 @@ export class SystemSettingService {
       await this.applyPlanFieldUpdates(current, planFieldUpdates)
     }
 
-    const updates: Array<{ field: SystemSettingDbField; value: unknown }> = []
+    const updates: Array<{ field: SystemSettingDbField, value: unknown }> = []
 
     const enqueueUpdate = <K extends SystemSettingDbField>(
       field: K,
@@ -283,7 +342,8 @@ export class SystemSettingService {
       updates.push({ field, value })
       if (currentValue !== undefined) {
         ;(current as unknown as Record<string, unknown>)[field] = currentValue
-      } else {
+      }
+      else {
         ;(current as unknown as Record<string, unknown>)[field] = value
       }
     }
@@ -313,23 +373,23 @@ export class SystemSettingService {
     }
 
     if (patch.maxPhotoUploadSizeMb !== undefined && patch.maxPhotoUploadSizeMb !== current.maxPhotoUploadSizeMb) {
-      const normalized =
-        patch.maxPhotoUploadSizeMb === null ? null : Math.max(1, Math.trunc(patch.maxPhotoUploadSizeMb))
+      const normalized
+        = patch.maxPhotoUploadSizeMb === null ? null : Math.max(1, Math.trunc(patch.maxPhotoUploadSizeMb))
       enqueueUpdate('maxPhotoUploadSizeMb', normalized)
     }
 
     if (
-      patch.maxDataSyncObjectSizeMb !== undefined &&
-      patch.maxDataSyncObjectSizeMb !== current.maxDataSyncObjectSizeMb
+      patch.maxDataSyncObjectSizeMb !== undefined
+      && patch.maxDataSyncObjectSizeMb !== current.maxDataSyncObjectSizeMb
     ) {
-      const normalized =
-        patch.maxDataSyncObjectSizeMb === null ? null : Math.max(1, Math.trunc(patch.maxDataSyncObjectSizeMb))
+      const normalized
+        = patch.maxDataSyncObjectSizeMb === null ? null : Math.max(1, Math.trunc(patch.maxDataSyncObjectSizeMb))
       enqueueUpdate('maxDataSyncObjectSizeMb', normalized)
     }
 
     if (patch.maxPhotoLibraryItems !== undefined && patch.maxPhotoLibraryItems !== current.maxPhotoLibraryItems) {
-      const normalized =
-        patch.maxPhotoLibraryItems === null ? null : Math.max(0, Math.trunc(patch.maxPhotoLibraryItems))
+      const normalized
+        = patch.maxPhotoLibraryItems === null ? null : Math.max(0, Math.trunc(patch.maxPhotoLibraryItems))
       enqueueUpdate('maxPhotoLibraryItems', normalized)
     }
 
@@ -337,14 +397,15 @@ export class SystemSettingService {
       const sanitized = patch.baseDomain === null ? null : String(patch.baseDomain).trim().toLowerCase()
       if (!sanitized) {
         enqueueUpdate('baseDomain', SYSTEM_SETTING_DEFINITIONS.baseDomain.defaultValue)
-      } else if (sanitized !== current.baseDomain) {
+      }
+      else if (sanitized !== current.baseDomain) {
         enqueueUpdate('baseDomain', sanitized)
       }
     }
 
     if (
-      patch.managedStorageSecureAccess !== undefined &&
-      patch.managedStorageSecureAccess !== current.managedStorageSecureAccess
+      patch.managedStorageSecureAccess !== undefined
+      && patch.managedStorageSecureAccess !== current.managedStorageSecureAccess
     ) {
       enqueueUpdate('managedStorageSecureAccess', patch.managedStorageSecureAccess)
     }
@@ -380,6 +441,34 @@ export class SystemSettingService {
       const sanitized = normalizeNullableString(patch.oauthGithubClientSecret)
       if (sanitized !== current.oauthGithubClientSecret) {
         enqueueUpdate('oauthGithubClientSecret', sanitized)
+      }
+    }
+
+    if (patch.oauthAppleWebClientId !== undefined) {
+      const sanitized = normalizeNullableString(patch.oauthAppleWebClientId)
+      if (sanitized !== current.oauthAppleWebClientId) {
+        enqueueUpdate('oauthAppleWebClientId', sanitized)
+      }
+    }
+
+    if (patch.oauthAppleAppBundleId !== undefined) {
+      const sanitized = String(patch.oauthAppleAppBundleId).trim()
+      if (sanitized && sanitized !== current.oauthAppleAppBundleId) {
+        enqueueUpdate('oauthAppleAppBundleId', sanitized)
+      }
+    }
+
+    if (patch.oauthAppleTeamId !== undefined) {
+      const sanitized = normalizeNullableString(patch.oauthAppleTeamId)
+      if (sanitized !== current.oauthAppleTeamId) {
+        enqueueUpdate('oauthAppleTeamId', sanitized)
+      }
+    }
+
+    if (patch.oauthAppleKeyId !== undefined) {
+      const sanitized = normalizeNullableString(patch.oauthAppleKeyId)
+      if (sanitized !== current.oauthAppleKeyId) {
+        enqueueUpdate('oauthAppleKeyId', sanitized)
       }
     }
 
@@ -447,9 +536,10 @@ export class SystemSettingService {
     BILLING_PLAN_FIELD_DESCRIPTORS.quotas.forEach((descriptor) => {
       const planOverrides = overrides[descriptor.planId]
       if (planOverrides && descriptor.key in (planOverrides as object)) {
-        ;(map as Record<string, unknown>)[descriptor.field] =
-          (planOverrides as BillingPlanQuota)[descriptor.key as keyof BillingPlanQuota] ?? null
-      } else {
+        ;(map as Record<string, unknown>)[descriptor.field]
+          = (planOverrides as BillingPlanQuota)[descriptor.key as keyof BillingPlanQuota] ?? null
+      }
+      else {
         ;(map as Record<string, unknown>)[descriptor.field] = descriptor.defaultValue ?? null
       }
     })
@@ -459,7 +549,8 @@ export class SystemSettingService {
       const entry = pricing[descriptor.planId]
       if (descriptor.key === 'currency') {
         ;(map as Record<string, unknown>)[descriptor.field] = entry?.currency ?? null
-      } else if (descriptor.key === 'monthlyPrice') {
+      }
+      else if (descriptor.key === 'monthlyPrice') {
         ;(map as Record<string, unknown>)[descriptor.field] = entry?.monthlyPrice ?? null
       }
     })
@@ -481,7 +572,8 @@ export class SystemSettingService {
     if (Array.isArray(raw) || typeof raw === 'object') {
       try {
         return parseStorageProviders(JSON.stringify(raw))
-      } catch {
+      }
+      catch {
         return []
       }
     }
@@ -504,12 +596,15 @@ export class SystemSettingService {
     let normalized: string
     if (typeof patch === 'string') {
       normalized = patch
-    } else if (patch == null) {
+    }
+    else if (patch == null) {
       normalized = '[]'
-    } else {
+    }
+    else {
       try {
         normalized = JSON.stringify(patch)
-      } catch {
+      }
+      catch {
         normalized = '[]'
       }
     }
@@ -536,8 +631,8 @@ export class SystemSettingService {
       const numericValue = raw === null || raw === undefined ? null : typeof raw === 'number' ? raw : Number(raw)
 
       const planPatch = summary.quotas[descriptor.planId] ?? {}
-      planPatch[descriptor.key as keyof BillingPlanQuota] =
-        numericValue === null || Number.isNaN(numericValue) ? null : numericValue
+      planPatch[descriptor.key as keyof BillingPlanQuota]
+        = numericValue === null || Number.isNaN(numericValue) ? null : numericValue
       summary.quotas[descriptor.planId] = planPatch
     }
 
@@ -551,14 +646,15 @@ export class SystemSettingService {
       const planPatch = summary.pricing[descriptor.planId] ?? {}
 
       if (descriptor.key === 'currency') {
-        const normalized =
-          raw === null || raw === undefined
+        const normalized
+          = raw === null || raw === undefined
             ? null
             : typeof raw === 'string'
               ? normalizeNullableString(raw)
               : normalizeNullableString(String(raw))
         planPatch.currency = normalized
-      } else if (descriptor.key === 'monthlyPrice') {
+      }
+      else if (descriptor.key === 'monthlyPrice') {
         const numericValue = raw === null || raw === undefined ? null : typeof raw === 'number' ? raw : Number(raw)
         planPatch.monthlyPrice = numericValue === null || Number.isNaN(numericValue) ? null : numericValue
       }
@@ -573,8 +669,8 @@ export class SystemSettingService {
       summary.hasUpdates = true
       const raw = patch[descriptor.field]
       delete (patch as Record<string, unknown>)[descriptor.field]
-      const normalized =
-        raw === null || raw === undefined
+      const normalized
+        = raw === null || raw === undefined
           ? null
           : typeof raw === 'string'
             ? normalizeNullableString(raw)
@@ -599,13 +695,15 @@ export class SystemSettingService {
         for (const [quotaKey, value] of Object.entries(quotaPatch) as Array<[keyof BillingPlanQuota, number | null]>) {
           if (value === null || value === undefined || Number.isNaN(value)) {
             delete existing[quotaKey]
-          } else {
+          }
+          else {
             existing[quotaKey] = value
           }
         }
         if (Object.keys(existing).length === 0) {
           delete nextOverrides[planId]
-        } else {
+        }
+        else {
           nextOverrides[planId] = existing
         }
       }
@@ -624,7 +722,8 @@ export class SystemSettingService {
         }
         if (entry.monthlyPrice === null && !entry.currency) {
           delete nextPricing[planId]
-        } else {
+        }
+        else {
           nextPricing[planId] = entry
         }
       }
@@ -640,7 +739,8 @@ export class SystemSettingService {
         const normalized = normalizeNullableString(product.creemProductId)
         if (!normalized) {
           delete nextProducts[planId]
-        } else {
+        }
+        else {
           nextProducts[planId] = { creemProductId: normalized }
         }
       }
@@ -728,16 +828,17 @@ export class SystemSettingService {
         return null
       }
 
-      const normalizedPath = url.pathname === '/' ? '' : url.pathname.replace(/\/+$/, '')
+      const normalizedPath = url.pathname === '/' ? '' : url.pathname.replace(TRAILING_SLASHES_REGEX, '')
       return `${url.origin}${normalizedPath}`
-    } catch {
+    }
+    catch {
       return null
     }
   }
 
   private buildStats(settings: SystemSettings, totalUsers: number): SystemSettingStats {
-    const remaining =
-      settings.maxRegistrableUsers === null ? null : Math.max(settings.maxRegistrableUsers - totalUsers, 0)
+    const remaining
+      = settings.maxRegistrableUsers === null ? null : Math.max(settings.maxRegistrableUsers - totalUsers, 0)
 
     return {
       totalUsers,
@@ -753,39 +854,6 @@ export class SystemSettingService {
     return typeof row?.total === 'number' ? row.total : Number(row?.total ?? 0)
   }
 }
-
-const PLAN_OVERRIDE_ENTRY_SCHEMA = z.object({
-  monthlyAssetProcessLimit: z.number().int().min(0).nullable().optional(),
-  libraryItemLimit: z.number().int().min(0).nullable().optional(),
-  maxUploadSizeMb: z.number().int().min(1).nullable().optional(),
-  maxSyncObjectSizeMb: z.number().int().min(1).nullable().optional(),
-})
-
-const BILLING_PLAN_OVERRIDES_SCHEMA = z.record(z.string(), PLAN_OVERRIDE_ENTRY_SCHEMA).default({})
-
-const PLAN_PRODUCT_ENTRY_SCHEMA = z.object({
-  creemProductId: z.string().trim().min(1).optional(),
-})
-
-const BILLING_PLAN_PRODUCTS_SCHEMA = z.record(z.string(), PLAN_PRODUCT_ENTRY_SCHEMA).default({})
-
-const PLAN_PRICING_ENTRY_SCHEMA = z.object({
-  monthlyPrice: z.number().min(0).nullable().optional(),
-  currency: z.string().trim().min(1).nullable().optional(),
-})
-
-const BILLING_PLAN_PRICING_SCHEMA = z.record(z.string(), PLAN_PRICING_ENTRY_SCHEMA).default({})
-
-const STORAGE_PLAN_CATALOG_ENTRY_SCHEMA = z.object({
-  name: z.string().trim().min(1),
-  description: z.string().trim().nullable().optional(),
-  capacityBytes: z.number().int().min(0).nullable().optional(),
-  isActive: z.boolean().optional(),
-})
-
-const STORAGE_PLAN_CATALOG_SCHEMA = z.record(z.string(), STORAGE_PLAN_CATALOG_ENTRY_SCHEMA).default({})
-const STORAGE_PLAN_PRODUCTS_SCHEMA = z.record(z.string(), PLAN_PRODUCT_ENTRY_SCHEMA).default({})
-const STORAGE_PLAN_PRICING_SCHEMA = z.record(z.string(), PLAN_PRICING_ENTRY_SCHEMA).default({})
 
 type PlanQuotaUpdateMap = Partial<Record<BillingPlanId, Partial<BillingPlanQuota>>>
 type PlanPricingUpdateMap = Partial<Record<BillingPlanId, Partial<BillingPlanPricing>>>

@@ -93,13 +93,32 @@ final class PageControllerHostView: ExpoView {
       guard let self else { return }
       onAuthChange(["type": "signOut"])
     }
+    let requestWorkspaceSetup: () -> Void = { [weak self] in
+      guard let self else { return }
+      onAuthChange(["type": "workspaceSetup"])
+    }
+    let requestAccountSettings: () -> Void = { [weak self] in
+      guard let self else { return }
+      onAuthChange(["type": "accountSettings"])
+    }
+    let requestAccountDeletion: () -> Void = { [weak self] in
+      guard let self else { return }
+      onAuthChange(["type": "deleteAccountRequested"])
+    }
     let workspaceChanged: (String) -> Void = { [weak self] slug in
       guard let self else { return }
       onAuthChange(["type": "workspaceChanged", "workspaceSlug": slug])
     }
     switch page {
     case "photos":
-      return PhotosHomeController(appContext: appContext, onRequestSignIn: requestSignIn)
+      return PhotosHomeController(
+        appContext: appContext,
+        onRequestSignIn: requestSignIn,
+        onRequestSignOut: requestSignOut,
+        onRequestWorkspaceSetup: requestWorkspaceSetup,
+        onRequestAccountSettings: requestAccountSettings,
+        onRequestAccountDeletion: requestAccountDeletion
+      )
     case "explore":
       let root = GalleriesController(appContext: appContext, onRequestSignIn: requestSignIn)
       let navigationController = UINavigationController(rootViewController: root)

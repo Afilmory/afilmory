@@ -1,6 +1,7 @@
+import * as AppleAuthentication from 'expo-apple-authentication'
 import { Image } from 'expo-image'
-import { useMemo, useState } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
+import { useEffect, useMemo, useState } from 'react'
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import githubMark from '@/assets/images/github-mark.svg'
 import googleG from '@/assets/images/google-g.png'
@@ -9,7 +10,9 @@ import type { Palette } from '@/theme/palette'
 import { controlH, font, radiusLg } from '@/theme/tokens'
 import { useTheme } from '@/theme/useTheme'
 
-import { signInWithProvider } from './sessionStore'
+import { fetchAppleAuthenticationConfiguration } from './api'
+import { isAppleAuthenticationAvailable } from './appleAuthentication'
+import { signInWithApple, signInWithPassword, signInWithProvider } from './sessionStore'
 import type { AuthProviderId } from './types'
 
 const PROVIDERS: Array<{ id: AuthProviderId, labelKey: string, logo: number, tinted: boolean }> = [
@@ -17,23 +20,34 @@ const PROVIDERS: Array<{ id: AuthProviderId, labelKey: string, logo: number, tin
   { id: 'google', labelKey: 'auth.continue.google', logo: googleG, tinted: false },
 ]
 
-const USER_CANCELLED_PATTERN = /cancel|dismiss/i
+const USER_CANCELLED_PATTERN = /cancel|dismiss|ERR_REQUEST_CANCELED/i
+type BusyAction = 'apple' | 'password' | AuthProviderId
 
 export function SignInSection({ compact = false, onSignedIn }: { compact?: boolean, onSignedIn?: () => void }) {
   const { palette } = useTheme()
   const { t } = useTranslation()
   const styles = useMemo(() => createStyles(palette), [palette])
-  const [busyProvider, setBusyProvider] = useState<AuthProviderId | null>(null)
+  const [appleAvailable, setAppleAvailable] = useState(false)
+  const [busyAction, setBusyAction] = useState<BusyAction | null>(null)
+  const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [password, setPassword] = useState('')
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
 
-  const handleSignIn = async (provider: AuthProviderId) => {
-    if (busyProvider) {
+  useEffect(() => {
+    void Promise.all([isAppleAuthenticationAvailable(), fetchAppleAuthenticationConfiguration()])
+      .then(([deviceAvailable, configuration]) => setAppleAvailable(deviceAvailable && configuration.enabled))
+      .catch(() => setAppleAvailable(false))
+  }, [])
+
+  const runSignIn = async (action: BusyAction, operation: () => Promise<void>) => {
+    if (busyAction) {
       return
     }
-    setBusyProvider(provider)
+    setBusyAction(action)
     setError(null)
     try {
-      await signInWithProvider(provider)
+      await operation()
       onSignedIn?.()
     }
     catch (err) {
@@ -43,12 +57,43 @@ export function SignInSection({ compact = false, onSignedIn }: { compact?: boole
       }
     }
     finally {
-      setBusyProvider(null)
+      setBusyAction(null)
     }
+  }
+
+  const submitPassword = () => {
+    const normalizedEmail = email.trim()
+    if (!normalizedEmail || !password) {
+      setError(t('auth.password.required'))
+      return
+    }
+    void runSignIn('password', () => signInWithPassword(normalizedEmail, password))
   }
 
   return (
     <View style={styles.root}>
+      {appleAvailable ? (
+        <View
+          pointerEvents={busyAction ? 'none' : 'auto'}
+          style={busyAction && busyAction !== 'apple' && styles.disabled}
+        >
+          {busyAction === 'apple' ? (
+            <View style={styles.appleBusy}>
+              <ActivityIndicator color="#000000" />
+            </View>
+          ) : (
+            <AppleAuthentication.AppleAuthenticationButton
+              accessibilityLabel={t('auth.continue.apple')}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+              cornerRadius={radiusLg}
+              style={styles.appleButton}
+              onPress={() => void runSignIn('apple', signInWithApple)}
+            />
+          )}
+        </View>
+      ) : null}
+
       <View style={compact ? styles.providerRow : styles.providerStack}>
         {PROVIDERS.map((provider) => {
           const label = t(provider.labelKey)
@@ -57,16 +102,16 @@ export function SignInSection({ compact = false, onSignedIn }: { compact?: boole
               key={provider.id}
               accessibilityLabel={label}
               accessibilityRole="button"
-              disabled={busyProvider !== null}
+              disabled={busyAction !== null}
               style={({ pressed }) => [
                 styles.providerButton,
                 compact && styles.providerButtonCompact,
-                busyProvider !== null && busyProvider !== provider.id && styles.providerButtonDisabled,
+                busyAction !== null && busyAction !== provider.id && styles.disabled,
                 pressed && styles.pressed,
               ]}
-              onPress={() => void handleSignIn(provider.id)}
+              onPress={() => void runSignIn(provider.id, () => signInWithProvider(provider.id))}
             >
-              {busyProvider === provider.id ? (
+              {busyAction === provider.id ? (
                 <ActivityIndicator color={palette.textPrimary} />
               ) : (
                 <View style={styles.providerContent}>
@@ -84,10 +129,71 @@ export function SignInSection({ compact = false, onSignedIn }: { compact?: boole
           )
         })}
       </View>
+
+      <Pressable
+        accessibilityRole="button"
+        disabled={busyAction !== null}
+        style={({ pressed }) => [styles.passwordToggle, pressed && styles.pressed]}
+        onPress={() => {
+          setError(null)
+          setShowPasswordForm(value => !value)
+        }}
+      >
+        <Text style={styles.passwordToggleLabel}>
+          {t(showPasswordForm ? 'auth.password.hide' : 'auth.password.show')}
+        </Text>
+      </Pressable>
+
+      {showPasswordForm ? (
+        <View style={styles.passwordForm}>
+          <TextInput
+            autoCapitalize="none"
+            autoComplete="email"
+            editable={busyAction === null}
+            inputMode="email"
+            keyboardType="email-address"
+            placeholder={t('auth.password.email')}
+            placeholderTextColor={palette.textMuted}
+            returnKeyType="next"
+            style={styles.input}
+            textContentType="username"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            autoCapitalize="none"
+            autoComplete="current-password"
+            editable={busyAction === null}
+            placeholder={t('auth.password.password')}
+            placeholderTextColor={palette.textMuted}
+            returnKeyType="go"
+            secureTextEntry
+            style={styles.input}
+            textContentType="password"
+            value={password}
+            onChangeText={setPassword}
+            onSubmitEditing={submitPassword}
+          />
+          <Pressable
+            accessibilityRole="button"
+            disabled={busyAction !== null}
+            style={({ pressed }) => [styles.passwordButton, pressed && styles.pressed]}
+            onPress={submitPassword}
+          >
+            {busyAction === 'password' ? (
+              <ActivityIndicator color={palette.accentContrast} />
+            ) : (
+              <Text style={styles.passwordButtonLabel}>{t('auth.password.submit')}</Text>
+            )}
+          </Pressable>
+          <Text style={styles.passwordNote}>{t('auth.password.reviewNote')}</Text>
+        </View>
+      ) : null}
+
       {error || !compact ? (
         <View style={[styles.errorSlot, compact && styles.errorSlotCompact]}>
           {error ? (
-            <Text numberOfLines={3} style={styles.error}>
+            <Text accessibilityRole="alert" numberOfLines={3} style={styles.error}>
               {error}
             </Text>
           ) : null}
@@ -100,6 +206,15 @@ export function SignInSection({ compact = false, onSignedIn }: { compact?: boole
 function createStyles(palette: Palette) {
   return StyleSheet.create({
     root: { gap: 10 },
+    appleButton: { height: controlH, width: '100%' },
+    appleBusy: {
+      alignItems: 'center',
+      backgroundColor: '#ffffff',
+      borderCurve: 'continuous',
+      borderRadius: radiusLg,
+      height: controlH,
+      justifyContent: 'center',
+    },
     providerStack: { gap: 10 },
     providerRow: { flexDirection: 'row', gap: 8 },
     providerButton: {
@@ -113,35 +228,44 @@ function createStyles(palette: Palette) {
       justifyContent: 'center',
     },
     providerButtonCompact: { flex: 1, paddingHorizontal: 10 },
-    providerButtonDisabled: { opacity: 0.45 },
-    providerContent: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      flexShrink: 1,
-      gap: 10,
-    },
-    providerLogo: {
-      height: 18,
-      width: 18,
-    },
+    disabled: { opacity: 0.45 },
+    providerContent: { alignItems: 'center', flexDirection: 'row', flexShrink: 1, gap: 10 },
+    providerLogo: { height: 18, width: 18 },
     providerLabel: {
+      color: palette.textPrimary,
+      flexShrink: 1,
+      fontFamily: font.ui,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    passwordToggle: { alignItems: 'center', minHeight: 32, justifyContent: 'center' },
+    passwordToggleLabel: { color: palette.textSecondary, fontFamily: font.ui, fontSize: 13, fontWeight: '600' },
+    passwordForm: { gap: 10 },
+    input: {
+      backgroundColor: palette.bgElement,
+      borderColor: palette.border,
+      borderCurve: 'continuous',
+      borderRadius: 12,
+      borderWidth: StyleSheet.hairlineWidth,
       color: palette.textPrimary,
       fontFamily: font.ui,
       fontSize: 15,
-      flexShrink: 1,
-      fontWeight: '600',
+      height: controlH,
+      paddingHorizontal: 14,
     },
-    errorSlot: {
+    passwordButton: {
+      alignItems: 'center',
+      backgroundColor: palette.accent,
+      borderCurve: 'continuous',
+      borderRadius: radiusLg,
+      height: controlH,
       justifyContent: 'center',
-      minHeight: 44,
     },
+    passwordButtonLabel: { color: palette.accentContrast, fontFamily: font.ui, fontSize: 15, fontWeight: '700' },
+    passwordNote: { color: palette.textMuted, fontFamily: font.ui, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+    errorSlot: { justifyContent: 'center', minHeight: 44 },
     errorSlotCompact: { minHeight: 0 },
-    error: {
-      color: palette.danger,
-      fontFamily: font.ui,
-      fontSize: 13,
-      textAlign: 'center',
-    },
+    error: { color: palette.danger, fontFamily: font.ui, fontSize: 13, textAlign: 'center' },
     pressed: { opacity: 0.7 },
   })
 }

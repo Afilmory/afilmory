@@ -1,14 +1,15 @@
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { I18nextProvider } from 'react-i18next'
-import { LogBox, StyleSheet } from 'react-native'
+import { LogBox, Platform, StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { waitForEnvironment } from '@/api/environment'
 import { i18n } from '@/i18n'
+import { addAppleCredentialRevokeListener } from '@/modules/auth/appleAuthentication'
 import { waitForAuthStorage } from '@/modules/auth/authStorage'
-import { hydrateAuth } from '@/modules/auth/sessionStore'
+import { clearLocalAuthentication, hydrateAuth } from '@/modules/auth/sessionStore'
 import { PresentationHost } from '@/presentation'
 import { useTheme as useAppTheme } from '@/theme/useTheme'
 
@@ -26,6 +27,16 @@ export default function RootLayout() {
       setEnvironmentReady(true)
       await hydrateAuth()
     })
+  }, [])
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') {
+      return
+    }
+    const subscription = addAppleCredentialRevokeListener(() => {
+      void clearLocalAuthentication()
+    })
+    return () => subscription.remove()
   }, [])
   const navigationTheme = useMemo(
     () => ({

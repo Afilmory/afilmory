@@ -3,9 +3,24 @@ import { useSyncExternalStore } from 'react'
 import { setAuthCookie } from '@/api/auth'
 import { setActiveTenantSlug } from '@/api/client'
 
-import { fetchSession, switchActiveWorkspace } from './api'
+import {
+  createWorkspace,
+  exchangeAppleAuthorization,
+  fetchAccountDeletionImpact,
+  fetchSession,
+  requestAccountDeletion,
+  switchActiveWorkspace,
+} from './api'
+import { requestAppleAuthorization } from './appleAuthentication'
 import { getAuthClient } from './authClient'
-import type { AuthProviderId, SessionInfo } from './types'
+import { clearAuthStorage } from './authStorage'
+import type {
+  AccountDeletionImpact,
+  AccountDeletionProof,
+  AccountDeletionRequestResult,
+  AuthProviderId,
+  SessionInfo,
+} from './types'
 
 export type AuthStatus = 'loading' | 'signedIn' | 'signedOut'
 
@@ -87,8 +102,6 @@ export async function signInWithProvider(provider: AuthProviderId): Promise<void
   setSignedIn(session, cookie)
 }
 
-// Dev-only: the local stack has no usable third-party OAuth credentials, so
-// email/password (enabled backend-side) is the only way into it.
 export async function signInWithPassword(email: string, password: string): Promise<void> {
   const result = await getAuthClient().signIn.email({ email, password })
   if (result.error) {
@@ -102,11 +115,87 @@ export async function signInWithPassword(email: string, password: string): Promi
   setSignedIn(session, cookie)
 }
 
+export async function signInWithApple(): Promise<void> {
+  const authorization = await requestAppleAuthorization()
+  const result = await getAuthClient().signIn.social({
+    callbackURL: '/',
+    idToken: {
+      nonce: authorization.nonce,
+      token: authorization.identityToken,
+      user: {
+        email: authorization.email ?? undefined,
+        name: authorization.name,
+      },
+    },
+    provider: 'apple',
+    requestSignUp: true,
+  })
+  if (result.error) {
+    throw new Error(result.error.message ?? 'Sign in with Apple failed.')
+  }
+
+  const cookie = getAuthClient().getCookie()
+  if (!cookie) {
+    throw new Error('Sign in with Apple did not produce a session.')
+  }
+  try {
+    await exchangeAppleAuthorization(cookie, authorization)
+    const session = await fetchSession(cookie)
+    if (!session) {
+      throw new Error('Sign in with Apple did not produce a session.')
+    }
+    setSignedIn(session, cookie)
+  }
+  catch (error) {
+    await clearLocalAuthentication()
+    throw error
+  }
+}
+
 export async function signOut(): Promise<void> {
   await getAuthClient()
     .signOut()
     .catch(() => {})
+  await clearLocalAuthentication()
+}
+
+export async function clearLocalAuthentication(): Promise<void> {
+  await clearAuthStorage()
   resetToSignedOut()
+}
+
+export async function createInitialWorkspace(name: string, slug: string): Promise<void> {
+  const cookie = getAuthClient().getCookie()
+  if (!cookie) {
+    resetToSignedOut()
+    throw new Error('A valid session is required to create a workspace.')
+  }
+  await createWorkspace(cookie, { name, slug })
+  const session = await fetchSession(cookie)
+  if (!session?.activeWorkspace) {
+    throw new Error('The workspace was created, but the session could not be refreshed.')
+  }
+  setSignedIn(session, cookie)
+}
+
+export async function deleteAccount(proof: AccountDeletionProof): Promise<AccountDeletionRequestResult> {
+  const cookie = getAuthClient().getCookie()
+  if (!cookie) {
+    resetToSignedOut()
+    throw new Error('A valid session is required to delete this account.')
+  }
+  const result = await requestAccountDeletion(cookie, proof)
+  await clearLocalAuthentication()
+  return result
+}
+
+export async function loadAccountDeletionImpact(): Promise<AccountDeletionImpact> {
+  const cookie = getAuthClient().getCookie()
+  if (!cookie) {
+    resetToSignedOut()
+    throw new Error('A valid session is required to inspect account deletion impact.')
+  }
+  return await fetchAccountDeletionImpact(cookie)
 }
 
 export async function switchWorkspace(tenantId: string): Promise<void> {

@@ -24,6 +24,13 @@ export function waitForAuthStorage(): Promise<void> {
   return hydration
 }
 
+export async function clearAuthStorage(): Promise<void> {
+  for (const key of HYDRATED_KEYS) {
+    cache.delete(key)
+  }
+  await Promise.all(HYDRATED_KEYS.map(key => SecureStore.deleteItemAsync(key).catch(() => {})))
+}
+
 export const authStorage = {
   getItem(key: string): string | null {
     return cache.get(key) ?? null
@@ -31,5 +38,9 @@ export const authStorage = {
   setItem(key: string, value: string): void {
     cache.set(key, value)
     void SecureStore.setItemAsync(key, value).catch(() => {})
+  },
+  removeItem(key: string): void {
+    cache.delete(key)
+    void SecureStore.deleteItemAsync(key).catch(() => {})
   },
 }

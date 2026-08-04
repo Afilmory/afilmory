@@ -200,7 +200,7 @@ const zhCnUiSchema = {
     title: '平台设置',
     description: '管理整个平台的注册入口、登录策略与 OAuth 配置。',
     sections: {
-      registration: {
+      'registration': {
         title: '全局注册策略',
         description: '控制新用户注册配额以及本地账号能力。',
         fields: {
@@ -226,12 +226,12 @@ const zhCnUiSchema = {
           },
         },
       },
-      billing: {
+      'billing': {
         title: '订阅计划配置',
         description: '为每个订阅计划定义资源限制、价格展示与 Creem 商品映射。',
         fields: {
           quota: {
-            helper: '留空表示遵循默认或不限，填写数字后将覆盖对应计划。',
+            'helper': '留空表示遵循默认或不限，填写数字后将覆盖对应计划。',
             'monthly-asset': {
               title: '每月可新增照片（张）',
               description: '达到上限后将阻止新增照片。留空表示回退到默认值或不限。',
@@ -260,7 +260,7 @@ const zhCnUiSchema = {
               placeholder: '例如 49',
               helper: '留空表示暂不展示定价信息。',
             },
-            currency: {
+            'currency': {
               title: '币种',
               description: 'ISO 货币代码，如 CNY、USD 等。',
               placeholder: 'CNY',
@@ -273,7 +273,7 @@ const zhCnUiSchema = {
               description: '用于创建结算会话的 Creem 商品 ID。留空表示该计划不会显示升级入口。',
               placeholder: 'prod_xxx',
             },
-            helper: '为空将隐藏升级入口。',
+            'helper': '为空将隐藏升级入口。',
           },
         },
         plans: {
@@ -295,19 +295,19 @@ const zhCnUiSchema = {
         title: '存储计划',
         description: '管理托管存储方案的目录、定价以及 Creem 商品映射。',
         fields: {
-          catalog: {
+          'catalog': {
             title: '计划目录',
             description: '存储计划的名称/描述/容量与启用状态，建议在控制台中编辑，无需手填 JSON。',
             placeholder: '通过控制台编辑',
             helper: '包含 plan id、name、description、capacityBytes、isActive 等字段。',
           },
-          pricing: {
+          'pricing': {
             title: '存储定价',
             description: '每个存储计划的月费与币种。',
             placeholder: '通过控制台编辑',
             helper: '留空回退到默认值或隐藏价格。',
           },
-          products: {
+          'products': {
             title: 'Creem 商品',
             description: '为存储计划绑定 Creem 商品 ID，用于结算与用户门户。',
             placeholder: '通过控制台编辑',
@@ -321,7 +321,7 @@ const zhCnUiSchema = {
           },
         },
       },
-      oauth: {
+      'oauth': {
         title: 'OAuth 登录渠道',
         description: '统一配置所有租户可用的第三方登录渠道。',
         fields: {
@@ -365,6 +365,32 @@ const zhCnUiSchema = {
               },
             },
           },
+          apple: {
+            title: '通过 Apple 登录',
+            description: '仅在此配置非敏感 Apple 标识。APPLE_PRIVATE_KEY 必须保存在部署密钥中。',
+            fields: {
+              'web-client-id': {
+                title: 'Services ID',
+                description: '后台网页登录使用的 Apple Services ID。留空时仅启用移动端 Apple 登录。',
+                placeholder: 'art.afilmory.web',
+              },
+              'app-bundle-id': {
+                title: 'App Bundle Identifier',
+                description: '原生 iOS 授权流程使用的 audience 与 client ID。',
+                placeholder: 'app.afilmory',
+              },
+              'team-id': {
+                title: 'Team ID',
+                description: '用于签发 Apple client-secret JWT 的开发者团队标识。',
+                placeholder: 'KAMM5N88X3',
+              },
+              'key-id': {
+                title: 'Key ID',
+                description: '部署密钥中 Sign in with Apple 私钥对应的标识。',
+                placeholder: 'ABC123DEFG',
+              },
+            },
+          },
         },
       },
     },
@@ -378,17 +404,17 @@ const zhCnUiSchema = {
       },
       fields: {
         s3: {
-          bucket: {
+          'bucket': {
             label: 'Bucket 名称',
             description: '存放照片的 S3 Bucket 名称。',
             placeholder: 'afilmory-photos（示例）',
           },
-          region: {
+          'region': {
             label: '区域',
             description: 'S3 区域代码，例如 ap-southeast-1。',
             placeholder: 'ap-southeast-1（示例）',
           },
-          endpoint: {
+          'endpoint': {
             label: '自定义 Endpoint',
             description: 'S3 兼容服务的自定义 Endpoint。',
             placeholder: 'https://s3.example.com（示例）',
@@ -402,7 +428,7 @@ const zhCnUiSchema = {
             label: 'Secret Access Key（私钥）',
             placeholder: '************（示例）',
           },
-          prefix: {
+          'prefix': {
             label: '路径前缀',
             description: '可选，仅扫描该前缀下的对象。',
             placeholder: 'photos/（前缀）',
@@ -425,28 +451,28 @@ const zhCnUiSchema = {
           },
         },
         github: {
-          owner: {
+          'owner': {
             label: '仓库拥有者',
             description: 'GitHub 用户或组织名称。',
             placeholder: 'afilmory（示例）',
           },
-          repo: {
+          'repo': {
             label: '仓库名称',
             description: '存放照片的仓库。',
             placeholder: 'photo-assets（示例）',
           },
-          branch: {
+          'branch': {
             label: '分支',
             description: '可选，要同步的分支。',
             placeholder: 'main（示例）',
             helper: '默认 master/main，如有不同请填写完整分支名。',
           },
-          token: {
+          'token': {
             label: '访问令牌',
             description: '用于私有仓库的 Personal Access Token。',
             placeholder: 'ghp_xxxxxxxxxxxxxxxxxxxx（示例）',
           },
-          path: {
+          'path': {
             label: '仓库路径',
             description: '可选，限制同步的仓库路径。',
             placeholder: 'public/photos（可选）',
@@ -485,7 +511,7 @@ const zhCnUiSchema = {
             description: '用于记录或生成公开链接的友好名称。',
             placeholder: 'afilmory-photos',
           },
-          prefix: {
+          'prefix': {
             label: '路径前缀',
             description: '可选，仅扫描该前缀下的文件。',
             placeholder: 'photos/',

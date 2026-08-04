@@ -55,7 +55,7 @@ const updateSuperAdminSettingsSchema = z
       .trim()
       .url({ message: '必须是有效的 URL' })
       .nullable()
-      .refine((value) => value === null || value.startsWith('http://') || value.startsWith('https://'), {
+      .refine(value => value === null || value.startsWith('http://') || value.startsWith('https://'), {
         message: '仅支持 http 或 https 协议',
       })
       .optional(),
@@ -63,6 +63,10 @@ const updateSuperAdminSettingsSchema = z
     oauthGoogleClientSecret: z.string().trim().min(1).nullable().optional(),
     oauthGithubClientId: z.string().trim().min(1).nullable().optional(),
     oauthGithubClientSecret: z.string().trim().min(1).nullable().optional(),
+    oauthAppleWebClientId: z.string().trim().min(1).nullable().optional(),
+    oauthAppleAppBundleId: z.string().trim().min(1).optional(),
+    oauthAppleTeamId: z.string().trim().min(1).nullable().optional(),
+    oauthAppleKeyId: z.string().trim().min(1).nullable().optional(),
     storagePlanCatalog: z.record(z.string(), z.any()).optional(),
     storagePlanPricing: z.record(z.string(), z.any()).optional(),
     storagePlanProducts: z.record(z.string(), z.any()).optional(),
@@ -73,7 +77,7 @@ const updateSuperAdminSettingsSchema = z
     ...planPricingFields,
     ...planProductFields,
   })
-  .refine((value) => Object.values(value).some((entry) => entry !== undefined), {
+  .refine(value => Object.values(value).some(entry => entry !== undefined), {
     message: '至少需要更新一项设置',
   })
 

@@ -17,14 +17,13 @@ import type { Context } from 'hono'
 
 import { getTenantContext, isPlaceholderTenantContext } from '../tenant/tenant.context'
 import type { TenantRecord } from '../tenant/tenant.types'
-import type { SocialProvidersConfig } from './auth.config'
 import { AuthProvider, MOBILE_AUTH_BROKER_SLUG } from './auth.provider'
 import { AuthRegistrationService } from './auth-registration.service'
 import { WorkspaceMembershipService } from './workspace-membership.service'
 
 const logger = createLogger('AuthController')
 
-const SOCIAL_PROVIDER_METADATA: Record<string, { name: string; icon: string }> = {
+const SOCIAL_PROVIDER_METADATA: Record<string, { name: string, icon: string }> = {
   google: {
     name: 'Google',
     icon: 'i-logos-google-icon',
@@ -33,37 +32,39 @@ const SOCIAL_PROVIDER_METADATA: Record<string, { name: string; icon: string }> =
     name: 'GitHub',
     icon: 'i-logos-github-icon',
   },
+  apple: {
+    name: 'Apple',
+    icon: 'i-simple-icons-apple',
+  },
 }
 
 const PROVIDER_ID_SEPARATOR_PATTERN = /[-_]/g
 const PROVIDER_ID_WORD_START_PATTERN = /\b\w/g
 
-function resolveSocialProviderMetadata(id: string): { name: string; icon: string } {
+function resolveSocialProviderMetadata(id: string): { name: string, icon: string } {
   const metadata = SOCIAL_PROVIDER_METADATA[id]
   if (metadata) {
     return metadata
   }
   const formattedId = id
     .replaceAll(PROVIDER_ID_SEPARATOR_PATTERN, ' ')
-    .replaceAll(PROVIDER_ID_WORD_START_PATTERN, (match) => match.toUpperCase())
+    .replaceAll(PROVIDER_ID_WORD_START_PATTERN, match => match.toUpperCase())
   return {
     name: formattedId.trim() || id,
     icon: 'i-mingcute-earth-2-line',
   }
 }
 
-function buildProviderResponse(socialProviders: SocialProvidersConfig) {
-  return Object.entries(socialProviders)
-    .filter(([, config]) => Boolean(config))
-    .map(([id]) => {
-      const metadata = resolveSocialProviderMetadata(id)
-      return {
-        id,
-        name: metadata.name,
-        icon: metadata.icon,
-        callbackPath: `/api/auth/callback/${id}`,
-      }
-    })
+function buildProviderResponse(providerIds: readonly string[]) {
+  return providerIds.map((id) => {
+    const metadata = resolveSocialProviderMetadata(id)
+    return {
+      id,
+      name: metadata.name,
+      icon: metadata.icon,
+      callbackPath: `/api/auth/callback/${id}`,
+    }
+  })
 }
 
 type TenantSignUpRequest = {
@@ -76,7 +77,7 @@ type TenantSignUpRequest = {
     name?: string
     slug?: string | null
   }
-  settings?: Array<{ key?: string; value?: unknown }>
+  settings?: Array<{ key?: string, value?: unknown }>
   useSessionAccount?: boolean
 }
 
@@ -217,8 +218,7 @@ export class AuthController {
   @BypassResponseTransform()
   @SkipTenantGuard()
   async getSocialProviders() {
-    const { socialProviders } = await this.systemSettings.getAuthModuleConfig()
-    return { providers: buildProviderResponse(socialProviders) }
+    return { providers: buildProviderResponse(await this.auth.getWebProviderIds()) }
   }
 
   @AllowPlaceholderTenant()
@@ -229,12 +229,11 @@ export class AuthController {
     const auth = await this.auth.getAuth()
     const { headers } = context.req.raw
     const accounts = await auth.api.listUserAccounts({ headers })
-    const { socialProviders } = await this.systemSettings.getAuthModuleConfig()
-    const enabledProviders = new Set(Object.keys(socialProviders))
+    const enabledProviders = new Set(await this.auth.getEnabledProviderIds())
     return {
       accounts: accounts
-        .filter((account) => account.providerId !== 'credential' && enabledProviders.has(account.providerId))
-        .map((account) => this.serializeSocialAccount(account)),
+        .filter(account => account.providerId !== 'credential' && enabledProviders.has(account.providerId))
+        .map(account => this.serializeSocialAccount(account)),
     }
   }
 
@@ -261,8 +260,7 @@ export class AuthController {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '缺少 OAuth Provider 参数' })
     }
 
-    const { socialProviders } = await this.systemSettings.getAuthModuleConfig()
-    if (!socialProviders[provider]) {
+    if (!(await this.auth.isProviderEnabled(provider))) {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '当前未启用该 OAuth Provider' })
     }
 
@@ -304,13 +302,12 @@ export class AuthController {
 
     const { headers } = context.req.raw
     const auth = await this.auth.getAuth()
-    const { socialProviders } = await this.systemSettings.getAuthModuleConfig()
-    const enabledProviders = new Set(Object.keys(socialProviders))
+    const enabledProviders = new Set(await this.auth.getEnabledProviderIds())
     const allAccounts = await auth.api.listUserAccounts({ headers })
     const linkedProviderAccounts = allAccounts.filter(
-      (account) => account.providerId !== 'credential' && enabledProviders.has(account.providerId),
+      account => account.providerId !== 'credential' && enabledProviders.has(account.providerId),
     )
-    const hasTargetAccount = linkedProviderAccounts.some((account) => account.providerId === providerId)
+    const hasTargetAccount = linkedProviderAccounts.some(account => account.providerId === providerId)
     if (hasTargetAccount && linkedProviderAccounts.length <= 1) {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '至少需要保留一个已绑定的 OAuth Provider' })
     }
@@ -343,7 +340,7 @@ export class AuthController {
   @AllowPlaceholderTenant()
   @SkipTenantGuard()
   @Post('/sign-in/email')
-  async signInEmail(@ContextParam() context: Context, @Body() body: { email: string; password: string }) {
+  async signInEmail(@ContextParam() context: Context, @Body() body: { email: string, password: string }) {
     const email = body.email.trim().toLowerCase()
     if (email.length === 0) {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '邮箱不能为空' })
@@ -469,7 +466,7 @@ export class AuthController {
             }
           : undefined,
         settings: body.settings?.filter(
-          (s): s is { key: string; value: unknown } => typeof s.key === 'string' && s.key.length > 0,
+          (s): s is { key: string, value: unknown } => typeof s.key === 'string' && s.key.length > 0,
         ),
         useSessionAccount,
       },
@@ -533,6 +530,50 @@ export class AuthController {
     return await this.auth.handler(context)
   }
 
+  /**
+   * Apple returns its web authorization response with `response_mode=form_post`.
+   * The gateway state therefore has to be unwrapped in the request body instead
+   * of by issuing a redirect, which would discard the one-time authorization code.
+   */
+  @AllowPlaceholderTenant()
+  @SkipTenantGuard()
+  @Post('/callback/*')
+  async callbackPost(@ContextParam() context: Context) {
+    const request = context.req.raw
+    const contentType = request.headers.get('content-type') ?? ''
+    if (!contentType.includes('application/x-www-form-urlencoded') || !this.gatewayStateSecret) {
+      return await this.auth.handler(context)
+    }
+
+    const formData = await request.clone().formData()
+    const wrappedState = formData.get('state')
+    if (typeof wrappedState !== 'string') {
+      return await this.auth.handler(context)
+    }
+    const decoded = decodeGatewayState(wrappedState, { secret: this.gatewayStateSecret })
+    if (!decoded?.innerState) {
+      return await this.auth.handler(context)
+    }
+
+    const body = new URLSearchParams()
+    for (const [key, value] of formData.entries()) {
+      if (typeof value === 'string') {
+        body.append(key, key === 'state' ? decoded.innerState : value)
+      }
+    }
+    body.append('gatewayState', wrappedState)
+
+    const headers = new Headers(request.headers)
+    headers.delete('content-length')
+    return await this.auth.handleRequest(
+      new Request(request.url, {
+        body,
+        headers,
+        method: request.method,
+      }),
+    )
+  }
+
   @AllowPlaceholderTenant()
   @SkipTenantGuard()
   @BypassResponseTransform()
@@ -564,7 +605,8 @@ export class AuthController {
         throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '回调地址必须使用 http 或 https 协议' })
       }
       return parsed.toString()
-    } catch (error) {
+    }
+    catch (error) {
       if (error instanceof BizException) {
         throw error
       }
@@ -611,7 +653,8 @@ export class AuthController {
       if (buffer.byteLength > 0) {
         text = new TextDecoder().decode(buffer)
       }
-    } catch {
+    }
+    catch {
       text = null
     }
 
@@ -619,7 +662,8 @@ export class AuthController {
       try {
         payload = JSON.parse(text)
         isJson = true
-      } catch {
+      }
+      catch {
         payload = text
       }
     }
@@ -630,8 +674,8 @@ export class AuthController {
       name: tenant.name,
     }
 
-    const responseBody =
-      isJson && payload && typeof payload === 'object' && !Array.isArray(payload)
+    const responseBody
+      = isJson && payload && typeof payload === 'object' && !Array.isArray(payload)
         ? {
             ...(payload as Record<string, unknown>),
             tenant: tenantPayload,
@@ -687,7 +731,8 @@ export class AuthController {
       let payload: unknown
       try {
         payload = await clone.json()
-      } catch {
+      }
+      catch {
         payload = null
       }
 
@@ -736,7 +781,8 @@ export class AuthController {
       })
       parsed.searchParams.set('state', wrapped)
       return parsed.toString()
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(`[AuthController] Failed to wrap OAuth gateway state for url=${url}`, error)
       return url
     }

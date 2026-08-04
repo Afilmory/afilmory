@@ -134,6 +134,13 @@
       "when": 1785780833361,
       "tag": "0018_yielding_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1785785111479,
+      "tag": "0019_great_skin",
+      "breakpoints": true
     }
   ]
 }

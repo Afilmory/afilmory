@@ -4,8 +4,10 @@ import { useCallback } from 'react'
 import type { ViewProps } from 'react-native'
 import { StyleSheet } from 'react-native'
 
+import { accountSettingsPage } from '@/modules/auth/accountSettingsPage'
 import { signOut, synchronizeWorkspaceFromNative } from '@/modules/auth/sessionStore'
 import { signInPage } from '@/modules/auth/signInPage'
+import { workspaceSetupPage } from '@/modules/auth/workspaceSetupPage'
 import { present } from '@/presentation'
 
 type NativePage = 'explore' | 'map' | 'photos' | 'studio-home' | 'studio-library'
@@ -20,6 +22,9 @@ interface NativeNavigationEvent {
 type NativeAuthChangeEvent
   = | { nativeEvent: { type: 'signOut' } }
     | { nativeEvent: { type: 'workspaceChanged', workspaceSlug: string } }
+    | { nativeEvent: { type: 'workspaceSetup' } }
+    | { nativeEvent: { type: 'accountSettings' } }
+    | { nativeEvent: { type: 'deleteAccountRequested' } }
 
 interface NativePageViewProps extends ViewProps {
   galleryRoute?: string
@@ -39,7 +44,15 @@ export function NativePageView({ galleryRoute, page }: { galleryRoute?: string, 
       void signOut()
       return
     }
-    void synchronizeWorkspaceFromNative(event.nativeEvent.workspaceSlug)
+    if (event.nativeEvent.type === 'workspaceChanged') {
+      void synchronizeWorkspaceFromNative(event.nativeEvent.workspaceSlug)
+      return
+    }
+    if (event.nativeEvent.type === 'workspaceSetup') {
+      void present(workspaceSetupPage)
+      return
+    }
+    void present(accountSettingsPage, { startDeletion: event.nativeEvent.type === 'deleteAccountRequested' })
   }, [])
 
   return (

@@ -4,12 +4,15 @@ import UIKit
 
 struct ProfileSheetView: View {
   let profile: ProfileSheetRecord
+  let onAccountSettings: () -> Void
+  let onDeleteAccount: () -> Void
   let onSignOut: () -> Void
 
   @StateObject private var sponsorshipStore = SponsorshipStore()
   @State private var cacheBytes: UInt = 0
   @State private var cacheCleared = false
   @State private var confirmingSignOut = false
+  @State private var confirmingDeleteAccount = false
   @State private var showingSponsorshipError = false
 
   private let stripHeight: CGFloat = 132
@@ -41,6 +44,14 @@ struct ProfileSheetView: View {
       titleVisibility: .visible
     ) {
       Button(profile.localization.signOut, role: .destructive, action: onSignOut)
+      Button(profile.localization.cancel, role: .cancel) {}
+    }
+    .confirmationDialog(
+      profile.localization.deleteAccount,
+      isPresented: $confirmingDeleteAccount,
+      titleVisibility: .visible
+    ) {
+      Button(profile.localization.deleteAccount, role: .destructive, action: onDeleteAccount)
       Button(profile.localization.cancel, role: .cancel) {}
     }
   }
@@ -123,14 +134,24 @@ struct ProfileSheetView: View {
 
   private var actions: some View {
     VStack(spacing: 0) {
-      actionRow(icon: "safari", title: profile.localization.openWeb, tint: .primary) {
-        guard let url = URL(string: profile.webUrl) else { return }
-        UIApplication.shared.open(url)
+      if !profile.webUrl.isEmpty {
+        actionRow(icon: "safari", title: profile.localization.openWeb, tint: .primary) {
+          guard let url = URL(string: profile.webUrl) else { return }
+          UIApplication.shared.open(url)
+        }
+        rowDivider
+      }
+      actionRow(icon: "person.crop.circle", title: profile.localization.accountSettings, tint: .primary) {
+        onAccountSettings()
       }
       rowDivider
       sponsorshipRow
       rowDivider
       cacheRow
+      rowDivider
+      actionRow(icon: "person.crop.circle.badge.minus", title: profile.localization.deleteAccount, tint: .red) {
+        confirmingDeleteAccount = true
+      }
       rowDivider
       actionRow(
         icon: "rectangle.portrait.and.arrow.right",

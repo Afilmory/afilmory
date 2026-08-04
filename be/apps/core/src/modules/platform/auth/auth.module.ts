@@ -5,6 +5,10 @@ import { SystemSettingModule } from '@core/modules/configuration/system-setting/
 import { Module } from '@tsuki-hono/common'
 
 import { TenantModule } from '../tenant/tenant.module'
+import { AppleAuthController } from './apple-auth.controller'
+import { AppleAuthorizationService } from './apple-authorization.service'
+import { AppleClientSecretService } from './apple-client-secret.service'
+import { AppleCredentialCipher } from './apple-credential-cipher.service'
 import { AuthConfig } from './auth.config'
 import { AuthController } from './auth.controller'
 import { AuthProvider } from './auth.provider'
@@ -13,7 +17,15 @@ import { WorkspaceMembershipService } from './workspace-membership.service'
 
 @Module({
   imports: [DatabaseModule, SystemSettingModule, SettingModule, TenantModule, AppStateModule],
-  controllers: [AuthController],
-  providers: [AuthProvider, AuthConfig, AuthRegistrationService, WorkspaceMembershipService],
+  controllers: [AuthController, AppleAuthController],
+  providers: [
+    AuthProvider,
+    AuthConfig,
+    AuthRegistrationService,
+    WorkspaceMembershipService,
+    AppleAuthorizationService,
+    AppleClientSecretService,
+    AppleCredentialCipher,
+  ],
 })
 export class AuthModule {}

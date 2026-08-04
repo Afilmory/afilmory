@@ -8,6 +8,10 @@ final class PhotosHomeController: UIViewController {
   private let appContext: AppContext?
   private let localization = Localization.shared
   private let onRequestSignIn: () -> Void
+  private let onRequestSignOut: () -> Void
+  private let onRequestWorkspaceSetup: () -> Void
+  private let onRequestAccountSettings: () -> Void
+  private let onRequestAccountDeletion: () -> Void
   private let masonryView: PhotoMasonryView
   private let sidebarModel = PhotoSidebarModel()
   private weak var sidebarController: UITabBarController?
@@ -21,9 +25,20 @@ final class PhotosHomeController: UIViewController {
   private var visibleRange: (Int, Int)?
   private var displayedPhotos: [GalleryPhoto] = []
 
-  init(appContext: AppContext?, onRequestSignIn: @escaping () -> Void) {
+  init(
+    appContext: AppContext?,
+    onRequestSignIn: @escaping () -> Void,
+    onRequestSignOut: @escaping () -> Void,
+    onRequestWorkspaceSetup: @escaping () -> Void,
+    onRequestAccountSettings: @escaping () -> Void,
+    onRequestAccountDeletion: @escaping () -> Void
+  ) {
     self.appContext = appContext
     self.onRequestSignIn = onRequestSignIn
+    self.onRequestSignOut = onRequestSignOut
+    self.onRequestWorkspaceSetup = onRequestWorkspaceSetup
+    self.onRequestAccountSettings = onRequestAccountSettings
+    self.onRequestAccountDeletion = onRequestAccountDeletion
     masonryView = PhotoMasonryView(appContext: appContext)
     super.init(nibName: nil, bundle: nil)
     configureMasonry()
@@ -428,15 +443,33 @@ final class PhotosHomeController: UIViewController {
   }
 
   private func presentProfile(anchor: UIView) {
-    guard let session, let workspace = session.activeWorkspace, let feed else { return }
-    let profile = makeProfile(session: session, workspace: workspace, photos: feed.photos)
-    let host = UIHostingController(
-      rootView: ProfileSheetView(profile: profile) { [weak self] in
-        self?.dismiss(animated: true)
-        AfilmorySessionStore.shared.clearSession()
-      }
+    guard let session else { return }
+    let profile = makeProfile(
+      session: session,
+      workspace: session.activeWorkspace,
+      photos: feed?.photos ?? []
     )
-    configureSheet(host, anchor: anchor, size: CGSize(width: 390, height: 520))
+    let host = UIHostingController(
+      rootView: ProfileSheetView(
+        profile: profile,
+        onAccountSettings: { [weak self] in
+          self?.dismiss(animated: true) {
+            self?.onRequestAccountSettings()
+          }
+        },
+        onDeleteAccount: { [weak self] in
+          self?.dismiss(animated: true) {
+            self?.onRequestAccountDeletion()
+          }
+        },
+        onSignOut: { [weak self] in
+          self?.dismiss(animated: true) {
+            self?.onRequestSignOut()
+          }
+        }
+      )
+    )
+    configureSheet(host, anchor: anchor, size: CGSize(width: 390, height: 620))
     present(host, animated: true)
   }
 
@@ -519,7 +552,7 @@ final class PhotosHomeController: UIViewController {
 
   private func makeProfile(
     session: AfilmorySession,
-    workspace: AfilmorySessionWorkspace,
+    workspace: AfilmorySessionWorkspace?,
     photos: [GalleryPhoto]
   ) -> ProfileSheetRecord {
     let stats = ProfileStats.collect(photos)
@@ -535,8 +568,10 @@ final class PhotosHomeController: UIViewController {
     profile.userName = session.user.name
     profile.avatarUrl = session.user.image ?? ""
     profile.avatarInitial = session.user.name.first.map { String($0).uppercased() } ?? "?"
-    profile.tenantLine = "\(workspace.name) · \(workspace.slug)"
-    profile.webUrl = (try? ApiEnvironmentStore.shared.galleryOrigin(slug: workspace.slug).absoluteString) ?? ""
+    profile.tenantLine = workspace.map { "\($0.name) · \($0.slug)" } ?? session.user.email
+    profile.webUrl = workspace.flatMap {
+      try? ApiEnvironmentStore.shared.galleryOrigin(slug: $0.slug).absoluteString
+    } ?? ""
     profile.statsLine = photos.isEmpty ? "" : statsParts.joined(separator: " · ")
     profile.strip = photos.prefix(12).map { photo in
       let item = ProfileStripItemRecord()
@@ -547,12 +582,14 @@ final class PhotosHomeController: UIViewController {
     }
     let copy = ProfileLocalizationRecord()
     copy.cacheCleared = localization.value("profile.cacheCleared")
+    copy.accountSettings = localization.value("profile.accountSettings")
     copy.cancel = localization.value("common.cancel")
     copy.clearCache = localization.value("profile.clearCache")
     copy.done = localization.value("common.done")
     copy.openWeb = localization.value("common.openGalleryWeb")
     copy.signOut = localization.value("common.signOut")
     copy.signOutConfirmTitle = localization.value("profile.signOutConfirmTitle")
+    copy.deleteAccount = localization.value("account.deletion.action")
     copy.sponsorDescription = localization.value("profile.sponsor.description")
     copy.sponsorFailedMessage = localization.value("profile.sponsor.failedMessage")
     copy.sponsorFailedTitle = localization.value("profile.sponsor.failedTitle")
@@ -601,6 +638,16 @@ final class PhotosHomeController: UIViewController {
     configuration.image = UIImage(systemName: "clock")
     configuration.text = localization.value("gallery.workspace.pending.title")
     configuration.secondaryText = localization.value("gallery.workspace.pending.subtitle")
+    configuration.button = .filled()
+    configuration.button.title = localization.value("workspace.setup.submit")
+    configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in
+      self?.onRequestWorkspaceSetup()
+    }
+    configuration.secondaryButton = .plain()
+    configuration.secondaryButton.title = localization.value("account.settings.title")
+    configuration.secondaryButtonProperties.primaryAction = UIAction { [weak self] _ in
+      self?.onRequestAccountSettings()
+    }
     contentUnavailableConfiguration = configuration
   }
 

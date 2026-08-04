@@ -165,10 +165,12 @@ struct ProfileStripItemRecord: Record {
 }
 
 struct ProfileLocalizationRecord: Record {
+  @Field var accountSettings: String = ""
   @Field var cacheCleared: String = ""
   @Field var cancel: String = ""
   @Field var clearCache: String = ""
   @Field var done: String = ""
+  @Field var deleteAccount: String = ""
   @Field var openWeb: String = ""
   @Field var signOut: String = ""
   @Field var signOutConfirmTitle: String = ""

@@ -3,7 +3,15 @@ import { ofetch } from 'ofetch'
 import { getApiBaseUrl } from '@/api/client'
 
 import { camelCaseKeys } from './case'
-import type { SessionInfo, SessionMembership, SessionUser, SessionWorkspace } from './types'
+import type {
+  AccountDeletionImpact,
+  AccountDeletionProof,
+  AccountDeletionRequestResult,
+  SessionInfo,
+  SessionMembership,
+  SessionUser,
+  SessionWorkspace,
+} from './types'
 
 interface SessionResponse {
   user?: SessionUser | null
@@ -11,6 +19,12 @@ interface SessionResponse {
   requestedWorkspace?: SessionWorkspace | null
   requestedMembership?: Omit<SessionMembership, 'workspace'> | null
   memberships?: SessionMembership[]
+}
+
+export interface AppleAuthenticationConfiguration {
+  appBundleIdentifier: string
+  enabled: boolean
+  webEnabled: boolean
 }
 
 export async function fetchSession(cookie: string | null): Promise<SessionInfo | null> {
@@ -50,4 +64,50 @@ export async function switchActiveWorkspace(cookie: string | null, tenantId: str
     headers: cookie ? { cookie } : undefined,
     body: { tenantId },
   })
+}
+
+export async function exchangeAppleAuthorization(
+  cookie: string,
+  input: { authorizationCode: string, identityToken: string, nonce: string },
+): Promise<void> {
+  await ofetch(`${getApiBaseUrl()}/auth/apple/exchange`, {
+    body: input,
+    headers: { cookie },
+    method: 'POST',
+  })
+}
+
+export async function fetchAppleAuthenticationConfiguration(): Promise<AppleAuthenticationConfiguration> {
+  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/auth/apple/configuration`)
+  return camelCaseKeys<AppleAuthenticationConfiguration>(raw)
+}
+
+export async function createWorkspace(cookie: string, input: { name: string, slug: string }): Promise<void> {
+  await ofetch(`${getApiBaseUrl()}/auth/sign-up/email`, {
+    body: {
+      tenant: input,
+      useSessionAccount: true,
+    },
+    headers: { cookie },
+    method: 'POST',
+  })
+}
+
+export async function fetchAccountDeletionImpact(cookie: string): Promise<AccountDeletionImpact> {
+  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/auth/account-deletion/impact`, {
+    headers: { cookie },
+  })
+  return camelCaseKeys<AccountDeletionImpact>(raw)
+}
+
+export async function requestAccountDeletion(
+  cookie: string,
+  proof: AccountDeletionProof,
+): Promise<AccountDeletionRequestResult> {
+  const raw = await ofetch<unknown>(`${getApiBaseUrl()}/auth/account-deletion/request`, {
+    body: { proof },
+    headers: { cookie },
+    method: 'POST',
+  })
+  return camelCaseKeys<AccountDeletionRequestResult>(raw)
 }

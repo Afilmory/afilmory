@@ -201,7 +201,7 @@ const enUiSchema = {
     title: 'Platform Settings',
     description: 'Manage registration flow, login strategy, and shared OAuth providers for the platform.',
     sections: {
-      registration: {
+      'registration': {
         title: 'Global registration policy',
         description: 'Control new user quotas and local account capabilities.',
         fields: {
@@ -228,12 +228,12 @@ const enUiSchema = {
           },
         },
       },
-      billing: {
+      'billing': {
         title: 'Plan configuration',
         description: 'Define quotas, display pricing, and Creem products per plan.',
         fields: {
           quota: {
-            helper: 'Leave empty to inherit defaults or no limit; numbers override plan settings.',
+            'helper': 'Leave empty to inherit defaults or no limit; numbers override plan settings.',
             'monthly-asset': {
               title: 'Monthly new photos',
               description: 'Stop new uploads once this monthly cap is reached. Empty means fallback or unlimited.',
@@ -262,7 +262,7 @@ const enUiSchema = {
               placeholder: 'e.g. 49',
               helper: 'Blank hides pricing information.',
             },
-            currency: {
+            'currency': {
               title: 'Currency',
               description: 'ISO currency code, e.g., CNY or USD.',
               placeholder: 'CNY',
@@ -275,7 +275,7 @@ const enUiSchema = {
               description: 'Creem product used to create checkout sessions. Leave blank to hide the upgrade entry.',
               placeholder: 'prod_xxx',
             },
-            helper: 'Blank values hide the upgrade entry.',
+            'helper': 'Blank values hide the upgrade entry.',
           },
         },
         plans: {
@@ -297,20 +297,20 @@ const enUiSchema = {
         title: 'Storage plans',
         description: 'Managed storage catalog, pricing, and Creem products for storage subscriptions.',
         fields: {
-          catalog: {
+          'catalog': {
             title: 'Plan catalog',
             description:
               'Manage storage plans for managed B2 space. Use the dashboard editor; JSON is no longer required.',
             placeholder: 'Configured via dashboard',
             helper: 'Plans include name/description/capacity and active flag.',
           },
-          pricing: {
+          'pricing': {
             title: 'Storage pricing',
             description: 'Monthly price and currency per storage plan.',
             placeholder: 'Configured via dashboard',
             helper: 'Blank values fall back to defaults or hide pricing.',
           },
-          products: {
+          'products': {
             title: 'Creem products',
             description: 'Creem product per storage plan for checkout and portal.',
             placeholder: 'Configured via dashboard',
@@ -324,7 +324,7 @@ const enUiSchema = {
           },
         },
       },
-      oauth: {
+      'oauth': {
         title: 'OAuth providers',
         description: 'Configure shared third-party login providers for all tenants.',
         fields: {
@@ -369,6 +369,34 @@ const enUiSchema = {
               },
             },
           },
+          apple: {
+            title: 'Sign in with Apple',
+            description:
+              'Configure the non-secret Apple identifiers here. APPLE_PRIVATE_KEY remains a deployment secret.',
+            fields: {
+              'web-client-id': {
+                title: 'Services ID',
+                description:
+                  'Apple Services ID used by the dashboard web login. Leave blank to keep Apple mobile-only.',
+                placeholder: 'art.afilmory.web',
+              },
+              'app-bundle-id': {
+                title: 'App bundle identifier',
+                description: 'Audience and client ID for the native iOS authorization flow.',
+                placeholder: 'app.afilmory',
+              },
+              'team-id': {
+                title: 'Team ID',
+                description: 'Apple Developer team identifier used to sign client-secret JWTs.',
+                placeholder: 'KAMM5N88X3',
+              },
+              'key-id': {
+                title: 'Key ID',
+                description: 'Identifier of the Sign in with Apple private key configured in deployment secrets.',
+                placeholder: 'ABC123DEFG',
+              },
+            },
+          },
         },
       },
     },
@@ -384,17 +412,17 @@ const enUiSchema = {
       },
       fields: {
         s3: {
-          bucket: {
+          'bucket': {
             label: 'Bucket name',
             description: 'Name of the S3 bucket that stores your photos.',
             placeholder: 'afilmory-photos',
           },
-          region: {
+          'region': {
             label: 'Region',
             description: 'S3 region code, e.g. ap-southeast-1.',
             placeholder: 'ap-southeast-1',
           },
-          endpoint: {
+          'endpoint': {
             label: 'Custom endpoint',
             description: 'Optional endpoint for S3-compatible services.',
             placeholder: 'https://s3.example.com',
@@ -408,7 +436,7 @@ const enUiSchema = {
             label: 'Secret Access Key',
             placeholder: '************',
           },
-          prefix: {
+          'prefix': {
             label: 'Path prefix',
             description: 'Optional. Limit scanning to objects under this prefix.',
             placeholder: 'photos/',
@@ -431,28 +459,28 @@ const enUiSchema = {
           },
         },
         github: {
-          owner: {
+          'owner': {
             label: 'Repository owner',
             description: 'GitHub user or organization name.',
             placeholder: 'afilmory',
           },
-          repo: {
+          'repo': {
             label: 'Repository name',
             description: 'Repository that stores your photos.',
             placeholder: 'photo-assets',
           },
-          branch: {
+          'branch': {
             label: 'Branch',
             description: 'Optional branch to sync.',
             placeholder: 'main',
             helper: 'Defaults to master/main. Provide the full branch name if it differs.',
           },
-          token: {
+          'token': {
             label: 'Access token',
             description: 'Personal Access Token for private repositories.',
             placeholder: 'ghp_xxxxxxxxxxxxxxxxxxxx',
           },
-          path: {
+          'path': {
             label: 'Repository path',
             description: 'Optional path within the repository to limit syncing.',
             placeholder: 'public/photos',
@@ -491,7 +519,7 @@ const enUiSchema = {
             description: 'Friendly bucket name for reference or public URL generation.',
             placeholder: 'afilmory-photos',
           },
-          prefix: {
+          'prefix': {
             label: 'Path prefix',
             description: 'Optional. Restrict scanning to files under this prefix.',
             placeholder: 'photos/',

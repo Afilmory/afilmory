@@ -31,6 +31,10 @@ export interface SystemSettings {
   oauthGoogleClientSecret: string | null
   oauthGithubClientId: string | null
   oauthGithubClientSecret: string | null
+  oauthAppleWebClientId: string | null
+  oauthAppleAppBundleId: string
+  oauthAppleTeamId: string | null
+  oauthAppleKeyId: string | null
   billingPlanOverrides: BillingPlanOverrides
   billingPlanProducts: BillingPlanProductConfigs
   billingPlanPricing: BillingPlanPricingConfigs
@@ -57,13 +61,13 @@ export interface SystemSettingOverview {
   stats: SystemSettingStats
 }
 
-export type UpdateSystemSettingsInput = Partial<SystemSettings> &
-  Partial<Record<BillingPlanSettingField, string | number | boolean | null | undefined>>
+export type UpdateSystemSettingsInput = Partial<SystemSettings>
+  & Partial<Record<BillingPlanSettingField, string | number | boolean | null | undefined>>
 
 export { type SystemSettingField } from './system-setting.constants'
 
 declare module '@tsuki-hono/event-emitter' {
   interface Events {
-    'system.setting.updated': { key: SystemSettingKey; value: unknown }
+    'system.setting.updated': { key: SystemSettingKey, value: unknown }
   }
 }

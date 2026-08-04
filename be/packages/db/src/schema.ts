@@ -5,6 +5,7 @@ import { relations, sql } from 'drizzle-orm'
 import {
   bigint,
   boolean,
+  foreignKey,
   index,
   integer,
   jsonb,
@@ -37,6 +38,25 @@ export const tenantDomainStatusEnum = pgEnum('tenant_domain_status', ['pending',
 export const photoSyncStatusEnum = pgEnum('photo_sync_status', ['pending', 'synced', 'conflict'])
 export const commentStatusEnum = pgEnum('comment_status', ['pending', 'approved', 'rejected', 'hidden'])
 export const apnsEnvironmentEnum = pgEnum('apns_environment', ['development', 'production'])
+export const appleAuthorizationStatusEnum = pgEnum('apple_authorization_status', [
+  'active',
+  'revoked',
+  'revocation_failed',
+])
+export const accountDeletionStatusEnum = pgEnum('account_deletion_status', [
+  'requested',
+  'processing',
+  'retryable_failure',
+  'manual_intervention',
+  'completed',
+])
+export const accountDeletionStageEnum = pgEnum('account_deletion_stage', [
+  'revoke_providers',
+  'resolve_billing',
+  'delete_storage',
+  'finalize_database',
+  'completed',
+])
 export const CURRENT_PHOTO_MANIFEST_VERSION: ManifestVersion = CURRENT_MANIFEST_VERSION
 
 export type PhotoAssetConflictType = 'missing-in-storage' | 'metadata-mismatch' | 'photo-id-conflict'
@@ -90,7 +110,7 @@ export const tenants = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [unique('uq_tenant_slug').on(t.slug)],
+  t => [unique('uq_tenant_slug').on(t.slug)],
 )
 
 export const tenantDomains = pgTable(
@@ -107,7 +127,7 @@ export const tenantDomains = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [unique('uq_tenant_domain_domain').on(t.domain), index('idx_tenant_domain_tenant').on(t.tenantId)],
+  t => [unique('uq_tenant_domain_domain').on(t.domain), index('idx_tenant_domain_tenant').on(t.tenantId)],
 )
 
 // Platform-global users table (Better Auth: user).
@@ -131,8 +151,9 @@ export const authUsers = pgTable(
     banned: boolean('banned').default(false).notNull(),
     banReason: text('ban_reason'),
     banExpires: timestamp('ban_expires_at', { mode: 'string' }),
+    deletionRequestedAt: timestamp('deletion_requested_at', { mode: 'string' }),
   },
-  (t) => [uniqueIndex('uq_auth_user_email_normalized').on(sql`lower(trim(${t.email}))`)],
+  t => [uniqueIndex('uq_auth_user_email_normalized').on(sql`lower(trim(${t.email}))`)],
 )
 
 export const tenantMemberships = pgTable(
@@ -150,7 +171,7 @@ export const tenantMemberships = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     unique('uq_tenant_membership_tenant_user').on(t.tenantId, t.userId),
     uniqueIndex('uq_tenant_membership_active_owner')
       .on(t.tenantId)
@@ -172,7 +193,7 @@ export const gallerySubscriptions = pgTable(
       .references(() => tenants.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     unique('uq_gallery_subscription_subscriber_target').on(t.subscriberUserId, t.targetTenantId),
     index('idx_gallery_subscription_target').on(t.targetTenantId),
     index('idx_gallery_subscription_subscriber_created').on(t.subscriberUserId, t.createdAt),
@@ -195,7 +216,7 @@ export const apnsDevices = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     unique('uq_apns_device_token_environment').on(t.deviceToken, t.environment),
     index('idx_apns_device_user_enabled').on(t.userId, t.enabled),
   ],
@@ -236,7 +257,7 @@ export const authAccounts = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     unique('uq_auth_account_provider').on(t.providerId, t.accountId),
     index('idx_auth_account_user').on(t.userId),
   ],
@@ -250,6 +271,60 @@ export const authVerifications = pgTable('auth_verification', {
   createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
 })
+
+export const appleAuthorizations = pgTable(
+  'apple_authorization',
+  {
+    id: snowflakeId,
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => authAccounts.id, { onDelete: 'cascade' }),
+    subject: text('subject').notNull(),
+    clientId: text('client_id').notNull(),
+    encryptedRefreshToken: text('encrypted_refresh_token').notNull(),
+    authorizationCodeHash: text('authorization_code_hash'),
+    status: appleAuthorizationStatusEnum('status').notNull().default('active'),
+    lastRevocationError: text('last_revocation_error'),
+    revokedAt: timestamp('revoked_at', { mode: 'string' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_apple_authorization_account').on(t.accountId),
+    unique('uq_apple_authorization_subject_client').on(t.subject, t.clientId),
+    uniqueIndex('uq_apple_authorization_code_hash').on(t.authorizationCodeHash),
+    index('idx_apple_authorization_user_status').on(t.userId, t.status),
+  ],
+)
+
+export const accountDeletionRequests = pgTable(
+  'account_deletion_request',
+  {
+    id: snowflakeId,
+    subjectUserId: text('subject_user_id'),
+    statusTokenHash: text('status_token_hash').notNull(),
+    status: accountDeletionStatusEnum('status').notNull().default('requested'),
+    stage: accountDeletionStageEnum('stage').notNull().default('revoke_providers'),
+    impactSnapshot: jsonb('impact_snapshot').$type<Record<string, unknown>>().notNull(),
+    attempts: integer('attempts').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', { mode: 'string' }),
+    lastErrorCode: text('last_error_code'),
+    accessRevokedAt: timestamp('access_revoked_at', { mode: 'string' }),
+    completedAt: timestamp('completed_at', { mode: 'string' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_account_deletion_status_token_hash').on(t.statusTokenHash),
+    uniqueIndex('uq_account_deletion_active_user')
+      .on(t.subjectUserId)
+      .where(sql`${t.subjectUserId} is not null and ${t.status} <> 'completed'`),
+    index('idx_account_deletion_retry').on(t.status, t.nextAttemptAt),
+  ],
+)
 
 export const creemSubscriptions = pgTable('creem_subscription', {
   id: text('id').primaryKey(),
@@ -282,7 +357,7 @@ export const settings = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [unique('uq_settings_tenant_key').on(t.tenantId, t.key)],
+  t => [unique('uq_settings_tenant_key').on(t.tenantId, t.key)],
 )
 
 export const systemSettings = pgTable(
@@ -296,7 +371,7 @@ export const systemSettings = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [unique('uq_system_setting_key').on(t.key)],
+  t => [unique('uq_system_setting_key').on(t.key)],
 )
 
 export const reactions = pgTable(
@@ -310,7 +385,7 @@ export const reactions = pgTable(
     refKey: text('ref_key').notNull(),
     reaction: text('reaction').notNull(),
   },
-  (t) => [index('idx_reactions_tenant_ref_key').on(t.tenantId, t.refKey)],
+  t => [index('idx_reactions_tenant_ref_key').on(t.tenantId, t.refKey)],
 )
 
 export const comments = pgTable(
@@ -333,7 +408,12 @@ export const comments = pgTable(
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
     deletedAt: timestamp('deleted_at', { mode: 'string' }),
   },
-  (t) => [
+  t => [
+    foreignKey({
+      name: 'fk_comment_parent',
+      columns: [t.parentId],
+      foreignColumns: [t.id],
+    }).onDelete('set null'),
     index('idx_comment_tenant_photo').on(t.tenantId, t.photoId),
     index('idx_comment_parent').on(t.parentId),
     index('idx_comment_user').on(t.userId),
@@ -364,7 +444,7 @@ export const commentReactions = pgTable(
     reaction: text('reaction').notNull(),
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     unique('uq_comment_reaction_user').on(t.tenantId, t.commentId, t.userId, t.reaction),
     index('idx_comment_reaction_comment').on(t.tenantId, t.commentId),
   ],
@@ -387,7 +467,7 @@ export const managedStorageUsages = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     index('idx_managed_storage_usage_tenant_recorded').on(t.tenantId, t.recordedAt),
     index('idx_managed_storage_usage_provider').on(t.providerKey),
   ],
@@ -412,7 +492,7 @@ export const managedStorageFileReferences = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     unique('uq_managed_storage_file_ref_tenant_key').on(t.tenantId, t.storageKey),
     index('idx_managed_storage_file_ref_provider').on(t.providerKey),
     index('idx_managed_storage_file_ref_reference').on(t.referenceType, t.referenceId),
@@ -442,7 +522,7 @@ export const photoAssets = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     unique('uq_photo_asset_tenant_storage_key').on(t.tenantId, t.storageKey),
     unique('uq_photo_asset_tenant_photo_id').on(t.tenantId, t.photoId),
   ],
@@ -472,7 +552,7 @@ export const photoAccessLogs = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     index('idx_photo_access_log_tenant').on(t.tenantId),
     index('idx_photo_access_log_asset').on(t.photoAssetId),
     index('idx_photo_access_log_token').on(t.tokenId),
@@ -494,7 +574,7 @@ export const photoAccessStats = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     primaryKey({ name: 'pk_photo_access_stat', columns: [t.tenantId, t.photoAssetId] }),
     index('idx_photo_access_stat_photo').on(t.tenantId, t.photoId),
   ],
@@ -515,7 +595,7 @@ export const photoSyncRuns = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [index('idx_photo_sync_run_tenant').on(t.tenantId)],
+  t => [index('idx_photo_sync_run_tenant').on(t.tenantId)],
 )
 
 export type BillingUsageMetadata = Record<string, unknown>
@@ -535,7 +615,7 @@ export const billingUsageEvents = pgTable(
     createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
   },
-  (t) => [
+  t => [
     index('idx_billing_usage_event_tenant').on(t.tenantId),
     index('idx_billing_usage_event_type').on(t.eventType),
   ],
@@ -551,6 +631,8 @@ export const dbSchema = {
   authSessions,
   authAccounts,
   authVerifications,
+  appleAuthorizations,
+  accountDeletionRequests,
   creemSubscriptions,
 
   settings,

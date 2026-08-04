@@ -272,6 +272,7 @@ body {
 
 @source inline('i-logos-github-icon');
 @source inline('i-logos-google-icon');
+@source inline('i-simple-icons-apple');
 
 .shape-squircle {
   corner-shape: squircle;

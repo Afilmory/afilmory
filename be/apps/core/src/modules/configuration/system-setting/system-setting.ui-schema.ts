@@ -5,7 +5,7 @@ import type { UiNode, UiSchema } from '@core/modules/ui/ui-schema/ui-schema.type
 
 import type { SystemSettingField } from './system-setting.constants'
 
-export const SYSTEM_SETTING_UI_SCHEMA_VERSION = '1.4.0'
+export const SYSTEM_SETTING_UI_SCHEMA_VERSION = '1.5.0'
 
 const PLAN_QUOTA_FIELDS = [
   {
@@ -64,7 +64,7 @@ const PLAN_PAYMENT_FIELDS = [
 
 function buildBillingPlanGroups(t: UiSchemaTFunction): ReadonlyArray<UiNode<SystemSettingField>> {
   return BILLING_PLAN_IDS.map((planId) => {
-    const quotaFields = PLAN_QUOTA_FIELDS.map((field) => ({
+    const quotaFields = PLAN_QUOTA_FIELDS.map(field => ({
       type: 'field' as const,
       id: `${planId}-${field.suffix}`,
       title: t(field.titleKey),
@@ -78,7 +78,7 @@ function buildBillingPlanGroups(t: UiSchemaTFunction): ReadonlyArray<UiNode<Syst
       },
     }))
 
-    const pricingFields = PLAN_PRICING_FIELDS.map((field) => ({
+    const pricingFields = PLAN_PRICING_FIELDS.map(field => ({
       type: 'field' as const,
       id: `${planId}-pricing-${field.suffix}`,
       title: t(field.titleKey),
@@ -92,7 +92,7 @@ function buildBillingPlanGroups(t: UiSchemaTFunction): ReadonlyArray<UiNode<Syst
       },
     }))
 
-    const paymentFields = PLAN_PAYMENT_FIELDS.map((field) => ({
+    const paymentFields = PLAN_PAYMENT_FIELDS.map(field => ({
       type: 'field' as const,
       id: `${planId}-payment-${field.suffix}`,
       title: t(field.titleKey),
@@ -312,6 +312,59 @@ export function createSystemSettingUiSchema(t: UiSchemaTFunction): UiSchema<Syst
                   placeholder: t('system.sections.oauth.groups.github.fields.client-secret.placeholder'),
                   revealable: true,
                   autoComplete: 'off',
+                },
+              },
+            ],
+          },
+          {
+            type: 'group',
+            id: 'oauth-apple',
+            title: t('system.sections.oauth.groups.apple.title'),
+            description: t('system.sections.oauth.groups.apple.description'),
+            icon: 'apple',
+            children: [
+              {
+                type: 'field',
+                id: 'oauth-apple-web-client-id',
+                title: t('system.sections.oauth.groups.apple.fields.web-client-id.title'),
+                description: t('system.sections.oauth.groups.apple.fields.web-client-id.description'),
+                key: 'oauthAppleWebClientId',
+                component: {
+                  type: 'text',
+                  placeholder: t('system.sections.oauth.groups.apple.fields.web-client-id.placeholder'),
+                },
+              },
+              {
+                type: 'field',
+                id: 'oauth-apple-app-bundle-id',
+                title: t('system.sections.oauth.groups.apple.fields.app-bundle-id.title'),
+                description: t('system.sections.oauth.groups.apple.fields.app-bundle-id.description'),
+                key: 'oauthAppleAppBundleId',
+                component: {
+                  type: 'text',
+                  placeholder: t('system.sections.oauth.groups.apple.fields.app-bundle-id.placeholder'),
+                },
+              },
+              {
+                type: 'field',
+                id: 'oauth-apple-team-id',
+                title: t('system.sections.oauth.groups.apple.fields.team-id.title'),
+                description: t('system.sections.oauth.groups.apple.fields.team-id.description'),
+                key: 'oauthAppleTeamId',
+                component: {
+                  type: 'text',
+                  placeholder: t('system.sections.oauth.groups.apple.fields.team-id.placeholder'),
+                },
+              },
+              {
+                type: 'field',
+                id: 'oauth-apple-key-id',
+                title: t('system.sections.oauth.groups.apple.fields.key-id.title'),
+                description: t('system.sections.oauth.groups.apple.fields.key-id.description'),
+                key: 'oauthAppleKeyId',
+                component: {
+                  type: 'text',
+                  placeholder: t('system.sections.oauth.groups.apple.fields.key-id.placeholder'),
                 },
               },
             ],
