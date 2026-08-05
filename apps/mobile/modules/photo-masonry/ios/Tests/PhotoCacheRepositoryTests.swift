@@ -78,10 +78,27 @@ final class PhotoCacheRepositoryTests: XCTestCase {
 
     let loaded = await repository.loadFeed(key)
     XCTAssertEqual(loaded?.photos.map(\.id), ["a"])
-    XCTAssertEqual(loaded?.etag, "etag-1")
+    XCTAssertNil(loaded?.etag)
 
     let remainingRows = try await waitForPhotoRows(feedKey: key.rawValue, toMatch: ["a"])
     XCTAssertEqual(remainingRows.map(\.photoId), ["a"])
+  }
+
+  func testLoadFeedReturnsNilWhenAllPayloadRowsAreCorrupted() async throws {
+    let key = PhotoFeedKey.manifest("acme")
+    await repository.saveFeed(
+      key,
+      photos: [NativeFixtureTestSupport.photo(id: "a"), NativeFixtureTestSupport.photo(id: "b")],
+      etag: "etag-1"
+    )
+    try await corruptPayload(photoId: "a", feedKey: key.rawValue)
+    try await corruptPayload(photoId: "b", feedKey: key.rawValue)
+
+    let loaded = await repository.loadFeed(key)
+    XCTAssertNil(loaded)
+
+    let remainingRows = try await waitForPhotoRows(feedKey: key.rawValue, toMatch: [])
+    XCTAssertTrue(remainingRows.isEmpty)
   }
 
   func testTouchFeedUpdatesFetchedAtWithoutChangingPhotosOrEtag() async throws {

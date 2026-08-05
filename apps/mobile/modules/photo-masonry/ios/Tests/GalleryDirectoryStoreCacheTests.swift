@@ -29,6 +29,19 @@ final class GalleryDirectoryStoreCacheTests: XCTestCase {
     XCTAssertEqual(store.loadCached()?.map(\.id), ["fresh"])
   }
 
+  func testFetchWithNonEmptyQueryDoesNotPersistToCache() async throws {
+    let repository = InMemoryPhotoCacheRepository()
+    await repository.saveGalleryDirectory(try Self.encode([Self.makeGallery(id: "cached")]))
+
+    let transport = FakeGalleryDirectoryTransport(steps: [.success([Self.makeGallery(id: "search-result")])])
+    let store = GalleryDirectoryStore(repository: repository, transport: transport)
+
+    let fetched = try await store.fetch(query: "sunset", limit: 30)
+
+    XCTAssertEqual(fetched.map(\.id), ["search-result"])
+    XCTAssertEqual(store.loadCached()?.map(\.id), ["cached"])
+  }
+
   func testFetchFailureLeavesTheCachedPayloadInPlace() async throws {
     let repository = InMemoryPhotoCacheRepository()
     await repository.saveGalleryDirectory(try Self.encode([Self.makeGallery(id: "cached")]))

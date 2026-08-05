@@ -36,9 +36,10 @@ final class SwiftDataPhotoCacheRepository: PhotoCacheRepository, Sendable {
       }
     }
 
-    if !corruptedPhotoIds.isEmpty {
+    guard corruptedPhotoIds.isEmpty else {
       let mutator = mutator
       Task { await mutator.deleteCorruptedPhotos(feedKey: feedKey, photoIds: corruptedPhotoIds) }
+      return photos.isEmpty ? nil : (photos, nil)
     }
 
     return (photos, feed.etag)

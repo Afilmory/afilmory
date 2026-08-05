@@ -40,7 +40,7 @@ final class GalleryDirectoryStore {
 
   func fetch(query: String, limit: Int) async throws -> [FeaturedGallery] {
     let envelope = try await transport.fetchGalleryDirectory(query: query, limit: limit)
-    if let payload = try? JSONEncoder().encode(envelope) {
+    if query.isEmpty, let payload = try? JSONEncoder().encode(envelope) {
       await repository.saveGalleryDirectory(payload)
     }
     return envelope.galleries
