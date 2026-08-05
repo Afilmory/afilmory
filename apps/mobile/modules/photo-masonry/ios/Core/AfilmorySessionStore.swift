@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import UIKit
 
 struct AfilmorySessionSnapshot: Sendable {
   let cookie: String?
@@ -85,6 +86,7 @@ final class AfilmorySessionStore: @unchecked Sendable {
   private var refreshTask: Task<Void, Never>?
   private var refreshGeneration: UInt64 = 0
   private var bootstrapped = false
+  private var foregroundObserver: NSObjectProtocol?
 
   init(
     repository: PhotoCacheRepository = SwiftDataPhotoCacheRepository(container: AfilmoryDatabase.shared),
@@ -97,6 +99,21 @@ final class AfilmorySessionStore: @unchecked Sendable {
     platformBaseURL = ApiEnvironmentStore.storedOrBuildDefault().platformAPIBaseURL().absoluteString
     tenantBaseURL = nil
     state = cookieStorage.read() == nil ? .signedOut : .loading
+    foregroundObserver = NotificationCenter.default.addObserver(
+      forName: UIApplication.didBecomeActiveNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor in
+        self?.bootstrap()
+      }
+    }
+  }
+
+  deinit {
+    if let foregroundObserver {
+      NotificationCenter.default.removeObserver(foregroundObserver)
+    }
   }
 
   func register(cookie: String) {
@@ -146,13 +163,17 @@ final class AfilmorySessionStore: @unchecked Sendable {
 
   @MainActor
   func bootstrap() {
-    let shouldStart = lock.withLock { () -> Bool in
+    let isFirstBootstrap = lock.withLock { () -> Bool in
       guard !bootstrapped else { return false }
       bootstrapped = true
       return true
     }
-    guard shouldStart else { return }
-    publishCachedSession()
+    if isFirstBootstrap {
+      publishCachedSession()
+    }
+    // Later bootstraps (foreground, tab mount) are the only retry hook an unresolved session gets.
+    let isUnresolved = lock.withLock { state.session == nil }
+    guard isFirstBootstrap || isUnresolved else { return }
     startRefresh(joinInFlight: true)
   }
 
@@ -192,7 +213,9 @@ final class AfilmorySessionStore: @unchecked Sendable {
 
   private func startRefresh(joinInFlight: Bool) {
     guard cookieStorage.read() != nil else {
-      publish(.signedOut)
+      if lock.withLock({ state != .signedOut }) {
+        publish(.signedOut)
+      }
       return
     }
 

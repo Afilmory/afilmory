@@ -21,3 +21,9 @@ test('does not expose navigation while authentication is loading', () => {
   assert.equal(getDefaultTabPath('loading'), null)
   assert.equal(shouldShowTabBar('loading'), false)
 })
+
+test('falls back to the visitor surface when the session cannot be resolved', () => {
+  assert.deepEqual(getAvailableTabNames('failed'), ['explore'])
+  assert.equal(getDefaultTabPath('failed'), '/explore')
+  assert.equal(shouldShowTabBar('failed'), false)
+})

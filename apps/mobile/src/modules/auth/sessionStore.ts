@@ -24,11 +24,12 @@ import type {
   SessionInfo,
 } from './types'
 
-export type AuthStatus = 'loading' | 'signedIn' | 'signedOut'
+export type AuthStatus = 'failed' | 'loading' | 'signedIn' | 'signedOut'
 
 export interface AuthState {
   status: AuthStatus
   session: SessionInfo | null
+  error?: string
 }
 
 let state: AuthState = { status: 'loading', session: null }
@@ -85,13 +86,15 @@ function mirrorNativeSession(snapshot: NativeSessionSnapshot): void {
   }
 
   if (snapshot.status === 'signedOut') {
-    const revoked = state.status === 'signedIn'
     adoptAuthCookie(null)
     setActiveWorkspace(null)
     setState({ status: 'signedOut', session: null })
-    if (revoked) {
-      void clearAuthStorage()
-    }
+    return
+  }
+
+  // A failed refresh never downgrades a session an interactive flow already established.
+  if (snapshot.status === 'failed' && state.status !== 'signedIn') {
+    setState({ status: 'failed', session: null, error: snapshot.error })
   }
 }
 

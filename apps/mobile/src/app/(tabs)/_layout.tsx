@@ -5,7 +5,7 @@ import { useCallback, useRef } from 'react'
 import { useTranslation } from '@/i18n'
 import { useAuth } from '@/modules/auth/sessionStore'
 import { createDevLabShortcutState, registerDevLabTabPress } from '@/modules/shell/devLabShortcut'
-import { getAvailableTabNames, shouldShowTabBar } from '@/modules/shell/tabAccess'
+import { getAvailableTabNames, isVisitorStatus, shouldShowTabBar } from '@/modules/shell/tabAccess'
 import { useTheme } from '@/theme/useTheme'
 
 export default function TabLayout() {
@@ -17,7 +17,7 @@ export default function TabLayout() {
   const isStudio = segments.includes('studio')
   const isExplore = segments.includes('explore')
   const availableTabs = getAvailableTabNames(auth.status)
-  const isSignedOut = auth.status === 'signedOut'
+  const isVisitor = isVisitorStatus(auth.status)
   const devLabShortcutStateRef = useRef(createDevLabShortcutState())
   const handleTabPress = useCallback(
     (tabName: string) => {
@@ -39,7 +39,7 @@ export default function TabLayout() {
     return null
   }
 
-  if (isSignedOut && !isExplore) {
+  if (isVisitor && !isExplore) {
     return <Redirect href="/explore" />
   }
 

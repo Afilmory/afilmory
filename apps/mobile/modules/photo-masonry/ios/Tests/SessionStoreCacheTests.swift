@@ -71,6 +71,78 @@ final class SessionStoreCacheTests: XCTestCase {
     await gate.open()
   }
 
+  func testBootstrapRetriesAfterAFailedRefresh() async throws {
+    let repository = InMemoryPhotoCacheRepository()
+    let cookies = InMemorySessionCookieStorage(cookie: Self.cookie)
+    let transport = FakeSessionTransport(
+      steps: [.failure(APIError.transport(URLError(.notConnectedToInternet))), .success(Self.makeResponse())]
+    )
+    let store = AfilmorySessionStore(repository: repository, transport: transport, cookieStorage: cookies)
+
+    store.bootstrap()
+    try await waitUntil { store.current().state != .loading }
+    XCTAssertNil(store.current().state.session)
+
+    store.bootstrap()
+
+    try await waitUntil { store.current().state == .signedIn(Self.makeSession()) }
+    let requestCount = await transport.requestCount
+    XCTAssertEqual(requestCount, 2)
+  }
+
+  func testBootstrapRetriesAfterAnUnreadableCookieAtLaunch() async throws {
+    let repository = InMemoryPhotoCacheRepository()
+    let cookies = InMemorySessionCookieStorage()
+    let transport = FakeSessionTransport(steps: [.success(Self.makeResponse())])
+    let store = AfilmorySessionStore(repository: repository, transport: transport, cookieStorage: cookies)
+
+    store.bootstrap()
+    XCTAssertEqual(store.current().state, .signedOut)
+
+    cookies.write(Self.cookie)
+    store.bootstrap()
+
+    try await waitUntil { store.current().state == .signedIn(Self.makeSession()) }
+    let requestCount = await transport.requestCount
+    XCTAssertEqual(requestCount, 1)
+  }
+
+  func testForegroundingRetriesAnUnresolvedSession() async throws {
+    let repository = InMemoryPhotoCacheRepository()
+    let cookies = InMemorySessionCookieStorage(cookie: Self.cookie)
+    let transport = FakeSessionTransport(
+      steps: [.failure(APIError.transport(URLError(.notConnectedToInternet))), .success(Self.makeResponse())]
+    )
+    let store = AfilmorySessionStore(repository: repository, transport: transport, cookieStorage: cookies)
+
+    store.bootstrap()
+    try await waitUntil { store.current().state != .loading }
+    XCTAssertNil(store.current().state.session)
+
+    NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+
+    try await waitUntil { store.current().state == .signedIn(Self.makeSession()) }
+    let requestCount = await transport.requestCount
+    XCTAssertEqual(requestCount, 2)
+  }
+
+  func testBootstrapDoesNotRefetchOnceTheSessionIsResolved() async throws {
+    let repository = InMemoryPhotoCacheRepository()
+    let cookies = InMemorySessionCookieStorage(cookie: Self.cookie)
+    let transport = FakeSessionTransport(steps: [.success(Self.makeResponse())])
+    let store = AfilmorySessionStore(repository: repository, transport: transport, cookieStorage: cookies)
+
+    store.bootstrap()
+    try await waitUntil { store.current().state == .signedIn(Self.makeSession()) }
+
+    store.bootstrap()
+    store.bootstrap()
+    try await Task.sleep(nanoseconds: 50_000_000)
+
+    let requestCount = await transport.requestCount
+    XCTAssertEqual(requestCount, 1)
+  }
+
   func testRefreshFailureKeepsTheCachedSignedInState() async throws {
     let session = Self.makeSession()
     let repository = InMemoryPhotoCacheRepository()
