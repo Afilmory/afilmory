@@ -13,7 +13,9 @@ public final class AfilmorySessionModule: Module {
           self?.sendEvent("onSessionChange", Self.eventPayload(state))
         }
       }
-      AfilmorySessionStore.shared.bootstrap()
+      Task { @MainActor in
+        AfilmorySessionStore.shared.bootstrap()
+      }
     }
 
     OnDestroy {
@@ -74,15 +76,18 @@ public final class AfilmorySessionModule: Module {
   }
 
   private static func eventPayload(_ state: AfilmorySessionState) -> [String: Any] {
-    var payload: [String: Any] = ["status": state.status]
-    if let session = state.session {
-      payload["userId"] = session.user.id
-      payload["workspaceId"] = session.activeWorkspace?.id ?? NSNull()
-      payload["workspaceSlug"] = session.activeWorkspace?.slug ?? NSNull()
-    }
+    var payload: [String: Any] = [
+      "status": state.status,
+      "session": state.session.flatMap(Self.serializedSession) ?? NSNull(),
+    ]
     if case .failed(let message) = state {
       payload["error"] = message
     }
     return payload
+  }
+
+  private static func serializedSession(_ session: AfilmorySession) -> [String: Any]? {
+    guard let data = try? JSONEncoder().encode(session) else { return nil }
+    return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
   }
 }

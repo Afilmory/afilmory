@@ -45,7 +45,7 @@ export function NativePageView({ galleryRoute, page }: { galleryRoute?: string, 
       return
     }
     if (event.nativeEvent.type === 'workspaceChanged') {
-      void synchronizeWorkspaceFromNative(event.nativeEvent.workspaceSlug)
+      synchronizeWorkspaceFromNative(event.nativeEvent.workspaceSlug)
       return
     }
     if (event.nativeEvent.type === 'workspaceSetup') {

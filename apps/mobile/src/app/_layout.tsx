@@ -23,9 +23,9 @@ export default function RootLayout() {
   // Nothing may issue a request before the API environment override resolves,
   // otherwise the first fetch races against the production default.
   useEffect(() => {
-    void Promise.all([waitForEnvironment(), waitForAuthStorage()]).then(async () => {
+    void Promise.all([waitForEnvironment(), waitForAuthStorage()]).then(() => {
       setEnvironmentReady(true)
-      await hydrateAuth()
+      hydrateAuth()
     })
   }, [])
 

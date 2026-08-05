@@ -6,6 +6,10 @@ export function getAuthCookie(): string | null {
   return authCookie
 }
 
+export function adoptAuthCookie(cookie: string | null): void {
+  authCookie = cookie
+}
+
 export function setAuthCookie(cookie: string | null): void {
   authCookie = cookie
   if (cookie) {

@@ -8,26 +8,95 @@ struct AfilmorySessionSnapshot: Sendable {
   let state: AfilmorySessionState
 }
 
+typealias AfilmorySessionObserver = @Sendable (AfilmorySessionState) -> Void
+
+protocol SessionTransport: Sendable {
+  func fetchSession() async throws -> AfilmorySessionResponse?
+}
+
+struct LiveSessionTransport: SessionTransport {
+  func fetchSession() async throws -> AfilmorySessionResponse? {
+    try await AfilmoryAPI.shared.request(APIEndpoint(baseURL: .platform, path: "auth/session"))
+  }
+}
+
+protocol SessionCookieStorage: Sendable {
+  func read() -> String?
+  func write(_ cookie: String)
+  func clear()
+}
+
+struct KeychainSessionCookieStorage: SessionCookieStorage {
+  private static let service = "app.afilmory.session.cookie"
+  private static let account = "authenticated-session"
+
+  func read() -> String? {
+    var query = Self.query
+    query[kSecReturnData as String] = true
+    query[kSecMatchLimit as String] = kSecMatchLimitOne
+
+    var result: CFTypeRef?
+    guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+          let data = result as? Data
+    else { return nil }
+    return String(data: data, encoding: .utf8)
+  }
+
+  func write(_ cookie: String) {
+    SecItemDelete(Self.query as CFDictionary)
+
+    var attributes = Self.query
+    attributes[kSecValueData as String] = Data(cookie.utf8)
+    // Background upload retries can be recreated while the device is locked.
+    attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+    let status = SecItemAdd(attributes as CFDictionary, nil)
+    if status != errSecSuccess {
+      NSLog("[AfilmorySessionStore] Unable to persist the session cookie: %d", status)
+    }
+  }
+
+  func clear() {
+    let status = SecItemDelete(Self.query as CFDictionary)
+    if status != errSecSuccess, status != errSecItemNotFound {
+      NSLog("[AfilmorySessionStore] Unable to clear the session cookie: %d", status)
+    }
+  }
+
+  private static var query: [String: Any] {
+    [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: account,
+    ]
+  }
+}
+
 final class AfilmorySessionStore: @unchecked Sendable {
   static let shared = AfilmorySessionStore()
 
-  private static let cookieService = "app.afilmory.session.cookie"
-  private static let cookieAccount = "authenticated-session"
-
+  private let repository: PhotoCacheRepository
+  private let transport: SessionTransport
+  private let cookieStorage: SessionCookieStorage
   private let lock = NSLock()
   private var platformBaseURL: String?
   private var tenantBaseURL: String?
   private var state: AfilmorySessionState
-  private var observers: [UUID: @Sendable (AfilmorySessionState) -> Void] = [:]
+  private var observers: [UUID: AfilmorySessionObserver] = [:]
   private var refreshTask: Task<Void, Never>?
   private var refreshGeneration: UInt64 = 0
   private var bootstrapped = false
 
-  private init() {
-    let environment = ApiEnvironmentStore.storedOrBuildDefault()
-    platformBaseURL = environment.platformAPIBaseURL().absoluteString
+  init(
+    repository: PhotoCacheRepository = SwiftDataPhotoCacheRepository(container: AfilmoryDatabase.shared),
+    transport: SessionTransport = LiveSessionTransport(),
+    cookieStorage: SessionCookieStorage = KeychainSessionCookieStorage()
+  ) {
+    self.repository = repository
+    self.transport = transport
+    self.cookieStorage = cookieStorage
+    platformBaseURL = ApiEnvironmentStore.storedOrBuildDefault().platformAPIBaseURL().absoluteString
     tenantBaseURL = nil
-    state = Self.readCookie() == nil ? .signedOut : .loading
+    state = cookieStorage.read() == nil ? .signedOut : .loading
   }
 
   func register(cookie: String) {
@@ -36,18 +105,7 @@ final class AfilmorySessionStore: @unchecked Sendable {
       clearSession()
       return
     }
-
-    let query = Self.cookieQuery
-    SecItemDelete(query as CFDictionary)
-
-    var attributes = query
-    attributes[kSecValueData as String] = Data(normalized.utf8)
-    // Background upload retries can be recreated while the device is locked.
-    attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-    let status = SecItemAdd(attributes as CFDictionary, nil)
-    if status != errSecSuccess {
-      NSLog("[AfilmorySessionStore] Unable to persist the session cookie: %d", status)
-    }
+    cookieStorage.write(normalized)
     refreshSession()
   }
 
@@ -60,9 +118,9 @@ final class AfilmorySessionStore: @unchecked Sendable {
 
   func clearSession() {
     APNsRegistrationCoordinator.unregisterCurrentDevice(using: current())
-    deleteCookie()
+    cookieStorage.clear()
     ShareUploadContextStore.clear()
-    let observers = lock.withLock { () -> [@Sendable (AfilmorySessionState) -> Void] in
+    let observers = lock.withLock { () -> [AfilmorySessionObserver] in
       refreshGeneration &+= 1
       refreshTask?.cancel()
       refreshTask = nil
@@ -71,80 +129,39 @@ final class AfilmorySessionStore: @unchecked Sendable {
       return Array(self.observers.values)
     }
     ApiEnvironmentStore.shared.activateTenant(slug: nil)
+    let repository = repository
+    Task { await repository.wipeAll() }
     notify(observers, state: .signedOut)
   }
 
   func current() -> AfilmorySessionSnapshot {
     let environment = lock.withLock { (platformBaseURL, tenantBaseURL) }
     return AfilmorySessionSnapshot(
-      cookie: loadCookie(),
+      cookie: cookieStorage.read(),
       platformBaseURL: environment.0,
       tenantBaseURL: environment.1,
       state: lock.withLock { state }
     )
   }
 
+  @MainActor
   func bootstrap() {
-    let shouldRefresh = lock.withLock { () -> Bool in
+    let shouldStart = lock.withLock { () -> Bool in
       guard !bootstrapped else { return false }
       bootstrapped = true
       return true
     }
-    guard shouldRefresh else { return }
-    refreshSession()
+    guard shouldStart else { return }
+    publishCachedSession()
+    startRefresh(joinInFlight: true)
   }
 
   func refreshSession() {
-    guard loadCookie() != nil else {
-      publish(.signedOut)
-      return
-    }
-
-    let generation = lock.withLock { () -> UInt64 in
-      refreshGeneration &+= 1
-      refreshTask?.cancel()
-      state = .loading
-      return refreshGeneration
-    }
-    publishCurrent()
-
-    let task = Task { [weak self] in
-      guard let self else { return }
-      do {
-        let endpoint = APIEndpoint(baseURL: .platform, path: "auth/session")
-        let response: AfilmorySessionResponse? = try await AfilmoryAPI.shared.request(endpoint)
-        guard !Task.isCancelled else { return }
-        if let session = response?.resolved() {
-          ApiEnvironmentStore.shared.activateTenant(slug: session.activeWorkspace?.slug)
-          completeRefresh(generation: generation, state: .signedIn(session))
-        } else {
-          APNsRegistrationCoordinator.unregisterCurrentDevice(using: current())
-          deleteCookie()
-          ApiEnvironmentStore.shared.activateTenant(slug: nil)
-          completeRefresh(generation: generation, state: .signedOut)
-        }
-      } catch APIError.unauthorized {
-        APNsRegistrationCoordinator.unregisterCurrentDevice(using: current())
-        deleteCookie()
-        ApiEnvironmentStore.shared.activateTenant(slug: nil)
-        completeRefresh(generation: generation, state: .signedOut)
-      } catch APIError.cancelled {
-        return
-      } catch {
-        completeRefresh(generation: generation, state: .failed(error.localizedDescription))
-      }
-    }
-    lock.withLock {
-      if generation == refreshGeneration {
-        refreshTask = task
-      } else {
-        task.cancel()
-      }
-    }
+    startRefresh(joinInFlight: false)
   }
 
   func observe(
-    _ observer: @escaping @Sendable (AfilmorySessionState) -> Void
+    _ observer: @escaping AfilmorySessionObserver
   ) -> AfilmorySessionObservationToken {
     let id = UUID()
     let currentState = lock.withLock { () -> AfilmorySessionState in
@@ -160,52 +177,114 @@ final class AfilmorySessionStore: @unchecked Sendable {
   }
 
   func hasStoredCookie() -> Bool {
-    loadCookie() != nil
+    cookieStorage.read() != nil
   }
 
-  private func loadCookie() -> String? {
-    Self.readCookie()
+  @MainActor
+  private func publishCachedSession() {
+    guard cookieStorage.read() != nil,
+          let payload = repository.loadSession(),
+          let session = try? JSONDecoder().decode(AfilmorySession.self, from: payload)
+    else { return }
+    ApiEnvironmentStore.shared.activateTenant(slug: session.activeWorkspace?.slug)
+    publish(.signedIn(session))
   }
 
-  private static func readCookie() -> String? {
-    var query = Self.cookieQuery
-    query[kSecReturnData as String] = true
-    query[kSecMatchLimit as String] = kSecMatchLimitOne
+  private func startRefresh(joinInFlight: Bool) {
+    guard cookieStorage.read() != nil else {
+      publish(.signedOut)
+      return
+    }
 
-    var result: CFTypeRef?
-    guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-          let data = result as? Data
-    else { return nil }
-    return String(data: data, encoding: .utf8)
-  }
-
-  private func deleteCookie() {
-    let status = SecItemDelete(Self.cookieQuery as CFDictionary)
-    if status != errSecSuccess, status != errSecItemNotFound {
-      NSLog("[AfilmorySessionStore] Unable to clear the session cookie: %d", status)
+    var enteredLoading = false
+    let started = lock.withLock { () -> Bool in
+      if refreshTask != nil {
+        guard !joinInFlight else { return false }
+        refreshTask?.cancel()
+      }
+      refreshGeneration &+= 1
+      if state.session == nil, state != .loading {
+        state = .loading
+        enteredLoading = true
+      }
+      let generation = refreshGeneration
+      refreshTask = Task { [weak self] in
+        await self?.performRefresh(generation: generation)
+      }
+      return true
+    }
+    guard started else { return }
+    if enteredLoading {
+      publishCurrent()
     }
   }
 
+  private func performRefresh(generation: UInt64) async {
+    do {
+      let response = try await transport.fetchSession()
+      guard !Task.isCancelled, isCurrentRefresh(generation) else { return }
+      guard let session = response?.resolved() else {
+        await applyServerSignOut(generation: generation)
+        return
+      }
+      ApiEnvironmentStore.shared.activateTenant(slug: session.activeWorkspace?.slug)
+      if let payload = try? JSONEncoder().encode(session) {
+        await repository.saveSession(payload)
+      }
+      completeRefresh(generation: generation, state: .signedIn(session))
+    } catch APIError.unauthorized {
+      await applyServerSignOut(generation: generation)
+    } catch APIError.cancelled {
+      return
+    } catch {
+      completeRefreshKeepingSession(generation: generation, error: error)
+    }
+  }
+
+  private func applyServerSignOut(generation: UInt64) async {
+    guard isCurrentRefresh(generation) else { return }
+    APNsRegistrationCoordinator.unregisterCurrentDevice(using: current())
+    cookieStorage.clear()
+    ApiEnvironmentStore.shared.activateTenant(slug: nil)
+    await repository.wipeAll()
+    completeRefresh(generation: generation, state: .signedOut)
+  }
+
+  private func isCurrentRefresh(_ generation: UInt64) -> Bool {
+    lock.withLock { generation == refreshGeneration }
+  }
+
   private func completeRefresh(generation: UInt64, state: AfilmorySessionState) {
-    let observers = lock.withLock { () -> [@Sendable (AfilmorySessionState) -> Void] in
-      guard generation == refreshGeneration else { return [] }
+    let observers = lock.withLock { () -> [AfilmorySessionObserver]? in
+      guard generation == refreshGeneration else { return nil }
       refreshTask = nil
       self.state = state
       return Array(self.observers.values)
     }
-    if let session = state.session {
-      ShareUploadContextStore.update(session: session)
-    } else if state == .signedOut {
-      ShareUploadContextStore.clear()
-    }
+    guard let observers else { return }
+    synchronizeUploadContext(state)
     notify(observers, state: state)
   }
 
+  private func completeRefreshKeepingSession(generation: UInt64, error: Error) {
+    NSLog("[AfilmorySessionStore] Session refresh failed: %@", error.localizedDescription)
+    let failure = lock.withLock { () -> (AfilmorySessionState, [AfilmorySessionObserver])? in
+      guard generation == refreshGeneration else { return nil }
+      refreshTask = nil
+      guard state.session == nil else { return nil }
+      state = .failed(error.localizedDescription)
+      return (state, Array(observers.values))
+    }
+    guard let failure else { return }
+    notify(failure.1, state: failure.0)
+  }
+
   private func publish(_ state: AfilmorySessionState) {
-    let observers = lock.withLock { () -> [@Sendable (AfilmorySessionState) -> Void] in
+    let observers = lock.withLock { () -> [AfilmorySessionObserver] in
       self.state = state
       return Array(self.observers.values)
     }
+    synchronizeUploadContext(state)
     notify(observers, state: state)
   }
 
@@ -214,21 +293,21 @@ final class AfilmorySessionStore: @unchecked Sendable {
     notify(snapshot.1, state: snapshot.0)
   }
 
+  private func synchronizeUploadContext(_ state: AfilmorySessionState) {
+    if let session = state.session {
+      ShareUploadContextStore.update(session: session)
+    } else if state == .signedOut {
+      ShareUploadContextStore.clear()
+    }
+  }
+
   private func notify(
-    _ observers: [@Sendable (AfilmorySessionState) -> Void],
+    _ observers: [AfilmorySessionObserver],
     state: AfilmorySessionState
   ) {
     for observer in observers {
       observer(state)
     }
-  }
-
-  private static var cookieQuery: [String: Any] {
-    [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: cookieService,
-      kSecAttrAccount as String: cookieAccount,
-    ]
   }
 
   private static func normalizedBaseURL(_ value: String) -> String? {

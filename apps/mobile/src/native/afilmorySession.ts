@@ -2,7 +2,17 @@ import { requireNativeModule } from 'expo'
 import Constants from 'expo-constants'
 import { Platform } from 'react-native'
 
+import type { SessionInfo } from '@/modules/auth/types'
+
 export type AfilmoryAppVariant = 'local' | 'production'
+
+export type NativeSessionStatus = 'failed' | 'loading' | 'signedIn' | 'signedOut'
+
+export interface NativeSessionSnapshot {
+  error?: string
+  session: SessionInfo | null
+  status: NativeSessionStatus
+}
 
 export interface AfilmoryBuildConfiguration {
   allowsApiEnvironmentOverride: boolean
@@ -13,8 +23,10 @@ export interface AfilmoryBuildConfiguration {
 }
 
 interface AfilmorySessionNativeModule {
+  addListener: (event: 'onSessionChange', listener: (snapshot: NativeSessionSnapshot) => void) => { remove: () => void }
   clearSession: () => void
   getBuildConfiguration: () => AfilmoryBuildConfiguration
+  getSessionSnapshot: () => NativeSessionSnapshot
   hasStoredCookie: () => boolean
   registerSession: (cookie: string) => void
   setApiEnvironment: (
@@ -46,6 +58,20 @@ export function getBuildConfiguration(): AfilmoryBuildConfiguration {
   catch {
     return fallbackBuildConfiguration
   }
+}
+
+export function getNativeSessionSnapshot(): NativeSessionSnapshot | null {
+  try {
+    return nativeSession?.getSessionSnapshot() ?? null
+  }
+  catch {
+    return null
+  }
+}
+
+export function addNativeSessionListener(listener: (snapshot: NativeSessionSnapshot) => void): () => void {
+  const subscription = nativeSession?.addListener('onSessionChange', listener)
+  return () => subscription?.remove()
 }
 
 export function registerNativeSession(cookie: string): void {
