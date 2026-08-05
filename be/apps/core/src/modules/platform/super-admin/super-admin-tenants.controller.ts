@@ -3,6 +3,7 @@ import { DbAccessor } from '@core/database/database.provider'
 import { PlatformRoles } from '@core/guards/roles.decorator'
 import { BypassResponseTransform } from '@core/interceptors/response-transform.decorator'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
+import { BillingEntitlementService } from '@core/modules/platform/billing/billing-entitlement.service'
 import { BillingPlanService } from '@core/modules/platform/billing/billing-plan.service'
 import { BillingUsageService } from '@core/modules/platform/billing/billing-usage.service'
 import { ManagedStorageService } from '@core/modules/platform/managed-storage/managed-storage.service'
@@ -29,6 +30,7 @@ export class SuperAdminTenantController {
     private readonly tenantService: TenantService,
     private readonly dataManagementService: DataManagementService,
     private readonly billingPlanService: BillingPlanService,
+    private readonly billingEntitlements: BillingEntitlementService,
     private readonly billingUsageService: BillingUsageService,
     private readonly managedStorageService: ManagedStorageService,
     private readonly systemSettings: SystemSettingService,
@@ -46,7 +48,7 @@ export class SuperAdminTenantController {
       .orderBy(desc(photoAssets.createdAt))
 
     return {
-      photos: photos.map((p) => ({
+      photos: photos.map(p => ({
         ...p,
         publicUrl: p.manifest.data.thumbnailUrl,
       })),
@@ -71,15 +73,15 @@ export class SuperAdminTenantController {
 
     const { items: tenantAggregates, total } = tenantResult
 
-    const tenantIds = tenantAggregates.map((aggregate) => aggregate.tenant.id)
+    const tenantIds = tenantAggregates.map(aggregate => aggregate.tenant.id)
     const usageTotalsMap = await this.billingUsageService.getUsageTotalsForTenants(tenantIds)
-    const storageUsageMap =
-      managedProviderKey && tenantIds.length > 0
+    const storageUsageMap
+      = managedProviderKey && tenantIds.length > 0
         ? await this.managedStorageService.getUsageTotalsForTenants(managedProviderKey, tenantIds)
         : {}
 
     return {
-      tenants: tenantAggregates.map((aggregate) => ({
+      tenants: tenantAggregates.map(aggregate => ({
         ...aggregate.tenant,
         usageTotals: usageTotalsMap[aggregate.tenant.id] ?? [],
         storageUsage: storageUsageMap[aggregate.tenant.id] ?? null,
@@ -110,15 +112,15 @@ export class SuperAdminTenantController {
     ])
 
     const { items: tenantAggregates, total } = tenantResult
-    const tenantIds = tenantAggregates.map((aggregate) => aggregate.tenant.id)
+    const tenantIds = tenantAggregates.map(aggregate => aggregate.tenant.id)
 
-    const storageUsageMap =
-      managedProviderKey && tenantIds.length > 0
+    const storageUsageMap
+      = managedProviderKey && tenantIds.length > 0
         ? await this.managedStorageService.getUsageTotalsForTenants(managedProviderKey, tenantIds)
         : {}
 
     return {
-      tenants: tenantAggregates.map((aggregate) => ({
+      tenants: tenantAggregates.map(aggregate => ({
         ...aggregate.tenant,
         storageUsage: storageUsageMap[aggregate.tenant.id] ?? null,
       })),
@@ -133,13 +135,23 @@ export class SuperAdminTenantController {
 
   @Patch('/:tenantId/plan')
   async updateTenantPlan(@Param() params: TenantIdParamDto, @Body() dto: UpdateTenantPlanDto) {
-    await this.billingPlanService.updateTenantPlan(params.tenantId, dto.planId as BillingPlanId)
+    await this.billingEntitlements.setManualGrant({
+      kind: 'application_plan',
+      sourceId: `superadmin:${params.tenantId}`,
+      tenantId: params.tenantId,
+      value: dto.planId as BillingPlanId,
+    })
     return { updated: true }
   }
 
   @Patch('/:tenantId/storage-plan')
   async updateTenantStoragePlan(@Param() params: TenantIdParamDto, @Body() dto: UpdateTenantStoragePlanDto) {
-    await this.tenantService.updateStoragePlan(params.tenantId, dto.storagePlanId)
+    await this.billingEntitlements.setManualGrant({
+      kind: 'managed_storage',
+      sourceId: `superadmin:${params.tenantId}`,
+      tenantId: params.tenantId,
+      value: dto.storagePlanId,
+    })
     return { updated: true }
   }
 

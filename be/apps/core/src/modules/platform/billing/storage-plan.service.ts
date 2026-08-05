@@ -49,9 +49,8 @@ export class StoragePlanService {
           },
           pricing[id],
           products[id],
-        ),
-      )
-      .filter((plan) => plan.isActive !== false)
+        ))
+      .filter(plan => plan.isActive !== false)
   }
 
   async getPlanById(planId: string): Promise<StoragePlanSummary | null> {
@@ -81,8 +80,8 @@ export class StoragePlanService {
     const storagePlanCapacity = storagePlan?.capacityBytes
     const storagePlanBytes = storagePlanCapacity === undefined ? 0 : storagePlanCapacity
 
-    const totalBytes =
-      appIncluded === Number.POSITIVE_INFINITY || storagePlanCapacity === null
+    const totalBytes
+      = appIncluded === Number.POSITIVE_INFINITY || storagePlanCapacity === null
         ? null
         : (appIncluded || 0) + (storagePlanBytes || 0)
 

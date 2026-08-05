@@ -20,6 +20,7 @@ export type BillingPlanQuotaOverride = Partial<BillingPlanQuota>
 export type BillingPlanOverrides = Record<BillingPlanId | string, BillingPlanQuotaOverride>
 
 export interface BillingPlanPaymentInfo {
+  appStoreProductId?: string | null
   creemProductId?: string | null
 }
 

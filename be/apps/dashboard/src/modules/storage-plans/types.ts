@@ -4,6 +4,7 @@ export interface ManagedStoragePricing {
 }
 
 export interface ManagedStoragePaymentInfo {
+  appStoreProductId?: string | null
   creemProductId?: string | null
 }
 

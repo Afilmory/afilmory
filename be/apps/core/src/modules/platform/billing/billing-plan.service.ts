@@ -117,7 +117,7 @@ export class BillingPlanService {
         payment: this.buildPaymentInfo(productConfigs[id]),
         pricing: this.buildPricingInfo(pricingConfigs[id]),
       }
-    }).filter((plan) => this.shouldExposePlan(plan.planId, plan.payment))
+    }).filter(plan => this.shouldExposePlan(plan.planId, plan.payment))
   }
 
   async ensurePhotoProcessingAllowance(tenantId: string, incomingItems: number): Promise<void> {
@@ -190,11 +190,12 @@ export class BillingPlanService {
     if (!entry) {
       return undefined
     }
+    const appStoreProductId = normalizeString(entry.appStoreProductId)
     const creemProductId = normalizeString(entry.creemProductId)
-    if (!creemProductId) {
+    if (!appStoreProductId && !creemProductId) {
       return undefined
     }
-    return { creemProductId }
+    return { appStoreProductId, creemProductId }
   }
 
   private shouldExposePlan(planId: BillingPlanId, payment?: BillingPlanPaymentInfo): boolean {
@@ -202,7 +203,7 @@ export class BillingPlanService {
       return true
     }
 
-    return Boolean(payment?.creemProductId)
+    return Boolean(payment?.appStoreProductId || payment?.creemProductId)
   }
 
   private buildPricingInfo(entry?: BillingPlanPricing): BillingPlanPricing | undefined {

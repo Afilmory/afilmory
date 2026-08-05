@@ -4,6 +4,7 @@ import { useCallback, useRef } from 'react'
 
 import { useTranslation } from '@/i18n'
 import { useAuth } from '@/modules/auth/sessionStore'
+import { isMobileWorkspaceReady, useMobileOnboarding } from '@/modules/onboarding/onboardingStore'
 import { createDevLabShortcutState, registerDevLabTabPress } from '@/modules/shell/devLabShortcut'
 import { getAvailableTabNames, shouldShowTabBar } from '@/modules/shell/tabAccess'
 import { useTheme } from '@/theme/useTheme'
@@ -12,11 +13,13 @@ export default function TabLayout() {
   const { palette } = useTheme()
   const { t } = useTranslation()
   const auth = useAuth()
+  const onboarding = useMobileOnboarding()
   const router = useRouter()
   const segments = useSegments() as string[]
   const isStudio = segments.includes('studio')
   const isExplore = segments.includes('explore')
-  const availableTabs = getAvailableTabNames(auth.status)
+  const workspaceReady = isMobileWorkspaceReady(onboarding)
+  const availableTabs = getAvailableTabNames(auth.status, workspaceReady)
   const isSignedOut = auth.status === 'signedOut'
   const devLabShortcutStateRef = useRef(createDevLabShortcutState())
   const handleTabPress = useCallback(
@@ -40,6 +43,10 @@ export default function TabLayout() {
   }
 
   if (isSignedOut && !isExplore) {
+    return <Redirect href="/explore" />
+  }
+
+  if (auth.status === 'signedIn' && !workspaceReady && !isExplore) {
     return <Redirect href="/explore" />
   }
 

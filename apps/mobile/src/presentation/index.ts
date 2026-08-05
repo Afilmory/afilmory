@@ -7,4 +7,4 @@ export {
   usePageRuntime,
 } from './page'
 export { PresentationHost } from './PresentationHost'
-export { present, type PresentationResult } from './presentationStore'
+export { cancelPresentation, present, type PresentationResult, usePresentationSessions } from './presentationStore'

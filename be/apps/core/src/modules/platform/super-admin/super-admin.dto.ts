@@ -27,6 +27,7 @@ const planProductFields = (() => {
   const fields: Record<string, z.ZodTypeAny> = {}
   for (const planId of BILLING_PLAN_IDS) {
     fields[`billingPlan.${planId}.payment.creemProductId`] = z.string().trim().min(1).nullable().optional()
+    fields[`billingPlan.${planId}.payment.appStoreProductId`] = z.string().trim().min(1).nullable().optional()
   }
   return fields
 })()

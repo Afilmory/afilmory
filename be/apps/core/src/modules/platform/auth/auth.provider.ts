@@ -5,9 +5,8 @@ import { DrizzleProvider } from '@core/database/database.provider'
 import { BizException } from '@core/errors'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
 import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/billing-plan.constants'
-import { BillingPlanService } from '@core/modules/platform/billing/billing-plan.service'
 import type { BillingPlanId } from '@core/modules/platform/billing/billing-plan.types'
-import { StoragePlanService } from '@core/modules/platform/billing/storage-plan.service'
+import { BillingReconciliationService } from '@core/modules/platform/billing/billing-reconciliation.service'
 import type { FlatSubscriptionEvent } from '@creem_io/better-auth'
 import { creem } from '@creem_io/better-auth'
 import type { OnModuleInit } from '@tsuki-hono/common'
@@ -49,8 +48,7 @@ export class AuthProvider implements OnModuleInit {
     private readonly memberships: WorkspaceMembershipService,
     private readonly appleAuthorizations: AppleAuthorizationService,
     private readonly appleClientSecrets: AppleClientSecretService,
-    private readonly billingPlanService: BillingPlanService,
-    private readonly storagePlanService: StoragePlanService,
+    private readonly billingReconciliation: BillingReconciliationService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -298,23 +296,45 @@ export class AuthProvider implements OnModuleInit {
                 onCheckoutCompleted: async (data) => {
                   await this.handleCreemWebhook({
                     event: data.webhookEventType,
+                    eventId: data.webhookId,
                     metadata: this.mergeMetadata(data.metadata, data.subscription?.metadata),
-                    status: data.subscription?.status ?? null,
+                    status: data.subscription?.status ?? 'active',
                     subscriptionId: data.subscription?.id ?? null,
-                    defaultGrant: true,
+                    productId: data.product.id,
+                    periodStart: this.toIsoDate(data.subscription?.current_period_start_date),
+                    periodEnd: this.toIsoDate(data.subscription?.current_period_end_date),
+                    providerUpdatedAt: this.toIsoDate(data.webhookCreatedAt),
                   })
                 },
                 // onRefundCreated: async (data: FlatRefundCreated) => {
                 //   await this.handleCreemRefundCreated(data)
                 // },
                 onSubscriptionCanceled: async (data) => {
-                  await this.handleCreemSubscriptionEvent(data, true)
+                  await this.handleCreemSubscriptionEvent(data, false, true)
                 },
                 onSubscriptionExpired: async (data) => {
                   await this.handleCreemSubscriptionEvent(data, true)
                 },
                 onSubscriptionUpdate: async (data) => {
                   await this.handleCreemSubscriptionEvent(data, false)
+                },
+                onSubscriptionActive: async (data) => {
+                  await this.handleCreemSubscriptionEvent(data, false)
+                },
+                onSubscriptionTrialing: async (data) => {
+                  await this.handleCreemSubscriptionEvent(data, false)
+                },
+                onSubscriptionPaid: async (data) => {
+                  await this.handleCreemSubscriptionEvent(data, false)
+                },
+                onSubscriptionUnpaid: async (data) => {
+                  await this.handleCreemSubscriptionEvent(data, false)
+                },
+                onSubscriptionPastDue: async (data) => {
+                  await this.handleCreemSubscriptionEvent(data, false)
+                },
+                onSubscriptionPaused: async (data) => {
+                  await this.handleCreemSubscriptionEvent(data, true)
                 },
               }),
             ]
@@ -383,25 +403,52 @@ export class AuthProvider implements OnModuleInit {
     return await this.createAuthForEndpoint(tenantSlug, options, tenant.id)
   }
 
-  private async handleCreemSubscriptionEvent(data: FlatSubscriptionEvent<string>, forceRevoke: boolean): Promise<void> {
+  private async handleCreemSubscriptionEvent(
+    data: FlatSubscriptionEvent<string>,
+    forceRevoke: boolean,
+    cancelAtPeriodEnd = false,
+  ): Promise<void> {
     await this.handleCreemWebhook({
       event: data.webhookEventType,
+      eventId: data.webhookId,
       metadata: this.mergeMetadata(data.metadata),
       status: data.status,
       subscriptionId: data.id,
+      productId: data.product.id,
+      periodStart: this.toIsoDate(data.current_period_start_date),
+      periodEnd: this.toIsoDate(data.current_period_end_date),
+      providerUpdatedAt: this.toIsoDate(data.webhookCreatedAt) ?? this.toIsoDate(data.updated_at),
+      cancelAtPeriodEnd,
       forceRevoke,
     })
   }
 
   private async handleCreemWebhook(params: {
+    cancelAtPeriodEnd?: boolean
     event: string
+    eventId: string
     metadata?: Record<string, unknown> | null
+    periodEnd?: string | null
+    periodStart?: string | null
+    productId: string
+    providerUpdatedAt?: string | null
     status?: string | null
     subscriptionId?: string | null
-    defaultGrant?: boolean
     forceRevoke?: boolean
   }): Promise<void> {
-    const { event, metadata, status, subscriptionId, defaultGrant = false, forceRevoke = false } = params
+    const {
+      cancelAtPeriodEnd = false,
+      event,
+      eventId,
+      metadata,
+      periodEnd,
+      periodStart,
+      productId,
+      providerUpdatedAt,
+      status,
+      subscriptionId,
+      forceRevoke = false,
+    } = params
     const tenantId = this.extractMetadataValue(metadata ?? undefined, 'tenantId')
     const planId = this.extractPlanIdFromMetadata(metadata ?? undefined)
     const storagePlanId = this.extractStoragePlanIdFromMetadata(metadata ?? undefined)
@@ -411,21 +458,34 @@ export class AuthProvider implements OnModuleInit {
       return
     }
 
-    if (subscriptionId) {
-      await this.attachSubscriptionTenant(subscriptionId, tenantId)
-    }
-
-    const shouldGrant = this.shouldGrantStatus(status, event, defaultGrant, forceRevoke)
-    if (shouldGrant === null) {
-      logger.warn(`[AuthProvider] Creem ${event} event for tenant ${tenantId} missing actionable status, skipping`)
-      return
-    }
-    if (shouldGrant) {
-      await this.applyPlanUpdates({ tenantId, planId, storagePlanId, event })
+    if (!subscriptionId) {
+      logger.warn(`[AuthProvider] Creem ${event} event missing a subscription ID`)
       return
     }
 
-    await this.applyRevocation({ tenantId, planId, storagePlanId, event })
+    if (!productId) {
+      logger.warn(`[AuthProvider] Creem ${event} event missing a product ID`)
+      return
+    }
+
+    await this.attachSubscriptionTenant(subscriptionId, tenantId)
+    await this.billingReconciliation.reconcileCreem({
+      applicationPlanId: planId,
+      billingOwnerUserId: this.extractMetadataValue(metadata ?? undefined, 'referenceId'),
+      cancelAtPeriodEnd,
+      eventId,
+      eventType: event,
+      externalSubscriptionId: subscriptionId,
+      forceRevoke,
+      periodEnd,
+      periodStart,
+      productId,
+      providerUpdatedAt,
+      status,
+      storagePlanId,
+      tenantId,
+    })
+    logger.info(`[AuthProvider] Reconciled Creem ${event} for tenant ${tenantId}`)
   }
 
   private async attachSubscriptionTenant(subscriptionId: string, tenantId: string): Promise<void> {
@@ -444,112 +504,6 @@ export class AuthProvider implements OnModuleInit {
     return Object.keys(merged).length > 0 ? merged : null
   }
 
-  private shouldGrantStatus(
-    status: string | null | undefined,
-    event: string,
-    defaultGrant: boolean,
-    forceRevoke: boolean,
-  ): boolean | null {
-    if (forceRevoke) {
-      return false
-    }
-    const normalized = status?.toLowerCase() ?? null
-    const grantStatuses = new Set(['active', 'trialing', 'paid'])
-
-    if (event === 'checkout.completed') {
-      return true
-    }
-
-    if (normalized && grantStatuses.has(normalized)) {
-      return true
-    }
-
-    if (event === 'subscription.update') {
-      if (!normalized) {
-        return defaultGrant ? true : null
-      }
-      return grantStatuses.has(normalized)
-    }
-
-    if (!normalized && !defaultGrant) {
-      return null
-    }
-
-    return defaultGrant
-  }
-
-  private async applyPlanUpdates(params: {
-    tenantId: string
-    planId: BillingPlanId | null
-    storagePlanId: string | null
-    event: string
-  }): Promise<void> {
-    const { tenantId, planId, storagePlanId, event } = params
-    let handled = false
-
-    if (planId) {
-      handled = true
-      try {
-        await this.billingPlanService.updateTenantPlan(tenantId, planId)
-        logger.info(`[AuthProvider] Tenant ${tenantId} set to billing plan ${planId} via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to update tenant ${tenantId} billing plan from Creem (${event})`, error)
-      }
-    }
-
-    if (storagePlanId) {
-      handled = true
-      try {
-        await this.storagePlanService.updateTenantPlan(tenantId, storagePlanId)
-        logger.info(`[AuthProvider] Tenant ${tenantId} storage plan set to ${storagePlanId} via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to update tenant ${tenantId} storage plan from Creem (${event})`, error)
-      }
-    }
-
-    if (!handled) {
-      logger.warn(`[AuthProvider] Creem ${event} event for tenant ${tenantId} missing plan metadata`)
-    }
-  }
-
-  private async applyRevocation(params: {
-    tenantId: string
-    planId: BillingPlanId | null
-    storagePlanId: string | null
-    event: string
-  }): Promise<void> {
-    const { tenantId, planId, storagePlanId, event } = params
-    let handled = false
-
-    if (planId) {
-      handled = true
-      try {
-        await this.billingPlanService.updateTenantPlan(tenantId, 'free')
-        logger.info(`[AuthProvider] Tenant ${tenantId} downgraded to free via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to downgrade tenant ${tenantId} after Creem ${event}`, error)
-      }
-    }
-
-    if (storagePlanId) {
-      handled = true
-      try {
-        await this.storagePlanService.updateTenantPlan(tenantId, null)
-        logger.info(`[AuthProvider] Tenant ${tenantId} storage plan cleared via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to clear tenant ${tenantId} storage plan after Creem ${event}`, error)
-      }
-    }
-
-    if (!handled) {
-      logger.warn(`[AuthProvider] Creem ${event} event for tenant ${tenantId} missing plan metadata`)
-    }
-  }
-
   private extractPlanIdFromMetadata(metadata?: Record<string, unknown>): BillingPlanId | null {
     const planId = this.extractMetadataValue(metadata, 'planId')
     if (!planId) {
@@ -563,6 +517,15 @@ export class AuthProvider implements OnModuleInit {
 
   private extractStoragePlanIdFromMetadata(metadata?: Record<string, unknown>): string | null {
     return this.extractMetadataValue(metadata, 'storagePlanId')
+  }
+
+  private toIsoDate(value: Date | number | string | null | undefined): string | null {
+    if (value === null || value === undefined) {
+      return null
+    }
+    const numericValue = typeof value === 'number' && value < 10_000_000_000 ? value * 1000 : value
+    const date = new Date(numericValue)
+    return Number.isNaN(date.getTime()) ? null : date.toISOString()
   }
 
   private extractMetadataValue(metadata: Record<string, unknown> | undefined, key: string): string | null {

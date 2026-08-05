@@ -60,6 +60,12 @@ const PLAN_PAYMENT_FIELDS = [
     descriptionKey: 'system.sections.billing.fields.payment.creem-product.description',
     placeholderKey: 'system.sections.billing.fields.payment.creem-product.placeholder',
   },
+  {
+    suffix: 'appStoreProductId',
+    titleKey: 'system.sections.billing.fields.payment.app-store-product.title',
+    descriptionKey: 'system.sections.billing.fields.payment.app-store-product.description',
+    placeholderKey: 'system.sections.billing.fields.payment.app-store-product.placeholder',
+  },
 ] as const
 
 function buildBillingPlanGroups(t: UiSchemaTFunction): ReadonlyArray<UiNode<SystemSettingField>> {

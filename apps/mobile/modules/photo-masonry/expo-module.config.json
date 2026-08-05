@@ -1,7 +1,7 @@
 {
   "platforms": ["apple"],
   "apple": {
-    "modules": ["AfilmorySessionModule", "PhotoMasonryModule", "NativePagesModule"],
+    "modules": ["AfilmorySessionModule", "PhotoMasonryModule", "NativePagesModule", "StoreKitBillingModule"],
     "appDelegateSubscribers": ["PushAppDelegateSubscriber", "UploadAppDelegateSubscriber"]
   }
 }

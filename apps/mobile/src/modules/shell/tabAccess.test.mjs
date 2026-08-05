@@ -16,6 +16,12 @@ test('restores the complete tab set after authentication', () => {
   assert.equal(shouldShowTabBar('signedIn'), true)
 })
 
+test('keeps Explore available while a signed-in workspace is incomplete', () => {
+  assert.deepEqual(getAvailableTabNames('signedIn', false), ['explore'])
+  assert.equal(getDefaultTabPath('signedIn', false), '/explore')
+  assert.equal(shouldShowTabBar('signedIn'), true)
+})
+
 test('does not expose navigation while authentication is loading', () => {
   assert.deepEqual(getAvailableTabNames('loading'), [])
   assert.equal(getDefaultTabPath('loading'), null)

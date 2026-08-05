@@ -29,7 +29,7 @@ export class BillingController {
   }
 
   @Get('plan')
-  async getCurrentPlan(): Promise<{ plan: BillingPlanSummary; availablePlans: BillingPlanSummary[] }> {
+  async getCurrentPlan(): Promise<{ plan: BillingPlanSummary, availablePlans: BillingPlanSummary[] }> {
     const [plan, availablePlans] = await Promise.all([
       this.billingPlanService.getCurrentPlanSummary(),
       this.billingPlanService.getPublicPlanSummaries(),

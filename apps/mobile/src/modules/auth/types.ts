@@ -14,6 +14,8 @@ export interface AccountDeletionImpact {
   proofMethods: AccountDeletionProofMethod[]
   subscriptions: Array<{
     id: string
+    provider: 'app_store' | 'creem'
+    requiresExternalCancellation: boolean
     status: string
     subscriptionId: string | null
     tenantId: string | null

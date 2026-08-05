@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from 'react'
+
 import type { PageDefinition, PageDefinitionBase, PagePresentationOptions } from './page'
 
 export type PresentationResult<TResult> = { status: 'cancelled' } | { status: 'completed', value: TResult }
@@ -11,9 +13,11 @@ export interface PresentationSession {
   page: PageDefinitionBase
   params: unknown
   presentation: PagePresentationOptions
+  visible: boolean
 }
 
 interface StoredPresentationSession extends PresentationSession {
+  pendingResult?: PresentationResult<unknown>
   resolve: (result: PresentationResult<unknown>) => void
 }
 
@@ -23,11 +27,12 @@ let publicSessions: readonly PresentationSession[] = []
 const listeners = new Set<() => void>()
 
 function emit() {
-  publicSessions = sessions.map(({ id, page, params, presentation }) => ({
+  publicSessions = sessions.map(({ id, page, params, presentation, visible }) => ({
     id,
     page,
     params,
     presentation,
+    visible,
   }))
   for (const listener of listeners) {
     listener()
@@ -36,7 +41,14 @@ function emit() {
 
 function settle(id: number, result: PresentationResult<unknown>) {
   const session = sessions.find(candidate => candidate.id === id)
-  if (!session) {
+  if (!session || !session.visible) {
+    return
+  }
+
+  if (!session.presentation.detents) {
+    sessions = sessions.map(candidate =>
+      candidate.id === id ? { ...candidate, pendingResult: result, visible: false } : candidate)
+    emit()
     return
   }
 
@@ -61,6 +73,7 @@ export function present<TParams, TResult>(
         params,
         presentation: { ...page.presentation, ...presentation },
         resolve: result => resolve(result as PresentationResult<TResult>),
+        visible: true,
       },
     ]
     emit()
@@ -77,6 +90,17 @@ export function cancelPresentation(id: number): void {
   settle(id, { status: 'cancelled' })
 }
 
+export function finalizePresentation(id: number): void {
+  const session = sessions.find(candidate => candidate.id === id)
+  if (!session) {
+    return
+  }
+
+  sessions = sessions.filter(candidate => candidate.id !== id)
+  emit()
+  session.resolve(session.pendingResult ?? { status: 'cancelled' })
+}
+
 export function getPresentationSnapshot(): readonly PresentationSession[] {
   return publicSessions
 }
@@ -86,4 +110,8 @@ export function subscribeToPresentations(listener: () => void): () => void {
   return () => {
     listeners.delete(listener)
   }
+}
+
+export function usePresentationSessions(): readonly PresentationSession[] {
+  return useSyncExternalStore(subscribeToPresentations, getPresentationSnapshot, getPresentationSnapshot)
 }

@@ -194,7 +194,7 @@ export type BillingPlanQuotaFieldKey = (typeof BILLING_PLAN_QUOTA_KEYS)[number]
 const BILLING_PLAN_PRICING_KEYS = ['monthlyPrice', 'currency'] as const
 export type BillingPlanPricingFieldKey = (typeof BILLING_PLAN_PRICING_KEYS)[number]
 
-const BILLING_PLAN_PAYMENT_KEYS = ['creemProductId'] as const
+const BILLING_PLAN_PAYMENT_KEYS = ['creemProductId', 'appStoreProductId'] as const
 export type BillingPlanPaymentFieldKey = (typeof BILLING_PLAN_PAYMENT_KEYS)[number]
 
 export type BillingPlanQuotaField = `billingPlan.${BillingPlanId}.quota.${BillingPlanQuotaFieldKey}`

@@ -1,6 +1,7 @@
 import 'dotenv/config'
 
 import { resolve } from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 import tailwindcss from '@tailwindcss/vite'
@@ -19,7 +20,7 @@ const ROOT = fileURLToPath(new URL('./', import.meta.url))
 const isSaas = process.env.SAAS === '1'
 
 export default defineConfig({
-  base: isSaas ? 'https://static.afilmory.art/platform/' : '/',
+  base: isSaas ? 'https://static.afilmory.art/platform/' : '/platform/',
   plugins: [
     codeInspectorPlugin({
       bundler: 'vite',
@@ -86,7 +87,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(ROOT, 'index.html'),
+        'main': resolve(ROOT, 'index.html'),
         'tenant-missing': resolve(ROOT, 'tenant-missing.html'),
         'tenant-restricted': resolve(ROOT, 'tenant-restricted.html'),
         'tenant-suspended': resolve(ROOT, 'tenant-suspended.html'),

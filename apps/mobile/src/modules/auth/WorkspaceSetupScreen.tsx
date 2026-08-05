@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import { useTranslation } from '@/i18n'
+import { accountSettingsPage } from '@/modules/auth/accountSettingsPage'
+import { refreshMobileOnboarding } from '@/modules/onboarding/onboardingStore'
 import { usePageRuntime } from '@/presentation'
 import type { Palette } from '@/theme/palette'
 import { controlH, font, radiusLg } from '@/theme/tokens'
@@ -24,7 +26,7 @@ function normalizeSlug(value: string): string {
 }
 
 export function WorkspaceSetupScreen() {
-  const { finish } = usePageRuntime()
+  const { finish, present } = usePageRuntime<undefined, 'created' | 'signed-out'>()
   const { palette } = useTheme()
   const { t } = useTranslation()
   const styles = useMemo(() => createStyles(palette), [palette])
@@ -45,7 +47,8 @@ export function WorkspaceSetupScreen() {
     setError(null)
     try {
       await createInitialWorkspace(normalizedName, normalizedSlug)
-      finish()
+      await refreshMobileOnboarding()
+      finish('created')
     }
     catch {
       setError(t('workspace.setup.failed'))
@@ -121,7 +124,15 @@ export function WorkspaceSetupScreen() {
         accessibilityRole="button"
         disabled={busy}
         style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-        onPress={() => void signOut().then(() => finish())}
+        onPress={() => void present(accountSettingsPage, { fromOnboarding: true })}
+      >
+        <Text style={styles.secondaryLabel}>{t('account.settings.title')}</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        disabled={busy}
+        style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+        onPress={() => void signOut().then(() => finish('signed-out'))}
       >
         <Text style={styles.secondaryLabel}>{t('common.signOut')}</Text>
       </Pressable>

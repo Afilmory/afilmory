@@ -18,6 +18,8 @@ export interface AccountDeletionWorkspaceImpact {
 
 export interface AccountDeletionSubscriptionImpact {
   id: string
+  provider: 'app_store' | 'creem'
+  requiresExternalCancellation: boolean
   status: string
   subscriptionId: string | null
   tenantId: string | null

@@ -5,6 +5,9 @@ import type { StaticDashboardService } from './static-dashboard.service'
 import { STATIC_DASHBOARD_BASENAME } from './static-dashboard.service'
 import type { StaticWebService } from './static-web.service'
 
+const LEGACY_DASHBOARD_PREFIX_PATTERN = /^\/static\/dashboard/
+const TRAILING_SLASH_PATTERN = /\/+$/
+
 export abstract class StaticBaseController {
   constructor(
     protected readonly staticWebService: StaticWebService,
@@ -46,7 +49,7 @@ export abstract class StaticBaseController {
     }
 
     if (this.isLegacyDashboardPath(pathname)) {
-      return pathname.replace(/^\/static\/dashboard/, STATIC_DASHBOARD_BASENAME)
+      return pathname.replace(LEGACY_DASHBOARD_PREFIX_PATTERN, STATIC_DASHBOARD_BASENAME)
     }
 
     return pathname
@@ -89,7 +92,8 @@ export abstract class StaticBaseController {
   protected shouldAllowTenantlessDashboardAccess(pathname: string): boolean {
     const normalized = this.normalizePathname(pathname)
     const welcomePath = `${STATIC_DASHBOARD_BASENAME}/welcome`
-    return normalized === welcomePath
+    const storageHandoffPath = `${STATIC_DASHBOARD_BASENAME}/storage-handoff`
+    return normalized === welcomePath || normalized === storageHandoffPath
   }
 
   protected normalizePathname(pathname: string): string {
@@ -105,7 +109,7 @@ export abstract class StaticBaseController {
       return '/'
     }
     if (trimmed.length > 1 && trimmed.endsWith('/')) {
-      return trimmed.replace(/\/+$/, '')
+      return trimmed.replace(TRAILING_SLASH_PATTERN, '')
     }
     return trimmed
   }

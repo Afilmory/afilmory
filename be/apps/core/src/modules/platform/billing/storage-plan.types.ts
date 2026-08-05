@@ -14,6 +14,7 @@ export interface StoragePlanPricing {
 }
 
 export interface StoragePlanPaymentInfo {
+  appStoreProductId?: string | null
   creemProductId?: string | null
 }
 

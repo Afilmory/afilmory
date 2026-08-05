@@ -2,12 +2,15 @@ import {
   accountDeletionRequests,
   authUsers,
   authVerifications,
+  billingSubjects,
+  billingSubscriptions,
   creemSubscriptions,
   tenantMemberships,
   tenants,
 } from '@afilmory/db'
 import { env } from '@afilmory/env'
 import { DbAccessor } from '@core/database/database.provider'
+import { BillingEntitlementService } from '@core/modules/platform/billing/billing-entitlement.service'
 import { DataManagementService } from '@core/modules/platform/data-management/data-management.service'
 import { cancelSubscription } from '@creem_io/better-auth/server'
 import { createLogger } from '@tsuki-hono/common'
@@ -38,6 +41,7 @@ export class AccountDeletionExecutor {
     private readonly dbAccessor: DbAccessor,
     private readonly apple: AppleAuthorizationService,
     private readonly dataManagement: DataManagementService,
+    private readonly entitlements: BillingEntitlementService,
   ) {}
 
   async process(requestId: string): Promise<void> {
@@ -110,10 +114,10 @@ export class AccountDeletionExecutor {
   private async resolveBilling(impact: AccountDeletionImpact): Promise<void> {
     const db = this.dbAccessor.get()
     for (const subscription of impact.subscriptions) {
-      if (['canceled', 'cancelled', 'expired'].includes(subscription.status.toLowerCase())) {
+      if (['canceled', 'cancelled', 'expired', 'revoked'].includes(subscription.status.toLowerCase())) {
         continue
       }
-      if (subscription.subscriptionId) {
+      if (subscription.provider === 'creem' && subscription.subscriptionId) {
         if (!env.CREEM_API_KEY) {
           throw new AccountDeletionStageError('CREEM_NOT_CONFIGURED')
         }
@@ -127,26 +131,15 @@ export class AccountDeletionExecutor {
           throw new AccountDeletionStageError('CREEM_CANCELLATION_FAILED', error)
         }
       }
-      await db
-        .update(creemSubscriptions)
-        .set({ cancelAtPeriodEnd: false, status: 'canceled', updatedAt: new Date().toISOString() })
-        .where(eq(creemSubscriptions.id, subscription.id))
-    }
-
-    const retainedTenantIds = impact.workspaces
-      .filter(workspace => workspace.action === 'transfer')
-      .map(workspace => workspace.tenantId)
-    const subscriptionTenantIds = new Set(
-      impact.subscriptions
-        .map(subscription => subscription.tenantId)
-        .filter((value): value is string => Boolean(value)),
-    )
-    const retainedWithBilling = retainedTenantIds.filter(tenantId => subscriptionTenantIds.has(tenantId))
-    if (retainedWithBilling.length > 0) {
-      await db
-        .update(tenants)
-        .set({ planId: 'free', storagePlanId: null, updatedAt: new Date().toISOString() })
-        .where(inArray(tenants.id, retainedWithBilling))
+      if (subscription.provider === 'creem' && subscription.subscriptionId) {
+        await db
+          .update(creemSubscriptions)
+          .set({ cancelAtPeriodEnd: false, status: 'canceled', updatedAt: new Date().toISOString() })
+          .where(eq(creemSubscriptions.creemSubscriptionId, subscription.subscriptionId))
+      }
+      if (subscription.tenantId) {
+        await this.entitlements.revokeSubscription(subscription.id, subscription.tenantId)
+      }
     }
   }
 
@@ -211,9 +204,21 @@ export class AccountDeletionExecutor {
         await tx.delete(tenants).where(eq(tenants.id, workspace.tenantId))
       }
 
+      const now = new Date().toISOString()
+      await tx
+        .update(billingSubjects)
+        .set({ billingOwnerUserId: null, tombstonedAt: now, updatedAt: now })
+        .where(eq(billingSubjects.billingOwnerUserId, userId))
+
       const subscriptionIds = impact.subscriptions.map(subscription => subscription.id)
       if (subscriptionIds.length > 0) {
-        await tx.delete(creemSubscriptions).where(inArray(creemSubscriptions.id, subscriptionIds))
+        await tx.delete(billingSubscriptions).where(inArray(billingSubscriptions.id, subscriptionIds))
+      }
+      const creemSubscriptionIds = impact.subscriptions
+        .filter(subscription => subscription.provider === 'creem' && subscription.subscriptionId)
+        .map(subscription => subscription.subscriptionId as string)
+      if (creemSubscriptionIds.length > 0) {
+        await tx.delete(creemSubscriptions).where(inArray(creemSubscriptions.creemSubscriptionId, creemSubscriptionIds))
       }
       const [user] = await tx
         .select({ email: authUsers.email })
@@ -232,7 +237,6 @@ export class AccountDeletionExecutor {
           )
       }
       await tx.delete(authUsers).where(eq(authUsers.id, userId))
-      const now = new Date().toISOString()
       await tx
         .update(accountDeletionRequests)
         .set({

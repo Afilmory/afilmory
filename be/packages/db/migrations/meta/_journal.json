@@ -141,6 +141,13 @@
       "when": 1785785111479,
       "tag": "0019_great_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1785868165232,
+      "tag": "0020_stiff_random",
+      "breakpoints": true
     }
   ]
 }

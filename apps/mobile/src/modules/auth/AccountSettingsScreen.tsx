@@ -3,6 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import { useTranslation } from '@/i18n'
+import { requestMobileOnboardingPresentation } from '@/modules/onboarding/onboardingPresentationRequestStore'
+import { useMobileOnboarding } from '@/modules/onboarding/onboardingStore'
+import { openStoreKitSubscriptionManagement } from '@/native/storeKitBilling'
 import { usePageRuntime } from '@/presentation'
 import type { Palette } from '@/theme/palette'
 import { controlH, font, radiusLg } from '@/theme/tokens'
@@ -13,11 +16,12 @@ import { deleteAccount, loadAccountDeletionImpact, signOut, useAuth } from './se
 import type { AccountDeletionImpact, AccountDeletionProof } from './types'
 
 export function AccountSettingsScreen() {
-  const { finish, params } = usePageRuntime<{ startDeletion?: boolean }>()
+  const { finish, params } = usePageRuntime<{ fromOnboarding?: boolean, startDeletion?: boolean }>()
   const { palette } = useTheme()
   const { t } = useTranslation()
   const styles = useMemo(() => createStyles(palette), [palette])
   const auth = useAuth()
+  const onboarding = useMobileOnboarding()
   const [appleAvailable, setAppleAvailable] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -113,13 +117,30 @@ export function AccountSettingsScreen() {
   }
 
   if (!impact) {
+    const needsOnboarding = onboarding.readiness?.state && onboarding.readiness.state !== 'ready'
     return (
       <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.pageTitle}>{t('account.settings.title')}</Text>
         <View style={styles.identityCard}>
           <Text style={styles.identityName}>{auth.session.user.name}</Text>
           <Text style={styles.identityEmail}>{auth.session.user.email}</Text>
         </View>
         <View style={styles.actionGroup}>
+          {needsOnboarding && !params.fromOnboarding ? (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.rowButton, pressed && styles.pressed]}
+                onPress={() => {
+                  requestMobileOnboardingPresentation()
+                  finish()
+                }}
+              >
+                <Text style={styles.accentLabel}>{t('onboarding.resume.action')}</Text>
+              </Pressable>
+              <View style={styles.divider} />
+            </>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             disabled={busy}
@@ -152,9 +173,13 @@ export function AccountSettingsScreen() {
   const supportsPassword = impact.proofMethods.includes('password')
   const supportsApple = impact.proofMethods.includes('apple') && appleAvailable
   const supportsRecentSession = impact.proofMethods.includes('recent-session')
+  const requiresAppStoreManagement = impact.subscriptions.some(
+    subscription => subscription.provider === 'app_store' && subscription.requiresExternalCancellation,
+  )
 
   return (
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <Text style={styles.pageTitle}>{t('account.settings.title')}</Text>
       <View style={styles.warning}>
         <Text style={styles.warningTitle}>{t('account.deletion.title')}</Text>
         <Text style={styles.description}>{t('account.deletion.description')}</Text>
@@ -178,6 +203,21 @@ export function AccountSettingsScreen() {
               </Text>
             </View>
           ))}
+        </View>
+      ) : null}
+
+      {requiresAppStoreManagement ? (
+        <View style={styles.subscriptionWarning}>
+          <Text style={styles.sectionTitle}>{t('account.deletion.appStoreTitle')}</Text>
+          <Text style={styles.description}>{t('account.deletion.appStoreDescription')}</Text>
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy}
+            style={({ pressed }) => [styles.rowButton, pressed && styles.pressed]}
+            onPress={() => void openStoreKitSubscriptionManagement()}
+          >
+            <Text style={styles.rowLabel}>{t('account.deletion.appStoreAction')}</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -261,6 +301,7 @@ export function AccountSettingsScreen() {
 
 function createStyles(palette: Palette) {
   return StyleSheet.create({
+    accentLabel: { color: palette.accentHi, fontFamily: font.ui, fontSize: 15, fontWeight: '600' },
     centered: { alignItems: 'center', flex: 1, justifyContent: 'center', padding: 24 },
     content: { gap: 20, padding: 20, paddingBottom: 48 },
     identityCard: {
@@ -272,6 +313,7 @@ function createStyles(palette: Palette) {
     },
     identityName: { color: palette.textPrimary, fontFamily: font.ui, fontSize: 18, fontWeight: '700' },
     identityEmail: { color: palette.textSecondary, fontFamily: font.ui, fontSize: 14 },
+    pageTitle: { color: palette.textPrimary, fontFamily: font.ui, fontSize: 24, fontWeight: '700' },
     actionGroup: {
       backgroundColor: palette.bgElement,
       borderCurve: 'continuous',
@@ -297,6 +339,15 @@ function createStyles(palette: Palette) {
       padding: 16,
     },
     warningTitle: { color: palette.danger, fontFamily: font.ui, fontSize: 20, fontWeight: '700' },
+    subscriptionWarning: {
+      backgroundColor: palette.accentDim,
+      borderColor: palette.accentLine,
+      borderCurve: 'continuous',
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      gap: 8,
+      padding: 16,
+    },
     description: { color: palette.textSecondary, fontFamily: font.ui, fontSize: 14, lineHeight: 21 },
     summarySection: { gap: 10 },
     sectionTitle: { color: palette.textPrimary, fontFamily: font.ui, fontSize: 14, fontWeight: '700' },

@@ -1,6 +1,8 @@
 import { useLocalSearchParams } from 'expo-router'
 import { useMemo } from 'react'
+import { StyleSheet, View } from 'react-native'
 
+import { OnboardingResumeBanner } from '@/modules/onboarding/OnboardingResumeBanner'
 import { NativePageView } from '@/native/NativePageView'
 
 export default function ExplorePage() {
@@ -23,8 +25,17 @@ export default function ExplorePage() {
     })
   }, [eventId, galleryName, gallerySlug])
 
-  return <NativePageView galleryRoute={galleryRoute} page="explore" />
+  return (
+    <View style={styles.root}>
+      <NativePageView galleryRoute={galleryRoute} page="explore" />
+      <OnboardingResumeBanner />
+    </View>
+  )
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+})
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value

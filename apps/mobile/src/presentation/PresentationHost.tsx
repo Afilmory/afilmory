@@ -1,5 +1,5 @@
 import { SymbolView } from 'expo-symbols'
-import { useCallback, useMemo, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScreenStack, ScreenStackItem } from 'react-native-screens'
@@ -14,12 +14,14 @@ import type { PresentationSession } from './presentationStore'
 import {
   cancelPresentation,
   completePresentation,
+  finalizePresentation,
   getPresentationSnapshot,
   present,
   subscribeToPresentations,
 } from './presentationStore'
 
 const ignoreRequestClose = () => {}
+const MODAL_DISMISS_FALLBACK_MS = 1000
 
 export function PresentationHost() {
   const sessions = useSyncExternalStore(subscribeToPresentations, getPresentationSnapshot, getPresentationSnapshot)
@@ -46,14 +48,24 @@ function PresentationModal({ session }: { session: PresentationSession }) {
   const { palette } = useTheme()
   const { animationType, dismissible, style } = session.presentation
   const { cancel, runtime } = useSessionRuntime(session)
+  const finalize = useCallback(() => finalizePresentation(session.id), [session.id])
+
+  useEffect(() => {
+    if (session.visible) {
+      return
+    }
+    const timer = setTimeout(finalize, MODAL_DISMISS_FALLBACK_MS)
+    return () => clearTimeout(timer)
+  }, [finalize, session.visible])
 
   return (
     <Modal
-      visible
+      visible={session.visible}
       allowSwipeDismissal={dismissible}
       animationType={animationType}
       backdropColor={palette.bgCanvas}
       presentationStyle={style}
+      onDismiss={finalize}
       onRequestClose={dismissible ? cancel : ignoreRequestClose}
     >
       <PageRuntimeProvider value={runtime}>
@@ -88,7 +100,7 @@ function PresentationSheet({ session }: { session: PresentationSession }) {
         screenId={`sheet-${session.id}`}
         sheetAllowedDetents={detents}
         sheetCornerRadius={radiusLg}
-        sheetGrabberVisible
+        sheetGrabberVisible={dismissible}
         stackPresentation="formSheet"
         onDismissed={onDismissed}
       >

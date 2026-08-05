@@ -10,6 +10,7 @@ import { i18n } from '@/i18n'
 import { addAppleCredentialRevokeListener } from '@/modules/auth/appleAuthentication'
 import { waitForAuthStorage } from '@/modules/auth/authStorage'
 import { clearLocalAuthentication, hydrateAuth } from '@/modules/auth/sessionStore'
+import { MobileOnboardingCoordinator } from '@/modules/onboarding/MobileOnboardingCoordinator'
 import { PresentationHost } from '@/presentation'
 import { useTheme as useAppTheme } from '@/theme/useTheme'
 
@@ -65,6 +66,7 @@ export default function RootLayout() {
                 {__DEV__ ? <Stack.Screen name="dev" /> : null}
               </Stack>
             ) : null}
+            <MobileOnboardingCoordinator />
             <PresentationHost />
           </ThemeProvider>
         </SafeAreaProvider>

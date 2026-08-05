@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
 
 import { settings } from '@afilmory/db'
@@ -33,12 +34,12 @@ export type SetSettingOptions = {
 
 declare module '@tsuki-hono/event-emitter' {
   interface Events {
-    'setting.updated': { tenantId: string; key: string; value: string }
-    'setting.deleted': { tenantId: string; key: string }
+    'setting.updated': { tenantId: string, key: string, value: string }
+    'setting.deleted': { tenantId: string, key: string }
   }
 }
 export type SettingEntryInput = {
-  [K in SettingKeyType]: { key: K; value: SettingValueMap[K]; options?: SetSettingOptions }
+  [K in SettingKeyType]: { key: K, value: SettingValueMap[K], options?: SetSettingOptions }
 }[SettingKeyType]
 
 function isSettingKey(key: string): key is SettingKeyType {
@@ -91,7 +92,7 @@ export class SettingService {
       .from(settings)
       .where(and(eq(settings.tenantId, tenantId), inArray(settings.key, uniqueKeys)))
 
-    const recordMap = new Map(records.map((record) => [record.key, record]))
+    const recordMap = new Map(records.map(record => [record.key, record]))
 
     return uniqueKeys.reduce<Record<string, string | null>>((acc, key) => {
       const record = recordMap.get(key)
@@ -129,8 +130,9 @@ export class SettingService {
 
     // If activeId exists and matches, return it
     if (activeId) {
-      const found = providers.find((provider) => provider.id === activeId) ?? null
-      if (found) return found
+      const found = providers.find(provider => provider.id === activeId) ?? null
+      if (found)
+        return found
     }
 
     // Fallback: if there is exactly one provider, treat it as active without mutating settings.
@@ -215,8 +217,8 @@ export class SettingService {
     }
   }
 
-  async getUiSchema(): Promise<SettingUiSchemaResponse> {
-    const rawValues = await this.getMany(SETTING_UI_SCHEMA_KEYS, {})
+  async getUiSchema(options?: SettingOption): Promise<SettingUiSchemaResponse> {
+    const rawValues = await this.getMany(SETTING_UI_SCHEMA_KEYS, options)
     const typedValues: SettingUiSchemaResponse['values'] = {}
 
     for (const key of SETTING_UI_SCHEMA_KEYS) {
