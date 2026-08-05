@@ -27,20 +27,18 @@ final class SwiftDataPhotoCacheRepository: PhotoCacheRepository, Sendable {
     let decoder = JSONDecoder()
     var photos: [GalleryPhoto] = []
     photos.reserveCapacity(rows.count)
-    var corruptedRows: [CachedPhoto] = []
+    var corruptedPhotoIds: [String] = []
     for row in rows {
       if let photo = try? decoder.decode(GalleryPhoto.self, from: row.payload) {
         photos.append(photo)
       } else {
-        corruptedRows.append(row)
+        corruptedPhotoIds.append(row.photoId)
       }
     }
 
-    if !corruptedRows.isEmpty {
-      for row in corruptedRows {
-        context.delete(row)
-      }
-      try? context.save()
+    if !corruptedPhotoIds.isEmpty {
+      let mutator = mutator
+      Task { await mutator.deleteCorruptedPhotos(feedKey: feedKey, photoIds: corruptedPhotoIds) }
     }
 
     return (photos, feed.etag)
@@ -125,6 +123,16 @@ private actor PhotoCacheMutator {
       modelContext.insert(CachedFeed(feedKey: feedKey, etag: etag, fetchedAt: Date(), photoCount: orderIndex))
     }
 
+    try? modelContext.save()
+  }
+
+  func deleteCorruptedPhotos(feedKey: String, photoIds: [String]) {
+    let idSet = Set(photoIds)
+    let descriptor = FetchDescriptor<CachedPhoto>(predicate: #Predicate<CachedPhoto> { $0.feedKey == feedKey })
+    let rows = (try? modelContext.fetch(descriptor)) ?? []
+    for row in rows where idSet.contains(row.photoId) {
+      modelContext.delete(row)
+    }
     try? modelContext.save()
   }
 

@@ -80,7 +80,7 @@ final class PhotoCacheRepositoryTests: XCTestCase {
     XCTAssertEqual(loaded?.photos.map(\.id), ["a"])
     XCTAssertEqual(loaded?.etag, "etag-1")
 
-    let remainingRows = try await fetchPhotoRows(feedKey: key.rawValue)
+    let remainingRows = try await waitForPhotoRows(feedKey: key.rawValue, toMatch: ["a"])
     XCTAssertEqual(remainingRows.map(\.photoId), ["a"])
   }
 
@@ -170,6 +170,24 @@ final class PhotoCacheRepositoryTests: XCTestCase {
   private func fetchPhotoRows(feedKey: String) throws -> [CachedPhoto] {
     let descriptor = FetchDescriptor<CachedPhoto>(predicate: #Predicate<CachedPhoto> { $0.feedKey == feedKey })
     return try container.mainContext.fetch(descriptor)
+  }
+
+  private func waitForPhotoRows(
+    feedKey: String,
+    toMatch expectedPhotoIds: [String],
+    timeout: TimeInterval = 2
+  ) async throws -> [CachedPhoto] {
+    let deadline = Date().addingTimeInterval(timeout)
+    while true {
+      let rows = try await fetchPhotoRows(feedKey: feedKey)
+      if rows.map(\.photoId).sorted() == expectedPhotoIds.sorted() {
+        return rows
+      }
+      if Date() >= deadline {
+        return rows
+      }
+      try await Task.sleep(nanoseconds: 20_000_000)
+    }
   }
 
   @MainActor
