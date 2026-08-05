@@ -5,6 +5,8 @@ import type { JWSTransactionDecodedPayload, ResponseBodyV2DecodedPayload } from 
 import { Environment, SignedDataVerifier } from '@apple/app-store-server-library'
 import { injectable } from 'tsyringe'
 
+import { BillingError } from '../../billing.error'
+
 const CERTIFICATE_PATTERN = /-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/g
 const WHITESPACE_PATTERN = /\s/g
 
@@ -40,10 +42,10 @@ export class AppStoreSignedDataService implements AppStoreSignedDataVerifier {
     }
     const roots = this.getRootCertificates()
     if (roots.length === 0) {
-      throw new Error('APP_STORE_ROOT_CERTIFICATES_NOT_CONFIGURED')
+      throw new BillingError('APP_STORE_ROOT_CERTIFICATES_NOT_CONFIGURED')
     }
     if (environment === Environment.PRODUCTION && !env.APP_STORE_APPLE_ID) {
-      throw new Error('APP_STORE_APPLE_ID_NOT_CONFIGURED')
+      throw new BillingError('APP_STORE_APPLE_ID_NOT_CONFIGURED')
     }
     const verifier = new SignedDataVerifier(
       roots,
@@ -59,14 +61,14 @@ export class AppStoreSignedDataService implements AppStoreSignedDataVerifier {
   private resolveUntrustedEnvironment(jws: string): Environment {
     const payloadPart = jws.split('.')[1]
     if (!payloadPart) {
-      throw new Error('APP_STORE_JWS_MALFORMED')
+      throw new BillingError('APP_STORE_JWS_MALFORMED')
     }
     let payload: Record<string, unknown>
     try {
       payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf8')) as Record<string, unknown>
     }
     catch {
-      throw new Error('APP_STORE_JWS_MALFORMED')
+      throw new BillingError('APP_STORE_JWS_MALFORMED')
     }
     const data = payload.data && typeof payload.data === 'object' ? (payload.data as Record<string, unknown>) : null
     const value = String(data?.environment ?? payload.environment ?? '')

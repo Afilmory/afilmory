@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import { STORAGE_PROVIDER_SECRET_PLACEHOLDER } from '@afilmory/utils'
 
-import { STORAGE_PROVIDER_SENSITIVE_FIELDS } from './storage-provider.constants'
+import { MANAGED_STORAGE_PROVIDER_ID, STORAGE_PROVIDER_SENSITIVE_FIELDS } from './storage-provider.constants'
 
 export interface BuilderStorageProvider {
   id: string
@@ -45,6 +45,10 @@ function normalizeProvider(input: unknown): BuilderStorageProvider | null {
   }
 }
 
+export function isByoStorageActive(activeProvider: string | null, byoProviderIds: ReadonlySet<string>): boolean {
+  return Boolean(activeProvider && activeProvider !== MANAGED_STORAGE_PROVIDER_ID && byoProviderIds.has(activeProvider))
+}
+
 export function parseStorageProviders(raw: string | null): BuilderStorageProvider[] {
   if (!raw) {
     return []
@@ -56,8 +60,9 @@ export function parseStorageProviders(raw: string | null): BuilderStorageProvide
       return []
     }
 
-    return parsed.map((item) => normalizeProvider(item)).filter((item): item is BuilderStorageProvider => item !== null)
-  } catch {
+    return parsed.map(item => normalizeProvider(item)).filter((item): item is BuilderStorageProvider => item !== null)
+  }
+  catch {
     return []
   }
 }
@@ -88,7 +93,7 @@ export function mergeStorageProviderSecrets(
   incoming: BuilderStorageProvider[],
   existing: BuilderStorageProvider[],
 ): BuilderStorageProvider[] {
-  const existingMap = new Map(existing.map((provider) => [provider.id, provider]))
+  const existingMap = new Map(existing.map(provider => [provider.id, provider]))
   const now = new Date().toISOString()
 
   return incoming.map((provider) => {
@@ -127,7 +132,7 @@ export function sanitizeStorageProviders(raw: string | null): string {
 export function prepareStorageProvidersForPersist(
   incomingRaw: string,
   existingRaw: string | null,
-): { stored: string; masked: string } {
+): { stored: string, masked: string } {
   const incomingProviders = parseStorageProviders(incomingRaw)
   const existingProviders = parseStorageProviders(existingRaw)
   const merged = mergeStorageProviderSecrets(incomingProviders, existingProviders)

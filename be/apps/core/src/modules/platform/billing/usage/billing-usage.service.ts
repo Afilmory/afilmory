@@ -6,8 +6,8 @@ import { getTenantContext, requireTenantContext } from '@core/modules/platform/t
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
-import type { BillingUsageEventType, BillingUsageUnit } from './billing.constants'
-import { DEFAULT_BILLING_USAGE_UNIT } from './billing.constants'
+import type { BillingUsageEventType, BillingUsageUnit } from './billing-usage.constants'
+import { DEFAULT_BILLING_USAGE_UNIT } from './billing-usage.constants'
 
 type BillingUsageRow = typeof billingUsageEvents.$inferSelect
 

@@ -1,5 +1,5 @@
-import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/billing-plan.constants'
-import type { BillingPlanId } from '@core/modules/platform/billing/billing-plan.types'
+import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/plan/billing-plan.constants'
+import type { BillingPlanId } from '@core/modules/platform/billing/plan/billing-plan.types'
 import { createZodDto, createZodSchemaDto } from '@tsuki-hono/common'
 import { z } from 'zod'
 

@@ -7,7 +7,8 @@ import { requireTenantContext } from '@core/modules/platform/tenant/tenant.conte
 import { eq } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
-import { BILLING_USAGE_EVENT } from './billing.constants'
+import { BILLING_USAGE_EVENT } from '../usage/billing-usage.constants'
+import { BillingUsageService } from '../usage/billing-usage.service'
 import { BILLING_PLAN_DEFINITIONS, BILLING_PLAN_IDS } from './billing-plan.constants'
 import type {
   BillingPlanDefinition,
@@ -20,7 +21,6 @@ import type {
   BillingPlanQuota,
   BillingPlanQuotaOverride,
 } from './billing-plan.types'
-import { BillingUsageService } from './billing-usage.service'
 
 function startOfUtcMonth(reference = new Date()): Date {
   return new Date(Date.UTC(reference.getUTCFullYear(), reference.getUTCMonth(), 1, 0, 0, 0, 0))
@@ -141,14 +141,6 @@ export class BillingPlanService {
         message: `当月新增照片额度不足，可用剩余：${remaining}，请求新增：${incomingItems}。升级订阅后即可提升限额。`,
       })
     }
-  }
-
-  async updateTenantPlan(tenantId: string, planId: BillingPlanId): Promise<void> {
-    if (!BILLING_PLAN_IDS.includes(planId)) {
-      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: `未知订阅计划：${planId}` })
-    }
-    const db = this.dbAccessor.get()
-    await db.update(tenants).set({ planId, updatedAt: new Date().toISOString() }).where(eq(tenants.id, tenantId))
   }
 
   private async resolvePlanIdForTenant(tenantId: string): Promise<BillingPlanId> {

@@ -1,15 +1,20 @@
 import { billingOffers, billingSubscriptions, tenantMemberships, tenants } from '@afilmory/db'
 import { DbAccessor } from '@core/database/database.provider'
 import { SettingService } from '@core/modules/configuration/setting/setting.service'
+import {
+  MANAGED_STORAGE_PROVIDER_ID,
+  STORAGE_ACTIVE_PROVIDER_SETTING_KEY,
+} from '@core/modules/configuration/setting/storage-provider.constants'
+import { isByoStorageActive } from '@core/modules/configuration/setting/storage-provider.utils'
+import { BillingCatalogService } from '@core/modules/platform/billing/catalog/billing-catalog.service'
+import { AppStoreBillingService } from '@core/modules/platform/billing/providers/app-store/app-store-billing.service'
 import { and, desc, eq } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
-import { AppStoreBillingService } from './app-store-billing.service'
-import { isByoStorageActive } from './billing.policy'
-import { BillingCatalogService } from './billing-catalog.service'
 import { deriveMobileOnboardingState } from './mobile-onboarding.policy'
 
-const ACTIVE_PROVIDER_KEY = 'builder.storage.activeProvider'
+const RECOVERABLE_SUBSCRIPTION_STATUSES = ['billing_retry', 'expired', 'revoked']
+const CURRENT_SUBSCRIPTION_STATUSES = ['active', 'cancel_scheduled', 'conflict', 'grace_period', 'pending']
 
 @injectable()
 export class MobileOnboardingService {
@@ -44,7 +49,9 @@ export class MobileOnboardingService {
       return this.workspaceRequired()
     }
 
-    const activeProviderValue = await this.settings.get(ACTIVE_PROVIDER_KEY, { tenantId: activeTenantId })
+    const activeProviderValue = await this.settings.get(STORAGE_ACTIVE_PROVIDER_SETTING_KEY, {
+      tenantId: activeTenantId,
+    })
     const storageProviders = await this.settings.getStorageProvidersRaw({ tenantId: activeTenantId })
     const subscriptions = await db
       .select({
@@ -67,13 +74,11 @@ export class MobileOnboardingService {
     const hasRecoverableManagedHistory
       = subscriptions.some(
         subscription =>
-          Boolean(subscription.offerStoragePlanId)
-          && ['billing_retry', 'expired', 'revoked'].includes(subscription.status),
+          Boolean(subscription.offerStoragePlanId) && RECOVERABLE_SUBSCRIPTION_STATUSES.includes(subscription.status),
       )
-      || (activeProvider === 'managed' && !hasManagedStorage)
+      || (activeProvider === MANAGED_STORAGE_PROVIDER_ID && !hasManagedStorage)
     const currentSubscription
-      = subscriptions.find(subscription =>
-        ['active', 'cancel_scheduled', 'conflict', 'grace_period', 'pending'].includes(subscription.status)) ?? null
+      = subscriptions.find(subscription => CURRENT_SUBSCRIPTION_STATUSES.includes(subscription.status)) ?? null
     const state = deriveMobileOnboardingState({
       hasByoStorage,
       hasManagedStorage,

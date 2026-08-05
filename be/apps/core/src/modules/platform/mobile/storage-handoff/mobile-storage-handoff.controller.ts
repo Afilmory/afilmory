@@ -1,8 +1,10 @@
+import { requireActiveTenantIdentity } from '@core/context/auth-identity'
 import { AllowPlaceholderTenant } from '@core/decorators/allow-placeholder.decorator'
 import { SkipTenantGuard } from '@core/decorators/skip-tenant.decorator'
 import { BizException, ErrorCode } from '@core/errors'
 import { RequireAuth } from '@core/guards/roles.decorator'
-import { Body, ContextParam, Controller, createZodSchemaDto, Get, HttpContext, Post } from '@tsuki-hono/common'
+import { STORAGE_SETTING_KEYS } from '@core/modules/configuration/setting/storage-provider.constants'
+import { Body, ContextParam, Controller, createZodSchemaDto, Get, Post } from '@tsuki-hono/common'
 import type { Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 import { z } from 'zod'
@@ -18,12 +20,12 @@ class SaveDto extends createZodSchemaDto(
     entries: z
       .array(
         z.object({
-          key: z.enum(['builder.storage.providers', 'builder.storage.activeProvider', 'photo.storage.secureAccess']),
+          key: z.enum(STORAGE_SETTING_KEYS),
           value: z.string(),
         }),
       )
       .min(1)
-      .max(3),
+      .max(STORAGE_SETTING_KEYS.length),
   }),
 ) {}
 class TestConnectionDto extends createZodSchemaDto(
@@ -46,15 +48,7 @@ export class MobileStorageHandoffController {
 
   @Post('/')
   async create() {
-    const auth = HttpContext.getValue('auth')
-    if (!auth?.user || !auth.session) {
-      throw new BizException(ErrorCode.AUTH_UNAUTHORIZED)
-    }
-    const tenantId = (auth.session as { activeTenantId?: string | null }).activeTenantId ?? null
-    if (!tenantId) {
-      throw new BizException(ErrorCode.TENANT_NOT_FOUND)
-    }
-    return await this.handoffs.create({ tenantId, userId: auth.user.id })
+    return await this.handoffs.create(requireActiveTenantIdentity())
   }
 }
 

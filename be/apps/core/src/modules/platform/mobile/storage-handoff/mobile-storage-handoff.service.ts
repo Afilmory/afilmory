@@ -1,5 +1,6 @@
-import { createHash, randomBytes, randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 
+import { sha256Hex } from '@afilmory/be-utils'
 import { StorageFactory } from '@afilmory/builder/storage/index.js'
 import { mobileStorageHandoffs, tenantMemberships, tenants } from '@afilmory/db'
 import { env } from '@afilmory/env'
@@ -8,6 +9,12 @@ import { DbAccessor } from '@core/database/database.provider'
 import { BizException, ErrorCode } from '@core/errors'
 import type { SettingEntryInput } from '@core/modules/configuration/setting/setting.service'
 import { SettingService } from '@core/modules/configuration/setting/setting.service'
+import type { StorageSettingKey } from '@core/modules/configuration/setting/storage-provider.constants'
+import {
+  STORAGE_ACTIVE_PROVIDER_SETTING_KEY,
+  STORAGE_PROVIDERS_SETTING_KEY,
+  STORAGE_SETTING_KEYS,
+} from '@core/modules/configuration/setting/storage-provider.constants'
 import type { BuilderStorageProvider } from '@core/modules/configuration/setting/storage-provider.utils'
 import { parseStorageProviders } from '@core/modules/configuration/setting/storage-provider.utils'
 import { StorageSettingService } from '@core/modules/configuration/storage-setting/storage-setting.service'
@@ -19,11 +26,6 @@ import { injectable } from 'tsyringe'
 const HANDOFF_LIFETIME_MS = 10 * 60 * 1000
 const CAPABILITY_LIFETIME_MS = 15 * 60 * 1000
 const CONNECTION_TEST_TIMEOUT_MS = 12_000
-const STORAGE_KEYS = [
-  'builder.storage.providers',
-  'builder.storage.activeProvider',
-  'photo.storage.secureAccess',
-] as const
 
 @injectable()
 export class MobileStorageHandoffService {
@@ -45,7 +47,7 @@ export class MobileStorageHandoffService {
       .values({
         tenantId: input.tenantId,
         userId: input.userId,
-        tokenHash: this.hash(token),
+        tokenHash: sha256Hex(token),
         status: 'issued',
         expiresAt,
       })
@@ -61,7 +63,7 @@ export class MobileStorageHandoffService {
       .from(mobileStorageHandoffs)
       .where(
         and(
-          eq(mobileStorageHandoffs.tokenHash, this.hash(code)),
+          eq(mobileStorageHandoffs.tokenHash, sha256Hex(code)),
           eq(mobileStorageHandoffs.status, 'issued'),
           gt(mobileStorageHandoffs.expiresAt, now),
         ),
@@ -79,7 +81,7 @@ export class MobileStorageHandoffService {
     const [exchanged] = await db
       .update(mobileStorageHandoffs)
       .set({
-        capabilityTokenHash: this.hash(capabilityToken),
+        capabilityTokenHash: sha256Hex(capabilityToken),
         capabilityExpiresAt,
         exchangedAt: now,
         status: 'exchanged',
@@ -107,7 +109,7 @@ export class MobileStorageHandoffService {
   async getContext(capabilityToken: string) {
     const handoff = await this.requireCapability(capabilityToken)
     const schema = await this.storageSettings.getUiSchema({ tenantId: handoff.tenantId })
-    const values = await this.storageSettings.getMany(STORAGE_KEYS, { tenantId: handoff.tenantId })
+    const values = await this.storageSettings.getMany(STORAGE_SETTING_KEYS, { tenantId: handoff.tenantId })
     const tenant = await this.dbAccessor
       .get()
       .select({ name: tenants.name, slug: tenants.slug })
@@ -146,12 +148,12 @@ export class MobileStorageHandoffService {
 
   async save(
     capabilityToken: string,
-    entries: Array<{ key: (typeof STORAGE_KEYS)[number], value: string }>,
+    entries: Array<{ key: StorageSettingKey, value: string }>,
   ): Promise<{ completed: true, returnUrl: string }> {
     const handoff = await this.requireCapability(capabilityToken)
     const values = new Map(entries.map(entry => [entry.key, entry.value]))
-    const providers = parseStorageProviders(values.get('builder.storage.providers') ?? '')
-    const activeProviderId = values.get('builder.storage.activeProvider')?.trim()
+    const providers = parseStorageProviders(values.get(STORAGE_PROVIDERS_SETTING_KEY) ?? '')
+    const activeProviderId = values.get(STORAGE_ACTIVE_PROVIDER_SETTING_KEY)?.trim()
     const activeProvider = providers.find(provider => provider.id === activeProviderId)
     if (!activeProvider) {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
@@ -192,7 +194,7 @@ export class MobileStorageHandoffService {
       .from(mobileStorageHandoffs)
       .where(
         and(
-          eq(mobileStorageHandoffs.capabilityTokenHash, this.hash(capabilityToken)),
+          eq(mobileStorageHandoffs.capabilityTokenHash, sha256Hex(capabilityToken)),
           eq(mobileStorageHandoffs.status, 'exchanged'),
           gt(mobileStorageHandoffs.capabilityExpiresAt, now),
         ),
@@ -243,10 +245,6 @@ export class MobileStorageHandoffService {
     const url = new URL('storage-handoff', normalizedBase)
     url.searchParams.set('code', token)
     return url
-  }
-
-  private hash(value: string): string {
-    return createHash('sha256').update(value).digest('hex')
   }
 
   private async withTimeout<T>(operation: Promise<T>): Promise<T> {

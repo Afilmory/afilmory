@@ -2,12 +2,12 @@ import type {
   BillingPlanOverrides,
   BillingPlanPricingConfigs,
   BillingPlanProductConfigs,
-} from '@core/modules/platform/billing/billing-plan.types'
+} from '@core/modules/platform/billing/plan/billing-plan.types'
 import type {
   StoragePlanCatalog,
   StoragePlanPricingConfigs,
   StoragePlanProductConfigs,
-} from '@core/modules/platform/billing/storage-plan.types'
+} from '@core/modules/platform/billing/plan/storage-plan.types'
 import type { UiSchema } from '@core/modules/ui/ui-schema/ui-schema.type'
 
 import type { BuilderStorageProvider } from '../setting/storage-provider.utils'

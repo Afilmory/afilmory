@@ -1,29 +1,36 @@
-import { createHash, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 
-import {
-  billingEntitlements,
-  billingProviderEvents,
-  billingSubjects,
-  billingSubscriptions,
-  generateId,
-} from '@afilmory/db'
+import { sha256Hex } from '@afilmory/be-utils'
+import { billingEntitlements, billingSubjects, billingSubscriptions } from '@afilmory/db'
 import type { JWSTransactionDecodedPayload, ResponseBodyV2DecodedPayload } from '@apple/app-store-server-library'
 import { DbAccessor } from '@core/database/database.provider'
 import { BizException, ErrorCode } from '@core/errors'
 import { and, eq, inArray } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
+import { BillingError } from '../../billing.error'
+import type { BillingSubscriptionStatus } from '../../billing-domain.types'
+import { BillingCatalogService } from '../../catalog/billing-catalog.service'
+import type { BillingPurchaseOffer } from '../../catalog/billing-catalog.types'
+import { BillingEntitlementService } from '../../entitlement/billing-entitlement.service'
+import { getAppStoreEnvironment, normalizeAppStoreEnvironment } from '../billing-environment'
+import { BillingProviderEventService } from '../billing-provider-event.service'
 import { AppStoreSignedDataService } from './app-store-signed-data.service'
-import type { BillingPurchaseOffer } from './billing-catalog.service'
-import { BillingCatalogService, getAppStoreEnvironment, normalizeAppStoreEnvironment } from './billing-catalog.service'
-import type { BillingSubscriptionStatus } from './billing-domain.types'
-import { BillingEntitlementService } from './billing-entitlement.service'
 
 export interface AppStorePurchaseContext {
   appAccountToken: string
   environment: 'production' | 'sandbox'
   offer: BillingPurchaseOffer
   productId: string
+}
+
+interface ReconciliationContext {
+  eventId: string
+  eventType: string
+  expectedOwnerUserId?: string
+  expectedTenantId?: string
+  notificationStatus?: number
+  skipEventInsert?: boolean
 }
 
 @injectable()
@@ -33,6 +40,7 @@ export class AppStoreBillingService {
     private readonly catalog: BillingCatalogService,
     private readonly entitlements: BillingEntitlementService,
     private readonly signedData: AppStoreSignedDataService,
+    private readonly providerEvents: BillingProviderEventService,
   ) {}
 
   isConfigured(): boolean {
@@ -63,7 +71,7 @@ export class AppStoreBillingService {
     return await this.reconcileVerifiedTransaction(transaction, {
       expectedOwnerUserId: input.billingOwnerUserId,
       expectedTenantId: input.tenantId,
-      eventId: transaction.transactionId ?? this.digest(input.signedTransactionInfo),
+      eventId: transaction.transactionId ?? sha256Hex(input.signedTransactionInfo),
       eventType: 'client_transaction',
     })
   }
@@ -87,53 +95,40 @@ export class AppStoreBillingService {
     const environment = normalizeAppStoreEnvironment(notification.data?.environment)
     const notificationId = notification.notificationUUID
     if (!environment || !notificationId) {
-      throw new Error('APP_STORE_NOTIFICATION_INVALID')
-    }
-    const payload = this.notificationAuditPayload(notification)
-    const event = await this.recordProviderEvent({
-      environment,
-      eventId: notificationId,
-      eventType: String(notification.notificationType ?? 'UNKNOWN'),
-      externalSubscriptionId: null,
-      payload,
-      signedAt: this.toIsoDate(notification.signedDate),
-    })
-    if (!notification.data?.signedTransactionInfo) {
-      await this.markProviderEvent(event.id, 'processed', null)
-      return { accepted: true, duplicate: event.duplicate }
+      throw new BillingError('APP_STORE_NOTIFICATION_INVALID')
     }
 
-    try {
-      const transaction = await this.signedData.verifyTransaction(notification.data.signedTransactionInfo)
-      const result = await this.reconcileVerifiedTransaction(transaction, {
+    const signedTransactionInfo = notification.data?.signedTransactionInfo
+    const tracked = await this.providerEvents.track(
+      {
+        environment,
         eventId: notificationId,
-        eventType: String(notification.notificationType ?? 'notification'),
-        notificationStatus: notification.data.status,
-        skipEventInsert: true,
-      })
-      await this.markProviderEvent(event.id, 'processed', null)
-      return { accepted: true, duplicate: event.duplicate || result.duplicate }
-    }
-    catch (error) {
-      await this.markProviderEvent(
-        event.id,
-        'failed',
-        error instanceof Error ? error.message.slice(0, 120) : 'APP_STORE_NOTIFICATION_RECONCILIATION_FAILED',
-      )
-      throw error
-    }
+        externalSubscriptionId: null,
+        payload: this.notificationAuditPayload(notification),
+        provider: 'app_store',
+        signedAt: this.toIsoDate(notification.signedDate),
+      },
+      'APP_STORE_NOTIFICATION_RECONCILIATION_FAILED',
+      async () => {
+        if (!signedTransactionInfo) {
+          return null
+        }
+        const transaction = await this.signedData.verifyTransaction(signedTransactionInfo)
+        return await this.reconcileVerifiedTransaction(transaction, {
+          eventId: notificationId,
+          eventType: String(notification.notificationType ?? 'notification'),
+          notificationStatus: notification.data?.status,
+          skipEventInsert: true,
+        })
+      },
+    )
+
+    return { accepted: true, duplicate: tracked.duplicate || (tracked.result?.duplicate ?? false) }
   }
 
   private async reconcileVerifiedTransaction(
     transaction: JWSTransactionDecodedPayload,
-    context: {
-      eventId: string
-      eventType: string
-      expectedOwnerUserId?: string
-      expectedTenantId?: string
-      notificationStatus?: number
-      skipEventInsert?: boolean
-    },
+    context: ReconciliationContext,
   ) {
     const environment = normalizeAppStoreEnvironment(transaction.environment)
     const productId = transaction.productId?.trim()
@@ -141,28 +136,29 @@ export class AppStoreBillingService {
     const transactionId = transaction.transactionId?.trim()
     const appAccountToken = transaction.appAccountToken?.trim().toLowerCase()
     if (!environment || !productId || !originalTransactionId || !transactionId || !appAccountToken) {
-      throw new Error('APP_STORE_TRANSACTION_MISSING_REQUIRED_FIELDS')
+      throw new BillingError('APP_STORE_TRANSACTION_MISSING_REQUIRED_FIELDS')
     }
     if (environment !== getAppStoreEnvironment()) {
-      throw new Error('APP_STORE_ENVIRONMENT_MISMATCH')
+      throw new BillingError('APP_STORE_ENVIRONMENT_MISMATCH')
     }
     const offer = await this.catalog.findOfferByProduct('app_store', environment, productId)
     if (!offer) {
-      throw new Error('APP_STORE_PRODUCT_NOT_ALLOWLISTED')
+      throw new BillingError('APP_STORE_PRODUCT_NOT_ALLOWLISTED')
     }
-    const db = this.dbAccessor.get()
-    const subject = await db
+
+    const subject = await this.dbAccessor
+      .get()
       .select()
       .from(billingSubjects)
       .where(eq(billingSubjects.appAccountToken, appAccountToken))
       .limit(1)
       .then(rows => rows[0] ?? null)
     if (!subject) {
-      throw new Error('APP_STORE_BILLING_SUBJECT_NOT_FOUND')
+      throw new BillingError('APP_STORE_BILLING_SUBJECT_NOT_FOUND')
     }
     if (subject.tombstonedAt) {
       if (context.expectedTenantId || context.expectedOwnerUserId) {
-        throw new Error('APP_STORE_BILLING_SUBJECT_TOMBSTONED')
+        throw new BillingError('APP_STORE_BILLING_SUBJECT_TOMBSTONED')
       }
       return {
         duplicate: false,
@@ -174,36 +170,19 @@ export class AppStoreBillingService {
       }
     }
     if (context.expectedTenantId && subject.tenantId !== context.expectedTenantId) {
-      throw new Error('APP_STORE_TRANSACTION_TENANT_MISMATCH')
+      throw new BillingError('APP_STORE_TRANSACTION_TENANT_MISMATCH')
     }
     if (
       context.expectedOwnerUserId
       && subject.billingOwnerUserId
       && subject.billingOwnerUserId !== context.expectedOwnerUserId
     ) {
-      throw new Error('APP_STORE_TRANSACTION_OWNER_MISMATCH')
+      throw new BillingError('APP_STORE_TRANSACTION_OWNER_MISMATCH')
     }
 
     const status = this.resolveTransactionStatus(transaction, context.notificationStatus)
-    const providerEvent = context.skipEventInsert
-      ? null
-      : await this.recordProviderEvent({
-          environment,
-          eventId: context.eventId,
-          eventType: context.eventType,
-          externalSubscriptionId: originalTransactionId,
-          payload: {
-            eventType: context.eventType,
-            originalTransactionId,
-            productId,
-            status,
-            transactionId,
-          },
-          signedAt: this.toIsoDate(transaction.signedDate),
-        })
-
-    try {
-      const projection = await this.entitlements.reconcileSubscription({
+    const reconcile = async () =>
+      await this.entitlements.reconcileSubscription({
         appAccountToken,
         applicationPlanId: offer.applicationPlanId,
         billingOwnerUserId: subject.billingOwnerUserId ?? context.expectedOwnerUserId ?? null,
@@ -221,27 +200,35 @@ export class AppStoreBillingService {
         storagePlanId: offer.storagePlanId,
         tenantId: subject.tenantId,
       })
-      if (providerEvent) {
-        await this.markProviderEvent(providerEvent.id, 'processed', null)
-      }
-      return {
-        duplicate: providerEvent?.duplicate ?? false,
-        originalTransactionId,
-        projection,
-        status,
-        tenantId: subject.tenantId,
-        transactionId,
-      }
-    }
-    catch (error) {
-      if (providerEvent) {
-        await this.markProviderEvent(
-          providerEvent.id,
-          'failed',
-          error instanceof Error ? error.message.slice(0, 120) : 'APP_STORE_RECONCILIATION_FAILED',
+
+    const outcome = context.skipEventInsert
+      ? { duplicate: false, result: await reconcile() }
+      : await this.providerEvents.track(
+          {
+            environment,
+            eventId: context.eventId,
+            externalSubscriptionId: originalTransactionId,
+            payload: {
+              eventType: context.eventType,
+              originalTransactionId,
+              productId,
+              status,
+              transactionId,
+            },
+            provider: 'app_store',
+            signedAt: this.toIsoDate(transaction.signedDate),
+          },
+          'APP_STORE_RECONCILIATION_FAILED',
+          reconcile,
         )
-      }
-      throw error
+
+    return {
+      duplicate: outcome.duplicate,
+      originalTransactionId,
+      projection: outcome.result,
+      status,
+      tenantId: subject.tenantId,
+      transactionId,
     }
   }
 
@@ -277,7 +264,7 @@ export class AppStoreBillingService {
       .values({ tenantId, appAccountToken: randomUUID(), billingOwnerUserId })
       .returning()
     if (!created) {
-      throw new Error('BILLING_SUBJECT_CREATION_FAILED')
+      throw new BillingError('BILLING_SUBJECT_CREATION_FAILED')
     }
     return created
   }
@@ -290,8 +277,8 @@ export class AppStoreBillingService {
     if (kinds.length === 0) {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: 'This offer grants no entitlement.' })
     }
-    const db = this.dbAccessor.get()
-    const grants = await db
+    const grants = await this.dbAccessor
+      .get()
       .select({
         sourceType: billingEntitlements.sourceType,
         provider: billingSubscriptions.provider,
@@ -343,68 +330,6 @@ export class AppStoreBillingService {
     return expiresAt > Date.now() ? 'active' : 'expired'
   }
 
-  private async recordProviderEvent(input: {
-    environment: string
-    eventId: string
-    eventType: string
-    externalSubscriptionId: string | null
-    payload: Record<string, unknown>
-    signedAt: string | null
-  }): Promise<{ duplicate: boolean, id: string }> {
-    const db = this.dbAccessor.get()
-    const digest = this.digest(JSON.stringify(input.payload))
-    const [created] = await db
-      .insert(billingProviderEvents)
-      .values({
-        id: generateId(),
-        provider: 'app_store',
-        environment: input.environment,
-        externalEventId: input.eventId,
-        externalSubscriptionId: input.externalSubscriptionId,
-        signedAt: input.signedAt,
-        payload: input.payload,
-        payloadDigest: digest,
-      })
-      .onConflictDoNothing()
-      .returning({ id: billingProviderEvents.id })
-    if (created) {
-      return { duplicate: false, id: created.id }
-    }
-    const existing = await db
-      .select({ id: billingProviderEvents.id })
-      .from(billingProviderEvents)
-      .where(
-        and(
-          eq(billingProviderEvents.provider, 'app_store'),
-          eq(billingProviderEvents.environment, input.environment),
-          eq(billingProviderEvents.externalEventId, input.eventId),
-        ),
-      )
-      .limit(1)
-      .then(rows => rows[0] ?? null)
-    if (!existing) {
-      throw new Error('APP_STORE_EVENT_RECEIPT_FAILED')
-    }
-    return { duplicate: true, id: existing.id }
-  }
-
-  private async markProviderEvent(
-    eventId: string,
-    status: 'failed' | 'processed',
-    errorCode: string | null,
-  ): Promise<void> {
-    await this.dbAccessor
-      .get()
-      .update(billingProviderEvents)
-      .set({
-        processingStatus: status,
-        processedAt: status === 'processed' ? new Date().toISOString() : null,
-        errorCode,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(billingProviderEvents.id, eventId))
-  }
-
   private notificationAuditPayload(notification: ResponseBodyV2DecodedPayload): Record<string, unknown> {
     return {
       bundleId: notification.data?.bundleId ?? null,
@@ -423,9 +348,5 @@ export class AppStoreBillingService {
     }
     const date = new Date(value)
     return Number.isNaN(date.getTime()) ? null : date.toISOString()
-  }
-
-  private digest(value: string): string {
-    return createHash('sha256').update(value).digest('hex')
   }
 }

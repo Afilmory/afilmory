@@ -6,8 +6,8 @@ import { requireTenantContext } from '@core/modules/platform/tenant/tenant.conte
 import { Body, Controller, createZodSchemaDto, Get, HttpContext, Post } from '@tsuki-hono/common'
 import { z } from 'zod'
 
+import { BillingCatalogService } from '../../catalog/billing-catalog.service'
 import { AppStoreBillingService } from './app-store-billing.service'
-import { BillingCatalogService } from './billing-catalog.service'
 
 class PurchaseContextDto extends createZodSchemaDto(z.object({ offerId: z.string().trim().min(1).max(160) })) {}
 

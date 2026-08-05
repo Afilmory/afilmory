@@ -1,17 +1,21 @@
 import { billingEntitlements, billingSubscriptions, generateId, settings, tenants } from '@afilmory/db'
 import { DbAccessor } from '@core/database/database.provider'
 import { SettingService } from '@core/modules/configuration/setting/setting.service'
+import {
+  MANAGED_STORAGE_PROVIDER_ID,
+  STORAGE_ACTIVE_PROVIDER_SETTING_KEY,
+} from '@core/modules/configuration/setting/storage-provider.constants'
+import { isByoStorageActive } from '@core/modules/configuration/setting/storage-provider.utils'
 import { and, eq, sql } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
-import { isByoStorageActive, selectEffectiveEntitlement, subscriptionGrantsEntitlement } from './billing.policy'
+import { BillingError } from '../billing.error'
 import type {
   BillingEntitlementKind,
   BillingProjection,
   BillingSubscriptionReconciliationInput,
-} from './billing-domain.types'
-
-const ACTIVE_PROVIDER_KEY = 'builder.storage.activeProvider'
+} from '../billing-domain.types'
+import { selectEffectiveEntitlement, subscriptionGrantsEntitlement } from './billing-entitlement.policy'
 
 @injectable()
 export class BillingEntitlementService {
@@ -42,7 +46,7 @@ export class BillingEntitlementService {
           conflicting
           && (conflicting.tenantId !== input.tenantId || conflicting.appAccountToken !== input.appAccountToken)
         ) {
-          throw new Error('BILLING_ORIGINAL_TRANSACTION_CONFLICT')
+          throw new BillingError('BILLING_ORIGINAL_TRANSACTION_CONFLICT')
         }
       }
 
@@ -114,7 +118,7 @@ export class BillingEntitlementService {
         .returning()
 
       if (!subscription) {
-        throw new Error('BILLING_SUBSCRIPTION_UPSERT_FAILED')
+        throw new BillingError('BILLING_SUBSCRIPTION_UPSERT_FAILED')
       }
 
       await tx
@@ -234,7 +238,7 @@ export class BillingEntitlementService {
         .limit(1)
         .then(rows => rows[0] ?? null)
       if (!subscription || subscription.tenantId !== tenantId) {
-        throw new Error('BILLING_SUBSCRIPTION_NOT_FOUND')
+        throw new BillingError('BILLING_SUBSCRIPTION_NOT_FOUND')
       }
       const now = new Date().toISOString()
       await tx
@@ -298,7 +302,7 @@ export class BillingEntitlementService {
     tx: Parameters<Parameters<ReturnType<DbAccessor['get']>['transaction']>[0]>[0],
     tenantId: string,
   ): Promise<void> {
-    const activeProviderValue = await this.settings.get(ACTIVE_PROVIDER_KEY, { tenantId })
+    const activeProviderValue = await this.settings.get(STORAGE_ACTIVE_PROVIDER_SETTING_KEY, { tenantId })
     const storageProviders = await this.settings.getStorageProvidersRaw({ tenantId })
     const activeProvider = activeProviderValue?.trim() ?? ''
     const byoProviderIds = new Set(storageProviders.map(provider => provider.id))
@@ -312,14 +316,14 @@ export class BillingEntitlementService {
       .values({
         id: generateId(),
         tenantId,
-        key: ACTIVE_PROVIDER_KEY,
-        value: 'managed',
+        key: STORAGE_ACTIVE_PROVIDER_SETTING_KEY,
+        value: MANAGED_STORAGE_PROVIDER_ID,
         isSensitive: false,
         updatedAt: now,
       })
       .onConflictDoUpdate({
         target: [settings.tenantId, settings.key],
-        set: { value: 'managed', isSensitive: false, updatedAt: now },
+        set: { value: MANAGED_STORAGE_PROVIDER_ID, isSensitive: false, updatedAt: now },
       })
   }
 }

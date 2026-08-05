@@ -1,4 +1,4 @@
-import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/billing-plan.constants'
+import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/plan/billing-plan.constants'
 import type { UiSchemaTFunction } from '@core/modules/ui/ui-schema/ui-schema.i18n'
 import { identityUiSchemaT } from '@core/modules/ui/ui-schema/ui-schema.i18n'
 import type { UiNode, UiSchema } from '@core/modules/ui/ui-schema/ui-schema.type'

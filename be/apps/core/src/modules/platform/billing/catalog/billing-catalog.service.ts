@@ -1,48 +1,17 @@
 import { billingOfferProducts, billingOffers, generateId } from '@afilmory/db'
-import { env } from '@afilmory/env'
 import { DbAccessor } from '@core/database/database.provider'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
 import { and, eq } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
-import type { BillingProvider } from './billing-domain.types'
-import { BILLING_PLAN_DEFINITIONS } from './billing-plan.constants'
-import { DEFAULT_STORAGE_PLAN_CATALOG } from './storage-plan.constants'
+import type { BillingProvider } from '../billing-domain.types'
+import { BILLING_PLAN_DEFINITIONS } from '../plan/billing-plan.constants'
+import { DEFAULT_STORAGE_PLAN_CATALOG } from '../plan/storage-plan.constants'
+import { getAppStoreEnvironment, getCreemEnvironment } from '../providers/billing-environment'
+import type { BillingPurchaseOffer } from './billing-catalog.types'
 
-export function getAppStoreEnvironment(): 'production' | 'sandbox' {
-  return env.NODE_ENV === 'production' ? 'production' : 'sandbox'
-}
-
-export function getCreemEnvironment(): 'production' | 'test' {
-  return env.NODE_ENV === 'production' ? 'production' : 'test'
-}
-
-export function normalizeAppStoreEnvironment(value: string | null | undefined): 'production' | 'sandbox' | null {
-  switch (value?.trim().toLowerCase()) {
-    case 'production': {
-      return 'production'
-    }
-    case 'sandbox':
-    case 'xcode':
-    case 'localtesting': {
-      return 'sandbox'
-    }
-    default: {
-      return null
-    }
-  }
-}
-
-export interface BillingPurchaseOffer {
-  applicationPlanId: string | null
-  description: string | null
-  externalProductId: string
-  id: string
-  name: string
-  rank: number
-  storageCapacityBytes: number | null
-  storagePlanId: string | null
-}
+const APPLICATION_PLAN_RANKS: Record<string, number> = { friend: 1000, pro: 100 }
+const UNBOUNDED_STORAGE_RANK = 10_000
 
 @injectable()
 export class BillingCatalogService {
@@ -54,7 +23,7 @@ export class BillingCatalogService {
   async synchronizeConfiguredProducts(): Promise<void> {
     const planProducts = await this.systemSettings.getBillingPlanProducts()
     const storageProducts = await this.systemSettings.getStoragePlanProducts()
-    const storageCatalog = await this.systemSettings.getStoragePlanCatalog()
+    const storageCatalog = await this.getStorageCatalog()
 
     for (const [planId, products] of Object.entries(planProducts)) {
       const definition = BILLING_PLAN_DEFINITIONS[planId as keyof typeof BILLING_PLAN_DEFINITIONS]
@@ -66,15 +35,14 @@ export class BillingCatalogService {
         description: definition.description,
         id: `plan:${planId}`,
         name: definition.name,
-        rank: planId === 'friend' ? 1000 : planId === 'pro' ? 100 : 0,
+        rank: this.applicationPlanRank(planId),
         storagePlanId: null,
       })
       await this.synchronizeProductsForOffer(`plan:${planId}`, products)
     }
 
-    const mergedStorageCatalog = { ...DEFAULT_STORAGE_PLAN_CATALOG, ...storageCatalog }
     for (const [storagePlanId, products] of Object.entries(storageProducts)) {
-      const definition = mergedStorageCatalog[storagePlanId]
+      const definition = storageCatalog[storagePlanId]
       if (!definition || !products) {
         continue
       }
@@ -95,7 +63,6 @@ export class BillingCatalogService {
     externalProductId: string
     storagePlanId: string | null
   }): Promise<BillingPurchaseOffer | null> {
-    await this.synchronizeConfiguredProducts()
     const environment = getCreemEnvironment()
     const configured = await this.findOfferByProduct('creem', environment, input.externalProductId)
     if (configured) {
@@ -113,10 +80,7 @@ export class BillingCatalogService {
     const planDefinition = input.applicationPlanId
       ? BILLING_PLAN_DEFINITIONS[input.applicationPlanId as keyof typeof BILLING_PLAN_DEFINITIONS]
       : null
-    const storageCatalog = input.storagePlanId
-      ? { ...DEFAULT_STORAGE_PLAN_CATALOG, ...(await this.systemSettings.getStoragePlanCatalog()) }
-      : null
-    const storageDefinition = input.storagePlanId && storageCatalog ? storageCatalog[input.storagePlanId] : null
+    const storageDefinition = input.storagePlanId ? (await this.getStorageCatalog())[input.storagePlanId] : null
     if ((input.applicationPlanId && !planDefinition) || (input.storagePlanId && !storageDefinition)) {
       return null
     }
@@ -126,11 +90,7 @@ export class BillingCatalogService {
       id: offerId,
       name: planDefinition?.name ?? storageDefinition?.name ?? offerId,
       rank: planDefinition
-        ? input.applicationPlanId === 'friend'
-          ? 1000
-          : input.applicationPlanId === 'pro'
-            ? 100
-            : 0
+        ? this.applicationPlanRank(input.applicationPlanId)
         : this.storageRank(storageDefinition?.capacityBytes),
       storagePlanId: input.storagePlanId,
     })
@@ -139,12 +99,10 @@ export class BillingCatalogService {
   }
 
   async getAppStoreOffer(offerId: string): Promise<BillingPurchaseOffer | null> {
-    await this.synchronizeConfiguredProducts()
     return await this.findOfferById('app_store', getAppStoreEnvironment(), offerId)
   }
 
   async listAppStoreOffers(): Promise<BillingPurchaseOffer[]> {
-    await this.synchronizeConfiguredProducts()
     const db = this.dbAccessor.get()
     const environment = getAppStoreEnvironment()
     const rows = await db
@@ -166,7 +124,7 @@ export class BillingCatalogService {
           eq(billingOffers.isActive, true),
         ),
       )
-    const storageCatalog = { ...DEFAULT_STORAGE_PLAN_CATALOG, ...(await this.systemSettings.getStoragePlanCatalog()) }
+    const storageCatalog = await this.getStorageCatalog()
     return rows
       .map(row => ({
         ...row,
@@ -205,7 +163,7 @@ export class BillingCatalogService {
     if (!row) {
       return null
     }
-    const storageCatalog = { ...DEFAULT_STORAGE_PLAN_CATALOG, ...(await this.systemSettings.getStoragePlanCatalog()) }
+    const storageCatalog = await this.getStorageCatalog()
     return {
       ...row,
       storageCapacityBytes: row.storagePlanId ? (storageCatalog[row.storagePlanId]?.capacityBytes ?? null) : null,
@@ -232,6 +190,10 @@ export class BillingCatalogService {
     return product ? await this.findOfferByProduct(provider, environment, product.externalProductId) : null
   }
 
+  private async getStorageCatalog() {
+    return { ...DEFAULT_STORAGE_PLAN_CATALOG, ...(await this.systemSettings.getStoragePlanCatalog()) }
+  }
+
   private async synchronizeProductsForOffer(
     offerId: string,
     products: { appStoreProductId?: string | null, creemProductId?: string | null },
@@ -254,10 +216,11 @@ export class BillingCatalogService {
     rank: number
     storagePlanId: string | null
   }): Promise<void> {
-    const db = this.dbAccessor.get()
-    await db
+    const now = new Date().toISOString()
+    await this.dbAccessor
+      .get()
       .insert(billingOffers)
-      .values({ ...input, isActive: true, updatedAt: new Date().toISOString() })
+      .values({ ...input, isActive: true, updatedAt: now })
       .onConflictDoUpdate({
         target: billingOffers.id,
         set: {
@@ -267,7 +230,7 @@ export class BillingCatalogService {
           rank: input.rank,
           storagePlanId: input.storagePlanId,
           isActive: true,
-          updatedAt: new Date().toISOString(),
+          updatedAt: now,
         },
       })
   }
@@ -278,8 +241,8 @@ export class BillingCatalogService {
     environment: string,
     externalProductId: string,
   ): Promise<void> {
-    const db = this.dbAccessor.get()
-    await db
+    await this.dbAccessor
+      .get()
       .insert(billingOfferProducts)
       .values({ id: generateId(), offerId, provider, environment, externalProductId })
       .onConflictDoUpdate({
@@ -292,9 +255,13 @@ export class BillingCatalogService {
       })
   }
 
+  private applicationPlanRank(planId: string | null): number {
+    return planId ? (APPLICATION_PLAN_RANKS[planId] ?? 0) : 0
+  }
+
   private storageRank(capacityBytes: number | null | undefined): number {
     if (capacityBytes === null) {
-      return 10000
+      return UNBOUNDED_STORAGE_RANK
     }
     return Math.max(1, Math.floor((capacityBytes ?? 0) / 1024 / 1024 / 1024))
   }

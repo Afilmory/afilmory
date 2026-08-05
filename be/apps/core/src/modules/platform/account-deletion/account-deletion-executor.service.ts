@@ -10,7 +10,7 @@ import {
 } from '@afilmory/db'
 import { env } from '@afilmory/env'
 import { DbAccessor } from '@core/database/database.provider'
-import { BillingEntitlementService } from '@core/modules/platform/billing/billing-entitlement.service'
+import { BillingEntitlementService } from '@core/modules/platform/billing/entitlement/billing-entitlement.service'
 import { DataManagementService } from '@core/modules/platform/data-management/data-management.service'
 import { cancelSubscription } from '@creem_io/better-auth/server'
 import { createLogger } from '@tsuki-hono/common'

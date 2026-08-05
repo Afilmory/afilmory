@@ -5,15 +5,15 @@ import {
   BILLING_PLAN_OVERRIDES_SETTING_KEY,
   BILLING_PLAN_PRICING_SETTING_KEY,
   BILLING_PLAN_PRODUCTS_SETTING_KEY,
-} from '@core/modules/platform/billing/billing-plan.constants'
-import type { BillingPlanId, BillingPlanQuota } from '@core/modules/platform/billing/billing-plan.types'
+} from '@core/modules/platform/billing/plan/billing-plan.constants'
+import type { BillingPlanId, BillingPlanQuota } from '@core/modules/platform/billing/plan/billing-plan.types'
 import {
   DEFAULT_STORAGE_PLAN_CATALOG,
   STORAGE_PLAN_CATALOG_SETTING_KEY,
   STORAGE_PLAN_PRICING_SETTING_KEY,
   STORAGE_PLAN_PRODUCTS_SETTING_KEY,
-} from '@core/modules/platform/billing/storage-plan.constants'
-import type { StoragePlanCatalog } from '@core/modules/platform/billing/storage-plan.types'
+} from '@core/modules/platform/billing/plan/storage-plan.constants'
+import type { StoragePlanCatalog } from '@core/modules/platform/billing/plan/storage-plan.types'
 import { z } from 'zod'
 
 const nonEmptyString = z.string().trim().min(1)

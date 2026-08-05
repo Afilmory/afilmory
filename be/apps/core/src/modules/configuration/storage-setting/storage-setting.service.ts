@@ -1,5 +1,5 @@
 import { BizException, ErrorCode } from '@core/errors'
-import { StoragePlanService } from '@core/modules/platform/billing/storage-plan.service'
+import { StoragePlanService } from '@core/modules/platform/billing/plan/storage-plan.service'
 import { getTenantContext } from '@core/modules/platform/tenant/tenant.context'
 import { injectable } from 'tsyringe'
 
