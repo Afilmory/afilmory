@@ -2,12 +2,12 @@ import ExpoModulesCore
 import SDWebImage
 import UIKit
 
-struct FeaturedGalleryAuthor: Decodable, Hashable, Sendable {
+struct FeaturedGalleryAuthor: Codable, Hashable, Sendable {
   let name: String
   let avatar: String?
 }
 
-struct FeaturedGallery: Decodable, Hashable, Sendable {
+struct FeaturedGallery: Codable, Hashable, Sendable {
   let id: String
   let name: String
   let slug: String
@@ -30,7 +30,7 @@ struct GalleryCoverPhoto: Hashable, Sendable {
   let isLivePhoto: Bool
 }
 
-private struct FeaturedGalleriesEnvelope: Decodable, Sendable {
+struct FeaturedGalleriesEnvelope: Codable, Sendable {
   let galleries: [FeaturedGallery]
 }
 
@@ -60,6 +60,7 @@ final class GalleriesController: UIViewController {
   private let localization = Localization.shared
   private let onRequestSignIn: () -> Void
   private let notificationPermissions = GalleryNotificationPermissionCoordinator()
+  private let galleryDirectoryStore = GalleryDirectoryStore()
   private let layout = UICollectionViewFlowLayout()
   private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
   private let refreshControl = UIRefreshControl()
@@ -196,36 +197,20 @@ final class GalleriesController: UIViewController {
   private func loadGalleries(force: Bool = false) {
     if loadTask != nil, !force { return }
     loadTask?.cancel()
+    let requestedQuery = activeQuery
+    if requestedQuery.isEmpty, galleries.isEmpty, let cached = galleryDirectoryStore.loadCached() {
+      applyGalleries(cached)
+    }
     if galleries.isEmpty {
       contentUnavailableConfiguration = UIContentUnavailableConfiguration.loading()
     }
-    let requestedQuery = activeQuery
     loadTask = Task { @MainActor [weak self] in
       guard let self else { return }
       do {
-        let endpoint = APIEndpoint(
-          baseURL: .platform,
-          path: "gallery-directory",
-          queryItems: [
-            requestedQuery.isEmpty ? nil : URLQueryItem(name: "q", value: requestedQuery),
-            URLQueryItem(name: "limit", value: "30"),
-          ].compactMap { $0 },
-          retryPolicy: .transientGET(maxAttempts: 2, delay: 0.25)
-        )
-        let response: FeaturedGalleriesEnvelope = try await AfilmoryAPI.shared.request(endpoint)
+        let fetched = try await galleryDirectoryStore.fetch(query: requestedQuery, limit: 30)
         try Task.checkCancellation()
         guard requestedQuery == activeQuery else { return }
-        galleries = response.galleries.map { gallery in
-          guard let pendingTarget = self.pendingSubscriptionTargets[gallery.id] else {
-            return gallery
-          }
-          var gallery = gallery
-          gallery.isSubscribed = pendingTarget
-          return gallery
-        }
-        refreshNotificationPresentation()
-        contentUnavailableConfiguration = galleries.isEmpty ? emptyConfiguration() : nil
-        prefetchVisibleCovers()
+        applyGalleries(fetched)
       } catch {
         guard !Task.isCancelled else { return }
         if galleries.isEmpty {
@@ -235,6 +220,20 @@ final class GalleriesController: UIViewController {
       refreshControl.endRefreshing()
       loadTask = nil
     }
+  }
+
+  private func applyGalleries(_ fetched: [FeaturedGallery]) {
+    galleries = fetched.map { gallery in
+      guard let pendingTarget = pendingSubscriptionTargets[gallery.id] else {
+        return gallery
+      }
+      var gallery = gallery
+      gallery.isSubscribed = pendingTarget
+      return gallery
+    }
+    refreshNotificationPresentation()
+    contentUnavailableConfiguration = galleries.isEmpty ? emptyConfiguration() : nil
+    prefetchVisibleCovers()
   }
 
   private func loadCovers(for gallery: FeaturedGallery) {
