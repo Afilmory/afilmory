@@ -150,6 +150,42 @@ final class PhotoFeedStoreCacheTests: XCTestCase {
     XCTAssertEqual(requestedEtagsCount, 0)
   }
 
+  func testStaleCancelledTaskDoesNotClobberTheNewerLoadRegistration() async throws {
+    let repository = RecordingPhotoCacheRepository()
+    let key = PhotoFeedKey.manifest("acme")
+
+    let gates = OneShotGates()
+    repository.touchFeedGate = { index in await gates.wait(index) }
+
+    let transport = FakeManifestTransport(steps: [.notModified, .notModified])
+    let store = PhotoFeedStore(repository: repository, manifestTransport: transport)
+
+    store.load(key)
+    let feed = store.feed(for: key)
+    XCTAssertEqual(feed.loadState, .loading)
+
+    try await waitUntil { repository.touchCalls.count == 1 }
+
+    store.load(key, force: true)
+
+    try await waitUntil { repository.touchCalls.count == 2 }
+
+    await gates.open(1)
+    try await Task.sleep(nanoseconds: 50_000_000)
+
+    store.load(key)
+    try await Task.sleep(nanoseconds: 50_000_000)
+
+    XCTAssertEqual(
+      repository.touchCalls.count,
+      2,
+      "a stale cancelled task must not clear the in-flight registration for a newer task"
+    )
+
+    await gates.open(2)
+    await gates.open(3)
+  }
+
   private func manifestData(ids: [String]) -> Data {
     let photos = ids.map { id in ["id": id, "thumbnailUrl": "https://example.com/\(id).jpg"] }
     return try! JSONSerialization.data(withJSONObject: ["data": photos])
@@ -167,6 +203,21 @@ final class PhotoFeedStoreCacheTests: XCTestCase {
       }
       try await Task.sleep(nanoseconds: 10_000_000)
     }
+  }
+}
+
+private actor OneShotGates {
+  private var opened: Set<Int> = []
+  private var waiters: [Int: CheckedContinuation<Void, Never>] = [:]
+
+  func wait(_ index: Int) async {
+    if opened.contains(index) { return }
+    await withCheckedContinuation { waiters[index] = $0 }
+  }
+
+  func open(_ index: Int) {
+    opened.insert(index)
+    waiters.removeValue(forKey: index)?.resume()
   }
 }
 
@@ -210,6 +261,8 @@ private final class RecordingPhotoCacheRepository: PhotoCacheRepository, @unchec
   private var _saveCalls: [(key: PhotoFeedKey, photos: [GalleryPhoto], etag: String?)] = []
   private var _touchCalls: [PhotoFeedKey] = []
 
+  var touchFeedGate: (@Sendable (Int) async -> Void)?
+
   var loadCalls: [PhotoFeedKey] { lock.withLock { _loadCalls } }
   var saveCalls: [(key: PhotoFeedKey, photos: [GalleryPhoto], etag: String?)] { lock.withLock { _saveCalls } }
   var touchCalls: [PhotoFeedKey] { lock.withLock { _touchCalls } }
@@ -235,7 +288,13 @@ private final class RecordingPhotoCacheRepository: PhotoCacheRepository, @unchec
   }
 
   func touchFeed(_ key: PhotoFeedKey) async {
-    lock.withLock { _touchCalls.append(key) }
+    let callIndex: Int = lock.withLock {
+      _touchCalls.append(key)
+      return _touchCalls.count
+    }
+    if let touchFeedGate {
+      await touchFeedGate(callIndex)
+    }
   }
 
   @MainActor

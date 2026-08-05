@@ -94,6 +94,7 @@ final class PhotoFeedStore {
   private let manifestTransport: ManifestTransport
   private var feeds: [PhotoFeedKey: PhotoFeed] = [:]
   private var loads: [PhotoFeedKey: Task<Void, Never>] = [:]
+  private var loadGenerations: [PhotoFeedKey: UUID] = [:]
 
   init(
     repository: PhotoCacheRepository = SwiftDataPhotoCacheRepository(container: AfilmoryDatabase.shared),
@@ -132,6 +133,9 @@ final class PhotoFeedStore {
       feed.update(photos: feed.photos, studioPhotos: feed.studioPhotos, state: .loading)
     }
 
+    let generation = UUID()
+    loadGenerations[key] = generation
+
     loads[key] = Task { [weak self, weak feed] in
       guard let self, let feed else { return }
       do {
@@ -169,7 +173,9 @@ final class PhotoFeedStore {
           )
         }
       }
+      guard self.loadGenerations[key] == generation else { return }
       self.loads[key] = nil
+      self.loadGenerations[key] = nil
     }
   }
 }
