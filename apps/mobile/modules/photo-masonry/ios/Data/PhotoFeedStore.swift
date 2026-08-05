@@ -1,5 +1,24 @@
 import Foundation
 import Observation
+import SwiftData
+
+protocol ManifestTransport: Sendable {
+  func fetchManifest(slug: String, etag: String?) async throws -> ManifestFetchOutcome
+}
+
+struct LiveManifestTransport: ManifestTransport {
+  private let api: AfilmoryAPI
+
+  init(api: AfilmoryAPI = .shared) {
+    self.api = api
+  }
+
+  func fetchManifest(slug: String, etag: String?) async throws -> ManifestFetchOutcome {
+    let apiBaseURL = try ApiEnvironmentStore.shared.galleryAPIBaseURL(slug: slug)
+    let endpoint = APIEndpoint(baseURL: .explicit(apiBaseURL.absoluteString), path: "manifest")
+    return try await api.fetchManifest(endpoint, etag: etag)
+  }
+}
 
 enum PhotoFeedLoadState: Equatable, Sendable {
   case idle
@@ -71,8 +90,18 @@ final class PhotoFeedObservationToken {
 final class PhotoFeedStore {
   static let shared = PhotoFeedStore()
 
+  private let repository: PhotoCacheRepository
+  private let manifestTransport: ManifestTransport
   private var feeds: [PhotoFeedKey: PhotoFeed] = [:]
   private var loads: [PhotoFeedKey: Task<Void, Never>] = [:]
+
+  init(
+    repository: PhotoCacheRepository = SwiftDataPhotoCacheRepository(container: AfilmoryDatabase.shared),
+    manifestTransport: ManifestTransport = LiveManifestTransport()
+  ) {
+    self.repository = repository
+    self.manifestTransport = manifestTransport
+  }
 
   func feed(for key: PhotoFeedKey) -> PhotoFeed {
     if let feed = feeds[key] {
@@ -89,19 +118,37 @@ final class PhotoFeedStore {
       return
     }
     loads[key]?.cancel()
-    feed.update(photos: feed.photos, studioPhotos: feed.studioPhotos, state: .loading)
+
+    let cached: (photos: [GalleryPhoto], etag: String?)?
+    if case .manifest = key {
+      cached = repository.loadFeed(key)
+    } else {
+      cached = nil
+    }
+
+    if let cached {
+      feed.update(photos: cached.photos, state: .loaded)
+    } else {
+      feed.update(photos: feed.photos, studioPhotos: feed.studioPhotos, state: .loading)
+    }
+
     loads[key] = Task { [weak self, weak feed] in
       guard let self, let feed else { return }
       do {
         switch key {
         case .manifest(let slug):
           let origin = try ApiEnvironmentStore.shared.galleryOrigin(slug: slug)
-          let apiBaseURL = try ApiEnvironmentStore.shared.galleryAPIBaseURL(slug: slug)
-          let endpoint = APIEndpoint(baseURL: .explicit(apiBaseURL.absoluteString), path: "manifest")
-          let response: ManifestEnvelope = try await AfilmoryAPI.shared.request(endpoint)
-          let photos = ManifestDecoding.normalize(response.data, galleryOrigin: origin)
+          let outcome = try await self.manifestTransport.fetchManifest(slug: slug, etag: cached?.etag)
           guard !Task.isCancelled else { return }
-          feed.update(photos: photos, state: .loaded)
+          switch outcome {
+          case .notModified:
+            await self.repository.touchFeed(key)
+          case .success(let data, let etag):
+            let photos = try ManifestDecoding.decode(data, galleryOrigin: origin)
+            guard !Task.isCancelled else { return }
+            feed.update(photos: photos, state: .loaded)
+            await self.repository.saveFeed(key, photos: photos, etag: etag)
+          }
         case .studioLibrary:
           let endpoint = APIEndpoint(baseURL: .tenant, path: "photos/assets")
           let assets: [StudioAsset] = try await AfilmoryAPI.shared.request(endpoint)
@@ -111,12 +158,16 @@ final class PhotoFeedStore {
         }
       } catch {
         guard !Task.isCancelled else { return }
-        feed.update(
-          photos: feed.photos,
-          studioPhotos: feed.studioPhotos,
-          state: .failed,
-          error: error.localizedDescription
-        )
+        if cached != nil {
+          NSLog("[PhotoFeedStore] Manifest refresh failed for %@: %@", key.rawValue, error.localizedDescription)
+        } else {
+          feed.update(
+            photos: feed.photos,
+            studioPhotos: feed.studioPhotos,
+            state: .failed,
+            error: error.localizedDescription
+          )
+        }
       }
       self.loads[key] = nil
     }

@@ -23,6 +23,11 @@ private enum AfilmoryAPIConfigurationError: LocalizedError {
   }
 }
 
+enum ManifestFetchOutcome: Sendable {
+  case notModified
+  case success(Data, etag: String?)
+}
+
 final class AfilmoryAPI: @unchecked Sendable {
   static let shared = AfilmoryAPI()
 
@@ -92,36 +97,7 @@ final class AfilmoryAPI: @unchecked Sendable {
   ) async throws -> Response {
     try Task.checkCancellation()
     let sessionSnapshot = sessionSnapshot ?? sessionStore.current()
-    let baseURL = switch endpoint.baseURL {
-    case .platform:
-      sessionSnapshot.platformBaseURL
-    case .tenant:
-      sessionSnapshot.tenantBaseURL
-    case .explicit(let value):
-      value
-    }
-
-    guard let baseURL else {
-      let error: AfilmoryAPIConfigurationError = switch endpoint.baseURL {
-      case .platform: .missingPlatformBaseURL
-      case .tenant: .missingTenantBaseURL
-      case .explicit: .invalidBaseURL
-      }
-      throw APIError.transport(error)
-    }
-    guard var components = URLComponents(
-      string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        + "/"
-        + endpoint.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-    ) else {
-      throw APIError.transport(AfilmoryAPIConfigurationError.invalidRequestURL)
-    }
-    if !endpoint.queryItems.isEmpty {
-      components.queryItems = endpoint.queryItems
-    }
-    guard let url = components.url else {
-      throw APIError.transport(AfilmoryAPIConfigurationError.invalidRequestURL)
-    }
+    let url = try resolveURL(for: endpoint, sessionSnapshot: sessionSnapshot)
 
     var request = URLRequest(url: url)
     request.httpMethod = endpoint.method.rawValue
@@ -165,5 +141,74 @@ final class AfilmoryAPI: @unchecked Sendable {
     case .unauthorized, .decoding, .cancelled:
       false
     }
+  }
+
+  func fetchManifest(_ endpoint: APIEndpoint, etag: String?) async throws -> ManifestFetchOutcome {
+    try Task.checkCancellation()
+    let sessionSnapshot = sessionStore.current()
+    let url = try resolveURL(for: endpoint, sessionSnapshot: sessionSnapshot)
+
+    var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
+    request.httpMethod = endpoint.method.rawValue
+    request.setValue("application/json", forHTTPHeaderField: "Accept")
+    if let etag, !etag.isEmpty {
+      request.setValue(etag, forHTTPHeaderField: "If-None-Match")
+    }
+    if let cookie = sessionSnapshot.cookie, !cookie.isEmpty {
+      request.setValue(cookie, forHTTPHeaderField: "Cookie")
+    }
+
+    let data: Data
+    let response: URLResponse
+    do {
+      (data, response) = try await session.data(for: request)
+    } catch {
+      throw APIError.request(error)
+    }
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+      throw APIError.transport(AfilmoryAPIConfigurationError.nonHTTPResponse)
+    }
+    if httpResponse.statusCode == 304 {
+      return .notModified
+    }
+    if let responseError = APIError.response(status: httpResponse.statusCode, body: data) {
+      throw responseError
+    }
+    return .success(data, etag: httpResponse.value(forHTTPHeaderField: "ETag"))
+  }
+
+  private func resolveURL(for endpoint: APIEndpoint, sessionSnapshot: AfilmorySessionSnapshot) throws -> URL {
+    let baseURL = switch endpoint.baseURL {
+    case .platform:
+      sessionSnapshot.platformBaseURL
+    case .tenant:
+      sessionSnapshot.tenantBaseURL
+    case .explicit(let value):
+      value
+    }
+
+    guard let baseURL else {
+      let error: AfilmoryAPIConfigurationError = switch endpoint.baseURL {
+      case .platform: .missingPlatformBaseURL
+      case .tenant: .missingTenantBaseURL
+      case .explicit: .invalidBaseURL
+      }
+      throw APIError.transport(error)
+    }
+    guard var components = URLComponents(
+      string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        + "/"
+        + endpoint.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    ) else {
+      throw APIError.transport(AfilmoryAPIConfigurationError.invalidRequestURL)
+    }
+    if !endpoint.queryItems.isEmpty {
+      components.queryItems = endpoint.queryItems
+    }
+    guard let url = components.url else {
+      throw APIError.transport(AfilmoryAPIConfigurationError.invalidRequestURL)
+    }
+    return url
   }
 }
