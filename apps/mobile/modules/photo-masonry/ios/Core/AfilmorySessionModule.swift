@@ -16,6 +16,7 @@ public final class AfilmorySessionModule: Module {
       Task { @MainActor in
         AfilmorySessionStore.shared.bootstrap()
       }
+      CacheLifecycleCoordinator.shared.runOnce()
     }
 
     OnDestroy {
