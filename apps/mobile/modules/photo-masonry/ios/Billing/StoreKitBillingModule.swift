@@ -87,6 +87,9 @@ public final class StoreKitBillingModule: Module {
       return transactions
     }
 
+    // Finishing forfeits the transaction: StoreKit stops replaying it, so an entitlement the
+    // server never recorded becomes unrecoverable. The JS layer owns that ordering and only
+    // calls this once the server has acknowledged the same transaction id.
     AsyncFunction("finishTransaction") { (transactionId: String) in
       guard let expectedId = UInt64(transactionId) else {
         throw StoreKitBillingError.invalidTransactionIdentifier
@@ -94,9 +97,6 @@ public final class StoreKitBillingModule: Module {
       for await verification in Transaction.unfinished {
         guard case .verified(let transaction) = verification else { continue }
         guard transaction.id == expectedId else { continue }
-        guard StoreKitBillingFinishGate.allowsFinish(isVerified: true, serverAcknowledged: true) else {
-          return false
-        }
         await transaction.finish()
         return true
       }

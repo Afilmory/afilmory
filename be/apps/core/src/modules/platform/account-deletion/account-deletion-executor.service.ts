@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import {
   accountDeletionRequests,
   authUsers,
@@ -161,6 +163,7 @@ export class AccountDeletionExecutor {
     const db = this.dbAccessor.get()
     await db.transaction(async (tx) => {
       await tx.execute(sql`select id from ${authUsers} where ${authUsers.id} = ${userId} for update`)
+      const transferredTenantIds: string[] = []
       for (const workspace of impact.workspaces) {
         const freshMembers = await tx
           .select({
@@ -196,6 +199,7 @@ export class AccountDeletionExecutor {
                 eq(tenantMemberships.status, 'active'),
               ),
             )
+          transferredTenantIds.push(workspace.tenantId)
           continue
         }
         if (workspace.slug === ROOT_TENANT_SLUG) {
@@ -205,6 +209,18 @@ export class AccountDeletionExecutor {
       }
 
       const now = new Date().toISOString()
+      // A transferred workspace outlives its former owner, so its billing subject must be released
+      // rather than tombstoned: the successor has to be able to purchase. Rotating the App Store
+      // account token also detaches the departing owner's Apple identity, so their renewal
+      // notifications no longer resolve to this workspace.
+      for (const tenantId of transferredTenantIds) {
+        await tx
+          .update(billingSubjects)
+          .set({ appAccountToken: randomUUID(), billingOwnerUserId: null, updatedAt: now })
+          .where(eq(billingSubjects.tenantId, tenantId))
+      }
+      // Deleted workspaces take their billing subject with them via the tenant cascade, so the
+      // remaining rows are subjects whose workspace neither moved nor was removed.
       await tx
         .update(billingSubjects)
         .set({ billingOwnerUserId: null, tombstonedAt: now, updatedAt: now })

@@ -153,19 +153,19 @@ export class AppStoreBillingService {
       .where(eq(billingSubjects.appAccountToken, appAccountToken))
       .limit(1)
       .then(rows => rows[0] ?? null)
-    if (!subject) {
-      throw new BillingError('APP_STORE_BILLING_SUBJECT_NOT_FOUND')
-    }
-    if (subject.tombstonedAt) {
+    // A subject goes missing when its workspace was deleted, and is tombstoned when the workspace
+    // outlived a deleted owner. Apple keeps sending renewals either way, so an unattributable
+    // notification is accepted and dropped — retrying it could never succeed.
+    if (!subject || subject.tombstonedAt) {
       if (context.expectedTenantId || context.expectedOwnerUserId) {
-        throw new BillingError('APP_STORE_BILLING_SUBJECT_TOMBSTONED')
+        throw new BillingError(subject ? 'APP_STORE_BILLING_SUBJECT_TOMBSTONED' : 'APP_STORE_BILLING_SUBJECT_NOT_FOUND')
       }
       return {
         duplicate: false,
         ignored: true,
         originalTransactionId,
         status: 'revoked' as const,
-        tenantId: subject.tenantId,
+        tenantId: subject?.tenantId ?? null,
         transactionId,
       }
     }

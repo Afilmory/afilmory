@@ -1,4 +1,5 @@
 import { requireActiveTenantIdentity } from '@core/context/auth-identity'
+import { isSecureRequest } from '@core/context/http-context.helper'
 import { AllowPlaceholderTenant } from '@core/decorators/allow-placeholder.decorator'
 import { SkipTenantGuard } from '@core/decorators/skip-tenant.decorator'
 import { BizException, ErrorCode } from '@core/errors'
@@ -66,7 +67,7 @@ export class MobileStorageHandoffExchangeController {
       maxAge: 15 * 60,
       path: CAPABILITY_PATH,
       sameSite: 'Lax',
-      secure: new URL(context.req.url).protocol === 'https:',
+      secure: isSecureRequest(context),
     })
     return {
       capabilityExpiresAt: result.capabilityExpiresAt,

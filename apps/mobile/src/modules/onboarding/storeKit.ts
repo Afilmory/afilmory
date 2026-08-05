@@ -7,24 +7,16 @@ import {
 } from '@/native/storeKitBilling'
 
 import { acknowledgeAppStoreTransaction, createAppStorePurchaseContext, restoreAppStoreTransactions } from './api'
+import type { StoreKitAcknowledgementPort } from './storeKitAcknowledgement'
+import { acknowledgeTransaction } from './storeKitAcknowledgement'
 
-const acknowledgements = new Map<string, Promise<void>>()
+const acknowledgementPort: StoreKitAcknowledgementPort = {
+  acknowledge: acknowledgeAppStoreTransaction,
+  finish: finishStoreKitTransaction,
+}
 
 export async function acknowledgeStoreKitTransaction(transaction: StoreKitTransaction): Promise<void> {
-  const existing = acknowledgements.get(transaction.transactionId)
-  if (existing) {
-    return await existing
-  }
-  const operation = acknowledgeAppStoreTransaction(transaction.signedTransactionInfo)
-    .then(async (acknowledgement) => {
-      if (acknowledgement.transactionId !== transaction.transactionId) {
-        throw new Error('The App Store transaction acknowledgement did not match the purchased transaction.')
-      }
-      await finishStoreKitTransaction(transaction.transactionId)
-    })
-    .finally(() => acknowledgements.delete(transaction.transactionId))
-  acknowledgements.set(transaction.transactionId, operation)
-  return await operation
+  return await acknowledgeTransaction(transaction, acknowledgementPort)
 }
 
 export async function purchaseAppStoreOffer(offerId: string): Promise<'cancelled' | 'completed' | 'pending'> {
