@@ -1,6 +1,7 @@
 import { BizException, ErrorCode } from '@core/errors'
 import { BypassResponseTransform } from '@core/interceptors/response-transform.decorator'
-import { Body, Controller, createZodSchemaDto, Get, Param, Post, Query } from '@tsuki-hono/common'
+import { Body, ContextParam, Controller, createZodSchemaDto, Get, Param, Post, Query } from '@tsuki-hono/common'
+import type { Context } from 'hono'
 import { z } from 'zod'
 
 import { ManifestService } from './manifest.service'
@@ -45,8 +46,39 @@ export class ManifestPublicController {
 
   @Get()
   @BypassResponseTransform()
-  async getManifest() {
-    return await this.manifestService.getManifest()
+  async getManifest(@ContextParam() context: Context): Promise<Response> {
+    const etag = await this.manifestService.getManifestETag()
+
+    const ifNoneMatch = context.req.header('if-none-match')
+    if (ifNoneMatch && this.matchesEtag(ifNoneMatch, etag)) {
+      return new Response(null, {
+        status: 304,
+        headers: { etag },
+      })
+    }
+
+    const manifest = await this.manifestService.getManifest()
+    return new Response(JSON.stringify(manifest), {
+      status: 200,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        etag,
+      },
+    })
+  }
+
+  private matchesEtag(headerValue: string, currentEtag: string): boolean {
+    const trimmed = headerValue.trim()
+    if (trimmed === '*') {
+      return true
+    }
+
+    const candidates = trimmed
+      .split(',')
+      .map(entry => entry.trim())
+      .filter(entry => entry.length > 0)
+
+    return candidates.includes(currentEtag)
   }
 
   @Get('photos')

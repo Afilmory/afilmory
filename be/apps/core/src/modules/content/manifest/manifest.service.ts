@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import type { AfilmoryManifest, CameraInfo, LensInfo, PhotoManifestItem } from '@afilmory/builder'
 import { CURRENT_MANIFEST_VERSION, migrateManifest } from '@afilmory/builder'
 import type { ManifestVersion } from '@afilmory/builder/manifest/version.js'
@@ -6,10 +8,17 @@ import { CURRENT_PHOTO_MANIFEST_VERSION, photoAssets } from '@afilmory/db'
 import { DbAccessor } from '@core/database/database.provider'
 import { requireTenantContext } from '@core/modules/platform/tenant/tenant.context'
 import { createLogger } from '@tsuki-hono/common'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, count, eq, inArray, max } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
 import { ensureCurrentPhotoAssetManifest } from './manifest-migration.helper'
+
+export function computeManifestETag(maxUpdatedAt: string | null, photoCount: number): string {
+  const hash = createHash('sha256')
+    .update(`${maxUpdatedAt ?? ''}:${photoCount}`)
+    .digest('hex')
+  return `"${hash}"`
+}
 
 export interface AfilmorySearchQuery {
   tags?: string[]
@@ -34,6 +43,21 @@ export class ManifestService {
   private readonly logger = createLogger('ManifestService')
 
   constructor(private readonly dbAccessor: DbAccessor) {}
+
+  async getManifestETag(): Promise<string> {
+    const tenant = requireTenantContext()
+    const db = this.dbAccessor.get()
+
+    const [row] = await db
+      .select({
+        maxUpdatedAt: max(photoAssets.updatedAt),
+        photoCount: count(),
+      })
+      .from(photoAssets)
+      .where(and(eq(photoAssets.tenantId, tenant.tenant.id), inArray(photoAssets.syncStatus, ['synced', 'conflict'])))
+
+    return computeManifestETag(row?.maxUpdatedAt ?? null, row?.photoCount ?? 0)
+  }
 
   async getManifest(): Promise<AfilmoryManifest> {
     const tenant = requireTenantContext()
