@@ -129,4 +129,22 @@ describe('cloudflareCustomHostnameService', () => {
 
     await expect(service.create('photos.example.com')).rejects.toThrow('Zone does not have a fallback origin set.')
   })
+
+  it('treats an already deleted hostname as a successful idempotent deletion', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          success: false,
+          errors: [{ code: 1436, message: 'The custom hostname was not found.' }],
+        }),
+        { status: 404, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+
+    await expect(service.delete('missing-hostname-id')).resolves.toBeUndefined()
+
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toContain('/custom_hostnames/missing-hostname-id')
+    expect(request.method).toBe('DELETE')
+  })
 })

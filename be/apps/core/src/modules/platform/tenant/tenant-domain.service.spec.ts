@@ -11,8 +11,10 @@ describe('tenantDomainService plan enforcement', () => {
   const repository = {
     countByTenant: vi.fn(),
     createDomain: vi.fn(),
+    deleteDomain: vi.fn(),
     findActiveByDomain: vi.fn(),
     findByDomain: vi.fn(),
+    listByTenant: vi.fn(),
   }
   const systemSettings = {
     getSettings: vi.fn(),
@@ -22,6 +24,7 @@ describe('tenantDomainService plan enforcement', () => {
   }
   const cloudflare = {
     createOrGet: vi.fn(),
+    delete: vi.fn(),
   }
   const billingPlanService = {
     ensureCustomDomainAllowance: vi.fn(),
@@ -41,6 +44,7 @@ describe('tenantDomainService plan enforcement', () => {
     repository.findByDomain.mockResolvedValue(null)
     repository.findActiveByDomain.mockResolvedValue(null)
     repository.countByTenant.mockResolvedValue(0)
+    repository.listByTenant.mockResolvedValue([])
     systemSettings.getSettings.mockResolvedValue({ baseDomain: 'afilmory.art' })
     billingPlanService.hasCustomDomainEntitlement.mockResolvedValue(true)
   })
@@ -80,5 +84,28 @@ describe('tenantDomainService plan enforcement', () => {
     billingPlanService.hasCustomDomainEntitlement.mockResolvedValue(false)
 
     await expect(service.resolveTenantByDomain('photos.example.net')).resolves.toBeNull()
+  })
+
+  it('deletes every Cloudflare hostname and local record when a tenant loses the plan entitlement', async () => {
+    repository.listByTenant.mockResolvedValue([
+      { id: 'domain-1', cloudflareHostnameId: 'cf-hostname-1' },
+      { id: 'domain-2', cloudflareHostnameId: null },
+    ])
+
+    await expect(service.deleteDomainsForTenant('tenant-1')).resolves.toBe(2)
+
+    expect(cloudflare.delete).toHaveBeenCalledOnce()
+    expect(cloudflare.delete).toHaveBeenCalledWith('cf-hostname-1')
+    expect(repository.deleteDomain).toHaveBeenNthCalledWith(1, 'domain-1')
+    expect(repository.deleteDomain).toHaveBeenNthCalledWith(2, 'domain-2')
+  })
+
+  it('keeps the local record when Cloudflare deletion fails so a webhook retry can finish cleanup', async () => {
+    repository.listByTenant.mockResolvedValue([{ id: 'domain-1', cloudflareHostnameId: 'cf-hostname-1' }])
+    cloudflare.delete.mockRejectedValueOnce(new Error('Cloudflare unavailable'))
+
+    await expect(service.deleteDomainsForTenant('tenant-1')).rejects.toThrow('Cloudflare unavailable')
+
+    expect(repository.deleteDomain).not.toHaveBeenCalled()
   })
 })

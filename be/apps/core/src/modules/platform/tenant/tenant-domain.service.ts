@@ -127,10 +127,16 @@ export class TenantDomainService {
     if (aggregate.tenant.id !== tenantContext.tenant.id) {
       throw new BizException(ErrorCode.COMMON_FORBIDDEN, { message: '无法操作其他空间的域名' })
     }
-    if (aggregate.domain.cloudflareHostnameId) {
-      await this.cloudflare.delete(aggregate.domain.cloudflareHostnameId)
+
+    await this.deleteDomainRecord(aggregate.domain)
+  }
+
+  async deleteDomainsForTenant(tenantId: string): Promise<number> {
+    const domains = await this.repository.listByTenant(tenantId)
+    for (const domain of domains) {
+      await this.deleteDomainRecord(domain)
     }
-    await this.repository.deleteDomain(domainId)
+    return domains.length
   }
 
   private normalizeDomain(value?: string | null): string | null {
@@ -158,6 +164,13 @@ export class TenantDomainService {
 
     const cloudflareHostname = await this.cloudflare.createOrGet(aggregate.domain.domain)
     return await this.syncCloudflareState(aggregate.domain.id, cloudflareHostname)
+  }
+
+  private async deleteDomainRecord(domain: TenantDomainRecord): Promise<void> {
+    if (domain.cloudflareHostnameId) {
+      await this.cloudflare.delete(domain.cloudflareHostnameId)
+    }
+    await this.repository.deleteDomain(domain.id)
   }
 
   private async syncCloudflareState(

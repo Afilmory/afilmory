@@ -16,6 +16,7 @@ import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/billing-plan.co
 import { BillingPlanService } from '@core/modules/platform/billing/billing-plan.service'
 import type { BillingPlanId } from '@core/modules/platform/billing/billing-plan.types'
 import { StoragePlanService } from '@core/modules/platform/billing/storage-plan.service'
+import { TenantDomainService } from '@core/modules/platform/tenant/tenant-domain.service'
 import type { FlatSubscriptionEvent } from '@creem_io/better-auth'
 import { creem } from '@creem_io/better-auth'
 import type { OnModuleInit } from '@tsuki-hono/common'
@@ -61,6 +62,7 @@ export class AuthProvider implements OnModuleInit {
     private readonly appleClientSecrets: AppleClientSecretService,
     private readonly billingPlanService: BillingPlanService,
     private readonly storagePlanService: StoragePlanService,
+    private readonly tenantDomainService: TenantDomainService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -536,11 +538,13 @@ export class AuthProvider implements OnModuleInit {
   }): Promise<void> {
     const { tenantId, planId, storagePlanId, event } = params
     let handled = false
+    let shouldDeleteCustomDomains = false
 
     if (planId) {
       handled = true
       try {
         await this.billingPlanService.updateTenantPlan(tenantId, 'free')
+        shouldDeleteCustomDomains = true
         logger.info(`[AuthProvider] Tenant ${tenantId} downgraded to free via Creem (${event})`)
       }
       catch (error) {
@@ -556,6 +560,20 @@ export class AuthProvider implements OnModuleInit {
       }
       catch (error) {
         logger.error(`[AuthProvider] Failed to clear tenant ${tenantId} storage plan after Creem ${event}`, error)
+      }
+    }
+
+    if (shouldDeleteCustomDomains) {
+      try {
+        const deletedCount = await this.tenantDomainService.deleteDomainsForTenant(tenantId)
+        logger.info(`[AuthProvider] Deleted ${deletedCount} custom domains for tenant ${tenantId} after Creem ${event}`)
+      }
+      catch (error) {
+        logger.error(
+          `[AuthProvider] Failed to delete custom domains for tenant ${tenantId} after Creem ${event}`,
+          error,
+        )
+        throw error
       }
     }
 

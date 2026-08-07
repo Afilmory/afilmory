@@ -95,7 +95,10 @@ export class CloudflareCustomHostnameService {
   }
 
   async delete(customHostnameId: string): Promise<void> {
-    await this.request<unknown>(`/custom_hostnames/${customHostnameId}`, { method: 'DELETE' })
+    await this.request<unknown>(`/custom_hostnames/${customHostnameId}`, {
+      method: 'DELETE',
+      ignoreNotFound: true,
+    })
   }
 
   private getConfig(): CloudflareCustomHostnameConfig {
@@ -130,7 +133,11 @@ export class CloudflareCustomHostnameService {
 
   private async request<T>(
     path: string,
-    options: { method?: 'DELETE' | 'GET' | 'PATCH' | 'POST', body?: Record<string, unknown> } = {},
+    options: {
+      method?: 'DELETE' | 'GET' | 'PATCH' | 'POST'
+      body?: Record<string, unknown>
+      ignoreNotFound?: boolean
+    } = {},
   ): Promise<T> {
     const config = this.getConfig()
     const method = options.method ?? 'GET'
@@ -143,6 +150,10 @@ export class CloudflareCustomHostnameService {
       body: options.body ? JSON.stringify(options.body) : undefined,
       signal: AbortSignal.timeout(10_000),
     })
+
+    if (options.ignoreNotFound && response.status === 404) {
+      return undefined as T
+    }
 
     let payload: CloudflareApiResponse<T> | null = null
     try {
