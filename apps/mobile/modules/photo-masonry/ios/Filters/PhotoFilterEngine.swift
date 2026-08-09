@@ -7,6 +7,17 @@ enum DatePreset: String, Codable, CaseIterable, Sendable {
   case thisMonth
   case thisYear
   case lastYear
+
+  var label: String {
+    switch self {
+    case .last7: String(localized: "Last 7 days")
+    case .last30: String(localized: "Last 30 days")
+    case .last90: String(localized: "Last 90 days")
+    case .thisMonth: String(localized: "This month")
+    case .thisYear: String(localized: "This year")
+    case .lastYear: String(localized: "Last year")
+    }
+  }
 }
 
 enum TagMode: String, Codable, Sendable {
@@ -211,7 +222,7 @@ enum PhotoFilterEngine {
     return nil
   }
 
-  static func summarize(_ filters: PhotoFilters, localization: Localization) -> String {
+  static func summarize(_ filters: PhotoFilters) -> String {
     var parts: [String] = []
     let query = filters.query.trimmingCharacters(in: .whitespacesAndNewlines)
     if !query.isEmpty {
@@ -221,24 +232,23 @@ enum PhotoFilterEngine {
     if filters.tags.count == 1 {
       parts.append(filters.tags[0])
     } else if filters.tags.count > 1 {
-      parts.append(localization.value("filter.summary.tags", count: filters.tags.count))
+      parts.append(String(localized: "\(filters.tags.count) tags"))
     }
     if filters.cameras.count == 1 {
       parts.append(filters.cameras[0])
     } else if filters.cameras.count > 1 {
-      parts.append(localization.value("filter.summary.cameras", count: filters.cameras.count))
+      parts.append(String(localized: "\(filters.cameras.count) cameras"))
     }
     if filters.lenses.count == 1 {
       parts.append(filters.lenses[0])
     } else if filters.lenses.count > 1 {
-      parts.append(localization.value("filter.summary.lenses", count: filters.lenses.count))
+      parts.append(String(localized: "\(filters.lenses.count) lenses"))
     }
     if let minRating = filters.minRating {
       parts.append("≥\(minRating)★")
     }
     if filters.dateFrom != nil || filters.dateTo != nil {
-      let key = filters.datePreset.map(datePresetKey) ?? "filter.dates"
-      parts.append(localization.value(key))
+      parts.append(filters.datePreset?.label ?? String(localized: "Dates"))
     }
     return parts.joined(separator: " · ")
   }
@@ -280,16 +290,5 @@ enum PhotoFilterEngine {
   private static func dateString(_ date: Date, calendar: Calendar) -> String {
     let components = calendar.dateComponents([.year, .month, .day], from: date)
     return String(format: "%04d-%02d-%02d", components.year!, components.month!, components.day!)
-  }
-
-  private static func datePresetKey(_ preset: DatePreset) -> String {
-    switch preset {
-    case .last7: "action.date.preset.last7"
-    case .last30: "action.date.preset.last30"
-    case .last90: "action.date.preset.last90"
-    case .thisMonth: "action.date.preset.thisMonth"
-    case .thisYear: "action.date.preset.thisYear"
-    case .lastYear: "action.date.preset.lastYear"
-    }
   }
 }

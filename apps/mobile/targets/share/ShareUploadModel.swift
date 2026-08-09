@@ -15,7 +15,6 @@ final class ShareUploadModel: ObservableObject {
   @Published var draft = ""
   @Published var errorMessage: String?
 
-  let localization = ShareLocalization.current
 
   private let onCancel: () -> Void
   private let onComplete: () -> Void
@@ -186,14 +185,14 @@ final class ShareUploadModel: ObservableObject {
           }
           isSubmitting = false
           submissionStartedAt = nil
-          errorMessage = receipt.message ?? localization.failedTitle
+          errorMessage = receipt.message ?? String(localized: "Upload could not start")
         }
         if isSubmitting,
            let submissionStartedAt,
            Date.now.timeIntervalSince(submissionStartedAt) >= 120 {
           isSubmitting = false
           self.submissionStartedAt = nil
-          errorMessage = localization.handoffTimeout
+          errorMessage = String(localized: "Afilmory did not confirm the upload queue. Please try again.")
         }
         try? await Task.sleep(for: .milliseconds(200))
       }

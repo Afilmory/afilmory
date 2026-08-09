@@ -33,9 +33,9 @@ final class StudioOperationsViewModel: ObservableObject {
     guard !running else { return }
     running = true
     runProgress = 0
-    runMessage = Localization.t(
-      dryRun ? "studio.operations.dryRunRunning" : "studio.operations.syncRunning"
-    )
+    runMessage = dryRun
+      ? String(localized: "Comparing storage and database…")
+      : String(localized: "Synchronizing storage and database…")
     defer {
       running = false
       runMessage = nil
@@ -54,11 +54,9 @@ final class StudioOperationsViewModel: ObservableObject {
         }
       }
       await load()
-      completionMessage = Localization.t(
-        dryRun
-          ? "studio.operations.dryRunComplete.description"
-          : "studio.operations.syncComplete.description"
-      )
+      completionMessage = dryRun
+        ? String(localized: "The comparison completed without applying changes.")
+        : String(localized: "Storage and database synchronization completed.")
     } catch {
       operationError = error
     }
@@ -95,64 +93,64 @@ struct StudioOperationsView: View {
     .task { await model.load() }
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
-        Button(Localization.t("studio.operations.run.action"), systemImage: "arrow.triangle.2.circlepath") {
+        Button(String(localized: "Run"), systemImage: "arrow.triangle.2.circlepath") {
           showRunModes = true
         }
         .disabled(model.running || model.resolvingID != nil)
       }
     }
     .confirmationDialog(
-      Localization.t("studio.operations.run.title"),
+      String(localized: "Run data sync"),
       isPresented: $showRunModes,
       titleVisibility: .visible
     ) {
-      Button(Localization.t("studio.operations.run.dry")) {
+      Button(String(localized: "Dry run")) {
         Task { await model.run(dryRun: true) }
       }
-      Button(Localization.t("studio.operations.run.apply")) {
+      Button(String(localized: "Sync now")) {
         Task { await model.run(dryRun: false) }
       }
-      Button(Localization.t("common.cancel"), role: .cancel) {}
+      Button(String(localized: "Cancel"), role: .cancel) {}
     } message: {
-      Text(Localization.t("studio.operations.run.description"))
+      Text("A dry run only compares data. Sync now applies the resulting changes.")
     }
     .confirmationDialog(
-      Localization.t("studio.operations.resolve.title"),
+      String(localized: "Resolve conflict"),
       isPresented: Binding(
         get: { resolutionConflict != nil },
         set: { if !$0 { resolutionConflict = nil } }
       ),
       titleVisibility: .visible
     ) {
-      Button(Localization.t("studio.operations.resolve.database")) {
+      Button(String(localized: "Use database")) {
         resolve(using: "prefer-database")
       }
-      Button(Localization.t("studio.operations.resolve.storage")) {
+      Button(String(localized: "Use storage")) {
         resolve(using: "prefer-storage")
       }
-      Button(Localization.t("common.cancel"), role: .cancel) { resolutionConflict = nil }
+      Button(String(localized: "Cancel"), role: .cancel) { resolutionConflict = nil }
     } message: {
-      Text(Localization.t("studio.operations.resolve.description"))
+      Text("Choose which version should become authoritative.")
     }
     .alert(
-      Localization.t("studio.operations.runFailed"),
+      String(localized: "Data sync failed"),
       isPresented: Binding(
         get: { model.operationError != nil },
         set: { if !$0 { model.operationError = nil } }
       )
     ) {
-      Button(Localization.t("common.done")) { model.operationError = nil }
+      Button(String(localized: "Done")) { model.operationError = nil }
     } message: {
       Text(model.operationError?.localizedDescription ?? "")
     }
     .alert(
-      Localization.t("studio.operations.syncComplete.title"),
+      String(localized: "Sync complete"),
       isPresented: Binding(
         get: { model.completionMessage != nil },
         set: { if !$0 { model.completionMessage = nil } }
       )
     ) {
-      Button(Localization.t("common.done")) { model.completionMessage = nil }
+      Button(String(localized: "Done")) { model.completionMessage = nil }
     } message: {
       Text(model.completionMessage ?? "")
     }
@@ -161,55 +159,55 @@ struct StudioOperationsView: View {
   private var operationsForm: some View {
     Form {
       if model.running {
-        Section(Localization.t("studio.operations.currentRun")) {
+        Section(String(localized: "Current operation")) {
           VStack(alignment: .leading, spacing: 8) {
-            Text(model.runMessage ?? Localization.t("studio.operations.syncRunning"))
+            Text(model.runMessage ?? String(localized: "Synchronizing storage and database…"))
             ProgressView(value: model.runProgress)
           }
         }
       }
 
-      Section(Localization.t("studio.operations.lastRun")) {
+      Section(String(localized: "Last run")) {
         if let lastRun = model.status?.lastRun {
           LabeledContent(
-            Localization.t("studio.operations.completedAt"),
+            String(localized: "Completed"),
             value: NativeStudioFormatters.dateTime(lastRun.completedAt) ?? "—"
           )
           LabeledContent(
-            Localization.t("studio.operations.runMode"),
-            value: Localization.t(
-              lastRun.dryRun ? "studio.operations.mode.dryRun" : "studio.operations.mode.applied"
-            )
+            String(localized: "Mode"),
+            value: lastRun.dryRun
+              ? String(localized: "Dry run")
+              : String(localized: "Applied")
           )
           LabeledContent(
-            Localization.t("studio.operations.actions"),
+            String(localized: "Actions"),
             value: NativeStudioFormatters.count(lastRun.actionsCount)
           )
           LabeledContent(
-            Localization.t("studio.metric.conflicts"),
+            String(localized: "Conflicts"),
             value: NativeStudioFormatters.count(lastRun.summary.conflicts)
           )
           LabeledContent(
-            Localization.t("studio.operations.errors"),
+            String(localized: "Errors"),
             value: NativeStudioFormatters.count(lastRun.summary.errors)
           )
         } else {
           ContentUnavailableView(
-            Localization.t("studio.operations.noRuns"),
+            String(localized: "No sync history"),
             systemImage: "clock.arrow.circlepath",
-            description: Text(Localization.t("studio.operations.neverSynced"))
+            description: Text("No sync has completed yet")
           )
         }
       }
 
       Section(
-        Localization.t("studio.operations.conflicts", ["count": String(model.conflicts.count)])
+        String(localized: "Conflicts (\(model.conflicts.count))")
       ) {
         if model.conflicts.isEmpty {
           ContentUnavailableView(
-            Localization.t("studio.operations.noConflicts.title"),
+            String(localized: "No unresolved conflicts"),
             systemImage: "checkmark.circle",
-            description: Text(Localization.t("studio.operations.noConflicts.description"))
+            description: Text("Storage and database records are aligned.")
           )
         } else {
           ForEach(model.conflicts) { conflict in

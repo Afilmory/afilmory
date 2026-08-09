@@ -47,18 +47,18 @@ struct PhotoCommentsSheetView: View {
       .scrollDisabled(true)
     case .failed:
       ContentUnavailableView {
-        Label(store.localization.error, systemImage: "exclamationmark.triangle")
+        Label(String(localized: "Unable to load comments"), systemImage: "exclamationmark.triangle")
       } actions: {
-        Button(store.localization.retry) {
+        Button(String(localized: "Retry")) {
           Task { await store.loadInitial() }
         }
       }
     case .loaded:
       if store.collection.comments.isEmpty {
         ContentUnavailableView {
-          Label(store.localization.empty, systemImage: "bubble.left")
+          Label(String(localized: "No comments yet. Be the first to comment!"), systemImage: "bubble.left")
         } actions: {
-          Button(store.localization.retry) {
+          Button(String(localized: "Retry")) {
             Task { await store.refresh() }
           }
         }
@@ -75,7 +75,7 @@ struct PhotoCommentsSheetView: View {
           if let inlineError = store.inlineError {
             CommentInlineErrorView(
               message: inlineError,
-              dismissLabel: store.localization.done,
+              dismissLabel: String(localized: "Done"),
               onDismiss: store.dismissInlineError
             )
             .padding(.vertical, 4)
@@ -93,12 +93,12 @@ struct PhotoCommentsSheetView: View {
             ProgressView()
               .frame(maxWidth: .infinity)
               .padding(.vertical, 18)
-              .accessibilityLabel(store.localization.sending)
+              .accessibilityLabel(String(localized: "Sending…"))
           } else if store.loadMoreFailed {
             Button {
               Task { await store.retryLoadMore() }
             } label: {
-              Label(store.localization.loadMoreFailed, systemImage: "arrow.clockwise")
+              Label(String(localized: "Unable to load more comments. Try again."), systemImage: "arrow.clockwise")
                 .font(.footnote)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)

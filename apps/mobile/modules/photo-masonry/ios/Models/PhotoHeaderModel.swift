@@ -55,9 +55,9 @@ struct PhotoHeaderModel: Codable, Equatable, Sendable {
     localeIdentifier: String,
     timeZone: TimeZone
   ) -> String {
-    let language = LanguageTag.resolve(localeIdentifier)
+    let language = PhotoDateLanguage.resolve(localeIdentifier)
     let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: language == .english ? "en_US" : language.localeIdentifier)
+    formatter.locale = language.formattingLocale
     formatter.timeZone = timeZone
     switch language {
     case .english:
@@ -77,9 +77,9 @@ struct PhotoHeaderModel: Codable, Equatable, Sendable {
     localeIdentifier: String,
     timeZone: TimeZone
   ) -> String {
-    let language = LanguageTag.resolve(localeIdentifier)
+    let language = PhotoDateLanguage.resolve(localeIdentifier)
     let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: language == .english ? "en_US" : language.localeIdentifier)
+    formatter.locale = language.formattingLocale
     formatter.timeZone = timeZone
     switch language {
     case .english:

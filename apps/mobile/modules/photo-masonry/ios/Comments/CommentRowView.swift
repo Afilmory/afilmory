@@ -44,26 +44,26 @@ struct CommentRowView: View {
     .opacity(isFlightTarget ? 0 : 1)
     .contentShape(Rectangle())
     .contextMenu {
-      Button(liked ? store.localization.unlike : store.localization.like, systemImage: liked ? "heart.slash" : "heart") {
+      Button(liked ? String(localized: "Remove like") : String(localized: "Like comment"), systemImage: liked ? "heart.slash" : "heart") {
         Task { await store.toggleReaction(comment.id) }
       }
       .disabled(isSending || reactionBusy)
 
-      Button(store.localization.copy, systemImage: "document.on.document") {
+      Button(String(localized: "Copy"), systemImage: "document.on.document") {
         UIPasteboard.general.string = comment.content
       }
     }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(accessibilityLabel)
-    .accessibilityAction(named: Text(store.localization.reply)) {
+    .accessibilityAction(named: Text(String(localized: "Reply"))) {
       guard !isSending else { return }
       store.beginReply(to: comment)
     }
-    .accessibilityAction(named: Text(liked ? store.localization.unlike : store.localization.like)) {
+    .accessibilityAction(named: Text(liked ? String(localized: "Remove like") : String(localized: "Like comment"))) {
       guard !isSending, !reactionBusy else { return }
       Task { await store.toggleReaction(comment.id) }
     }
-    .accessibilityAction(named: Text(store.localization.copy)) {
+    .accessibilityAction(named: Text(String(localized: "Copy"))) {
       UIPasteboard.general.string = comment.content
     }
   }
@@ -118,7 +118,7 @@ struct CommentRowView: View {
         Image(systemName: "arrowshape.turn.up.left")
           .font(.system(size: 11))
           .foregroundStyle(own ? Color.white.opacity(0.7) : Color(.tertiaryLabel))
-        Text(store.localization.replyingTo(store.authorName(for: parent)))
+        Text("Replying to \(store.authorName(for: parent))")
           .font(.system(size: 10))
           .foregroundStyle(own ? Color.white.opacity(0.72) : Color(.tertiaryLabel))
           .lineLimit(1)
@@ -154,7 +154,7 @@ struct CommentRowView: View {
   }
 
   private var sendingFooter: some View {
-    Text(store.localization.sending)
+    Text(String(localized: "Sending…"))
       .font(.system(size: 10))
       .foregroundStyle(.tertiary)
       .frame(minHeight: 26)
@@ -171,7 +171,7 @@ struct CommentRowView: View {
       }
 
       if comment.status == .pending {
-        Text(store.localization.pending)
+        Text(String(localized: "Pending review"))
           .font(.system(size: 9, weight: .bold))
           .textCase(.uppercase)
           .foregroundStyle(Color(red: 1, green: 0.816, blue: 0.541))
@@ -215,7 +215,7 @@ struct CommentRowView: View {
     .buttonStyle(.plain)
     .disabled(reactionBusy || isSending)
     .opacity(isSending ? 0.38 : 1)
-    .accessibilityLabel("\(liked ? store.localization.unlike : store.localization.like), \(likeCount)")
+    .accessibilityLabel("\(liked ? String(localized: "Remove like") : String(localized: "Like comment")), \(likeCount)")
   }
 
   private var replyButton: some View {
@@ -225,7 +225,7 @@ struct CommentRowView: View {
       HStack(spacing: 4) {
         Image(systemName: "arrowshape.turn.up.left")
           .font(.system(size: 12))
-        Text(store.localization.reply)
+        Text(String(localized: "Reply"))
           .font(.system(size: 11, weight: .medium))
       }
       .foregroundStyle(.secondary)
@@ -235,7 +235,7 @@ struct CommentRowView: View {
     .buttonStyle(.plain)
     .disabled(isSending)
     .opacity(isSending ? 0.38 : 1)
-    .accessibilityLabel(store.localization.reply)
+    .accessibilityLabel(String(localized: "Reply"))
   }
 
   private var profileURL: URL? {
@@ -249,7 +249,6 @@ struct CommentRowView: View {
     guard let date = comment.createdDate else { return nil }
     return date.formatted(
       Date.RelativeFormatStyle(presentation: .named, unitsStyle: .abbreviated)
-        .locale(Locale(identifier: store.localization.locale))
     )
   }
 
@@ -257,9 +256,9 @@ struct CommentRowView: View {
     [
       author,
       isSending ? nil : relativeTime,
-      parent.map { store.localization.replyingTo(store.authorName(for: $0)) },
+      parent.map { String(localized: "Replying to \(store.authorName(for: $0))") },
       comment.content,
-      isSending ? store.localization.sending : nil,
+      isSending ? String(localized: "Sending…") : nil,
     ]
       .compactMap { $0 }
       .joined(separator: ", ")

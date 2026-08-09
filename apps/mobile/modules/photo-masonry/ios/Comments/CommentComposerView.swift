@@ -31,12 +31,12 @@ struct CommentComposerView: View {
             .font(.system(size: 12))
             .foregroundStyle(.secondary)
             .accessibilityHidden(true)
-          Text(store.localization.replyingTo(store.authorName(for: reply)))
+          Text("Replying to \(store.authorName(for: reply))")
             .font(.system(size: 12))
             .foregroundStyle(.secondary)
             .lineLimit(1)
           Spacer(minLength: 8)
-          Button(store.localization.cancelReply, systemImage: "xmark") {
+          Button(String(localized: "Cancel reply"), systemImage: "xmark") {
             store.cancelReply()
           }
           .labelStyle(.iconOnly)
@@ -58,7 +58,7 @@ struct CommentComposerView: View {
       HStack(alignment: .bottom, spacing: CommentComposerMetrics.contentSpacing) {
         VStack(alignment: .trailing, spacing: 3) {
           TextField(
-            store.flight == nil ? store.localization.placeholder : "",
+            store.flight == nil ? String(localized: "Add a comment…") : "",
             text: $store.draft,
             axis: .vertical
           )
@@ -68,7 +68,7 @@ struct CommentComposerView: View {
             .textFieldStyle(.plain)
             .submitLabel(.send)
             .disabled(store.isSending)
-            .accessibilityLabel(store.localization.placeholder)
+            .accessibilityLabel(String(localized: "Add a comment…"))
             .onSubmit {
               guard store.canSend else { return }
               Task { await store.send() }
@@ -104,7 +104,7 @@ struct CommentComposerView: View {
         .buttonStyle(.plain)
         .disabled(!store.canSend)
         .opacity(store.canSend ? 1 : 0.38)
-        .accessibilityLabel(store.localization.send)
+        .accessibilityLabel(String(localized: "Send"))
       }
       .padding(CommentComposerMetrics.chromeInset)
       .background {

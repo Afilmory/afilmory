@@ -107,8 +107,8 @@ final class PhotoDetailLoadingPillView: UIView {
   private let titleLabel = UILabel()
   private let subtitleLabel = UILabel()
 
-  private let loadingTitle = Localization.t("photo.loading.original")
-  private let failedTitle = Localization.t("photo.loading.failed")
+  private let loadingTitle = String(localized: "Loading original")
+  private let failedTitle = String(localized: "Failed to load original")
 
   private var machine = PhotoLoadPillStateMachine()
   private var pendingTick: DispatchWorkItem?

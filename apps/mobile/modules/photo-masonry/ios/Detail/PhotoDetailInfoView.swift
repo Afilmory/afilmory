@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 final class PhotoDetailInfoView: UIView {
-  private var info = PhotoInfoSheetRecord()
+  private var info = PhotoInfoSheetModel.empty
   private var hostingController: UIHostingController<PhotoInfoInspectorView>!
   private var scrollEdgeInteraction: AnyObject?
   private weak var edgeEffectScrollView: UIScrollView?
@@ -66,9 +66,8 @@ final class PhotoDetailInfoView: UIView {
     }
   }
 
-  func setInfoJSON(_ json: String) {
-    guard let decoded = PhotoInfoSheetRecord.decode(json: json) else { return }
-    info = decoded
+  func setInfo(_ value: PhotoInfoSheetModel) {
+    info = value
     hostingController.rootView = makeRootView()
   }
 

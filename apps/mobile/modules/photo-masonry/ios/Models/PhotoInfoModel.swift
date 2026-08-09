@@ -27,52 +27,69 @@ struct PhotoInfoSheetModel: Codable, Equatable, Sendable {
   let place: String?
   let sections: [PhotoInfoSection]
   let tags: [String]
+
+  static let empty = PhotoInfoSheetModel(
+    gear: PhotoInfoGear(
+      model: "",
+      formatBadge: nil,
+      styleBadge: nil,
+      lens: nil,
+      rating: 0,
+      specs: [],
+      tone: nil,
+      exposure: []
+    ),
+    description: nil,
+    emptyMessage: nil,
+    histogramUrl: nil,
+    mapLocation: nil,
+    place: nil,
+    sections: [],
+    tags: []
+  )
 }
 
 enum PhotoInfoModel {
   static func build(
     photo: GalleryPhoto,
-    localization: Localization,
     localeIdentifier: String,
     timeZone: TimeZone = .current
   ) -> PhotoInfoSheetModel {
     let exif = photo.exif
     var sections: [PhotoInfoSection] = []
     if let exif {
-      if let section = exposureSection(exif: exif, localization: localization) {
+      if let section = exposureSection(exif: exif) {
         sections.append(section)
       }
-      if let section = fujiSection(recipe: exif["FujiRecipe"]?.object, localization: localization) {
+      if let section = fujiSection(recipe: exif["FujiRecipe"]?.object) {
         sections.append(section)
       }
     }
-    if let section = toneSection(photo: photo, localization: localization) {
+    if let section = toneSection(photo: photo) {
       sections.append(section)
     }
-    if let section = locationSection(photo: photo, exif: exif, localization: localization) {
+    if let section = locationSection(photo: photo, exif: exif) {
       sections.append(section)
     }
     if let section = fileSection(
       photo: photo,
       exif: exif,
-      localization: localization,
       localeIdentifier: localeIdentifier,
       timeZone: timeZone
     ) {
       sections.append(section)
     }
-    if let section = attributionSection(exif: exif, localization: localization) {
+    if let section = attributionSection(exif: exif) {
       sections.append(section)
     }
     return PhotoInfoSheetModel(
       gear: PhotoInfoGear.build(
         photo: photo,
         exif: exif,
-        localization: localization,
         localeIdentifier: localeIdentifier
       ),
       description: photo.description.isEmpty ? nil : photo.description,
-      emptyMessage: exif == nil ? localization.value("photo.noExif") : nil,
+      emptyMessage: exif == nil ? String(localized: "No embedded EXIF metadata is available for this photo.") : nil,
       histogramUrl: photo.toneAnalysis == nil ? nil : photo.thumbnailUrl,
       mapLocation: mapLocation(photo: photo, exif: exif),
       place: place(photo: photo),
@@ -82,12 +99,10 @@ enum PhotoInfoModel {
   }
 
   private static func exposureSection(
-    exif: GalleryExif,
-    localization: Localization
+    exif: GalleryExif
   ) -> PhotoInfoSection? {
     let hasRecipe = exif["FujiRecipe"] != nil
     let summary = PhotoInfoFormatters.translatedExifValue(
-      localization,
       prefix: "exif.exposureprogram",
       value: exif["ExposureProgram"]
     )
@@ -95,109 +110,101 @@ enum PhotoInfoModel {
     let y = PhotoInfoFormatters.text(exif["FocalPlaneYResolution"])
     return section(
       id: "exposure",
-      title: localization.value("mobile.photoInfo.exposure"),
+      title: String(localized: "Exposure & Metering"),
       summary: summary,
       rows: [
         row(
           id: "exposure-program",
-          label: localization.value("exif.exposureprogram.title"),
+          label: String(localized: "Exposure Program"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.exposureprogram",
             value: exif["ExposureProgram"]
           )
         ),
         row(
           id: "exposure-mode",
-          label: localization.value("exif.exposure.mode.title"),
+          label: String(localized: "Exposure Mode"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.exposure.mode",
             value: exif["ExposureMode"]
           )
         ),
         row(
           id: "metering-mode",
-          label: localization.value("exif.metering.mode.type"),
+          label: String(localized: "Metering Mode"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.metering.mode",
             value: exif["MeteringMode"]
           )
         ),
         row(
           id: "white-balance",
-          label: localization.value("exif.white.balance.title"),
+          label: String(localized: "White Balance"),
           value: hasRecipe ? nil : PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.white.balance",
             value: exif["WhiteBalance"]
           )
         ),
         row(
           id: "white-balance-bias",
-          label: localization.value("exif.white.balance.bias"),
+          label: String(localized: "White Balance Bias"),
           value: PhotoInfoFormatters.formatMired(exif["WhiteBalanceBias"])
         ),
         row(
           id: "white-balance-ab",
-          label: localization.value("exif.white.balance.shift.ab"),
+          label: String(localized: "White Balance Shift (Amber-Blue)"),
           value: PhotoInfoFormatters.text(exif["WBShiftAB"])
         ),
         row(
           id: "white-balance-gm",
-          label: localization.value("exif.white.balance.shift.gm"),
+          label: String(localized: "White Balance Shift (Green-Magenta)"),
           value: PhotoInfoFormatters.text(exif["WBShiftGM"])
         ),
         row(
           id: "flash",
-          label: localization.value("exif.flash.title"),
+          label: String(localized: "Flash"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.flash",
             value: exif["Flash"]
           )
         ),
         row(
           id: "flash-metering",
-          label: localization.value("exif.flash.metering.mode"),
+          label: String(localized: "Flash Metering Mode"),
           value: PhotoInfoFormatters.text(exif["FlashMeteringMode"])
         ),
         row(
           id: "light-source",
-          label: localization.value("exif.light.source.type"),
+          label: String(localized: "Light Source"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.light.source",
             value: exif["LightSource"]
           )
         ),
         row(
           id: "scene-type",
-          label: localization.value("exif.scene.capture.type"),
+          label: String(localized: "Scene Capture Type"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.scene.capture",
             value: exif["SceneCaptureType"]
           )
         ),
         row(
           id: "brightness",
-          label: localization.value("exif.brightness.value"),
+          label: String(localized: "Brightness Value"),
           value: PhotoInfoFormatters.formatEV(exif["BrightnessValue"])
         ),
         row(
           id: "sensing-method",
-          label: localization.value("exif.sensing.method.type"),
+          label: String(localized: "Sensing Method"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.sensing.method",
             value: exif["SensingMethod"]
           )
         ),
         row(
           id: "focal-plane",
-          label: localization.value("exif.focal.plane.resolution"),
+          label: String(localized: "Focal Plane Resolution"),
           value: x == nil && y == nil ? nil : "\(x ?? "—") × \(y ?? "—")"
         ),
       ]
@@ -205,97 +212,92 @@ enum PhotoInfoModel {
   }
 
   private static func fujiSection(
-    recipe: [String: JSONValue]?,
-    localization: Localization
+    recipe: [String: JSONValue]?
   ) -> PhotoInfoSection? {
     guard let recipe else { return nil }
     return section(
       id: "fuji-recipe",
-      title: localization.value("mobile.photoInfo.filmSimulation"),
+      title: String(localized: "Film Simulation"),
       summary: PhotoInfoFormatters.formatFilmMode(recipe["FilmMode"]),
       rows: [
         row(
           id: "film-mode",
-          label: localization.value("exif.film.mode"),
+          label: String(localized: "Film Mode"),
           value: PhotoInfoFormatters.formatFilmMode(recipe["FilmMode"])
         ),
         row(
           id: "dynamic-range",
-          label: localization.value("exif.dynamic.range"),
-          value: PhotoInfoFormatters.formatFujiDynamicRange(recipe, localization: localization)
+          label: String(localized: "Dynamic Range"),
+          value: PhotoInfoFormatters.formatFujiDynamicRange(recipe)
         ),
         row(
           id: "white-balance",
-          label: localization.value("exif.white.balance.title"),
-          value: PhotoInfoFormatters.formatFujiWhiteBalance(recipe, localization: localization)
+          label: String(localized: "White Balance"),
+          value: PhotoInfoFormatters.formatFujiWhiteBalance(recipe)
         ),
         row(
           id: "highlight-tone",
-          label: localization.value("exif.highlight.tone"),
+          label: String(localized: "Highlight Tone"),
           value: PhotoInfoFormatters.cleanRecipeValue(recipe["HighlightTone"])
         ),
         row(
           id: "shadow-tone",
-          label: localization.value("exif.shadow.tone"),
+          label: String(localized: "Shadow Tone"),
           value: PhotoInfoFormatters.cleanRecipeValue(recipe["ShadowTone"])
         ),
         row(
           id: "saturation",
-          label: localization.value("exif.saturation"),
+          label: String(localized: "Saturation"),
           value: PhotoInfoFormatters.cleanRecipeValue(recipe["Saturation"])
         ),
         row(
           id: "sharpness",
-          label: localization.value("exif.sharpness"),
+          label: String(localized: "Sharpness"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.fujirecipe-sharpness",
             value: recipe["Sharpness"]
           )
         ),
         row(
           id: "noise-reduction",
-          label: localization.value("exif.noise.reduction"),
+          label: String(localized: "Noise Reduction"),
           value: PhotoInfoFormatters.cleanRecipeValue(recipe["NoiseReduction"])
         ),
         row(
           id: "clarity",
-          label: localization.value("exif.clarity"),
+          label: String(localized: "Clarity"),
           value: PhotoInfoFormatters.text(recipe["Clarity"])
         ),
         row(
           id: "color-chrome",
-          label: localization.value("exif.color.effect"),
+          label: String(localized: "Color Effect"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.fujirecipe-colorchromeeffect",
             value: recipe["ColorChromeEffect"]
           )
         ),
         row(
           id: "color-chrome-blue",
-          label: localization.value("exif.blue.color.effect"),
+          label: String(localized: "Blue Color Effect"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.fujirecipe-colorchromefxblue",
             value: recipe["ColorChromeFxBlue"]
           )
         ),
         row(
           id: "white-balance-fine-tune",
-          label: localization.value("exif.white.balance.fine.tune"),
+          label: String(localized: "White Balance Fine Tune"),
           value: PhotoInfoFormatters.text(recipe["WhiteBalanceFineTune"])
         ),
         row(
           id: "grain-intensity",
-          label: localization.value("exif.grain.effect.intensity"),
+          label: String(localized: "Grain Effect Intensity"),
           value: PhotoInfoFormatters.text(recipe["GrainEffectRoughness"])
         ),
         row(
           id: "grain-size",
-          label: localization.value("exif.grain.effect.size"),
+          label: String(localized: "Grain Effect Size"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.fujirecipe-graineffectsize",
             value: recipe["GrainEffectSize"]
           )
@@ -305,30 +307,29 @@ enum PhotoInfoModel {
   }
 
   private static func toneSection(
-    photo: GalleryPhoto,
-    localization: Localization
+    photo: GalleryPhoto
   ) -> PhotoInfoSection? {
     guard let tone = photo.toneAnalysis else { return nil }
     let brightness = PhotoInfoFormatters.formatPercentage(tone.brightness, scale: 1)
     return section(
       id: "tone",
-      title: localization.value("mobile.photoInfo.tone"),
+      title: String(localized: "Tone"),
       summary: brightness,
       rows: [
-        row(id: "brightness", label: localization.value("exif.brightness.title"), value: brightness),
+        row(id: "brightness", label: String(localized: "Brightness"), value: brightness),
         row(
           id: "contrast",
-          label: localization.value("exif.contrast.title"),
+          label: String(localized: "Contrast"),
           value: PhotoInfoFormatters.formatPercentage(tone.contrast, scale: 1)
         ),
         row(
           id: "shadow-ratio",
-          label: localization.value("exif.shadow.ratio"),
+          label: String(localized: "Shadow Ratio"),
           value: PhotoInfoFormatters.formatPercentage(tone.shadowRatio, scale: 100)
         ),
         row(
           id: "highlight-ratio",
-          label: localization.value("exif.highlight.ratio"),
+          label: String(localized: "Highlight Ratio"),
           value: PhotoInfoFormatters.formatPercentage(tone.highlightRatio, scale: 100)
         ),
       ]
@@ -337,18 +338,17 @@ enum PhotoInfoModel {
 
   private static func locationSection(
     photo: GalleryPhoto,
-    exif: GalleryExif?,
-    localization: Localization
+    exif: GalleryExif?
   ) -> PhotoInfoSection? {
     let altitude = PhotoInfoFormatters.formatAltitude(exif)
     return section(
       id: "location",
-      title: localization.value("mobile.photoInfo.locationDetail"),
+      title: String(localized: "Location Details"),
       summary: altitude,
       rows: [
         row(
           id: "latitude",
-          label: localization.value("exif.gps.latitude"),
+          label: String(localized: "Latitude"),
           value: PhotoInfoFormatters.formatCoordinate(
             exif?["GPSLatitude"] ?? photo.location?.latitude.map(JSONValue.number),
             reference: exif?["GPSLatitudeRef"]
@@ -356,16 +356,16 @@ enum PhotoInfoModel {
         ),
         row(
           id: "longitude",
-          label: localization.value("exif.gps.longitude"),
+          label: String(localized: "Longitude"),
           value: PhotoInfoFormatters.formatCoordinate(
             exif?["GPSLongitude"] ?? photo.location?.longitude.map(JSONValue.number),
             reference: exif?["GPSLongitudeRef"]
           )
         ),
-        row(id: "altitude", label: localization.value("exif.gps.altitude"), value: altitude),
+        row(id: "altitude", label: String(localized: "Altitude"), value: altitude),
         row(
           id: "address",
-          label: localization.value("exif.gps.address"),
+          label: String(localized: "Address"),
           value: photo.location?.locationName
         ),
       ]
@@ -375,29 +375,27 @@ enum PhotoInfoModel {
   private static func fileSection(
     photo: GalleryPhoto,
     exif: GalleryExif?,
-    localization: Localization,
     localeIdentifier: String,
     timeZone: TimeZone
   ) -> PhotoInfoSection? {
     let filename = PhotoInfoFormatters.text(photo.title)
     return section(
       id: "file",
-      title: localization.value("mobile.photoInfo.file"),
+      title: String(localized: "Image & File"),
       summary: filename,
       rows: [
-        row(id: "filename", label: localization.value("exif.filename"), value: filename),
+        row(id: "filename", label: String(localized: "Filename"), value: filename),
         row(
           id: "color-space",
-          label: localization.value("exif.color.space"),
+          label: String(localized: "Color Space"),
           value: PhotoInfoFormatters.translatedExifValue(
-            localization,
             prefix: "exif.colorspace",
             value: exif?["ColorSpace"]
           )
         ),
         row(
           id: "capture-time",
-          label: localization.value("exif.capture.time"),
+          label: String(localized: "Capture Time"),
           value: PhotoInfoFormatters.formatDate(
             PhotoInfoFormatters.text(exif?["DateTimeOriginal"]) ?? photo.dateTaken,
             localeIdentifier: localeIdentifier,
@@ -406,7 +404,7 @@ enum PhotoInfoModel {
         ),
         row(
           id: "time-zone",
-          label: localization.value("exif.time.zone"),
+          label: String(localized: "Time Zone"),
           value: PhotoInfoFormatters.text(exif?["zone"] ?? exif?["tz"])
         ),
       ]
@@ -414,24 +412,23 @@ enum PhotoInfoModel {
   }
 
   private static func attributionSection(
-    exif: GalleryExif?,
-    localization: Localization
+    exif: GalleryExif?
   ) -> PhotoInfoSection? {
     let artist = PhotoInfoFormatters.text(exif?["Artist"])
     return section(
       id: "attribution",
-      title: localization.value("mobile.photoInfo.attribution"),
+      title: String(localized: "Attribution"),
       summary: artist,
       rows: [
-        row(id: "artist", label: localization.value("exif.artist"), value: artist),
+        row(id: "artist", label: String(localized: "Artist"), value: artist),
         row(
           id: "copyright",
-          label: localization.value("exif.copyright"),
+          label: String(localized: "Copyright"),
           value: PhotoInfoFormatters.text(exif?["Copyright"])
         ),
         row(
           id: "software",
-          label: localization.value("exif.software"),
+          label: String(localized: "Software"),
           value: PhotoInfoFormatters.text(exif?["Software"])
         ),
       ]

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PhotoInfoSectionsList: View {
-  let info: PhotoInfoSheetRecord
+  let info: PhotoInfoSheetModel
   var bottomContentInset: CGFloat = 0
 
   // Keyed by section id rather than photo id so an expanded group survives
@@ -19,7 +19,7 @@ struct PhotoInfoSectionsList: View {
     ScrollView {
       LazyVStack(spacing: Self.cardSpacing) {
         card {
-          PhotoInfoGearCardView(gear: info.gear, ratingLabel: info.localization.ratingLabel)
+          PhotoInfoGearCardView(gear: info.gear, ratingLabel: String(localized: "Rating"))
         }
 
         if let description = info.description, !description.isEmpty {
@@ -35,7 +35,7 @@ struct PhotoInfoSectionsList: View {
 
         if !info.tags.isEmpty {
           card {
-            PhotoInfoTagsRow(tags: info.tags, accessibilityLabel: info.localization.tags)
+            PhotoInfoTagsRow(tags: info.tags, accessibilityLabel: String(localized: "Tags"))
           }
         }
 
@@ -45,7 +45,9 @@ struct PhotoInfoSectionsList: View {
               PhotoMapPreview(
                 latitude: mapLocation.latitude,
                 longitude: mapLocation.longitude,
-                accessibilityLabel: info.localization.mapAccessibilityLabel
+                accessibilityLabel: String(
+                  localized: "Photo location, latitude \(mapLocation.latitude), longitude \(mapLocation.longitude)"
+                )
               )
               .frame(height: 160)
 
@@ -157,13 +159,13 @@ struct PhotoInfoSectionsList: View {
 
   private func histogram(urlString: String) -> some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text(info.localization.histogram)
+      Text("Histogram")
         .font(.caption)
         .foregroundStyle(.secondary)
       PhotoHistogramView(
         urlString: urlString,
-        failedMessage: info.localization.histogramFailure,
-        accessibilityLabel: info.localization.histogramAccessibilityLabel
+        failedMessage: String(localized: "Unable to load histogram"),
+        accessibilityLabel: String(localized: "RGB and luminance histogram")
       )
       .frame(height: 128)
     }

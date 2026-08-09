@@ -669,7 +669,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
       return
     }
     navigationBar.setTitle(metadata.title, subtitle: metadata.subtitle)
-    infoView.setInfoJSON(metadata.infoJSON)
+    infoView.setInfo(metadata.info)
     setNeedsLayout()
   }
 

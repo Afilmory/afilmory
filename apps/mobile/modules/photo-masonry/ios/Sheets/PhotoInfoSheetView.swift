@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PhotoInfoInspectorView: View {
-  let info: PhotoInfoSheetRecord
+  let info: PhotoInfoSheetModel
   var showsHeader = true
   var bottomContentInset: CGFloat = 0
   let onClose: () -> Void
@@ -29,7 +29,7 @@ struct PhotoInfoInspectorView: View {
 
   private var header: some View {
     HStack(spacing: 12) {
-      Text(info.localization.title)
+      Text("Info")
         .font(.headline)
       Spacer()
       Button(action: onClose) {
@@ -39,7 +39,7 @@ struct PhotoInfoInspectorView: View {
           .contentShape(Circle())
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(info.localization.done)
+      .accessibilityLabel(String(localized: "Done"))
     }
     .padding(.horizontal, 16)
     .frame(height: 52)

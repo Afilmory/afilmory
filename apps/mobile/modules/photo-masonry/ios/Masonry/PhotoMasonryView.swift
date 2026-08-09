@@ -329,7 +329,7 @@ final class PhotoMasonryView: UIView {
     let galleryPhotos = appliesFilters
       ? PhotoFilterEngine.apply(PhotoFilterStore.shared.filters, to: boundFeed.photos)
       : boundFeed.photos
-    setPhotos(galleryPhotos.map { MasonryPhoto(photo: $0, localization: .shared) })
+    setPhotos(galleryPhotos.map(MasonryPhoto.init(photo:)))
     setRefreshing(boundFeed.loadState == .loading && !boundFeed.photos.isEmpty)
   }
 

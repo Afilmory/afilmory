@@ -7,14 +7,13 @@ final class UploadFabView: UIView {
   private let countLabel = UILabel()
   private let symbolView = UIImageView()
   private var observerToken: UUID?
-  private var localization: [String: String] = [:]
 
   override init(frame: CGRect) {
     super.init(frame: frame)
 
     isAccessibilityElement = true
     accessibilityTraits = .button
-    accessibilityLabel = "Uploads"
+    accessibilityLabel = String(localized: "Uploads")
 
     glass.clipsToBounds = true
     addSubview(glass)
@@ -60,11 +59,6 @@ final class UploadFabView: UIView {
     }
   }
 
-  func setLocalization(_ value: [String: String]) {
-    localization = value
-    accessibilityLabel = value["title"] ?? "Uploads"
-  }
-
   override func layoutSubviews() {
     super.layoutSubviews()
     glass.frame = bounds
@@ -93,20 +87,17 @@ final class UploadFabView: UIView {
       ringLayer.strokeColor = UIColor.systemRed.cgColor
       ringLayer.strokeEnd = 1
       showSymbol("exclamationmark", tint: .systemRed)
-      accessibilityValue = UploadQueueLocalization(dictionary: localization)
-        .failed(count: summary.failed)
+      accessibilityValue = String(localized: "\(summary.failed) failed")
     } else if summary.running {
       ringLayer.strokeColor = UIColor.tintColor.cgColor
       ringLayer.strokeEnd = max(0.02, summary.progress)
       showCount(done: summary.done, total: summary.total)
-      accessibilityValue = UploadQueueLocalization(dictionary: localization)
-        .headline(done: summary.done, total: summary.total)
+      accessibilityValue = String(localized: "Uploaded \(summary.done) of \(summary.total)")
     } else {
       ringLayer.strokeColor = UIColor.systemGreen.cgColor
       ringLayer.strokeEnd = 1
       showSymbol("checkmark", tint: .systemGreen)
-      accessibilityValue = UploadQueueLocalization(dictionary: localization)
-        .headline(done: summary.done, total: summary.total)
+      accessibilityValue = String(localized: "Uploaded \(summary.done) of \(summary.total)")
     }
     CATransaction.commit()
   }
@@ -126,9 +117,6 @@ final class UploadFabView: UIView {
 
   @objc private func handleTap() {
     guard let presenter = nearestViewController else { return }
-    UploadQueuePresenter.present(
-      from: presenter,
-      localization: UploadQueueLocalization(dictionary: localization)
-    )
+    UploadQueuePresenter.present(from: presenter)
   }
 }

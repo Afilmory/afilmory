@@ -40,49 +40,49 @@ struct StudioAnalyticsView: View {
 
   private func analyticsForm(_ data: StudioAnalyticsResponse) -> some View {
     Form {
-      Section(Localization.t("studio.analytics.storage")) {
+      Section(String(localized: "Storage summary")) {
         if horizontalSizeClass == .regular {
           LazyVGrid(
             columns: [GridItem(.flexible()), GridItem(.flexible())],
             spacing: 12
           ) {
-            metric(Localization.t("studio.metric.storage"), NativeStudioFormatters.bytes(data.storageUsage.totalBytes))
-            metric(Localization.t("studio.metric.photos"), NativeStudioFormatters.count(data.storageUsage.totalPhotos))
+            metric(String(localized: "Storage"), NativeStudioFormatters.bytes(data.storageUsage.totalBytes))
+            metric(String(localized: "Photos"), NativeStudioFormatters.count(data.storageUsage.totalPhotos))
             metric(
-              Localization.t("studio.analytics.currentMonth"),
+              String(localized: "This month"),
               NativeStudioFormatters.bytes(data.storageUsage.currentMonthBytes)
             )
             metric(
-              Localization.t("studio.analytics.previousMonth"),
+              String(localized: "Previous month"),
               NativeStudioFormatters.bytes(data.storageUsage.previousMonthBytes)
             )
           }
         } else {
           LabeledContent(
-            Localization.t("studio.metric.storage"),
+            String(localized: "Storage"),
             value: NativeStudioFormatters.bytes(data.storageUsage.totalBytes)
           )
           LabeledContent(
-            Localization.t("studio.metric.photos"),
+            String(localized: "Photos"),
             value: NativeStudioFormatters.count(data.storageUsage.totalPhotos)
           )
           LabeledContent(
-            Localization.t("studio.analytics.currentMonth"),
+            String(localized: "This month"),
             value: NativeStudioFormatters.bytes(data.storageUsage.currentMonthBytes)
           )
           LabeledContent(
-            Localization.t("studio.analytics.previousMonth"),
+            String(localized: "Previous month"),
             value: NativeStudioFormatters.bytes(data.storageUsage.previousMonthBytes)
           )
         }
       }
 
-      Section(Localization.t("studio.analytics.uploadTrend")) {
+      Section(String(localized: "Upload trend")) {
         if data.uploadTrends.isEmpty {
           ContentUnavailableView(
-            Localization.t("studio.analytics.noTrend.title"),
+            String(localized: "No upload history"),
             systemImage: "chart.bar",
-            description: Text(Localization.t("studio.analytics.noTrend.description"))
+            description: Text("Upload activity will appear after photos are added.")
           )
         } else {
           Chart(data.uploadTrends) { point in
@@ -97,9 +97,9 @@ struct StudioAnalyticsView: View {
         }
       }
 
-      Section(Localization.t("studio.analytics.providers")) {
+      Section(String(localized: "Storage providers")) {
         if data.storageUsage.providers.isEmpty {
-          Text(Localization.t("studio.analytics.noData"))
+          Text("No data yet")
         } else {
           let maximum = max(data.storageUsage.providers.map(\.bytes).max() ?? 0, 1)
           ForEach(data.storageUsage.providers) { provider in
@@ -120,11 +120,11 @@ struct StudioAnalyticsView: View {
       }
 
       rankedSection(
-        title: Localization.t("studio.analytics.tags"),
+        title: String(localized: "Popular tags"),
         values: Array(data.popularTags.prefix(10))
       )
       rankedSection(
-        title: Localization.t("studio.analytics.devices"),
+        title: String(localized: "Top devices"),
         values: Array(data.topDevices.prefix(10))
       )
     }
@@ -152,7 +152,7 @@ struct StudioAnalyticsView: View {
   ) -> some View {
     Section(title) {
       if values.isEmpty {
-        Text(Localization.t("studio.analytics.noData"))
+        Text("No data yet")
       } else {
         ForEach(Array(values.enumerated()), id: \.offset) { _, item in
           LabeledContent(item.label, value: NativeStudioFormatters.count(item.count))
@@ -168,12 +168,12 @@ struct StudioFailureView: View {
 
   var body: some View {
     ContentUnavailableView {
-      Label(Localization.t("studio.error.title"), systemImage: "exclamationmark.triangle")
+      Label(String(localized: "Unable to load Studio"), systemImage: "exclamationmark.triangle")
     } description: {
-      Text(error.localizedDescription.isEmpty ? Localization.t("studio.error.description") : error.localizedDescription)
+      Text(error.localizedDescription.isEmpty ? String(localized: "Check your connection and try again.") : error.localizedDescription)
     } actions: {
       AfilmoryButton(prominent: true, action: retry) {
-        Text(Localization.t("common.retry"))
+        Text("Retry")
       }
     }
   }

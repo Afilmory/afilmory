@@ -4,7 +4,6 @@ import UIKit
 final class GalleryDetailController: UIViewController {
   private let onRequestSignIn: () -> Void
   private let slug: String
-  private let localization = Localization.shared
   private let masonryView: PhotoMasonryView
   private var feed: PhotoFeed!
   private var observation: PhotoFeedObservationToken?
@@ -44,12 +43,12 @@ final class GalleryDetailController: UIViewController {
 
   private func configureMasonry() {
     masonryView.chromeVisible = false
-    masonryView.contextMenuInfoTitle = localization.value("photo.info")
-    masonryView.contextMenuShareTitle = localization.value("photo.share")
+    masonryView.contextMenuInfoTitle = String(localized: "Photo information")
+    masonryView.contextMenuShareTitle = String(localized: "Share photo")
     masonryView.defaultColumnCount = 2
     masonryView.extraBottomInset = 96
     masonryView.gap = 4
-    masonryView.livePhotoAccessibilityLabel = localization.value("photo.livePhoto")
+    masonryView.livePhotoAccessibilityLabel = String(localized: "Live Photo")
     masonryView.onNativePhotoPress = { [weak self] index in
       self?.presentPhoto(at: index)
     }
@@ -72,10 +71,10 @@ final class GalleryDetailController: UIViewController {
       masonryView.setPhotos([])
       var configuration = UIContentUnavailableConfiguration.empty()
       configuration.image = UIImage(systemName: "exclamationmark.triangle")
-      configuration.text = localization.value("gallery.failed.photos")
-      configuration.secondaryText = localization.value("gallery.failed.detail")
+      configuration.text = String(localized: "Failed to load photos")
+      configuration.secondaryText = String(localized: "Check your connection and try again.")
       configuration.button = .filled()
-      configuration.button.title = localization.value("common.retry")
+      configuration.button.title = String(localized: "Retry")
       configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in
         guard let self else { return }
         PhotoFeedStore.shared.load(.manifest(slug), force: true)
@@ -83,13 +82,13 @@ final class GalleryDetailController: UIViewController {
       contentUnavailableConfiguration = configuration
       return
     }
-    masonryView.setPhotos(feed.photos.map { MasonryPhoto(photo: $0, localization: localization) })
+    masonryView.setPhotos(feed.photos.map(MasonryPhoto.init(photo:)))
     masonryView.setRefreshing(false)
     if feed.photos.isEmpty {
       var configuration = UIContentUnavailableConfiguration.empty()
       configuration.image = UIImage(systemName: "photo.on.rectangle.angled")
-      configuration.text = localization.value("gallery.empty.title")
-      configuration.secondaryText = localization.value("gallery.empty.subtitle")
+      configuration.text = String(localized: "No photos yet")
+      configuration.secondaryText = String(localized: "Upload photos from the web dashboard and they will appear here.")
       contentUnavailableConfiguration = configuration
     } else {
       contentUnavailableConfiguration = nil
@@ -102,7 +101,6 @@ final class GalleryDetailController: UIViewController {
       photos: feed.photos,
       initialIndex: index,
       gallerySlug: slug,
-      localization: localization,
       onRequestSignIn: onRequestSignIn,
       sourceProvider: { [weak masonryView] photoId in
         masonryView?.visibleTransitionSourceView(for: photoId)
@@ -123,16 +121,12 @@ final class GalleryDetailController: UIViewController {
     guard action == "info" else { return }
     let model = PhotoInfoModel.build(
       photo: photo,
-      localization: localization,
-      localeIdentifier: localization.language.localeIdentifier
+      localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier
     )
-    guard let info = PhotoInfoSheetRecord.decode(
-      json: model.detailJSON(localization: localization)
-    ) else { return }
-    let host = UIHostingController(rootView: PhotoInfoSectionsList(info: info))
-    host.navigationItem.title = info.localization.title
+    let host = UIHostingController(rootView: PhotoInfoSectionsList(info: model))
+    host.navigationItem.title = String(localized: "Info")
     host.navigationItem.rightBarButtonItem = UIBarButtonItem(
-      title: info.localization.done,
+      title: String(localized: "Done"),
       image: nil,
       primaryAction: UIAction { [weak host] _ in host?.dismiss(animated: true) },
       menu: nil

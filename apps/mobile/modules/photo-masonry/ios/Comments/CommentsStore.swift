@@ -21,7 +21,6 @@ final class CommentsStore {
   }
 
   let request: PhotoCommentsSheetRequest
-  let localization: CommentLocalization
 
   var collection = CommentCollection.empty
   var loadState: LoadState = .idle
@@ -48,11 +47,9 @@ final class CommentsStore {
 
   init(
     request: PhotoCommentsSheetRequest,
-    localization: CommentLocalization,
     transport: CommentsTransport? = nil
   ) {
     self.request = request
-    self.localization = localization
     self.transport = transport ?? LiveCommentsTransport(baseURL: request.baseURL)
     baselineCommentCount = request.initialCommentCount >= 0 ? request.initialCommentCount : nil
   }
@@ -113,7 +110,7 @@ final class CommentsStore {
     } catch {
       guard !isCancellation(error) else { return }
       if !handleUnauthorized(error) {
-        inlineError = localization.error
+        inlineError = String(localized: "Unable to load comments")
       }
     }
   }
@@ -162,7 +159,7 @@ final class CommentsStore {
       if self.collection.users[viewerUserId] == nil {
         self.collection.users[viewerUserId] = CommentUser(
           id: viewerUserId,
-          name: self.localization.you,
+          name: String(localized: "You"),
           image: nil,
           website: nil
         )
@@ -197,7 +194,7 @@ final class CommentsStore {
       draft = content
       replyCommentId = parentId
       if !handleUnauthorized(error), !isCancellation(error) {
-        inlineError = localization.postFailed
+        inlineError = String(localized: "Unable to post the comment. Your draft was restored.")
       }
     }
     isSending = false
@@ -226,7 +223,7 @@ final class CommentsStore {
         collection.comments[rollbackIndex] = original
       }
       if !handleUnauthorized(error), !isCancellation(error) {
-        inlineError = localization.reactionFailed
+        inlineError = String(localized: "Unable to update the like. Try again.")
       }
     }
     pendingReactionIds.remove(commentId)
@@ -292,13 +289,13 @@ final class CommentsStore {
 
   func authorName(for comment: CommentItem) -> String {
     if comment.userId == viewerUserId {
-      return localization.you
+      return String(localized: "You")
     }
     if let name = user(for: comment)?.name, !name.isEmpty {
       return name
     }
-    guard !comment.userId.isEmpty else { return localization.anonymous }
-    return localization.user(id: String(comment.userId.suffix(6)))
+    guard !comment.userId.isEmpty else { return String(localized: "Guest") }
+    return String(localized: "User \(String(comment.userId.suffix(6)))")
   }
 
   private func beginFlight(clientId: String, content: String) {
@@ -334,7 +331,7 @@ final class CommentsStore {
   private func handleUnauthorized(_ error: Error) -> Bool {
     guard case .unauthorized = APIError.request(error) else { return false }
     requiresAuthentication = true
-    inlineError = localization.reauthenticate
+    inlineError = String(localized: "Your session expired. Sign in again to continue.")
     return true
   }
 

@@ -88,7 +88,7 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate {
       onRequestAccountDeletion: { [weak self] in self?.presentAccountSettings(startsDeletion: true) }
     )
     photos.tabBarItem = UITabBarItem(
-      title: Localization.shared.value("tabs.photos"),
+      title: String(localized: "Photos"),
       image: UIImage(systemName: "photo.on.rectangle"),
       selectedImage: UIImage(systemName: "photo.fill.on.rectangle.fill")
     )
@@ -97,7 +97,7 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate {
       self?.presentSignIn()
     }
     map.tabBarItem = UITabBarItem(
-      title: Localization.shared.value("tabs.map"),
+      title: String(localized: "Map"),
       image: UIImage(systemName: "map"),
       selectedImage: UIImage(systemName: "map.fill")
     )
@@ -107,14 +107,14 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate {
     }
     let explore = UINavigationController(rootViewController: galleries)
     explore.tabBarItem = UITabBarItem(
-      title: Localization.shared.value("tabs.explore"),
+      title: String(localized: "Explore"),
       image: UIImage(systemName: "safari"),
       selectedImage: UIImage(systemName: "safari.fill")
     )
 
     let studio = makeStudioNavigationController()
     studio.tabBarItem = UITabBarItem(
-      title: Localization.shared.value("tabs.studio"),
+      title: String(localized: "Studio"),
       image: UIImage(systemName: "rectangle.3.group"),
       selectedImage: UIImage(systemName: "rectangle.3.group.fill")
     )
@@ -314,11 +314,11 @@ private extension Collection {
 private extension StudioHomeRoute {
   var title: String {
     switch self {
-    case .analytics: Localization.shared.value("studio.analytics.title")
-    case .comments: Localization.shared.value("studio.comments.title")
-    case .library: Localization.shared.value("studio.library.title")
-    case .operations: Localization.shared.value("studio.operations.title")
-    case .site: Localization.shared.value("studio.site.title")
+    case .analytics: String(localized: "Analytics")
+    case .comments: String(localized: "Comments")
+    case .library: String(localized: "Photo Library")
+    case .operations: String(localized: "Operations")
+    case .site: String(localized: "Site Settings")
     }
   }
 }

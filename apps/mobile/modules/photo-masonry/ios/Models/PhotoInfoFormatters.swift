@@ -31,7 +31,6 @@ enum PhotoInfoFormatters {
   }
 
   static func translatedExifValue(
-    _ localization: Localization,
     prefix: String,
     value: JSONValue?
   ) -> String? {
@@ -40,7 +39,11 @@ enum PhotoInfoFormatters {
       .replacingOccurrences(of: "&", with: "and")
       .replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
       .replacingOccurrences(of: "^-|-$", with: "", options: .regularExpression)
-    return localization.value("\(prefix).\(suffix)", defaultValue: text)
+    return Bundle.main.localizedString(
+      forKey: "\(prefix).\(suffix)",
+      value: text,
+      table: "ExifValues"
+    )
   }
 
   static func formatNumber(_ value: Double, localeIdentifier: String, maximumFractionDigits: Int = 1) -> String {
@@ -59,9 +62,9 @@ enum PhotoInfoFormatters {
   ) -> String? {
     guard let value else { return nil }
     guard let date = PhotoDateParser.date(value, timeZone: timeZone) else { return value }
-    let language = LanguageTag.resolve(localeIdentifier)
+    let language = PhotoDateLanguage.resolve(localeIdentifier)
     let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: language == .english ? "en_US" : language.localeIdentifier)
+    formatter.locale = language.formattingLocale
     formatter.timeZone = timeZone
     switch language {
     case .english:
@@ -208,10 +211,7 @@ enum PhotoInfoFormatters {
     }
   }
 
-  static func formatFujiDynamicRange(
-    _ recipe: [String: JSONValue],
-    localization: Localization
-  ) -> String? {
+  static func formatFujiDynamicRange(_ recipe: [String: JSONValue]) -> String? {
     if text(recipe["DynamicRangeSetting"]) == "Manual",
        let range = number(recipe["DevelopmentDynamicRange"]),
        range != 0
@@ -219,20 +219,16 @@ enum PhotoInfoFormatters {
       return "DR\(integerString(range))"
     }
     if text(recipe["DynamicRangeSetting"]) == "Auto" {
-      return localization.value("action.auto")
+      return String(localized: "Auto")
     }
     return text(recipe["DynamicRange"])
   }
 
-  static func formatFujiWhiteBalance(
-    _ recipe: [String: JSONValue],
-    localization: Localization
-  ) -> String? {
+  static func formatFujiWhiteBalance(_ recipe: [String: JSONValue]) -> String? {
     if text(recipe["WhiteBalance"]) == "Kelvin", let temperature = text(recipe["ColorTemperature"]) {
       return "\(temperature) K"
     }
     return translatedExifValue(
-      localization,
       prefix: "exif.fujirecipe-whitebalance",
       value: recipe["WhiteBalance"]
     )
@@ -242,15 +238,15 @@ enum PhotoInfoFormatters {
     value.isFinite ? "\(Int((value * scale).rounded()))%" : nil
   }
 
-  static func formatToneType(_ tone: GalleryToneAnalysis?, localization: Localization) -> String? {
+  static func formatToneType(_ tone: GalleryToneAnalysis?) -> String? {
     guard let tone else { return nil }
-    let keys = [
-      "low-key": "exif.tone.low-key",
-      "high-key": "exif.tone.high-key",
-      "normal": "exif.tone.normal",
-      "high-contrast": "exif.tone.high-contrast",
-    ]
-    return localization.value(keys[tone.toneType] ?? tone.toneType)
+    switch tone.toneType {
+    case "low-key": return String(localized: "Low Key")
+    case "high-key": return String(localized: "High Key")
+    case "normal": return String(localized: "Normal")
+    case "high-contrast": return String(localized: "High Contrast")
+    default: return tone.toneType
+    }
   }
 
   private static func focalLengthNumber(_ value: JSONValue?) -> String? {

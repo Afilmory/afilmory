@@ -13,7 +13,6 @@ struct PhotoInfoGear: Codable, Equatable, Sendable {
   static func build(
     photo: GalleryPhoto,
     exif: GalleryExif?,
-    localization: Localization,
     localeIdentifier: String
   ) -> PhotoInfoGear {
     let lens = PhotoInfoFormatters.joinMakeAndModel(exif?["LensMake"], exif?["LensModel"])
@@ -33,7 +32,7 @@ struct PhotoInfoGear: Codable, Equatable, Sendable {
         PhotoInfoFormatters.formatDimensions(photo.width, photo.height),
         PhotoInfoFormatters.formatFileSize(photo.size, localeIdentifier: localeIdentifier),
       ].compactMap { $0 },
-      tone: PhotoInfoFormatters.formatToneType(photo.toneAnalysis, localization: localization),
+      tone: PhotoInfoFormatters.formatToneType(photo.toneAnalysis),
       exposure: [
         PhotoInfoFormatters.formatISO(exif?["ISO"]),
         PhotoInfoFormatters.formatFocalPair(exif?["FocalLength"], exif?["FocalLengthIn35mmFormat"]),

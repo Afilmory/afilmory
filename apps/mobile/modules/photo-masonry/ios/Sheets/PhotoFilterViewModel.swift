@@ -17,7 +17,6 @@ final class PhotoFilterViewModel: ObservableObject {
   @Published var minRating: Int?
 
   let options: PhotoFilterOptionsRecord
-  let localization: PhotoFilterLocalizationRecord
 
   init(request: PhotoFilterSheetRequest) {
     let filters = request.filters
@@ -37,7 +36,6 @@ final class PhotoFilterViewModel: ObservableObject {
     lenses = Set(filters.lenses)
     minRating = filters.minRating
     options = request.options
-    localization = request.localization
   }
 
   var hasActiveFilters: Bool {

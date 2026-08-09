@@ -1,7 +1,6 @@
 import UIKit
 
 final class PhotoMapController: UIViewController {
-  private let localization = Localization.shared
   private let onRequestSignIn: () -> Void
   private let mapView: PhotoMapView
   private var sessionObservation: AfilmorySessionObservationToken?
@@ -102,10 +101,7 @@ final class PhotoMapController: UIViewController {
       return
     }
     displayedPhotos = PhotoFilterEngine.apply(PhotoFilterStore.shared.filters, to: feed.photos)
-    let mapPhotos = Self.mapPhotos(
-      displayedPhotos,
-      localization: localization
-    )
+    let mapPhotos = Self.mapPhotos(displayedPhotos)
     let state: PhotoMapScreenState
     if mapPhotos.isEmpty {
       state = PhotoFilterEngine.hasActiveFilters(PhotoFilterStore.shared.filters)
@@ -129,7 +125,6 @@ final class PhotoMapController: UIViewController {
       photos: displayedPhotos,
       initialIndex: index,
       gallerySlug: gallerySlug,
-      localization: localization,
       onRequestSignIn: onRequestSignIn,
       sourceProvider: { [weak mapView] photoId in
         mapView?.transitionSourceView(for: photoId)
@@ -140,50 +135,44 @@ final class PhotoMapController: UIViewController {
 
   private func strings(locationCount: Int) -> PhotoMapStrings {
     PhotoMapStrings(
-      clearFilters: localization.value("common.clearFilters"),
-      clearSelection: localization.value("map.clearSelection"),
-      clusterAccessibilityLabel: localization.value("map.cluster.accessibility"),
-      emptyDescription: localization.value("map.empty.description"),
-      emptyTitle: localization.value("map.empty.title"),
-      errorDescription: localization.value("map.failed.description"),
-      errorTitle: localization.value("map.failed.title"),
-      fitAll: localization.value("map.fit"),
-      filteredEmptyDescription: localization.value("map.filteredEmpty.description"),
-      filteredEmptyTitle: localization.value("gallery.empty.filtered"),
-      loading: localization.value("map.loading"),
-      locations: localization.value("map.locations", count: locationCount),
-      pendingDescription: localization.value("gallery.workspace.pending.subtitle"),
-      pendingTitle: localization.value("gallery.workspace.pending.title"),
-      previewDefaultDetail: localization.value("map.preview.defaultDetail"),
-      retry: localization.value("common.retry"),
-      signIn: localization.value("common.signIn"),
-      signedOutDescription: localization.value("map.signedOut.description"),
-      signedOutTitle: localization.value("map.signedOut.title"),
-      title: localization.value("map.title")
+      clearFilters: String(localized: "Clear filters"),
+      clearSelection: String(localized: "Clear photo selection"),
+      clusterAccessibilityLabel: String(localized: "Photo cluster"),
+      emptyDescription: String(localized: "Add location information to photos to see them on this map."),
+      emptyTitle: String(localized: "No photo locations yet"),
+      errorDescription: String(localized: "The gallery could not be loaded. Check your connection and try again."),
+      errorTitle: String(localized: "Unable to load the map"),
+      fitAll: String(localized: "Show all photo locations"),
+      filteredEmptyDescription: String(localized: "Clear filters to show all photo locations."),
+      filteredEmptyTitle: String(localized: "No photos match this search and filters"),
+      loading: String(localized: "Loading photo locations…"),
+      locations: String(localized: "\(locationCount) photo locations"),
+      pendingDescription: String(localized: "Create a workspace to publish and manage your gallery, or open account settings."),
+      pendingTitle: String(localized: "Set up your workspace"),
+      previewDefaultDetail: String(localized: "View photo details"),
+      retry: String(localized: "Retry"),
+      signIn: String(localized: "Sign in"),
+      signedOutDescription: String(localized: "Sign in to explore your geotagged photos on the map."),
+      signedOutTitle: String(localized: "Your photo map"),
+      title: String(localized: "Explore Map")
     )
   }
 
-  private static func mapPhotos(
-    _ photos: [GalleryPhoto],
-    localization: Localization
-  ) -> [MapPhoto] {
+  private static func mapPhotos(_ photos: [GalleryPhoto]) -> [MapPhoto] {
     photos.enumerated().compactMap { index, photo in
       guard let location = location(photo) else { return nil }
       let title = photo.title.isEmpty ? photo.id : photo.title
       var item = MapPhoto()
-      item.accessibilityLabel = localization.value(
-        "map.marker.accessibility",
-        arguments: ["title": title]
-      )
+      item.accessibilityLabel = String(localized: "Photo location: \(title)")
       item.id = photo.id
       item.index = index
       item.latitude = location.latitude
       item.longitude = location.longitude
-      item.openAccessibilityLabel = localization.value(
-        "map.openPhoto",
-        arguments: ["title": title]
+      item.openAccessibilityLabel = String(localized: "Open \(title)")
+      item.subtitle = subtitle(
+        photo,
+        localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier
       )
-      item.subtitle = subtitle(photo, localeIdentifier: localization.language.localeIdentifier)
       item.thumbnailUrl = photo.thumbnailUrl
       item.title = title
       return item

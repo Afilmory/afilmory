@@ -41,7 +41,6 @@ targets:
           - Tests/**
     resources:
       - path: NativeApp/Resources
-      - path: modules/photo-masonry/ios/Resources/Locales
     dependencies:
       - package: SDWebImage
         product: SDWebImage
@@ -60,8 +59,8 @@ targets:
         CFBundleLocalizations:
           - en
           - zh-Hans
+          - zh-Hant
           - zh-HK
-          - zh-TW
           - ja
           - ko
         CFBundleURLTypes:
@@ -134,6 +133,8 @@ targets:
     deploymentTarget: "18.0"
     sources:
       - path: targets/share
+    resources:
+      - path: targets/share/Localizable.xcstrings
     info:
       path: targets/share/Info.plist
       properties:

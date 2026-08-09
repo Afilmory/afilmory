@@ -14,15 +14,14 @@ enum CommentsLabPresenter {
 
     let store = CommentsStore(
       request: request,
-      localization: .resolve(),
       transport: DemoCommentsTransport(outcome: resolvedOutcome, latencyMs: latencyMs)
     )
 
     let hostingController = UIHostingController(rootView: PhotoCommentsSheetView(store: store))
-    hostingController.navigationItem.title = store.localization.title
+    hostingController.navigationItem.title = String(localized: "Comments")
     hostingController.navigationItem.prompt = request.photoTitle
     hostingController.navigationItem.rightBarButtonItem = UIBarButtonItem(
-      title: store.localization.done,
+      title: String(localized: "Done"),
       primaryAction: UIAction { [weak hostingController] _ in
         hostingController?.dismiss(animated: true)
       }

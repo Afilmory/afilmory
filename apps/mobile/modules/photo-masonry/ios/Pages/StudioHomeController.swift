@@ -129,7 +129,6 @@ final class StudioHomeController: UITableViewController {
     case workspace(id: String, name: String)
   }
 
-  private let localization = Localization.shared
   private let onNavigate: (StudioHomeRoute) -> Void
   private let onRequestSignIn: () -> Void
   private let onRequestSignOut: () -> Void
@@ -169,7 +168,7 @@ final class StudioHomeController: UITableViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    title = localization.value("tabs.studio")
+    title = String(localized: "Studio")
     navigationItem.largeTitleDisplayMode = .always
     navigationController?.navigationBar.prefersLargeTitles = true
     tableView.backgroundColor = .systemGroupedBackground
@@ -278,7 +277,7 @@ final class StudioHomeController: UITableViewController {
       content.secondaryText =
         StudioHomeFormatter.dateTime(
           activity.createdAt,
-          localeIdentifier: localization.language.localeIdentifier
+          localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier
         ) ?? activity.storageProvider
       content.secondaryTextProperties.color = .secondaryLabel
       content.secondaryTextProperties.font = .preferredFont(forTextStyle: .caption1)
@@ -287,7 +286,7 @@ final class StudioHomeController: UITableViewController {
 
     case .signOut:
       var content = UIListContentConfiguration.cell()
-      content.text = localization.value("common.signOut")
+      content.text = String(localized: "Sign out")
       content.textProperties.color = .systemRed
       content.textProperties.alignment = .center
       cell.contentConfiguration = content
@@ -322,10 +321,10 @@ final class StudioHomeController: UITableViewController {
     case .signedOut:
       resetContent()
       showAccess(
-        title: localization.value("studio.access.signedOut.title"),
-        description: localization.value("studio.access.signedOut.description"),
+        title: String(localized: "Sign in to Studio"),
+        description: String(localized: "Sign in with the administrator account for your workspace."),
         image: "lock",
-        action: localization.value("common.signIn"),
+        action: String(localized: "Sign in"),
         handler: onRequestSignIn
       )
 
@@ -344,8 +343,8 @@ final class StudioHomeController: UITableViewController {
       else {
         resetContent()
         showAccess(
-          title: localization.value("studio.access.admin.title"),
-          description: localization.value("studio.access.admin.description"),
+          title: String(localized: "Administrator access required"),
+          description: String(localized: "Studio is available to an active workspace administrator."),
           image: "person.badge.shield.checkmark",
           action: nil,
           handler: nil
@@ -439,7 +438,7 @@ final class StudioHomeController: UITableViewController {
       let workspace = session.activeWorkspace,
       let snapshot
     else { return }
-    let localeIdentifier = localization.language.localeIdentifier
+    let localeIdentifier = PhotoDateLanguage.activeLocaleIdentifier
     let count: (Int) -> String = {
       StudioHomeFormatter.count($0, localeIdentifier: localeIdentifier)
     }
@@ -455,8 +454,8 @@ final class StudioHomeController: UITableViewController {
     }
 
     var workspaceRows: [Row] = [
-      .labeled(title: localization.value("studio.home.workspaceName"), value: workspace.name),
-      .labeled(title: localization.value("studio.home.signedInAs"), value: session.user.email),
+      .labeled(title: String(localized: "Name"), value: workspace.name),
+      .labeled(title: String(localized: "Signed in as"), value: session.user.email),
     ]
     workspaceRows.append(
       contentsOf: manageableMemberships.map {
@@ -468,55 +467,55 @@ final class StudioHomeController: UITableViewController {
       StudioHomeFormatter.dateTime(
         snapshot.syncStatus.lastRun?.completedAt,
         localeIdentifier: localeIdentifier
-      ) ?? localization.value("studio.operations.neverSynced")
+      ) ?? String(localized: "No sync has completed yet")
     let conflictsBadge = stats.sync.conflicts > 0 ? count(stats.sync.conflicts) : nil
 
     var nextSections: [Section] = [
-      Section(title: localization.value("studio.home.workspace"), rows: workspaceRows),
+      Section(title: String(localized: "Workspace"), rows: workspaceRows),
       Section(
-        title: localization.value("studio.home.overview"),
+        title: String(localized: "Overview"),
         rows: [
           .labeled(
-            title: localization.value("studio.metric.photos"), value: count(stats.totalPhotos)),
+            title: String(localized: "Photos"), value: count(stats.totalPhotos)),
           .labeled(
-            title: localization.value("studio.metric.storage"),
+            title: String(localized: "Storage"),
             value: StudioHomeFormatter.bytes(
               stats.totalStorageBytes, localeIdentifier: localeIdentifier)
           ),
           .labeled(
-            title: localization.value("studio.metric.monthUploads"),
+            title: String(localized: "Uploads this month"),
             value: count(stats.thisMonthUploads)),
           .labeled(
-            title: localization.value("studio.metric.pendingComments"), value: pendingComments),
+            title: String(localized: "Pending comments"), value: pendingComments),
         ]
       ),
       Section(
-        title: localization.value("studio.home.manage"),
+        title: String(localized: "Manage"),
         rows: [
           .navigation(
-            title: localization.value("studio.library.title"),
-            detail: localization.value("studio.library.subtitle"),
+            title: String(localized: "Photo Library"),
+            detail: String(localized: "Upload, tag, and remove photo assets"),
             symbol: "photo.on.rectangle.angled",
             badge: nil,
             route: .library
           ),
           .navigation(
-            title: localization.value("studio.comments.title"),
-            detail: localization.value("studio.comments.subtitle"),
+            title: String(localized: "Comments"),
+            detail: String(localized: "Review status and remove comments"),
             symbol: "text.bubble",
             badge: snapshot.pendingComments > 0 ? pendingComments : nil,
             route: .comments
           ),
           .navigation(
-            title: localization.value("studio.analytics.title"),
-            detail: localization.value("studio.analytics.subtitle"),
+            title: String(localized: "Analytics"),
+            detail: String(localized: "Uploads, storage, tags, and devices"),
             symbol: "chart.xyaxis.line",
             badge: nil,
             route: .analytics
           ),
           .navigation(
-            title: localization.value("studio.site.title"),
-            detail: localization.value("studio.site.subtitle"),
+            title: String(localized: "Site Settings"),
+            detail: String(localized: "Branding, social links, feed, and map"),
             symbol: "paintpalette",
             badge: nil,
             route: .site
@@ -524,20 +523,20 @@ final class StudioHomeController: UITableViewController {
         ]
       ),
       Section(
-        title: localization.value("studio.operations.title"),
+        title: String(localized: "Operations"),
         rows: [
           .navigation(
-            title: localization.value("studio.operations.sync"),
+            title: String(localized: "Data sync"),
             detail: lastSync,
             symbol: "arrow.triangle.2.circlepath",
             badge: conflictsBadge,
             route: .operations
           ),
           .labeled(
-            title: localization.value("studio.metric.pendingSync"), value: count(stats.sync.pending)
+            title: String(localized: "Pending sync"), value: count(stats.sync.pending)
           ),
           .labeled(
-            title: localization.value("studio.metric.conflicts"), value: count(stats.sync.conflicts)
+            title: String(localized: "Conflicts"), value: count(stats.sync.conflicts)
           ),
         ]
       ),
@@ -547,7 +546,7 @@ final class StudioHomeController: UITableViewController {
     if !recentActivity.isEmpty {
       nextSections.append(
         Section(
-          title: localization.value("studio.home.recent"),
+          title: String(localized: "Recent activity"),
           rows: recentActivity.map(Row.activity)
         )
       )
@@ -665,13 +664,13 @@ final class StudioHomeController: UITableViewController {
     tableView.reloadData()
     var configuration = UIContentUnavailableConfiguration.empty()
     configuration.image = UIImage(systemName: "exclamationmark.triangle")
-    configuration.text = localization.value("studio.error.title")
+    configuration.text = String(localized: "Unable to load Studio")
     configuration.secondaryText =
       message.isEmpty
-      ? localization.value("studio.error.description")
+      ? String(localized: "Check your connection and try again.")
       : message
     configuration.button = .filled()
-    configuration.button.title = localization.value("common.retry")
+    configuration.button.title = String(localized: "Retry")
     configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in
       if self?.currentSession == nil {
         AfilmorySessionStore.shared.refreshSession()
@@ -686,11 +685,11 @@ final class StudioHomeController: UITableViewController {
   private func presentError(message: String) {
     guard presentedViewController == nil else { return }
     let alert = UIAlertController(
-      title: localization.value("studio.error.title"),
-      message: message.isEmpty ? localization.value("studio.error.description") : message,
+      title: String(localized: "Unable to load Studio"),
+      message: message.isEmpty ? String(localized: "Check your connection and try again.") : message,
       preferredStyle: .alert
     )
-    alert.addAction(UIAlertAction(title: localization.value("common.done"), style: .default))
+    alert.addAction(UIAlertAction(title: String(localized: "Done"), style: .default))
     present(alert, animated: true)
   }
 }

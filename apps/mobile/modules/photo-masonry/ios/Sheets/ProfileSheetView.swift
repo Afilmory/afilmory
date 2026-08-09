@@ -34,26 +34,26 @@ struct ProfileSheetView: View {
       await sponsorshipStore.load()
       await sponsorshipStore.observeTransactionUpdates()
     }
-    .alert(profile.localization.sponsorFailedTitle, isPresented: $showingSponsorshipError) {
-      Button(profile.localization.done, role: .cancel) {}
+    .alert(String(localized: "Sponsorship failed"), isPresented: $showingSponsorshipError) {
+      Button(String(localized: "Done"), role: .cancel) {}
     } message: {
-      Text(profile.localization.sponsorFailedMessage)
+      Text("The purchase could not be completed. Please try again.")
     }
     .confirmationDialog(
-      profile.localization.signOutConfirmTitle,
+      String(localized: "Sign out of your gallery?"),
       isPresented: $confirmingSignOut,
       titleVisibility: .visible
     ) {
-      Button(profile.localization.signOut, role: .destructive, action: onSignOut)
-      Button(profile.localization.cancel, role: .cancel) {}
+      Button(String(localized: "Sign out"), role: .destructive, action: onSignOut)
+      Button(String(localized: "Cancel"), role: .cancel) {}
     }
     .confirmationDialog(
-      profile.localization.deleteAccount,
+      String(localized: "Delete account"),
       isPresented: $confirmingDeleteAccount,
       titleVisibility: .visible
     ) {
-      Button(profile.localization.deleteAccount, role: .destructive, action: onDeleteAccount)
-      Button(profile.localization.cancel, role: .cancel) {}
+      Button(String(localized: "Delete account"), role: .destructive, action: onDeleteAccount)
+      Button(String(localized: "Cancel"), role: .cancel) {}
     }
   }
 
@@ -136,13 +136,13 @@ struct ProfileSheetView: View {
   private var actions: some View {
     VStack(spacing: 0) {
       if !profile.webUrl.isEmpty {
-        actionRow(icon: "safari", title: profile.localization.openWeb, tint: .primary) {
+        actionRow(icon: "safari", title: String(localized: "Open gallery on web"), tint: .primary) {
           guard let url = URL(string: profile.webUrl) else { return }
           UIApplication.shared.open(url)
         }
         rowDivider
       }
-      actionRow(icon: "person.crop.circle", title: profile.localization.accountSettings, tint: .primary) {
+      actionRow(icon: "person.crop.circle", title: String(localized: "Account settings"), tint: .primary) {
         onAccountSettings()
       }
       rowDivider
@@ -152,13 +152,13 @@ struct ProfileSheetView: View {
       }
       cacheRow
       rowDivider
-      actionRow(icon: "person.crop.circle.badge.minus", title: profile.localization.deleteAccount, tint: .red) {
+      actionRow(icon: "person.crop.circle.badge.minus", title: String(localized: "Delete account"), tint: .red) {
         confirmingDeleteAccount = true
       }
       rowDivider
       actionRow(
         icon: "rectangle.portrait.and.arrow.right",
-        title: profile.localization.signOut,
+        title: String(localized: "Sign out"),
         tint: .red
       ) {
         confirmingSignOut = true
@@ -182,7 +182,7 @@ struct ProfileSheetView: View {
         Image(systemName: "heart.fill")
           .foregroundStyle(.pink)
           .frame(width: 24)
-        Text(profile.localization.sponsorTitle)
+        Text("Sponsor Afilmory")
           .foregroundStyle(.primary)
         Spacer()
         sponsorshipStatus
@@ -194,18 +194,18 @@ struct ProfileSheetView: View {
     .buttonStyle(.plain)
     .disabled(!sponsorshipStore.canPurchase && sponsorshipStore.state != .unavailable)
     .accessibilityLabel(sponsorshipAccessibilityLabel)
-    .accessibilityHint(profile.localization.sponsorDescription)
+    .accessibilityHint(String(localized: "A one-time contribution that supports continued development. It does not unlock app features."))
   }
 
   private var sponsorshipAccessibilityLabel: String {
     let status: String? = switch sponsorshipStore.state {
     case .ready: sponsorshipStore.displayPrice
-    case .pending: profile.localization.sponsorPending
-    case .purchased: profile.localization.sponsorThanks
-    case .unavailable: profile.localization.sponsorUnavailable
+    case .pending: String(localized: "Awaiting approval")
+    case .purchased: String(localized: "Thank you")
+    case .unavailable: String(localized: "Unavailable")
     case .idle, .loading, .purchasing: nil
     }
-    return [profile.localization.sponsorTitle, status]
+    return [String(localized: "Sponsor Afilmory"), status]
       .compactMap { $0 }
       .joined(separator: ", ")
   }
@@ -215,7 +215,7 @@ struct ProfileSheetView: View {
     case .idle, .loading, .purchasing:
       ProgressView()
         .controlSize(.small)
-        .accessibilityLabel(profile.localization.sponsorTitle)
+        .accessibilityLabel(String(localized: "Sponsor Afilmory"))
     case .ready:
       if let displayPrice = sponsorshipStore.displayPrice {
         Text(displayPrice)
@@ -223,15 +223,15 @@ struct ProfileSheetView: View {
           .foregroundStyle(.secondary)
       }
     case .pending:
-      Text(profile.localization.sponsorPending)
+      Text("Awaiting approval")
         .font(.subheadline)
         .foregroundStyle(.secondary)
     case .purchased:
-      Label(profile.localization.sponsorThanks, systemImage: "checkmark")
+      Label(String(localized: "Thank you"), systemImage: "checkmark")
         .font(.subheadline)
         .foregroundStyle(.green)
     case .unavailable:
-      Text(profile.localization.sponsorUnavailable)
+      Text("Unavailable")
         .font(.subheadline)
         .foregroundStyle(.secondary)
     }
@@ -263,12 +263,12 @@ struct ProfileSheetView: View {
       HStack(spacing: 12) {
         Image(systemName: "trash")
           .frame(width: 24)
-        Text(profile.localization.clearCache)
+        Text("Clear image cache")
         Spacer()
         if cacheCleared {
           HStack(spacing: 4) {
             Image(systemName: "checkmark")
-            Text(profile.localization.cacheCleared)
+            Text("Cleared")
           }
           .font(.subheadline)
           .foregroundStyle(.secondary)

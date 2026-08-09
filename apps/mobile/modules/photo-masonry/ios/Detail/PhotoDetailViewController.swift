@@ -26,7 +26,6 @@ final class PhotoDetailViewController: UIViewController {
   private let photos: [GalleryPhoto]
   private let initialIndex: Int
   private let gallerySlug: String?
-  private let localization: Localization
   private let onRequestSignIn: () -> Void
   private let sourceProvider: (String) -> UIView?
   private let commentCount = PhotoCommentCount()
@@ -47,14 +46,12 @@ final class PhotoDetailViewController: UIViewController {
     photos: [GalleryPhoto],
     initialIndex: Int,
     gallerySlug: String?,
-    localization: Localization = .shared,
     onRequestSignIn: @escaping () -> Void = {},
     sourceProvider: @escaping (String) -> UIView?
   ) {
     self.photos = photos
     self.initialIndex = min(max(initialIndex, 0), max(photos.count - 1, 0))
     self.gallerySlug = gallerySlug
-    self.localization = localization
     self.onRequestSignIn = onRequestSignIn
     self.sourceProvider = sourceProvider
     currentIndex = self.initialIndex
@@ -122,7 +119,7 @@ final class PhotoDetailViewController: UIViewController {
   }
 
   private func configureDetailView() {
-    detailView.setPhotos(photos.map { MasonryPhoto(photo: $0, localization: localization) })
+    detailView.setPhotos(photos.map(MasonryPhoto.init(photo:)))
     detailView.setInitialIndex(initialIndex)
     detailView.setStrings(detailStrings())
     detailView.setLivePhotoStrings(livePhotoStrings())
@@ -268,7 +265,6 @@ final class PhotoDetailViewController: UIViewController {
   }
 
   private func submitReaction(_ flush: PhotoReactionFlush, key: PhotoSocialKey) {
-    let localization = localization
     Task { @MainActor [weak self] in
       guard let self else { return }
       do {
@@ -289,14 +285,8 @@ final class PhotoDetailViewController: UIViewController {
         let _: JSONValue? = try await AfilmoryAPI.shared.request(endpoint)
         acknowledgeReaction(flush, key: key)
         let message = flush.count > 1
-          ? localization.value(
-            "photo.reaction.burst",
-            arguments: [
-              "count": String(flush.count),
-              "reaction": flush.reaction,
-            ]
-          )
-          : localization.value("photo.reaction.success")
+          ? String(localized: "Sent \(flush.count) \(flush.reaction)")
+          : String(localized: "Reaction added")
         UIAccessibility.post(notification: .announcement, argument: message)
       } catch {
         rollbackReaction(flush, key: key)
@@ -304,7 +294,7 @@ final class PhotoDetailViewController: UIViewController {
         detailView.setReactionFailureNonce(reactionFailureNonce)
         UIAccessibility.post(
           notification: .announcement,
-          argument: localization.value("photo.reaction.failed")
+          argument: String(localized: "Unable to add reaction. Please try again.")
         )
       }
     }
@@ -359,17 +349,16 @@ final class PhotoDetailViewController: UIViewController {
     request.initialCommentCount = commentCount.count ?? -1
     let store = CommentsStore(
       request: request,
-      localization: .resolve(localization)
     )
     commentsStore = store
 
     let hostingController = UIHostingController(rootView: PhotoCommentsSheetView(store: store))
-    hostingController.navigationItem.title = store.localization.title
+    hostingController.navigationItem.title = String(localized: "Comments")
     if !request.photoTitle.isEmpty {
       hostingController.navigationItem.prompt = request.photoTitle
     }
     hostingController.navigationItem.rightBarButtonItem = UIBarButtonItem(
-      title: store.localization.done,
+      title: String(localized: "Done"),
       primaryAction: UIAction { [weak self, weak hostingController] _ in
         self?.finishComments()
         hostingController?.dismiss(animated: true)
@@ -421,13 +410,8 @@ final class PhotoDetailViewController: UIViewController {
   private func buildRemainingMetadata() {
     guard photos.count > 5 else { return }
     let photos = photos
-    let localization = localization
     let task = Task.detached {
-      Self.metadata(
-        photos: photos,
-        indices: photos.indices,
-        localization: localization
-      )
+      Self.metadata(photos: photos, indices: photos.indices)
     }
     Task { @MainActor [weak self] in
       let values = await task.value
@@ -438,77 +422,68 @@ final class PhotoDetailViewController: UIViewController {
   private func metadata(around index: Int) -> [PhotoDetailMetadata] {
     let lower = max(0, index - 2)
     let upper = min(photos.count, index + 3)
-    return Self.metadata(
-      photos: photos,
-      indices: lower..<upper,
-      localization: localization
-    )
+    return Self.metadata(photos: photos, indices: lower..<upper)
   }
 
   nonisolated private static func metadata(
     photos: [GalleryPhoto],
-    indices: Range<Int>,
-    localization: Localization
+    indices: Range<Int>
   ) -> [PhotoDetailMetadata] {
     indices.map { index in
       let photo = photos[index]
       let header = PhotoHeaderModel.build(
         photo: photo,
-        localeIdentifier: localization.language.localeIdentifier,
+        localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier,
         strings: PhotoHeaderStrings(
-          fallbackTitle: localization.value("page.photo"),
-          today: localization.value("photo.captureDay.today"),
-          yesterday: localization.value("photo.captureDay.yesterday")
+          fallbackTitle: String(localized: "Photo"),
+          today: String(localized: "Today"),
+          yesterday: String(localized: "Yesterday")
         )
       )
       let info = PhotoInfoModel.build(
         photo: photo,
-        localization: localization,
-        localeIdentifier: localization.language.localeIdentifier
+        localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier
       )
       return PhotoDetailMetadata(
         id: photo.id,
         title: header.title,
         subtitle: header.subtitle,
-        infoJSON: info.detailJSON(localization: localization)
+        info: info
       )
     }
   }
 
   private func detailStrings() -> PhotoDetailStrings {
     PhotoDetailStrings(
-      close: localization.value("photo.close"),
-      comments: localization.value("photo.comments"),
-      info: localization.value("photo.info"),
-      next: localization.value("photo.next"),
-      previous: localization.value("photo.previous"),
-      reaction: localization.value("photo.reaction.open"),
-      share: localization.value("photo.share")
+      close: String(localized: "Close photo"),
+      comments: String(localized: "View comments"),
+      info: String(localized: "Photo information"),
+      next: String(localized: "Next photo"),
+      previous: String(localized: "Previous photo"),
+      reaction: String(localized: "Add a reaction"),
+      share: String(localized: "Share photo")
     )
   }
 
   private func livePhotoStrings() -> LivePhotoBadgeStrings {
     LivePhotoBadgeStrings(
-      badgeLive: localization.value("photo.liveBadge"),
-      badgeLoop: localization.value("photo.liveBadgeLoop"),
-      badgeBounce: localization.value("photo.liveBadgeBounce"),
-      badgeOff: localization.value("photo.liveBadgeOff"),
-      menuLive: localization.value("photo.liveMode.live"),
-      menuLoop: localization.value("photo.liveMode.loop"),
-      menuBounce: localization.value("photo.liveMode.bounce"),
-      menuOff: localization.value("photo.liveMode.off"),
-      accessibilityLabel: localization.value("photo.livePhoto"),
-      accessibilityHint: localization.value("photo.livePhotoHint")
+      badgeLive: String(localized: "LIVE"),
+      badgeLoop: String(localized: "LOOP"),
+      badgeBounce: String(localized: "BOUNCE"),
+      badgeOff: String(localized: "LIVE OFF"),
+      menuLive: String(localized: "Live"),
+      menuLoop: String(localized: "Loop"),
+      menuBounce: String(localized: "Bounce"),
+      menuOff: String(localized: "Live Off"),
+      accessibilityLabel: String(localized: "Live Photo"),
+      accessibilityHint: String(localized: "Press and hold the photo to play it.")
     )
   }
 
   private func reactionItems(counts: [String: Int]) -> [PhotoDetailReactionItem] {
     PhotoReaction.allCases.map { reaction in
       PhotoDetailReactionItem(
-        accessibilityLabel: localization.value(
-          "photo.reaction.add",
-          arguments: ["reaction": reaction.rawValue]
-        ),
+        accessibilityLabel: String(localized: "React with \(reaction.rawValue)"),
         count: counts[reaction.rawValue] ?? 0,
         reaction: reaction.rawValue
       )

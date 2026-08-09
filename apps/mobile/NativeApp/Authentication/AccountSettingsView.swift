@@ -26,30 +26,30 @@ struct AccountSettingsView: View {
           }
         } else {
           ContentUnavailableView(
-            Localization.t("account.signedOut"),
+            String(localized: "This account is no longer signed in."),
             systemImage: "person.crop.circle.badge.xmark"
           )
         }
       }
-      .navigationTitle(Localization.t("account.settings.title"))
+      .navigationTitle(String(localized: "Account settings"))
       .navigationBarTitleDisplayMode(.inline)
       .task {
         if startsDeletion, impact == nil {
           await inspectDeletion()
         }
       }
-      .alert(Localization.t("account.deletion.finalTitle"), isPresented: $showPasswordConfirmation) {
-        Button(Localization.t("common.cancel"), role: .cancel) {}
-        Button(Localization.t("account.deletion.confirm"), role: .destructive) {
+      .alert(String(localized: "Delete this account?"), isPresented: $showPasswordConfirmation) {
+        Button(String(localized: "Cancel"), role: .cancel) {}
+        Button(String(localized: "Permanently delete account"), role: .destructive) {
           submitDeletion(.password(password))
         }
       } message: {
-        Text(Localization.t("account.deletion.finalDescription"))
+        Text("This permanently removes your account and cannot be undone.")
       }
-      .alert(Localization.t("account.deletion.acceptedTitle"), isPresented: $showAcceptedAlert) {
-        Button(Localization.t("common.done")) { dismiss() }
+      .alert(String(localized: "Deletion in progress"), isPresented: $showAcceptedAlert) {
+        Button(String(localized: "Done")) { dismiss() }
       } message: {
-        Text(Localization.t("account.deletion.acceptedDescription"))
+        Text("Access has been revoked. Cleanup will continue safely in the background.")
       }
     }
   }
@@ -76,7 +76,7 @@ struct AccountSettingsView: View {
           }
         } label: {
           HStack {
-            Text(Localization.t("common.signOut"))
+            Text("Sign out")
             Spacer()
           }
           .padding(.horizontal, 16)
@@ -90,7 +90,7 @@ struct AccountSettingsView: View {
           Task { await inspectDeletion() }
         } label: {
           HStack {
-            Text(Localization.t("account.deletion.action"))
+            Text("Delete account")
               .foregroundStyle(.red)
             Spacer()
             if busy { ProgressView().tint(.red) }
@@ -105,7 +105,7 @@ struct AccountSettingsView: View {
       .background(Color(uiColor: .secondarySystemGroupedBackground))
       .clipShape(.rect(cornerRadius: 16, style: .continuous))
 
-      Text(Localization.t("account.deletion.entryDescription"))
+      Text("A deletion request signs out every device and permanently removes account data after external storage and billing cleanup.")
         .font(.system(size: 12))
         .foregroundStyle(.tertiary)
         .lineSpacing(2)
@@ -120,10 +120,10 @@ struct AccountSettingsView: View {
   private func deletionContent(_ impact: AccountDeletionImpact) -> some View {
     VStack(alignment: .leading, spacing: 20) {
       VStack(alignment: .leading, spacing: 8) {
-        Text(Localization.t("account.deletion.title"))
+        Text("Permanent account deletion")
           .font(.system(size: 20, weight: .bold))
           .foregroundStyle(.red)
-        Text(Localization.t("account.deletion.description"))
+        Text("Review the consequences below. Once accepted, access is revoked immediately and the operation cannot be reversed.")
           .font(.system(size: 14))
           .foregroundStyle(.secondary)
           .lineSpacing(3)
@@ -135,7 +135,7 @@ struct AccountSettingsView: View {
 
       if !impact.workspaces.isEmpty {
         VStack(alignment: .leading, spacing: 10) {
-          Text(Localization.t("account.deletion.workspaces"))
+          Text("Owned workspaces")
             .font(.system(size: 14, weight: .bold))
           ForEach(impact.workspaces) { workspace in
             HStack(spacing: 12) {
@@ -147,13 +147,7 @@ struct AccountSettingsView: View {
                   .foregroundStyle(.secondary)
               }
               Spacer()
-              Text(
-                Localization.t(
-                  workspace.action == "delete"
-                    ? "account.deletion.deleteBadge"
-                    : "account.deletion.transferBadge"
-                )
-              )
+              Text(workspace.action == "delete" ? "DELETE" : "TRANSFER")
               .font(.system(size: 11, weight: .bold))
               .foregroundStyle(workspace.action == "delete" ? .red : .blue)
             }
@@ -165,13 +159,7 @@ struct AccountSettingsView: View {
       }
 
       Text(
-        Localization.t(
-          "account.deletion.associatedData",
-          [
-            "joined": String(impact.joinedWorkspaces.count),
-            "subscriptions": String(impact.subscriptions.count),
-          ]
-        )
+        "Your comments, reactions, followed galleries, device registrations, and other account data will be removed. \(impact.joinedWorkspaces.count) joined workspaces will be left. \(impact.subscriptions.count) subscriptions require cleanup."
       )
       .font(.system(size: 14))
       .foregroundStyle(.secondary)
@@ -179,9 +167,9 @@ struct AccountSettingsView: View {
 
       if impact.proofMethods.contains("password") {
         VStack(alignment: .leading, spacing: 10) {
-          Text(Localization.t("account.deletion.verifyPassword"))
+          Text("Confirm with your current password")
             .font(.system(size: 14, weight: .bold))
-          SecureField(Localization.t("auth.password.password"), text: $password)
+          SecureField(String(localized: "Password"), text: $password)
             .textContentType(.password)
             .submitLabel(.done)
             .onSubmit(confirmPasswordDeletion)
@@ -192,7 +180,7 @@ struct AccountSettingsView: View {
 
       if impact.proofMethods.contains("apple"), appleAvailable {
         VStack(alignment: .leading, spacing: 10) {
-          Text(Localization.t("account.deletion.verifyApple"))
+          Text("Verify with Apple to delete the account")
             .font(.system(size: 14, weight: .bold))
           NativeAppleAuthorizationButton(type: .signIn) {
             submitAppleDeletion()
@@ -232,7 +220,7 @@ struct AccountSettingsView: View {
         if busy {
           ProgressView().tint(.white)
         } else {
-          Text(Localization.t("account.deletion.confirm"))
+          Text("Permanently delete account")
             .font(.system(size: 15, weight: .bold))
         }
       }
@@ -247,9 +235,9 @@ struct AccountSettingsView: View {
 
   private func workspaceDescription(_ workspace: AccountDeletionImpact.Workspace) -> String {
     if workspace.action == "transfer", let target = workspace.transferTo {
-      return Localization.t("account.deletion.transferTo", ["name": target.name])
+      return String(localized: "Ownership will transfer to \(target.name).")
     }
-    return Localization.t("account.deletion.deleteWorkspace")
+    return String(localized: "This workspace and its managed storage will be deleted.")
   }
 
   private func inspectDeletion() async {
@@ -262,14 +250,14 @@ struct AccountSettingsView: View {
       impact = try await nextImpact
       appleAvailable = await available
     } catch {
-      self.error = Localization.t("account.deletion.impactFailed")
+      self.error = String(localized: "Unable to inspect the deletion impact. Please try again.")
     }
     busy = false
   }
 
   private func confirmPasswordDeletion() {
     guard !password.isEmpty else {
-      error = Localization.t("account.deletion.passwordRequired")
+      error = String(localized: "Enter your current password to continue.")
       return
     }
     showPasswordConfirmation = true
@@ -291,7 +279,7 @@ struct AccountSettingsView: View {
       } catch NativeAuthError.cancelled {
         return
       } catch {
-        self.error = Localization.t("account.deletion.failed")
+        self.error = String(localized: "The deletion request could not be accepted. Verify your identity and try again.")
       }
     }
   }
@@ -306,7 +294,7 @@ struct AccountSettingsView: View {
         _ = try await NativeAuthenticationService.shared.deleteAccount(proof: proof)
         showAcceptedAlert = true
       } catch {
-        self.error = Localization.t("account.deletion.failed")
+        self.error = String(localized: "The deletion request could not be accepted. Verify your identity and try again.")
       }
     }
   }

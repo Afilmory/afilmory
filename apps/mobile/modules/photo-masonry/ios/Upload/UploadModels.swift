@@ -11,6 +11,17 @@ enum UploadJobStatus: String, Codable, Sendable {
   var isActive: Bool {
     self == .queued || self == .uploading || self == .processing
   }
+
+  var label: String {
+    switch self {
+    case .queued: String(localized: "QUEUED")
+    case .uploading: String(localized: "UPLOADING")
+    case .processing: String(localized: "PROCESSING")
+    case .done: String(localized: "DONE")
+    case .failed: String(localized: "FAILED")
+    case .cancelled: String(localized: "CANCELLED")
+    }
+  }
 }
 
 struct UploadServerLogLine: Codable, Hashable, Sendable {

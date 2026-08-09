@@ -9,11 +9,13 @@ struct CommentSignInView: View {
         .font(.title3)
         .foregroundStyle(.secondary)
         .accessibilityHidden(true)
-      Text(store.requiresAuthentication ? store.localization.reauthenticate : store.localization.loginRequired)
+      Text(store.requiresAuthentication
+        ? String(localized: "Your session expired. Sign in again to continue.")
+        : String(localized: "Sign in to leave a comment."))
         .font(.footnote)
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
-      Button(store.localization.signIn) {
+      Button(String(localized: "Sign in")) {
         store.requestSignIn()
       }
       .buttonStyle(.borderedProminent)

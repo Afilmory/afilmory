@@ -23,7 +23,6 @@ enum StudioLibraryDeletePolicy {
 }
 
 final class StudioLibraryController: UIViewController {
-  private let localization = Localization.shared
   private let onRequestSignIn: () -> Void
   private let masonryView: PhotoMasonryView
   private let uploadFab: UploadFabView
@@ -44,7 +43,6 @@ final class StudioLibraryController: UIViewController {
     uploadFab = UploadFabView(frame: .zero)
     super.init(nibName: nil, bundle: nil)
     configureMasonry()
-    uploadFab.setLocalization(uploadQueueLocalization())
   }
 
   @available(*, unavailable)
@@ -94,12 +92,12 @@ final class StudioLibraryController: UIViewController {
   }
 
   private func configureMasonry() {
-    masonryView.contextMenuInfoTitle = localization.value("photo.info")
-    masonryView.contextMenuSelectTitle = localization.value("common.select")
-    masonryView.contextMenuShareTitle = localization.value("photo.share")
+    masonryView.contextMenuInfoTitle = String(localized: "Photo information")
+    masonryView.contextMenuSelectTitle = String(localized: "Select")
+    masonryView.contextMenuShareTitle = String(localized: "Share photo")
     masonryView.extraBottomInset = 20
     masonryView.gap = 3
-    masonryView.livePhotoAccessibilityLabel = localization.value("photo.livePhoto")
+    masonryView.livePhotoAccessibilityLabel = String(localized: "Live Photo")
     masonryView.selectionEnabled = true
     masonryView.onNativePhotoPress = { [weak self] index in
       self?.presentPhoto(at: index)
@@ -131,10 +129,10 @@ final class StudioLibraryController: UIViewController {
       feed = nil
       masonryView.setPhotos([])
       showAccess(
-        title: localization.value("studio.access.signedOut.title"),
-        description: localization.value("studio.access.signedOut.description"),
+        title: String(localized: "Sign in to Studio"),
+        description: String(localized: "Sign in with the administrator account for your workspace."),
         image: "lock",
-        action: localization.value("common.signIn"),
+        action: String(localized: "Sign in"),
         handler: onRequestSignIn
       )
     case .signedIn(let session):
@@ -151,8 +149,8 @@ final class StudioLibraryController: UIViewController {
         feed = nil
         masonryView.setPhotos([])
         showAccess(
-          title: localization.value("studio.access.admin.title"),
-          description: localization.value("studio.access.admin.description"),
+          title: String(localized: "Administrator access required"),
+          description: String(localized: "Studio is available to an active workspace administrator."),
           image: "person.badge.shield.checkmark",
           action: nil,
           handler: nil
@@ -181,24 +179,24 @@ final class StudioLibraryController: UIViewController {
     if feed.loadState == .failed, feed.photos.isEmpty {
       var configuration = UIContentUnavailableConfiguration.empty()
       configuration.image = UIImage(systemName: "exclamationmark.triangle")
-      configuration.text = localization.value("studio.error.title")
-      configuration.secondaryText = feed.lastError ?? localization.value("studio.error.description")
+      configuration.text = String(localized: "Unable to load Studio")
+      configuration.secondaryText = feed.lastError ?? String(localized: "Check your connection and try again.")
       configuration.button = .filled()
-      configuration.button.title = localization.value("common.retry")
+      configuration.button.title = String(localized: "Retry")
       configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in self?.reload() }
       contentUnavailableConfiguration = configuration
       return
     }
-    masonryView.setPhotos(feed.photos.map { MasonryPhoto(photo: $0, localization: localization) })
+    masonryView.setPhotos(feed.photos.map(MasonryPhoto.init(photo:)))
     ShareUploadContextStore.updateSuggestedTags(availableTags())
     masonryView.setRefreshing(false)
     if feed.photos.isEmpty {
       var configuration = UIContentUnavailableConfiguration.empty()
       configuration.image = UIImage(systemName: "photo.on.rectangle.angled")
-      configuration.text = localization.value("studio.library.empty.title")
-      configuration.secondaryText = localization.value("studio.library.empty.description")
+      configuration.text = String(localized: "No managed photos")
+      configuration.secondaryText = String(localized: "Choose photos from the system library to add them to your gallery.")
       configuration.button = .filled()
-      configuration.button.title = localization.value("studio.upload.action")
+      configuration.button.title = String(localized: "Upload Photos")
       configuration.buttonProperties.primaryAction = UIAction { [weak self] _ in self?.beginUpload() }
       contentUnavailableConfiguration = configuration
     } else {
@@ -217,7 +215,6 @@ final class StudioLibraryController: UIViewController {
       photos: feed.photos,
       initialIndex: index,
       gallerySlug: gallerySlug,
-      localization: localization,
       onRequestSignIn: onRequestSignIn,
       sourceProvider: { [weak masonryView] photoId in
         masonryView?.visibleTransitionSourceView(for: photoId)
@@ -245,9 +242,9 @@ final class StudioLibraryController: UIViewController {
   private func updateNavigation() {
     let summary = UploadQueueSummary(jobs: uploadJobs)
     if selectionMode {
-      title = localization.value("studio.library.selected", arguments: ["count": String(selectedIds.count)])
+      title = String(localized: "\(selectedIds.count) Selected")
       let done = UIBarButtonItem(
-        title: localization.value("common.done"),
+        title: String(localized: "Done"),
         primaryAction: UIAction { [weak self] _ in self?.leaveSelection() }
       )
       if #available(iOS 26.0, *) {
@@ -257,27 +254,24 @@ final class StudioLibraryController: UIViewController {
         image: UIImage(systemName: "tag"),
         primaryAction: UIAction { [weak self] _ in self?.editTags() }
       )
-      tags.accessibilityLabel = localization.value("studio.library.tags.action")
+      tags.accessibilityLabel = String(localized: "Tags")
       tags.isEnabled = !selectedIds.isEmpty && !mutating
       let delete = UIBarButtonItem(
         image: UIImage(systemName: "trash"),
         primaryAction: UIAction { [weak self] _ in self?.confirmDelete() }
       )
       delete.tintColor = .systemRed
-      delete.accessibilityLabel = localization.value("common.delete")
+      delete.accessibilityLabel = String(localized: "Delete")
       delete.isEnabled = !selectedIds.isEmpty && !mutating
       navigationItem.rightBarButtonItems = [done, delete, tags]
     } else {
       title = summary.running
-        ? localization.value(
-          "studio.upload.queue.headline",
-          arguments: ["done": String(summary.done), "total": String(summary.total)]
-        )
+        ? String(localized: "Uploaded \(summary.done) of \(summary.total)")
         : summary.failed > 0
-          ? localization.value("studio.upload.queue.failedCount", count: summary.failed)
-          : localization.value("studio.library.title")
+          ? String(localized: "\(summary.failed) failed")
+          : String(localized: "Photo Library")
       let select = UIBarButtonItem(
-        title: localization.value("common.select"),
+        title: String(localized: "Select"),
         primaryAction: UIAction { [weak self] _ in self?.enterSelection() }
       )
       select.isEnabled = !mutating && !(feed?.photos.isEmpty ?? true)
@@ -285,7 +279,7 @@ final class StudioLibraryController: UIViewController {
         image: UIImage(systemName: "plus"),
         primaryAction: UIAction { [weak self] _ in self?.beginUpload() }
       )
-      upload.accessibilityLabel = localization.value("studio.upload.action")
+      upload.accessibilityLabel = String(localized: "Upload Photos")
       upload.isEnabled = !mutating
       navigationItem.rightBarButtonItems = [select, upload]
     }
@@ -298,13 +292,13 @@ final class StudioLibraryController: UIViewController {
     guard !selected.isEmpty else { return }
     let common = commonTags(selected.map(\.asset)).joined(separator: ", ")
     let alert = UIAlertController(
-      title: localization.value("studio.library.tags.title"),
-      message: localization.value("studio.library.tags.description"),
+      title: String(localized: "Edit tags"),
+      message: String(localized: "Enter comma-separated tags. The result replaces tags on every selected photo."),
       preferredStyle: .alert
     )
     alert.addTextField { $0.text = common }
-    alert.addAction(UIAlertAction(title: localization.value("common.cancel"), style: .cancel))
-    alert.addAction(UIAlertAction(title: localization.value("common.save"), style: .default) { [weak self, weak alert] _ in
+    alert.addAction(UIAlertAction(title: String(localized: "Cancel"), style: .cancel))
+    alert.addAction(UIAlertAction(title: String(localized: "Save"), style: .default) { [weak self, weak alert] _ in
       self?.applyTags(Self.parseTags(alert?.textFields?.first?.text ?? ""), to: selected.map(\.asset.id))
     })
     present(alert, animated: true)
@@ -328,7 +322,7 @@ final class StudioLibraryController: UIViewController {
         self?.reload()
       } catch {
         self?.showError(
-          title: self?.localization.value("studio.library.tags.failed") ?? "",
+          title: String(localized: "Unable to update tags"),
           message: error.localizedDescription
         )
       }
@@ -346,28 +340,27 @@ final class StudioLibraryController: UIViewController {
       storageProviders: selectedProviders
     )
     let alert = UIAlertController(
-      title: localization.value("studio.library.delete.title"),
-      message: localization.value(
-        "studio.library.delete.description",
-        arguments: ["count": String(selectedIds.count)]
+      title: String(localized: "Delete selected photos?"),
+      message: String(
+        localized: "Delete \(selectedIds.count) selected photos. Removing storage files cannot be undone."
       ),
       preferredStyle: .alert
     )
-    alert.addAction(UIAlertAction(title: localization.value("common.cancel"), style: .cancel))
+    alert.addAction(UIAlertAction(title: String(localized: "Cancel"), style: .cancel))
     if requiresStorageDeletion {
       alert.addAction(UIAlertAction(
-        title: localization.value("common.delete"),
+        title: String(localized: "Delete"),
         style: .destructive
       ) { [weak self] _ in self?.deleteSelected(fromStorage: true) })
       present(alert, animated: true)
       return
     }
     alert.addAction(UIAlertAction(
-      title: localization.value("studio.library.delete.databaseOnly"),
+      title: String(localized: "Remove record only"),
       style: .destructive
     ) { [weak self] _ in self?.deleteSelected(fromStorage: false) })
     alert.addAction(UIAlertAction(
-      title: localization.value("studio.library.delete.everywhere"),
+      title: String(localized: "Delete files too"),
       style: .destructive
     ) { [weak self] _ in self?.deleteSelected(fromStorage: true) })
     present(alert, animated: true)
@@ -393,7 +386,7 @@ final class StudioLibraryController: UIViewController {
         self?.reload()
       } catch {
         self?.showError(
-          title: self?.localization.value("studio.library.delete.failed") ?? "",
+          title: String(localized: "Unable to delete photos"),
           message: error.localizedDescription
         )
       }
@@ -411,7 +404,7 @@ final class StudioLibraryController: UIViewController {
         self?.presentUploadReview(items: values, tags: [])
       case .failure(let error):
         self?.showError(
-          title: self?.localization.value("studio.upload.failed") ?? "",
+          title: String(localized: "Upload failed"),
           message: error.localizedDescription
         )
       }
@@ -423,15 +416,14 @@ final class StudioLibraryController: UIViewController {
     let root = UploadReviewSheetView(
       items: items.map { UploadReviewItem(id: $0.id, isLivePhoto: $0.isLivePhoto) },
       initialTags: tags,
-      suggestedTags: suggestedTags,
-      localization: uploadReviewLocalization()
+      suggestedTags: suggestedTags
     ) { [weak self] outcome in
       self?.dismiss(animated: true) {
         self?.handleUploadReview(outcome, items: items)
       }
     }
     let host = UIHostingController(rootView: root)
-    host.navigationItem.title = localization.value("studio.upload.review.title")
+    host.navigationItem.title = String(localized: "Review Upload")
     let navigation = UINavigationController(rootViewController: host)
     navigation.modalPresentationStyle = .pageSheet
     navigation.sheetPresentationController?.detents = [.large()]
@@ -456,7 +448,7 @@ final class StudioLibraryController: UIViewController {
           self?.presentUploadReview(items: kept + more, tags: tags)
         case .failure(let error):
           self?.showError(
-            title: self?.localization.value("studio.upload.failed") ?? "",
+            title: String(localized: "Upload failed"),
             message: error.localizedDescription
           )
         }
@@ -468,7 +460,7 @@ final class StudioLibraryController: UIViewController {
     guard !items.isEmpty,
           let tenantBaseURL = AfilmorySessionStore.shared.current().tenantBaseURL
     else { return }
-    UploadActivityController.shared.setTitle(localization.value("studio.upload.activity.title"))
+    UploadActivityController.shared.setTitle(String(localized: "Uploading photos"))
     _ = UploadCenter.shared.enqueue(
       endpoint: "\(tenantBaseURL)/photos/assets/upload",
       directory: UploadTagPath.directory(from: tags),
@@ -534,7 +526,7 @@ final class StudioLibraryController: UIViewController {
 
   private func showError(title: String, message: String) {
     let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-    alert.addAction(UIAlertAction(title: localization.value("common.done"), style: .default))
+    alert.addAction(UIAlertAction(title: String(localized: "Done"), style: .default))
     present(alert, animated: true)
   }
 
@@ -549,43 +541,6 @@ final class StudioLibraryController: UIViewController {
         return values.compactMap(\.string).contains(tag)
       }
     }
-  }
-
-  private func uploadReviewLocalization() -> UploadReviewLocalizationRecord {
-    var copy = UploadReviewLocalizationRecord()
-    copy.addMore = localization.value("studio.upload.review.addMore")
-    copy.cancel = localization.value("common.cancel")
-    copy.remove = localization.value("studio.upload.review.remove")
-    copy.startOne = localization.value("studio.upload.review.startTemplate_one")
-    copy.startOther = localization.value("studio.upload.review.startTemplate_other")
-    copy.summaryOne = localization.value("studio.upload.review.summaryTemplate_one")
-    copy.summaryOther = localization.value("studio.upload.review.summaryTemplate_other")
-    copy.tagsLabel = localization.value("studio.upload.review.tagsLabel")
-    copy.tagsPlaceholder = localization.value("studio.upload.review.tagsPlaceholder")
-    copy.title = localization.value("studio.upload.review.title")
-    return copy
-  }
-
-  private func uploadQueueLocalization() -> [String: String] {
-    [
-      "attemptTemplate": localization.value("studio.upload.queue.attempt"),
-      "cancel": localization.value("common.cancel"),
-      "cancelAll": localization.value("studio.upload.queue.cancelAll"),
-      "clear": localization.value("studio.upload.queue.clear"),
-      "done": localization.value("common.done"),
-      "failedTemplateOne": localization.value("studio.upload.queue.failedTemplate_one"),
-      "failedTemplateOther": localization.value("studio.upload.queue.failedTemplate_other"),
-      "headlineTemplate": localization.value("studio.upload.queue.headlineTemplate"),
-      "retry": localization.value("studio.upload.queue.retry"),
-      "retryAll": localization.value("studio.upload.queue.retryAll"),
-      "statusCancelled": localization.value("studio.upload.status.cancelled"),
-      "statusDone": localization.value("studio.upload.status.done"),
-      "statusFailed": localization.value("studio.upload.status.failed"),
-      "statusProcessing": localization.value("studio.upload.status.processing"),
-      "statusQueued": localization.value("studio.upload.status.queued"),
-      "statusUploading": localization.value("studio.upload.status.uploading"),
-      "title": localization.value("studio.upload.queue.title"),
-    ]
   }
 
   private static func parseTags(_ value: String) -> [String] {

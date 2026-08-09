@@ -24,8 +24,8 @@
 	<array>
 		<string>en</string>
 		<string>zh-Hans</string>
+		<string>zh-Hant</string>
 		<string>zh-HK</string>
-		<string>zh-TW</string>
 		<string>ja</string>
 		<string>ko</string>
 	</array>

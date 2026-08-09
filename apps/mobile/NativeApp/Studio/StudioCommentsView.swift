@@ -69,6 +69,16 @@ final class StudioCommentsViewModel: ObservableObject {
   }
 }
 
+private func commentStatusLabel(_ status: String) -> String {
+  switch status {
+  case "approved": String(localized: "Approved")
+  case "hidden": String(localized: "Hidden")
+  case "pending": String(localized: "Pending")
+  case "rejected": String(localized: "Rejected")
+  default: String(localized: "All")
+  }
+}
+
 struct StudioCommentsView: View {
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   @StateObject private var model = StudioCommentsViewModel()
@@ -98,30 +108,30 @@ struct StudioCommentsView: View {
       await model.load()
     }
     .confirmationDialog(
-      Localization.t("studio.comments.delete.title"),
+      String(localized: "Delete comment?"),
       isPresented: Binding(
         get: { pendingDeletionID != nil },
         set: { if !$0 { pendingDeletionID = nil } }
       ),
       titleVisibility: .visible
     ) {
-      Button(Localization.t("common.delete"), role: .destructive) {
+      Button(String(localized: "Delete"), role: .destructive) {
         guard let id = pendingDeletionID else { return }
         pendingDeletionID = nil
         Task { await model.delete(id) }
       }
-      Button(Localization.t("common.cancel"), role: .cancel) { pendingDeletionID = nil }
+      Button(String(localized: "Cancel"), role: .cancel) { pendingDeletionID = nil }
     } message: {
-      Text(Localization.t("studio.comments.delete.description"))
+      Text("This comment will be removed from the gallery.")
     }
     .alert(
-      Localization.t("studio.comments.delete.failed"),
+      String(localized: "Unable to delete comment"),
       isPresented: Binding(
         get: { model.mutationError != nil },
         set: { if !$0 { model.mutationError = nil } }
       )
     ) {
-      Button(Localization.t("common.done")) { model.mutationError = nil }
+      Button(String(localized: "Done")) { model.mutationError = nil }
     } message: {
       Text(model.mutationError?.localizedDescription ?? "")
     }
@@ -130,9 +140,9 @@ struct StudioCommentsView: View {
   private var commentsForm: some View {
     Form {
       Section {
-        Picker(Localization.t("studio.comments.filter"), selection: $model.filter) {
+        Picker(String(localized: "Status"), selection: $model.filter) {
           ForEach(filters, id: \.self) { value in
-            Text(Localization.t("studio.comments.status.\(value)"))
+            Text(commentStatusLabel(value))
               .tag(value)
           }
         }
@@ -140,13 +150,13 @@ struct StudioCommentsView: View {
       }
 
       Section(
-        Localization.t("studio.comments.results", ["count": String(model.comments.count)])
+        String(localized: "Comments (\(model.comments.count))")
       ) {
         if model.comments.isEmpty {
           ContentUnavailableView(
-            Localization.t("studio.comments.empty.title"),
+            String(localized: "No comments"),
             systemImage: "text.bubble",
-            description: Text(Localization.t("studio.comments.empty.description"))
+            description: Text("There are no comments in this status.")
           )
         } else {
           ForEach(model.comments) { comment in
@@ -156,12 +166,12 @@ struct StudioCommentsView: View {
                 if horizontalSizeClass == .regular { model.selectedCommentID = comment.id }
               }
               .contextMenu {
-                Button(Localization.t("common.delete"), role: .destructive) {
+                Button(String(localized: "Delete"), role: .destructive) {
                   pendingDeletionID = comment.id
                 }
               }
               .swipeActions(edge: .trailing) {
-                Button(Localization.t("common.delete"), role: .destructive) {
+                Button(String(localized: "Delete"), role: .destructive) {
                   pendingDeletionID = comment.id
                 }
               }
@@ -174,7 +184,7 @@ struct StudioCommentsView: View {
             if model.loadingMore {
               ProgressView().frame(maxWidth: .infinity)
             } else {
-              Text(Localization.t("studio.comments.loadMore"))
+              Text("Load more")
                 .frame(maxWidth: .infinity)
             }
           }
@@ -189,11 +199,11 @@ struct StudioCommentsView: View {
   private var detailForm: some View {
     Form {
       if let comment = selectedComment {
-        Section(model.users[comment.userId]?.name ?? Localization.t("studio.comments.unknownUser")) {
+        Section(model.users[comment.userId]?.name ?? String(localized: "Unknown user")) {
           VStack(alignment: .leading, spacing: 10) {
             Text(comment.content)
             Text(
-              "\(Localization.t("studio.comments.status.\(comment.status)")) · \(NativeStudioFormatters.dateTime(comment.createdAt) ?? "")"
+              "\(commentStatusLabel(comment.status)) · \(NativeStudioFormatters.dateTime(comment.createdAt) ?? "")"
             )
             .foregroundStyle(.secondary)
             Text(comment.photoId)
@@ -207,7 +217,7 @@ struct StudioCommentsView: View {
           if model.deletingID == comment.id {
             ProgressView().frame(maxWidth: .infinity)
           } else {
-            Button(Localization.t("common.delete"), role: .destructive) {
+            Button(String(localized: "Delete"), role: .destructive) {
               pendingDeletionID = comment.id
             }
           }
@@ -215,9 +225,9 @@ struct StudioCommentsView: View {
       } else {
         Section {
           ContentUnavailableView(
-            Localization.t("studio.comments.empty.title"),
+            String(localized: "No comments"),
             systemImage: "text.bubble",
-            description: Text(Localization.t("studio.comments.empty.description"))
+            description: Text("There are no comments in this status.")
           )
         }
       }
@@ -240,9 +250,9 @@ struct StudioCommentsView: View {
         )
       VStack(alignment: .leading, spacing: 3) {
         HStack(spacing: 6) {
-          Text(model.users[comment.userId]?.name ?? Localization.t("studio.comments.unknownUser"))
+          Text(model.users[comment.userId]?.name ?? String(localized: "Unknown user"))
             .font(.subheadline.weight(.semibold))
-          Text(Localization.t("studio.comments.status.\(comment.status)"))
+          Text(commentStatusLabel(comment.status))
             .font(.caption)
             .foregroundStyle(.secondary)
         }

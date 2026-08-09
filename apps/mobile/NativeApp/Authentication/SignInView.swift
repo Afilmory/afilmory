@@ -1,5 +1,7 @@
 import SwiftUI
 
+private let appName = "Afilmory"
+
 private enum SignInBusyAction: Equatable {
   case apple
   case github
@@ -9,7 +11,7 @@ private enum SignInBusyAction: Equatable {
 
 enum NativeAuthFailureMessage {
   static func text(for error: Error) -> String {
-    let fallback = Localization.t("auth.failed")
+    let fallback = String(localized: "Unable to sign in. Please try again.")
     let reason = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !reason.isEmpty,
           reason.caseInsensitiveCompare(fallback) != .orderedSame
@@ -83,7 +85,7 @@ struct SignInView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(
-          Localization.t("accessibility.closePage", ["title": "Afilmory"])
+          String(localized: "Close \(appName)")
         )
         .padding(16)
       }
@@ -98,7 +100,7 @@ struct SignInView: View {
       Text("Afilmory")
         .font(.system(size: 22, weight: .bold))
         .tracking(-0.35)
-      Text(Localization.t("auth.subtitle"))
+      Text("Sign in with the account that owns your gallery.")
         .font(.system(size: 14))
         .foregroundStyle(.secondary)
         .padding(.top, 4)
@@ -124,25 +126,25 @@ struct SignInView: View {
             }
           }
           .frame(height: 44)
-          .accessibilityLabel(Localization.t("auth.continue.apple"))
+          .accessibilityLabel(String(localized: "Continue with Apple"))
           .accessibilityIdentifier("auth.apple")
         }
 
         providerButton(
           action: .github,
-          title: Localization.t("auth.continue.github"),
+          title: String(localized: "Continue with GitHub"),
           symbol: nil
         )
         providerButton(
           action: .google,
-          title: Localization.t("auth.continue.google"),
+          title: String(localized: "Continue with Google"),
           symbol: "google-g"
         )
 
         Button {
           togglePasswordForm()
         } label: {
-          Text(Localization.t(showPasswordForm ? "auth.password.hide" : "auth.password.show"))
+          Text(showPasswordForm ? String(localized: "Hide email sign-in") : String(localized: "Sign in with email"))
             .font(.system(size: 13, weight: .semibold))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, minHeight: 32)
@@ -227,20 +229,20 @@ struct SignInView: View {
 
   private var passwordForm: some View {
     VStack(spacing: 10) {
-      TextField(Localization.t("auth.password.email"), text: $email)
+      TextField(String(localized: "Email"), text: $email)
         .textContentType(.username)
         .keyboardType(.emailAddress)
         .textInputAutocapitalization(.never)
         .autocorrectionDisabled()
-        .accessibilityLabel(Localization.t("auth.password.email"))
+        .accessibilityLabel(String(localized: "Email"))
         .accessibilityIdentifier("auth.email")
         .submitLabel(.next)
         .focused($focusedField, equals: .email)
         .onSubmit { focusedField = .password }
         .afilmoryFormField()
-      SecureField(Localization.t("auth.password.password"), text: $password)
+      SecureField(String(localized: "Password"), text: $password)
         .textContentType(.password)
-        .accessibilityLabel(Localization.t("auth.password.password"))
+        .accessibilityLabel(String(localized: "Password"))
         .accessibilityIdentifier("auth.password")
         .submitLabel(.go)
         .focused($focusedField, equals: .password)
@@ -251,7 +253,7 @@ struct SignInView: View {
           if busyAction == .password {
             ProgressView()
           } else {
-            Text(Localization.t("auth.password.submit"))
+            Text("Sign in")
               .font(.system(size: 15, weight: .bold))
           }
         }
@@ -261,7 +263,7 @@ struct SignInView: View {
       }
       .buttonStyle(.plain)
       .disabled(busyAction != nil)
-      Text(Localization.t("auth.password.reviewNote"))
+      Text("Email sign-in is available for invited and App Review accounts. New public accounts use a social provider.")
         .font(.system(size: 12))
         .foregroundStyle(.tertiary)
         .multilineTextAlignment(.center)
@@ -292,7 +294,7 @@ struct SignInView: View {
   private func submitPassword() {
     let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !normalizedEmail.isEmpty, !password.isEmpty else {
-      error = Localization.t("auth.password.required")
+      error = String(localized: "Enter both email and password.")
       return
     }
     perform(.password) {

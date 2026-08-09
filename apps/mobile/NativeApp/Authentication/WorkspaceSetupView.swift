@@ -19,9 +19,9 @@ struct WorkspaceSetupView: View {
       ScrollView {
         VStack(alignment: .leading, spacing: 20) {
           VStack(alignment: .leading, spacing: 8) {
-            Text(Localization.t("workspace.setup.title"))
+            Text("Create your gallery workspace")
               .font(.system(size: 24, weight: .bold))
-            Text(Localization.t("workspace.setup.description"))
+            Text("Choose the public name and URL identifier for your first gallery. Advanced configuration remains available in Studio.")
               .font(.system(size: 15))
               .foregroundStyle(.secondary)
               .lineSpacing(3)
@@ -29,9 +29,9 @@ struct WorkspaceSetupView: View {
 
           VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 7) {
-              Text(Localization.t("workspace.setup.name"))
+              Text("Workspace name")
                 .font(.system(size: 13, weight: .semibold))
-              TextField(Localization.t("workspace.setup.namePlaceholder"), text: $name)
+              TextField(String(localized: "My photography"), text: $name)
                 .submitLabel(.next)
                 .focused($focusedField, equals: .name)
                 .onChange(of: name) { _, value in
@@ -41,7 +41,7 @@ struct WorkspaceSetupView: View {
                 .afilmoryWorkspaceField()
             }
             VStack(alignment: .leading, spacing: 7) {
-              Text(Localization.t("workspace.setup.slug"))
+              Text("URL identifier")
                 .font(.system(size: 13, weight: .semibold))
               TextField("my-gallery", text: $slug)
                 .textInputAutocapitalization(.never)
@@ -55,7 +55,7 @@ struct WorkspaceSetupView: View {
                 }
                 .onSubmit(submit)
                 .afilmoryWorkspaceField()
-              Text(Localization.t("workspace.setup.slugHint"))
+              Text("Lowercase letters, numbers, and hyphens only.")
                 .font(.system(size: 12))
                 .foregroundStyle(.tertiary)
             }
@@ -73,7 +73,7 @@ struct WorkspaceSetupView: View {
               if busy {
                 ProgressView()
               } else {
-                Text(Localization.t("workspace.setup.submit"))
+                Text("Create workspace")
                   .font(.system(size: 15, weight: .bold))
               }
             }
@@ -87,7 +87,7 @@ struct WorkspaceSetupView: View {
               dismiss()
             }
           } label: {
-            Text(Localization.t("common.signOut"))
+            Text("Sign out")
               .font(.system(size: 15, weight: .semibold))
               .foregroundStyle(.secondary)
               .frame(maxWidth: .infinity, minHeight: 48)
@@ -98,7 +98,7 @@ struct WorkspaceSetupView: View {
         .padding(24)
         .padding(.bottom, 16)
       }
-      .navigationTitle(Localization.t("workspace.setup.pageTitle"))
+      .navigationTitle(String(localized: "New workspace"))
       .navigationBarTitleDisplayMode(.inline)
       .task { focusedField = .name }
     }
@@ -108,7 +108,7 @@ struct WorkspaceSetupView: View {
     let normalizedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
     let normalizedSlug = Self.normalizeSlug(slug.isEmpty ? name : slug)
     guard !normalizedName.isEmpty, normalizedSlug.count >= 2 else {
-      error = Localization.t("workspace.setup.required")
+      error = String(localized: "Enter a name and a URL identifier of at least two characters.")
       return
     }
     guard !busy else { return }
@@ -123,7 +123,7 @@ struct WorkspaceSetupView: View {
         )
         dismiss()
       } catch {
-        self.error = Localization.t("workspace.setup.failed")
+        self.error = String(localized: "The workspace could not be created. The identifier may already be in use.")
       }
     }
   }

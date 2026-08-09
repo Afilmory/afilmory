@@ -26,9 +26,6 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Generate native localization resources
-        run: bash scripts/sync-locales.sh
-
       - name: Install XcodeGen
         run: brew list xcodegen > /dev/null 2>&1 || brew install xcodegen
 
@@ -73,11 +70,17 @@ jobs:
 
       - name: Verify native localization resources
         run: |
-          LOCALES_BUNDLE="$RUNNER_TEMP/Afilmory.xcarchive/Products/Applications/Afilmory.app"
-          for namespace in app mobile; do
-            for language in en jp ko zh-CN zh-HK zh-TW; do
-              test -s "$LOCALES_BUNDLE/$namespace-$language.json"
-            done
+          APP_BUNDLE="$RUNNER_TEMP/Afilmory.xcarchive/Products/Applications/Afilmory.app"
+          SHARE_BUNDLE="$APP_BUNDLE/PlugIns/AfilmoryShare.appex"
+          # Xcode omits source-language Localizable.strings when every value is
+          # identical to the English source text. Dynamic EXIF keys still need
+          # an explicit English table.
+          for language in ja ko zh-Hans zh-Hant zh-HK; do
+            test -s "$APP_BUNDLE/$language.lproj/Localizable.strings"
+            test -s "$SHARE_BUNDLE/$language.lproj/Localizable.strings"
+          done
+          for language in en ja ko zh-Hans zh-Hant zh-HK; do
+            test -s "$APP_BUNDLE/$language.lproj/ExifValues.strings"
           done
 
       - name: Prepare App Store Connect authentication

@@ -25,7 +25,7 @@ pnpm --filter web dev             # SPA only
 pnpm --filter @afilmory/ssr dev   # SSR only
 pnpm dev:be                       # Backend (be/apps/core) via nodemon
 pnpm --filter @afilmory/dashboard dev  # Admin dashboard
-pnpm dev:mobile                   # Expo dev server
+pnpm dev:mobile                   # Build + run the native iOS app (Local variant) in Simulator
 pnpm site:dev                     # Astro marketing site (127.0.0.1:4325)
 pnpm docs:dev                     # Docs site
 
@@ -99,7 +99,7 @@ Afilmory is a photo gallery composed of several deployable layers plus a builder
 └───────────────────────┘                       └──────────┬──────────┘
                                                            │ REST + SSE
                                                 ┌──────────┴──────────┐
-                                                │ apps/mobile (Expo)  │
+                                                │ apps/mobile (Swift) │
                                                 │ native iOS client   │
                                                 └─────────────────────┘
 ```
@@ -120,7 +120,7 @@ Key implications when changing things:
 | --- | --- |
 | `apps/web` | Vite + React 19 SPA — the gallery UI (the only web UI codebase) |
 | `apps/ssr` | Next.js 15 host: serves SPA assets, injects manifest, dynamic OG/SEO |
-| `apps/mobile` | Expo / React Native iOS app (see below) |
+| `apps/mobile` | Native Swift/UIKit iOS app (see below) |
 | `apps/site` | Astro marketing/landing site |
 | `apps/docs` | Vite-based documentation site |
 | `be/apps/core` | Hono backend: DB-backed manifest, REST API, serves SPA |
@@ -138,16 +138,16 @@ Key implications when changing things:
 
 ## Mobile App (`apps/mobile`)
 
-- **iOS only, forever.** Never spend effort on Android compatibility, fallbacks, or testing — no `Platform.OS === 'android'` branches, no Android-specific assets or config beyond what Expo scaffolding requires.
-- **Prefer native (Swift) implementations** when they yield better UX or performance than JS: custom views/gestures/scrolling go in local Expo Modules under `apps/mobile/modules/<name>/` (Swift + `expo-module.config.json`, autolinked via prebuild). Don't reach for JS workarounds when a UIKit primitive does it better.
-- **Native sources are a Development Pod, and `ios/` is generated** (gitignored, rebuilt by prebuild) — so native code must live under `modules/<name>/ios/`, never hand-added to the app target in Xcode. Files there are grouped into feature subdirectories (`Core/`, `Masonry/`, `Detail/`, `Comments/`, `Upload/`, …); the podspec's `**/*.{h,m,mm,swift}` glob is recursive, so nesting is free. **Adding or removing a `.swift` file requires a `pod install`** — the glob expands to a fixed file list at install time, so a new file is invisible to Xcode until then.
-- **iOS 26 deployment target** (`expo-build-properties` in `app.json`) — no back-compat branches for older iOS. Widget/Live Activity extensions live in `apps/mobile/targets/` via `@bacons/apple-targets`.
-- **Run/build**: `pnpm dev:mobile` (Metro), `pnpm --filter @afilmory/mobile ios` (prebuild + run), `pnpm --filter @afilmory/mobile bundle` (export sanity check). TestFlight goes through `.github/workflows/mobile-testflight.yml`; see `apps/mobile/RELEASE.md`.
-- **Simulator automation**: use `axe` (`brew install cameroncooke/axe/axe`) for tap/swipe HID injection + `xcrun simctl io <udid> screenshot`; never control the user's mouse (cliclick/AppleScript).
-- **expo-glass-effect gotcha**: `GlassView` latches its effect on the first `layoutSubviews` — never mount it inside a reanimated `entering` animation (animate opacity/translate via `useAnimatedStyle` instead), or the glass renders permanently dead.
-- **UIGlassEffect gotcha (iOS 26, native)**: `isInteractive = true` swallows touches meant for buttons hosted in the effect view's `contentView` — keep it off for tappable glass controls; floating control clusters need `UIGlassContainerEffect` hosting per-element `UIGlassEffect` views to get real refraction and merge behavior.
-- **Presentation anchor gotcha**: a react-native-screens `ScreenStack` used as an imperative presentation anchor must be non-zero-sized (e.g. 1×1 at origin) but must NOT cover the window — a zero-size anchor presents nothing, and a full-bleed anchor makes UIKit stop sampling backdrops, silently blanking every glass surface beneath it.
-- **Debug builds**: never pass `CODE_SIGNING_ALLOWED=NO` to simulator builds — it strips the keychain entitlement and `expo-secure-store` crashes on launch.
+**Read `apps/mobile/CLAUDE.md` before touching mobile code** — it covers the architecture in depth. The essentials:
+
+- **iOS only, forever.** Never spend effort on Android compatibility, fallbacks, or testing.
+- **It is a pure native Swift/UIKit app.** Expo / React Native was deleted in `66fae030`; there is no Metro, no JS runtime, no CocoaPods, and no npm dependencies. `package.json` only wraps XcodeGen and xcodebuild.
+- **`project.yml` (XcodeGen) is the source of truth**; `Afilmory.xcodeproj` is generated output that is nonetheless committed. Adding or deleting a `.swift` file requires `pnpm --filter @afilmory/mobile native:generate`. Never edit the project through the Xcode UI.
+- **iOS 18 deployment target**, Swift 6. Post-18 APIs need an availability guard and an iOS 18 fallback — Liquid Glass goes through `NativeApp/Design/AdaptiveGlass.swift`.
+- **Two variants from one source tree**: `Afilmory Local` (`app.afilmory.local`, `localhost:1841`, no entitlements) and `Afilmory` (production). Capability differences are gated centrally in `AfilmoryBuildConfiguration`.
+- **Run/build/test**: `pnpm --filter @afilmory/mobile ios:local` / `ios:production` / `native:test`. TestFlight goes through `.github/workflows/mobile-testflight.yml`; see `apps/mobile/RELEASE.md`.
+- **Simulator automation**: use `axe` (`brew install cameroncooke/axe/axe`) for tap/swipe HID injection + `xcrun simctl io <udid> screenshot`; never control the user's mouse (cliclick/AppleScript). Run the memory guard during Simulator verification — see `apps/mobile/AGENTS.md`.
+- **UIGlassEffect gotcha**: `isInteractive = true` swallows touches meant for buttons hosted in the effect view's `contentView` — keep it off for tappable glass controls; floating control clusters need `UIGlassContainerEffect` hosting per-element `UIGlassEffect` views to get real refraction and merge behavior.
 
 ## Project Conventions That Matter
 
@@ -156,7 +156,8 @@ Key implications when changing things:
 - **State isolation over prop drilling.** For deep subtrees, lift handlers into colocated Jotai/Zustand stores or contexts; don't thread props through layers.
 - **Push state down**, not up. Feature-local stores/providers; switching tabs should unmount unused logic.
 - **Tailwind colors must use the Apple UIKit palette** (`text-text-secondary`, `bg-fill`, `bg-material-thick`, `border-accent/20`, …). See `.cursor/rules/color.mdc`. Avoid raw hex/inline styles unless `color-mix()` is unavoidable.
-- **i18n: flat keys with `.` separators**, no nested objects. Three namespaces under `locales/`: `app/` (SPA), `dashboard/`, `mobile/` — each with `en, zh-CN, zh-HK, zh-TW, jp, ko` (dashboard is en + zh-CN only). Edit `en.json` of the relevant namespace first; ESLint auto-strips keys missing from English in other locales. **Never let a key be both a leaf string and a parent path** (`a.b` cannot coexist with `a.b.c`); the build flattens dots into nested objects and will collide. Use `_one`/`_other` for plurals.
+- **i18n: flat keys with `.` separators**, no nested objects. Two namespaces under `locales/`: `app/` (SPA) with `en, zh-CN, zh-HK, zh-TW, jp, ko`, and `dashboard/` (en + zh-CN only). Edit `en.json` of the relevant namespace first; ESLint auto-strips keys missing from English in other locales. **Never let a key be both a leaf string and a parent path** (`a.b` cannot coexist with `a.b.c`); the build flattens dots into nested objects and will collide. Use `_one`/`_other` for plurals.
+- **The iOS app does not use `locales/`.** It localizes natively through String Catalogs — `apps/mobile/NativeApp/Resources/Localizable.xcstrings` (keys are the English source text, auto-extracted from `String(localized:)` / `Text(_:)` at build time), `ExifValues.xcstrings` (dotted keys for EXIF values looked up dynamically), and `apps/mobile/targets/share/Localizable.xcstrings` for the share extension.
 - **No bare global `location`** — an ESLint `no-restricted-globals` rule forbids it (the router instance differs between Electron and browser). Use `useLocation()` or `getReadonlyRoute()`.
 - **Decorators are enabled** (`emitDecoratorMetadata`, `experimentalDecorators`) for the backend framework.
 - **`motion` / `motion-dom` are pinned** via pnpm `overrides` (currently `12.38.0`) — don't bump them casually. Same for the security-driven `overrides` on `hono`, `vite`, `esbuild`, `qs`, etc.

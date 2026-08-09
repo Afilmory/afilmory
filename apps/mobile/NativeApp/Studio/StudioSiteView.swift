@@ -85,26 +85,26 @@ struct StudioSiteView: View {
     .task { await model.load() }
     .toolbar {
       ToolbarItem(placement: .topBarTrailing) {
-        Button(model.saving ? Localization.t("common.saving") : Localization.t("common.save")) {
+        Button(model.saving ? String(localized: "Saving…") : String(localized: "Save")) {
           Task { await model.save() }
         }
         .disabled(model.saving || model.changedEntries.isEmpty)
         .fontWeight(.semibold)
       }
     }
-    .alert(Localization.t("studio.site.saved.title"), isPresented: $model.saved) {
-      Button(Localization.t("common.done")) { model.saved = false }
+    .alert(String(localized: "Settings saved"), isPresented: $model.saved) {
+      Button(String(localized: "Done")) { model.saved = false }
     } message: {
-      Text(Localization.t("studio.site.saved.description"))
+      Text("Your public gallery settings have been updated.")
     }
     .alert(
-      Localization.t("studio.site.saveFailed"),
+      String(localized: "Unable to save site settings"),
       isPresented: Binding(
         get: { model.saveError != nil },
         set: { if !$0 { model.saveError = nil } }
       )
     ) {
-      Button(Localization.t("common.done")) { model.saveError = nil }
+      Button(String(localized: "Done")) { model.saveError = nil }
     } message: {
       Text(model.saveError?.localizedDescription ?? "")
     }
@@ -262,9 +262,9 @@ struct StudioSiteView: View {
 
   private func helperText(for field: StudioSiteSchemaResponse.Node) -> String? {
     switch field.key {
-    case "site.accentColor": Localization.t("studio.site.field.accentColor.helper")
-    case "site.map.providers": Localization.t("studio.site.field.mapProviders.helper")
-    case "site.mapProjection": Localization.t("studio.site.field.mapProjection.helper")
+    case "site.accentColor": String(localized: "Choose a solid accent color for highlighted controls.")
+    case "site.map.providers": String(localized: "Turn off every provider to disable map features.")
+    case "site.mapProjection": String(localized: "Mercator is flat; Globe presents the world as a sphere.")
     default: field.helperText ?? field.description
     }
   }

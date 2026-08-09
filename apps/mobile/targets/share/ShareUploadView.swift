@@ -8,11 +8,11 @@ struct ShareUploadView: View {
   var body: some View {
     NavigationStack {
       content
-        .navigationTitle(model.localization.title)
+        .navigationTitle(String(localized: "Review Upload"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
-            Button(model.localization.cancel) {
+            Button(String(localized: "Cancel")) {
               model.cancel()
             }
           }
@@ -29,15 +29,17 @@ struct ShareUploadView: View {
       reviewView
     case .unavailable:
       ContentUnavailableView(
-        model.localization.unavailableTitle,
+        String(localized: "Afilmory is not ready"),
         systemImage: "person.crop.circle.badge.exclamationmark",
-        description: Text(model.localization.unavailableDescription)
+        description: Text("Open Afilmory, sign in, and select a workspace before sharing photos.")
       )
     case .failed:
       ContentUnavailableView(
-        model.items.isEmpty ? model.localization.noImagesTitle : model.localization.failedTitle,
+        model.items.isEmpty
+          ? String(localized: "No images to upload")
+          : String(localized: "Upload could not start"),
         systemImage: "exclamationmark.triangle",
-        description: Text(model.errorMessage ?? model.localization.noImagesDescription)
+        description: Text(model.errorMessage ?? String(localized: "Share one or more supported images and try again."))
       )
     }
   }
@@ -49,10 +51,10 @@ struct ShareUploadView: View {
         total: Double(max(model.totalCount, 1))
       )
       .progressViewStyle(.circular)
-      Text(model.localization.loading)
+      Text("Loading shared photos")
         .font(.headline)
       if model.totalCount > 0 {
-        Text(model.localization.loadingProgress(current: model.loadedCount, total: model.totalCount))
+        Text("Preparing \(model.loadedCount) of \(model.totalCount)")
           .font(.subheadline)
           .foregroundStyle(.secondary)
       }
@@ -65,12 +67,12 @@ struct ShareUploadView: View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
         if let context = model.context {
-          Label(model.localization.workspace(context.workspaceName), systemImage: "person.2")
+          Label("Upload to \(context.workspaceName)", systemImage: "person.2")
             .font(.subheadline.weight(.medium))
             .foregroundStyle(.secondary)
         }
 
-        Text(model.localization.summary(count: model.items.count))
+        Text("\(model.items.count) items")
           .font(.subheadline)
           .foregroundStyle(.secondary)
 
@@ -79,7 +81,7 @@ struct ShareUploadView: View {
             ShareUploadThumbnailView(
               item: item,
               previewURL: model.previewURLs[item.id],
-              removeLabel: model.localization.remove,
+              removeLabel: String(localized: "Remove"),
               onRemove: { model.remove(item) }
             )
           }
@@ -103,7 +105,7 @@ struct ShareUploadView: View {
 
   private var tagSection: some View {
     VStack(alignment: .leading, spacing: 10) {
-      Text(model.localization.tagsLabel)
+      Text("TAGS — THESE BECOME THE FOLDER")
         .font(.caption2.weight(.semibold))
         .foregroundStyle(.tertiary)
 
@@ -111,7 +113,7 @@ struct ShareUploadView: View {
         ShareTagChipRow(labels: model.tags, selected: true, onTap: model.toggleTag)
       }
 
-      TextField(model.localization.tagsPlaceholder, text: $model.draft)
+      TextField(String(localized: "Add a tag, comma separated"), text: $model.draft)
         .textInputAutocapitalization(.never)
         .autocorrectionDisabled()
         .submitLabel(.done)
@@ -133,9 +135,9 @@ struct ShareUploadView: View {
     Link(destination: model.handoffURL) {
       Group {
         if model.isSubmitting {
-          Label(model.localization.preparing, systemImage: "arrow.up.circle")
+          Label("Adding to upload queue", systemImage: "arrow.up.circle")
         } else {
-          Text(model.localization.upload(count: model.items.count))
+          Text("Upload \(model.items.count)")
         }
       }
       .lineLimit(1)

@@ -112,7 +112,7 @@ public enum ShareUploadIntentBridge {
     }
 
     let normalizedTags = UploadTagPath.parse(tags)
-    let activityTitle = Localization.shared.value("studio.upload.activity.title")
+    let activityTitle = String(localized: "Uploading photos")
     await MainActor.run {
       UploadActivityController.shared.setTitle(activityTitle)
     }

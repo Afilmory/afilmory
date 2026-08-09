@@ -16,12 +16,9 @@ struct MasonryPhoto {
 }
 
 extension MasonryPhoto {
-  init(photo: GalleryPhoto, localization: Localization) {
+  init(photo: GalleryPhoto) {
     self.init()
-    accessibilityLabel = localization.value(
-      "photo.accessibility",
-      arguments: ["id": photo.title.isEmpty ? photo.id : photo.title]
-    )
+    accessibilityLabel = String(localized: "Photo \(photo.title.isEmpty ? photo.id : photo.title)")
     id = photo.id
     url = photo.thumbnailUrl
     originalUrl = photo.originalUrl

@@ -1,62 +1,6 @@
 import SwiftUI
 import UIKit
 
-struct UploadQueueLocalization {
-  let title: String
-  let done: String
-  let headlineTemplate: String
-  let failedTemplateOne: String
-  let failedTemplateOther: String
-  let attemptTemplate: String
-  let cancel: String
-  let retry: String
-  let cancelAll: String
-  let retryAll: String
-  let clear: String
-  let statuses: [UploadJobStatus: String]
-
-  init(dictionary: [String: String]) {
-    title = dictionary["title"] ?? "Uploads"
-    done = dictionary["done"] ?? "Done"
-    headlineTemplate = dictionary["headlineTemplate"] ?? "Uploaded {done} of {total}"
-    failedTemplateOne = dictionary["failedTemplateOne"] ?? "{count} failed"
-    failedTemplateOther = dictionary["failedTemplateOther"] ?? "{count} failed"
-    attemptTemplate = dictionary["attemptTemplate"] ?? "attempt {attempt}"
-    cancel = dictionary["cancel"] ?? "Cancel"
-    retry = dictionary["retry"] ?? "Retry"
-    cancelAll = dictionary["cancelAll"] ?? "Cancel All"
-    retryAll = dictionary["retryAll"] ?? "Retry Failed"
-    clear = dictionary["clear"] ?? "Clear Finished"
-    statuses = [
-      .queued: dictionary["statusQueued"] ?? "Queued",
-      .uploading: dictionary["statusUploading"] ?? "Uploading",
-      .processing: dictionary["statusProcessing"] ?? "Processing",
-      .done: dictionary["statusDone"] ?? "Done",
-      .failed: dictionary["statusFailed"] ?? "Failed",
-      .cancelled: dictionary["statusCancelled"] ?? "Cancelled",
-    ]
-  }
-
-  func headline(done: Int, total: Int) -> String {
-    headlineTemplate
-      .replacingOccurrences(of: "{done}", with: String(done))
-      .replacingOccurrences(of: "{total}", with: String(total))
-  }
-
-  func failed(count: Int) -> String {
-    (count == 1 ? failedTemplateOne : failedTemplateOther)
-      .replacingOccurrences(of: "{count}", with: String(count))
-  }
-
-  func attempt(_ attempt: Int) -> String {
-    attemptTemplate.replacingOccurrences(of: "{attempt}", with: String(attempt))
-  }
-
-  func status(for status: UploadJobStatus) -> String {
-    statuses[status] ?? status.rawValue
-  }
-}
-
 struct UploadQueueSummary {
   let total: Int
   let done: Int
@@ -103,7 +47,7 @@ enum UploadQueuePresenter {
   private static weak var current: UIViewController?
 
   @MainActor
-  static func present(from presenter: UIViewController, localization: UploadQueueLocalization) {
+  static func present(from presenter: UIViewController) {
     if let current, current.presentingViewController != nil {
       return
     }
@@ -114,7 +58,7 @@ enum UploadQueuePresenter {
     // swallowing every later FAB tap.
     weak var navigation: UINavigationController?
     let hostingController = UIHostingController(
-      rootView: UploadQueueSheetView(model: model, localization: localization) { job in
+      rootView: UploadQueueSheetView(model: model) { job in
         let logHost = UIHostingController(
           rootView: UploadJobLogView(model: model, jobId: job.id)
         )
@@ -122,17 +66,17 @@ enum UploadQueuePresenter {
         navigation?.pushViewController(logHost, animated: true)
       }
     )
-    hostingController.navigationItem.title = localization.title
+    hostingController.navigationItem.title = String(localized: "Uploads")
     hostingController.navigationItem.leftBarButtonItem = UIBarButtonItem(
       image: UIImage(systemName: "ellipsis.circle"),
       menu: UIMenu(children: [
         UIDeferredMenuElement.uncached { completion in
-          completion(overflowActions(localization: localization))
+          completion(overflowActions())
         },
       ])
     )
     hostingController.navigationItem.rightBarButtonItem = UIBarButtonItem(
-      title: localization.done,
+      title: String(localized: "Done"),
       image: nil,
       primaryAction: UIAction { [weak hostingController] _ in
         hostingController?.dismiss(animated: true)
@@ -153,26 +97,26 @@ enum UploadQueuePresenter {
     presenter.present(navigationController, animated: true)
   }
 
-  private static func overflowActions(localization: UploadQueueLocalization) -> [UIMenuElement] {
+  private static func overflowActions() -> [UIMenuElement] {
     let jobs = UploadCenter.shared.currentJobs()
     var actions: [UIMenuElement] = []
     if jobs.contains(where: { $0.status.isActive }) {
       actions.append(
-        UIAction(title: localization.cancelAll, image: UIImage(systemName: "xmark.circle"), attributes: .destructive) { _ in
+        UIAction(title: String(localized: "Cancel All"), image: UIImage(systemName: "xmark.circle"), attributes: .destructive) { _ in
           UploadCenter.shared.cancelAll()
         }
       )
     }
     if jobs.contains(where: { $0.status == .failed || $0.status == .cancelled }) {
       actions.append(
-        UIAction(title: localization.retryAll, image: UIImage(systemName: "arrow.clockwise")) { _ in
+        UIAction(title: String(localized: "Retry Failed"), image: UIImage(systemName: "arrow.clockwise")) { _ in
           UploadCenter.shared.retryAllFailed()
         }
       )
     }
     if jobs.contains(where: { $0.status == .done || $0.status == .cancelled }) {
       actions.append(
-        UIAction(title: localization.clear, image: UIImage(systemName: "trash")) { _ in
+        UIAction(title: String(localized: "Clear Finished"), image: UIImage(systemName: "trash")) { _ in
           UploadCenter.shared.clearFinished()
         }
       )
@@ -183,7 +127,6 @@ enum UploadQueuePresenter {
 
 struct UploadQueueSheetView: View {
   @ObservedObject var model: UploadQueueViewModel
-  let localization: UploadQueueLocalization
   let onOpenLogs: (UploadJobState) -> Void
 
   var body: some View {
@@ -193,17 +136,17 @@ struct UploadQueueSheetView: View {
         // Newest first: review usually targets the upload that just happened,
         // and a medium-detent sheet only shows the first few rows.
         ForEach(model.jobs.reversed(), id: \.id) { job in
-          UploadQueueRow(job: job, localization: localization, onOpenLogs: onOpenLogs)
+          UploadQueueRow(job: job, onOpenLogs: onOpenLogs)
         }
       } header: {
         VStack(alignment: .leading, spacing: 10) {
-          Text(localization.headline(done: summary.done, total: summary.total))
+          Text("Uploaded \(summary.done) of \(summary.total)")
             .font(.headline)
             .foregroundStyle(.primary)
           ProgressView(value: summary.progress)
             .tint(summary.failed > 0 && !summary.running ? Color.red : Color.accentColor)
           if summary.failed > 0 {
-            Text(localization.failed(count: summary.failed))
+            Text("\(summary.failed) failed")
               .font(.caption)
               .foregroundStyle(.red)
           }
@@ -225,15 +168,15 @@ struct UploadQueueSheetView: View {
     let retryable = model.jobs.contains { $0.status == .failed || $0.status == .cancelled }
     let clearable = model.jobs.contains { $0.status == .done || $0.status == .cancelled }
     if summary.running {
-      primaryAction(localization.cancelAll, role: .destructive) {
+      primaryAction(String(localized: "Cancel All"), role: .destructive) {
         UploadCenter.shared.cancelAll()
       }
     } else if retryable {
-      primaryAction(localization.retryAll) {
+      primaryAction(String(localized: "Retry Failed")) {
         UploadCenter.shared.retryAllFailed()
       }
     } else if clearable {
-      primaryAction(localization.clear) {
+      primaryAction(String(localized: "Clear Finished")) {
         UploadCenter.shared.clearFinished()
       }
     }
@@ -259,7 +202,6 @@ struct UploadQueueSheetView: View {
 
 private struct UploadQueueRow: View {
   let job: UploadJobState
-  let localization: UploadQueueLocalization
   let onOpenLogs: (UploadJobState) -> Void
 
   private var isActive: Bool {
@@ -331,9 +273,9 @@ private struct UploadQueueRow: View {
 
   private var statusText: String {
     if isActive, job.attempt > 1 {
-      return "\(localization.status(for: job.status)) · \(localization.attempt(job.attempt))"
+      return "\(job.status.label) · \(String(localized: "attempt \(job.attempt)"))"
     }
-    return localization.status(for: job.status)
+    return job.status.label
   }
 
   private var statusColor: Color {
@@ -359,7 +301,7 @@ private struct UploadQueueRow: View {
           .foregroundStyle(.secondary)
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(localization.cancel)
+      .accessibilityLabel(String(localized: "Cancel"))
     case .failed, .cancelled:
       Button {
         UploadCenter.shared.retry(id: job.id)
@@ -369,7 +311,7 @@ private struct UploadQueueRow: View {
           .foregroundStyle(Color.accentColor)
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(localization.retry)
+      .accessibilityLabel(String(localized: "Retry"))
     case .done:
       Image(systemName: "checkmark.circle.fill")
         .font(.title3)
