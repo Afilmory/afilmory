@@ -41,19 +41,28 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate {
 
   nonisolated func userNotificationCenter(
     _: UNUserNotificationCenter,
-    willPresent _: UNNotification
-  ) async -> UNNotificationPresentationOptions {
-    [.banner, .list, .sound]
+    willPresent _: UNNotification,
+    withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void
+  ) {
+    DispatchQueue.main.async {
+      completionHandler([.banner, .list, .sound])
+    }
   }
 
   nonisolated func userNotificationCenter(
     _: UNUserNotificationCenter,
-    didReceive response: UNNotificationResponse
-  ) async {
-    guard let url = galleryNotificationDeepLink(
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping @Sendable () -> Void
+  ) {
+    let url = galleryNotificationDeepLink(
       userInfo: response.notification.request.content.userInfo
-    ) else { return }
-    _ = await open(url: url)
+    )
+    DispatchQueue.main.async { [weak self] in
+      if let url {
+        _ = self?.open(url: url)
+      }
+      completionHandler()
+    }
   }
 
   private func render(_ state: AfilmorySessionState) {
