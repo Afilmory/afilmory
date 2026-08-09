@@ -3,8 +3,16 @@ import Photos
 
 final class UploadCenter: NSObject, @unchecked Sendable {
   static let shared = UploadCenter()
-  static let sessionIdentifier = "app.afilmory.upload"
+  static var sessionIdentifier: String {
+    sessionIdentifier(bundleIdentifier: Bundle.main.bundleIdentifier)
+  }
   @MainActor static var backgroundCompletionHandler: (() -> Void)?
+
+  static func sessionIdentifier(bundleIdentifier: String?) -> String {
+    let bundleIdentifier = bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let owner = bundleIdentifier.flatMap { $0.isEmpty ? nil : $0 } ?? "app.afilmory"
+    return "\(owner).upload"
+  }
 
   var onChange: (([[String: Any?]]) -> Void)?
   private var jobObservers: [UUID: @MainActor @Sendable ([UploadJobState]) -> Void] = [:]
