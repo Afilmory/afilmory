@@ -19,6 +19,11 @@ import { getTenantContext, isPlaceholderTenantContext } from '../tenant/tenant.c
 import type { TenantRecord } from '../tenant/tenant.types'
 import { AuthProvider, MOBILE_AUTH_BROKER_SLUG } from './auth.provider'
 import { AuthRegistrationService } from './auth-registration.service'
+import {
+  buildNativeOAuthCallbackUrl,
+  parseNativeOAuthCallbackTarget,
+  readNativeOAuthError,
+} from './native-oauth.callback'
 import { WorkspaceMembershipService } from './workspace-membership.service'
 
 const logger = createLogger('AuthController')
@@ -219,6 +224,57 @@ export class AuthController {
   @SkipTenantGuard()
   async getSocialProviders() {
     return { providers: buildProviderResponse(await this.auth.getWebProviderIds()) }
+  }
+
+  @AllowPlaceholderTenant()
+  @Get('/native/oauth/complete')
+  @BypassResponseTransform()
+  @SkipTenantGuard()
+  async completeNativeOAuth(@ContextParam() context: Context) {
+    const target = parseNativeOAuthCallbackTarget(new URL(context.req.url))
+    if (!target) {
+      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
+        message: 'Native OAuth callback target is invalid.',
+      })
+    }
+
+    try {
+      const auth = await this.auth.getAuth()
+      const result = await auth.api.generateOneTimeToken({ headers: context.req.raw.headers })
+      return this.redirectNativeOAuth(
+        context,
+        buildNativeOAuthCallbackUrl(target, { code: result.token }),
+      )
+    }
+    catch (error) {
+      logger.warn('[AuthController] Native OAuth session exchange could not be prepared.', error)
+      return this.redirectNativeOAuth(
+        context,
+        buildNativeOAuthCallbackUrl(target, {
+          error: 'native_session_missing',
+          errorDescription: 'Authentication completed without an active browser session.',
+        }),
+      )
+    }
+  }
+
+  @AllowPlaceholderTenant()
+  @Get('/native/oauth/error')
+  @BypassResponseTransform()
+  @SkipTenantGuard()
+  async failNativeOAuth(@ContextParam() context: Context) {
+    const requestUrl = new URL(context.req.url)
+    const target = parseNativeOAuthCallbackTarget(requestUrl)
+    if (!target) {
+      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
+        message: 'Native OAuth callback target is invalid.',
+      })
+    }
+
+    return this.redirectNativeOAuth(
+      context,
+      buildNativeOAuthCallbackUrl(target, readNativeOAuthError(requestUrl)),
+    )
   }
 
   @AllowPlaceholderTenant()
@@ -612,6 +668,13 @@ export class AuthController {
       }
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '回调地址格式不正确' })
     }
+  }
+
+  private redirectNativeOAuth(context: Context, location: string): Response {
+    const response = context.redirect(location, 302)
+    response.headers.set('cache-control', 'no-store')
+    response.headers.set('pragma', 'no-cache')
+    return response
   }
 
   private serializeSocialAccount(account: {

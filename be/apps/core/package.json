@@ -30,7 +30,6 @@
     "@afilmory/utils": "workspace:*",
     "@aws-crypto/sha256-js": "5.2.0",
     "@aws-sdk/client-s3": "3.1069.0",
-    "@better-auth/expo": "1.6.19",
     "@creem_io/better-auth": "1.1.1",
     "@hono/node-server": "^2.0.5",
     "@resvg/resvg-js": "2.6.2",

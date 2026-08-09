@@ -8,7 +8,6 @@ import {
   platformActivityEvents,
 } from '@afilmory/db'
 import { env } from '@afilmory/env'
-import { expo } from '@better-auth/expo'
 import { DrizzleProvider } from '@core/database/database.provider'
 import { BizException } from '@core/errors'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
@@ -38,9 +37,16 @@ import { AuthConfig } from './auth.config'
 import { AUTH_ACCOUNT_POLICY } from './auth-account.policy'
 import { AUTH_ADMIN_PLUGIN_OPTIONS } from './auth-admin.policy'
 import { AUTH_COOKIE_POLICY } from './auth-cookie.policy'
+import { nativeOAuthSessionBridge } from './native-oauth.plugin'
 import { WorkspaceMembershipService } from './workspace-membership.service'
 
-export type BetterAuthInstance = ReturnType<typeof betterAuth>
+type BetterAuthBaseInstance = ReturnType<typeof betterAuth>
+
+export type BetterAuthInstance = BetterAuthBaseInstance & {
+  api: BetterAuthBaseInstance['api'] & {
+    generateOneTimeToken: (input: { headers: Headers }) => Promise<{ token: string }>
+  }
+}
 
 const logger = createLogger('Auth')
 const TRAILING_SLASHES_PATTERN = /\/+$/
@@ -302,7 +308,7 @@ export class AuthProvider implements OnModuleInit {
         },
       },
       plugins: [
-        expo(),
+        nativeOAuthSessionBridge(),
         admin(AUTH_ADMIN_PLUGIN_OPTIONS),
         ...(env.CREEM_API_KEY && env.CREEM_WEBHOOK_SECRET
           ? [

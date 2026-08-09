@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import UIKit
 
 private struct SocialSignInResponse: Decodable {
@@ -19,6 +20,11 @@ private struct EmailSignInBody: Encodable {
 private struct SocialSignInBody: Encodable {
   let provider: String
   let callbackURL: String
+  let errorCallbackURL: String
+}
+
+private struct OneTimeTokenVerificationBody: Encodable {
+  let token: String
 }
 
 private struct AppleSignInBody: Encodable {
@@ -186,7 +192,7 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
       return serialized(values)
     }
 
-    let separatorPattern = ",(?=\\s*(?:__Secure-)?afilmory-tenant[^=;,\\s]*=)"
+    let separatorPattern = ",(?=\\s*(?:(?:__Secure-|__Host-))?afilmory-tenant[^=;,\\s]*=)"
     let normalized = setCookieHeader.replacingOccurrences(
       of: separatorPattern,
       with: "\n",
@@ -199,7 +205,7 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
       else { continue }
       let name = pair[..<separator].trimmingCharacters(in: .whitespacesAndNewlines)
       let value = pair[pair.index(after: separator)...].trimmingCharacters(in: .whitespacesAndNewlines)
-      let unprefixedName = name.hasPrefix("__Secure-") ? String(name.dropFirst("__Secure-".count)) : name
+      let unprefixedName = unprefixedCookieName(name)
       guard unprefixedName.hasPrefix("afilmory-tenant") else { continue }
       let attributes = components.dropFirst().map { $0.lowercased() }
       let expired = attributes.contains { attribute in
@@ -215,26 +221,17 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
     return serialized(values)
   }
 
-  static func oauthState(in cookie: String?) -> String? {
-    parseCookieHeader(cookie).first { name, _ in
-      let unprefixed = name.hasPrefix("__Secure-") ? String(name.dropFirst("__Secure-".count)) : name
-      return unprefixed == "afilmory-tenant.oauth_state"
-    }?.value
+  static func oauthCallbackValue(named name: String, in callbackURL: URL) -> String? {
+    callbackItems(in: callbackURL).first { $0.name == name }?.value
+  }
+
+  static func oauthCallbackParameterNames(in callbackURL: URL) -> [String] {
+    Array(Set(callbackItems(in: callbackURL).map(\.name))).sorted()
   }
 
   static func oauthError(in callbackURL: URL) -> String? {
-    guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false) else {
-      return nil
-    }
-    var items = components.queryItems ?? []
-    if let fragment = components.fragment,
-       let fragmentItems = URLComponents(string: "https://callback.invalid/?\(fragment)")?.queryItems
-    {
-      items.append(contentsOf: fragmentItems)
-    }
-
     var values: [String: String] = [:]
-    for item in items {
+    for item in callbackItems(in: callbackURL) {
       guard let value = item.value?.trimmingCharacters(in: .whitespacesAndNewlines),
             !value.isEmpty
       else { continue }
@@ -255,6 +252,29 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
     default:
       return nil
     }
+  }
+
+  private static func callbackItems(in callbackURL: URL) -> [URLQueryItem] {
+    guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false) else {
+      return []
+    }
+    var items = components.queryItems ?? []
+    if let fragment = components.fragment,
+       let fragmentItems = URLComponents(string: "https://callback.invalid/?\(fragment)")?.queryItems
+    {
+      items.append(contentsOf: fragmentItems)
+    }
+    return items
+  }
+
+  private static func unprefixedCookieName(_ name: String) -> String {
+    if name.hasPrefix("__Secure-") {
+      return String(name.dropFirst("__Secure-".count))
+    }
+    if name.hasPrefix("__Host-") {
+      return String(name.dropFirst("__Host-".count))
+    }
+    return name
   }
 
   private static func parseCookieHeader(_ header: String?) -> [String: String] {
@@ -280,6 +300,8 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
 final class NativeAuthenticationService {
   static let shared = NativeAuthenticationService()
 
+  private static let logger = Logger(subsystem: "app.afilmory", category: "native-authentication")
+
   private let authorizations = NativeAuthorizationSessions.shared
   private let client = NativeAuthHTTPClient()
   private let sessionStore = AfilmorySessionStore.shared
@@ -303,20 +325,35 @@ final class NativeAuthenticationService {
       path: "auth/sign-in/email",
       method: "POST",
       body: EmailSignInBody(email: email, password: password),
-      cookie: sessionStore.current().cookie,
-      headers: mobileOAuthHeaders
+      cookie: sessionStore.current().cookie
     )
     try await registerValidated(cookie: response.cookie)
   }
 
   func signIn(with provider: NativeAuthProvider, anchor: UIWindow) async throws {
-    let callbackURL = "\(AfilmoryBuildConfiguration.urlScheme):///"
+    let oauthState = try authorizations.makeOAuthState()
+    let authBase = ApiEnvironmentStore.shared.platformAPIBaseURL().appending(path: "auth")
+    guard let completionURL = Self.nativeOAuthBridgeURL(
+      authBase: authBase,
+      path: "native/oauth/complete",
+      state: oauthState
+    ),
+    let errorURL = Self.nativeOAuthBridgeURL(
+      authBase: authBase,
+      path: "native/oauth/error",
+      state: oauthState
+    )
+    else { throw NativeAuthError.invalidResponse }
+
     let initial = try await client.request(
       path: "auth/sign-in/social",
       method: "POST",
-      body: SocialSignInBody(provider: provider.rawValue, callbackURL: callbackURL),
-      cookie: sessionStore.current().cookie,
-      headers: mobileOAuthHeaders
+      body: SocialSignInBody(
+        provider: provider.rawValue,
+        callbackURL: completionURL.absoluteString,
+        errorCallbackURL: errorURL.absoluteString
+      ),
+      cookie: sessionStore.current().cookie
     )
     let signIn = try client.decode(SocialSignInResponse.self, from: initial.data)
     guard signIn.redirect != false,
@@ -324,33 +361,35 @@ final class NativeAuthenticationService {
           let signInURL = URL(string: signInURLString)
     else { throw NativeAuthError.invalidResponse }
 
-    let authBase = ApiEnvironmentStore.shared.platformAPIBaseURL().appending(path: "auth")
-    var components = URLComponents(
-      url: authBase.appending(path: "expo-authorization-proxy"),
-      resolvingAgainstBaseURL: false
-    )
-    var query = [URLQueryItem(name: "authorizationURL", value: signInURL.absoluteString)]
-    if let state = NativeAuthHTTPClient.oauthState(in: initial.cookie) {
-      query.append(URLQueryItem(name: "oauthState", value: state))
-    }
-    components?.queryItems = query
-    guard let proxyURL = components?.url else { throw NativeAuthError.invalidResponse }
-
     let callback = try await authorizations.openWebAuthentication(
-      url: proxyURL,
+      url: signInURL,
       callbackScheme: AfilmoryBuildConfiguration.urlScheme,
       anchor: anchor
     )
-    guard let callbackCookie = URLComponents(url: callback, resolvingAgainstBaseURL: false)?
-      .queryItems?.first(where: { $0.name == "cookie" })?.value
-    else {
-      if let callbackError = NativeAuthHTTPClient.oauthError(in: callback) {
-        throw NativeAuthError.server(callbackError)
-      }
-      throw NativeAuthError.missingSession
+    let callbackParameterNames = NativeAuthHTTPClient.oauthCallbackParameterNames(in: callback)
+    Self.logger.notice(
+      "OAuth callback received for \(provider.displayName, privacy: .public); parameters=\(callbackParameterNames.joined(separator: ","), privacy: .public)"
+    )
+    guard NativeAuthHTTPClient.oauthCallbackValue(named: "state", in: callback) == oauthState else {
+      throw NativeAuthError.oauthStateMismatch(provider.displayName)
     }
-    let cookie = NativeAuthHTTPClient.merge(setCookieHeader: callbackCookie, into: initial.cookie)
-    try await registerValidated(cookie: cookie)
+    if let callbackError = NativeAuthHTTPClient.oauthError(in: callback) {
+      throw NativeAuthError.server(callbackError)
+    }
+    guard let code = NativeAuthHTTPClient.oauthCallbackValue(named: "code", in: callback),
+          !code.isEmpty
+    else { throw NativeAuthError.oauthCallbackMissingCode(provider.displayName) }
+
+    let exchange = try await client.request(
+      path: "auth/one-time-token/verify",
+      method: "POST",
+      body: OneTimeTokenVerificationBody(token: code),
+      cookie: nil
+    )
+    try await registerValidated(
+      cookie: exchange.cookie,
+      invalidSessionError: .oauthSessionRejected(provider.displayName)
+    )
   }
 
   func signInWithApple(anchor: UIWindow) async throws {
@@ -372,8 +411,7 @@ final class NativeAuthenticationService {
           provider: "apple",
           requestSignUp: true
         ),
-        cookie: nil,
-        headers: ["x-skip-oauth-proxy": "true"]
+        cookie: nil
       )
       guard let cookie = response.cookie else { throw NativeAuthError.missingSession }
       _ = try await client.request(
@@ -403,8 +441,7 @@ final class NativeAuthenticationService {
     _ = try? await client.request(
       path: "auth/sign-out",
       method: "POST",
-      cookie: cookie,
-      headers: mobileOAuthHeaders
+      cookie: cookie
     )
     sessionStore.clearSession()
   }
@@ -453,19 +490,28 @@ final class NativeAuthenticationService {
     return result
   }
 
-  private var mobileOAuthHeaders: [String: String] {
-    [
-      "expo-origin": "\(AfilmoryBuildConfiguration.urlScheme):///",
-      "x-skip-oauth-proxy": "true",
+  private static func nativeOAuthBridgeURL(authBase: URL, path: String, state: String) -> URL? {
+    var components = URLComponents(
+      url: authBase.appending(path: path),
+      resolvingAgainstBaseURL: false
+    )
+    components?.queryItems = [
+      URLQueryItem(name: "scheme", value: AfilmoryBuildConfiguration.urlScheme),
+      URLQueryItem(name: "state", value: state),
     ]
+    return components?.url
   }
 
-  private func registerValidated(cookie: String?, requiresWorkspace: Bool = false) async throws {
+  private func registerValidated(
+    cookie: String?,
+    requiresWorkspace: Bool = false,
+    invalidSessionError: NativeAuthError = .missingSession
+  ) async throws {
     guard let cookie, !cookie.isEmpty else { throw NativeAuthError.missingSession }
     let response = try await client.request(path: "auth/session", cookie: cookie)
     let session = try client.decode(AfilmorySessionResponse.self, from: response.data).resolved()
     guard let session, !requiresWorkspace || session.activeWorkspace != nil else {
-      throw NativeAuthError.missingSession
+      throw invalidSessionError
     }
     ApiEnvironmentStore.shared.activateTenant(slug: session.activeWorkspace?.slug)
     sessionStore.register(cookie: response.cookie ?? cookie)

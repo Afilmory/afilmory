@@ -3,6 +3,15 @@ import Foundation
 enum NativeAuthProvider: String, Sendable {
   case github
   case google
+
+  var displayName: String {
+    switch self {
+    case .github:
+      "GitHub"
+    case .google:
+      "Google"
+    }
+  }
 }
 
 struct AppleAuthenticationConfiguration: Decodable, Sendable {
@@ -97,6 +106,9 @@ enum NativeAuthError: LocalizedError, Equatable {
   case cancelled
   case invalidResponse
   case missingSession
+  case oauthCallbackMissingCode(String)
+  case oauthSessionRejected(String)
+  case oauthStateMismatch(String)
   case server(String)
   case unavailable
 
@@ -108,6 +120,12 @@ enum NativeAuthError: LocalizedError, Equatable {
       "The authentication server returned an invalid response."
     case .missingSession:
       "Authentication completed without creating a session."
+    case .oauthCallbackMissingCode(let provider):
+      "\(provider) completed authorization, but the authentication server did not return a one-time sign-in code."
+    case .oauthSessionRejected(let provider):
+      "\(provider) completed authorization, but the returned session could not be validated."
+    case .oauthStateMismatch(let provider):
+      "\(provider) returned an authentication response that did not match this sign-in request."
     case .server(let message):
       message
     case .unavailable:

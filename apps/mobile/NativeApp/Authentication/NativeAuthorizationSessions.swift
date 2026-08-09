@@ -88,6 +88,14 @@ final class NativeAuthorizationSessions: NSObject {
     }
   }
 
+  func makeOAuthState() throws -> String {
+    let data = Data(try Self.randomBytes(count: 32))
+    return data.base64EncodedString()
+      .replacingOccurrences(of: "+", with: "-")
+      .replacingOccurrences(of: "/", with: "_")
+      .replacingOccurrences(of: "=", with: "")
+  }
+
   private func finishAppleSession() {
     appleContinuation = nil
     appleController = nil
@@ -103,11 +111,15 @@ final class NativeAuthorizationSessions: NSObject {
   }
 
   private static func randomNonce() throws -> String {
-    var bytes = [UInt8](repeating: 0, count: 32)
+    try randomBytes(count: 32).map { String(format: "%02x", $0) }.joined()
+  }
+
+  private static func randomBytes(count: Int) throws -> [UInt8] {
+    var bytes = [UInt8](repeating: 0, count: count)
     guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
       throw NativeAuthError.unavailable
     }
-    return bytes.map { String(format: "%02x", $0) }.joined()
+    return bytes
   }
 }
 
