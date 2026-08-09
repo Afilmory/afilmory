@@ -372,6 +372,7 @@ final class PhotoQueryHeaderView: UIView {
       configuration.cornerStyle = .capsule
       configuration.contentInsets = NSDirectionalEdgeInsets(top: 7, leading: 12, bottom: 7, trailing: 10)
       configuration.title = chip.title
+      configuration.titleLineBreakMode = .byClipping
       configuration.image = UIImage(systemName: "xmark")
       configuration.imagePlacement = .trailing
       configuration.imagePadding = 6
@@ -379,7 +380,16 @@ final class PhotoQueryHeaderView: UIView {
       configuration.background.strokeColor = UIColor.white.withAlphaComponent(0.12)
       configuration.background.strokeWidth = 1 / max(traitCollection.displayScale, 1)
       configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 9, weight: .bold)
+      configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+        var outgoing = incoming
+        outgoing.font = .systemFont(ofSize: 14, weight: .medium)
+        return outgoing
+      }
       let button = UIButton(configuration: configuration)
+      button.titleLabel?.numberOfLines = 1
+      button.titleLabel?.lineBreakMode = .byClipping
+      button.setContentHuggingPriority(.required, for: .horizontal)
+      button.setContentCompressionResistancePriority(.required, for: .horizontal)
       button.accessibilityIdentifier = "photo-query-chip-\(chip.id)"
       button.addAction(UIAction { [weak self] _ in
         self?.onRemoveConstraint?(chip.constraint)
