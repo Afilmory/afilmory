@@ -254,7 +254,7 @@ private struct CommentFlightBubbleShape: InsettableShape {
   }
 }
 
-private struct CommentFlightSurface: View, Animatable {
+private struct CommentFlightSurface: View, @MainActor Animatable {
   let content: String
   let source: CGRect
   let target: CGRect

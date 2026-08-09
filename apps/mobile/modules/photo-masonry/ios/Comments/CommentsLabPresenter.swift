@@ -5,7 +5,7 @@ import UIKit
 enum CommentsLabPresenter {
   static func present(outcome: String, latencyMs: Int) {
     let resolvedOutcome = DemoCommentsTransport.Outcome(rawValue: outcome) ?? .success
-    let request = PhotoCommentsSheetRequest()
+    var request = PhotoCommentsSheetRequest()
     request.gallerySlug = "lab"
     request.photoId = "lab-photo"
     request.photoTitle = "Send flight · \(resolvedOutcome.rawValue)"

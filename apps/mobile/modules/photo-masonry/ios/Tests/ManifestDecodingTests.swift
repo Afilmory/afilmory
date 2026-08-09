@@ -1,5 +1,5 @@
 import XCTest
-@testable import PhotoMasonry
+@testable import Afilmory
 
 final class ManifestDecodingTests: XCTestCase {
   func testDecodesAndNormalizesGoldenManifest() throws {

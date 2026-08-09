@@ -106,7 +106,7 @@ struct PhotoInfoSectionsList: View {
   // label and the chevron through the tint, and hierarchical styles like
   // .primary then resolve against that tint instead of the label colour, which
   // inverts the intended contrast. Concrete UIColors keep it unambiguous.
-  private func disclosure(for section: PhotoInfoSectionRecord) -> some View {
+  private func disclosure(for section: PhotoInfoSection) -> some View {
     let isExpanded = expandedSections.contains(section.id)
 
     return VStack(spacing: 0) {

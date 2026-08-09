@@ -41,6 +41,17 @@ final class PhotoDetailNavigationBar: UINavigationBar {
   func setBackAccessibilityLabel(_ label: String) {
     backButtonItem.accessibilityLabel = label
   }
+
+  override func sizeThatFits(_ size: CGSize) -> CGSize {
+    let fittingSize = super.sizeThatFits(size)
+    let titleHeight = titleCapsule.sizeThatFits(
+      CGSize(width: size.width, height: UIView.layoutFittingCompressedSize.height)
+    ).height
+    return CGSize(
+      width: fittingSize.width,
+      height: max(fittingSize.height, titleHeight)
+    )
+  }
 }
 
 /// Apple Photos backs its two-line date/time title with its own glass capsule and
@@ -55,7 +66,7 @@ private final class PhotoDetailTitleCapsule: UIVisualEffectView {
   private static let contentInset = UIView().layoutMargins.top
 
   init() {
-    super.init(effect: UIGlassEffect(style: .regular))
+    super.init(effect: AdaptiveGlass.effect(fallbackStyle: .systemThinMaterialDark))
 
     clipsToBounds = true
     layer.cornerCurve = .continuous

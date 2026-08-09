@@ -9,11 +9,19 @@ struct PhotoInfoInspectorView: View {
   @ViewBuilder
   var body: some View {
     if showsHeader {
-      PhotoInfoSectionsList(info: info)
-        .safeAreaBar(edge: .top, spacing: 0) {
-          header
-        }
-        .scrollEdgeEffectStyle(.soft, for: .top)
+      if #available(iOS 26.0, *) {
+        PhotoInfoSectionsList(info: info)
+          .safeAreaBar(edge: .top, spacing: 0) {
+            header
+          }
+          .scrollEdgeEffectStyle(.soft, for: .top)
+      } else {
+        PhotoInfoSectionsList(info: info)
+          .safeAreaInset(edge: .top, spacing: 0) {
+            header
+              .background(.bar)
+          }
+      }
     } else {
       PhotoInfoSectionsList(info: info, bottomContentInset: bottomContentInset)
     }

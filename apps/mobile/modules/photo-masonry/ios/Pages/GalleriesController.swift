@@ -1,4 +1,3 @@
-import ExpoModulesCore
 import SDWebImage
 import UIKit
 
@@ -55,8 +54,6 @@ func resolvedGalleryTopOffsetAfterHeaderTransition(
 }
 
 final class GalleriesController: UIViewController {
-  let appContext: AppContext?
-
   private let localization = Localization.shared
   private let onRequestSignIn: () -> Void
   private let notificationPermissions = GalleryNotificationPermissionCoordinator()
@@ -81,8 +78,7 @@ final class GalleriesController: UIViewController {
   private var previousLayoutWidth: CGFloat = 0
   private var lastGalleryRouteRequestID: String?
 
-  init(appContext: AppContext?, onRequestSignIn: @escaping () -> Void) {
-    self.appContext = appContext
+  init(onRequestSignIn: @escaping () -> Void) {
     self.onRequestSignIn = onRequestSignIn
     super.init(nibName: nil, bundle: nil)
     title = localization.value("tabs.explore")
@@ -100,7 +96,6 @@ final class GalleriesController: UIViewController {
       GalleryDetailController(
         slug: route.slug,
         title: route.title,
-        appContext: appContext,
         onRequestSignIn: onRequestSignIn
       ),
       animated: viewIfLoaded?.window != nil
@@ -108,12 +103,12 @@ final class GalleriesController: UIViewController {
   }
 
   deinit {
-    NotificationCenter.default.removeObserver(self)
     loadTask?.cancel()
     searchDebounceTask?.cancel()
     notificationPermissionTask?.cancel()
     coverTasks.values.forEach { $0.cancel() }
     subscriptionTasks.values.forEach { $0.cancel() }
+    NotificationCenter.default.removeObserver(self)
   }
 
   override func viewDidLoad() {
@@ -674,7 +669,6 @@ extension GalleriesController: UICollectionViewDataSource, UICollectionViewDeleg
       GalleryDetailController(
         slug: gallery.slug,
         title: gallery.name,
-        appContext: appContext,
         onRequestSignIn: onRequestSignIn
       ),
       animated: true

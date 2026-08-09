@@ -3,7 +3,7 @@ require 'xcodeproj'
 
 mobile_root = Pathname.new(__dir__).parent
 project_path = Pathname.new(
-  ENV.fetch('AFILMORY_XCODE_PROJECT_PATH', mobile_root.join('ios/Afilmory.xcodeproj').to_s),
+  ENV.fetch('AFILMORY_XCODE_PROJECT_PATH', mobile_root.join('Afilmory.xcodeproj').to_s),
 )
 team_id = ENV.fetch('APPLE_TEAM_ID')
 

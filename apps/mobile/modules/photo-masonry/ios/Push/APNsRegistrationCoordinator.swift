@@ -37,7 +37,7 @@ private struct PushDeviceRegistrationResponse: Decodable, Sendable {
 final class APNsRegistrationCoordinator {
   static let shared = APNsRegistrationCoordinator()
 
-  private static let cachedTokenKey = "app.afilmory.apns.device-token"
+  private nonisolated static let cachedTokenKey = "app.afilmory.apns.device-token"
 
   private var authorizationTask: Task<Void, Never>?
   private var registrationTask: Task<Void, Never>?
@@ -66,8 +66,7 @@ final class APNsRegistrationCoordinator {
   func registerForRemoteNotificationsIfAuthorized() {
     guard AfilmoryBuildConfiguration.supportsPushNotifications else { return }
     authorizationTask?.cancel()
-    authorizationTask = Task { @MainActor [weak self] in
-      guard let self else { return }
+    authorizationTask = Task { @MainActor in
       let settings = await UNUserNotificationCenter.current().notificationSettings()
       guard !Task.isCancelled else { return }
       switch settings.authorizationStatus {

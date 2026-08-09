@@ -1,13 +1,11 @@
-import ExpoModulesCore
-
-struct MapPhoto: Record {
-  @Field var accessibilityLabel: String = ""
-  @Field var id: String = ""
-  @Field var index: Int = 0
-  @Field var latitude: Double = 0
-  @Field var longitude: Double = 0
-  @Field var openAccessibilityLabel: String = ""
-  @Field var subtitle: String = ""
-  @Field var thumbnailUrl: String = ""
-  @Field var title: String = ""
+struct MapPhoto {
+  var accessibilityLabel: String = ""
+  var id: String = ""
+  var index: Int = 0
+  var latitude: Double = 0
+  var longitude: Double = 0
+  var openAccessibilityLabel: String = ""
+  var subtitle: String = ""
+  var thumbnailUrl: String = ""
+  var title: String = ""
 }

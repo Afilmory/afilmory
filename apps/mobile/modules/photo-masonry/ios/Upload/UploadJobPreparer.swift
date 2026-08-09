@@ -2,6 +2,7 @@ import Foundation
 import ImageIO
 import Photos
 import UIKit
+import UniformTypeIdentifiers
 
 enum UploadPrepareError: LocalizedError {
   case assetUnavailable
@@ -178,11 +179,17 @@ enum UploadJobPreparer {
     if !originalExtension.isEmpty {
       return originalExtension.lowercased()
     }
-    return resource.contentType.preferredFilenameExtension ?? "bin"
+    if #available(iOS 26.0, *) {
+      return resource.contentType.preferredFilenameExtension ?? "bin"
+    }
+    return UTType(resource.uniformTypeIdentifier)?.preferredFilenameExtension ?? "bin"
   }
 
   private static func mimeType(for resource: PHAssetResource) -> String {
-    resource.contentType.preferredMIMEType ?? "application/octet-stream"
+    if #available(iOS 26.0, *) {
+      return resource.contentType.preferredMIMEType ?? "application/octet-stream"
+    }
+    return UTType(resource.uniformTypeIdentifier)?.preferredMIMEType ?? "application/octet-stream"
   }
 
   private static func write(_ handle: FileHandle, _ text: String) {

@@ -31,7 +31,9 @@ struct ApiEnvironment: Codable, Equatable, Sendable {
 final class ApiEnvironmentStore: @unchecked Sendable {
   static let shared = ApiEnvironmentStore()
 
-  private static let service = "app.afilmory.api.environment"
+  private static var service: String {
+    "\(Bundle.main.bundleIdentifier ?? "app.afilmory").api.environment"
+  }
   private static let account = "active-environment"
   private let lock = NSLock()
   private var environment: ApiEnvironment
@@ -69,6 +71,18 @@ final class ApiEnvironmentStore: @unchecked Sendable {
     }
     lock.lock()
     self.environment = environment
+    lock.unlock()
+    apply(slug: nil)
+  }
+
+  func resetToBuildDefault() {
+    let status = SecItemDelete(Self.query as CFDictionary)
+    if status != errSecSuccess, status != errSecItemNotFound {
+      NSLog("[ApiEnvironmentStore] Unable to reset the API environment: %d", status)
+    }
+    let fallback = AfilmoryBuildConfiguration.defaultApiEnvironment
+    lock.lock()
+    environment = fallback
     lock.unlock()
     apply(slug: nil)
   }

@@ -1,12 +1,5 @@
-import ExpoModulesCore
 import SwiftUI
 import UIKit
-
-private struct StudioPickedPhoto: Equatable {
-  let id: String
-  let isLivePhoto: Bool
-  let name: String
-}
 
 private struct StudioTagsBody: Encodable {
   let tags: [String]
@@ -30,7 +23,6 @@ enum StudioLibraryDeletePolicy {
 }
 
 final class StudioLibraryController: UIViewController {
-  private let appContext: AppContext?
   private let localization = Localization.shared
   private let onRequestSignIn: () -> Void
   private let masonryView: PhotoMasonryView
@@ -46,11 +38,10 @@ final class StudioLibraryController: UIViewController {
   private var uploadJobs: [UploadJobState] = []
   private var uploadsWereRunning = false
 
-  init(appContext: AppContext?, onRequestSignIn: @escaping () -> Void) {
-    self.appContext = appContext
+  init(onRequestSignIn: @escaping () -> Void) {
     self.onRequestSignIn = onRequestSignIn
-    masonryView = PhotoMasonryView(appContext: appContext)
-    uploadFab = UploadFabView(appContext: appContext)
+    masonryView = PhotoMasonryView(frame: .zero)
+    uploadFab = UploadFabView(frame: .zero)
     super.init(nibName: nil, bundle: nil)
     configureMasonry()
     uploadFab.setLocalization(uploadQueueLocalization())
@@ -226,7 +217,6 @@ final class StudioLibraryController: UIViewController {
       photos: feed.photos,
       initialIndex: index,
       gallerySlug: gallerySlug,
-      appContext: appContext,
       localization: localization,
       onRequestSignIn: onRequestSignIn,
       sourceProvider: { [weak masonryView] photoId in
@@ -260,7 +250,9 @@ final class StudioLibraryController: UIViewController {
         title: localization.value("common.done"),
         primaryAction: UIAction { [weak self] _ in self?.leaveSelection() }
       )
-      done.style = .prominent
+      if #available(iOS 26.0, *) {
+        done.style = .prominent
+      }
       let tags = UIBarButtonItem(
         image: UIImage(systemName: "tag"),
         primaryAction: UIAction { [weak self] _ in self?.editTags() }
@@ -415,9 +407,8 @@ final class StudioLibraryController: UIViewController {
     UploadPickerSession.present(from: self) { [weak self] result in
       switch result {
       case .success(let values):
-        let items = values.compactMap(Self.pickedPhoto)
-        guard !items.isEmpty else { return }
-        self?.presentUploadReview(items: items, tags: [])
+        guard !values.isEmpty else { return }
+        self?.presentUploadReview(items: values, tags: [])
       case .failure(let error):
         self?.showError(
           title: self?.localization.value("studio.upload.failed") ?? "",
@@ -427,7 +418,7 @@ final class StudioLibraryController: UIViewController {
     }
   }
 
-  private func presentUploadReview(items: [StudioPickedPhoto], tags: [String]) {
+  private func presentUploadReview(items: [UploadPickedPhoto], tags: [String]) {
     let suggestedTags = availableTags()
     let root = UploadReviewSheetView(
       items: items.map { UploadReviewItem(id: $0.id, isLivePhoto: $0.isLivePhoto) },
@@ -448,7 +439,7 @@ final class StudioLibraryController: UIViewController {
     present(navigation, animated: true)
   }
 
-  private func handleUploadReview(_ outcome: UploadReviewOutcome, items: [StudioPickedPhoto]) {
+  private func handleUploadReview(_ outcome: UploadReviewOutcome, items: [UploadPickedPhoto]) {
     switch outcome {
     case .cancel:
       break
@@ -461,7 +452,7 @@ final class StudioLibraryController: UIViewController {
         switch result {
         case .success(let values):
           let existing = Set(kept.map(\.id))
-          let more = values.compactMap(Self.pickedPhoto).filter { !existing.contains($0.id) }
+          let more = values.filter { !existing.contains($0.id) }
           self?.presentUploadReview(items: kept + more, tags: tags)
         case .failure(let error):
           self?.showError(
@@ -473,7 +464,7 @@ final class StudioLibraryController: UIViewController {
     }
   }
 
-  private func enqueue(_ items: [StudioPickedPhoto], tags: [String]) {
+  private func enqueue(_ items: [UploadPickedPhoto], tags: [String]) {
     guard !items.isEmpty,
           let tenantBaseURL = AfilmorySessionStore.shared.current().tenantBaseURL
     else { return }
@@ -561,7 +552,7 @@ final class StudioLibraryController: UIViewController {
   }
 
   private func uploadReviewLocalization() -> UploadReviewLocalizationRecord {
-    let copy = UploadReviewLocalizationRecord()
+    var copy = UploadReviewLocalizationRecord()
     copy.addMore = localization.value("studio.upload.review.addMore")
     copy.cancel = localization.value("common.cancel")
     copy.remove = localization.value("studio.upload.review.remove")
@@ -595,14 +586,6 @@ final class StudioLibraryController: UIViewController {
       "statusUploading": localization.value("studio.upload.status.uploading"),
       "title": localization.value("studio.upload.queue.title"),
     ]
-  }
-
-  private static func pickedPhoto(_ value: [String: Any]) -> StudioPickedPhoto? {
-    guard let id = value["id"] as? String,
-          let isLivePhoto = value["isLivePhoto"] as? Bool,
-          let name = value["name"] as? String
-    else { return nil }
-    return StudioPickedPhoto(id: id, isLivePhoto: isLivePhoto, name: name)
   }
 
   private static func parseTags(_ value: String) -> [String] {

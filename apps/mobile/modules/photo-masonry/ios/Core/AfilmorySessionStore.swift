@@ -28,7 +28,9 @@ protocol SessionCookieStorage: Sendable {
 }
 
 struct KeychainSessionCookieStorage: SessionCookieStorage {
-  private static let service = "app.afilmory.session.cookie"
+  private static var service: String {
+    "\(Bundle.main.bundleIdentifier ?? "app.afilmory").session.cookie"
+  }
   private static let account = "authenticated-session"
 
   func read() -> String? {
@@ -79,6 +81,7 @@ final class AfilmorySessionStore: @unchecked Sendable {
   private let transport: SessionTransport
   private let cookieStorage: SessionCookieStorage
   private let lock = NSLock()
+  private var cookie: String?
   private var platformBaseURL: String?
   private var tenantBaseURL: String?
   private var state: AfilmorySessionState
@@ -96,9 +99,11 @@ final class AfilmorySessionStore: @unchecked Sendable {
     self.repository = repository
     self.transport = transport
     self.cookieStorage = cookieStorage
+    let storedCookie = cookieStorage.read()
+    cookie = storedCookie
     platformBaseURL = ApiEnvironmentStore.storedOrBuildDefault().platformAPIBaseURL().absoluteString
     tenantBaseURL = nil
-    state = cookieStorage.read() == nil ? .signedOut : .loading
+    state = storedCookie == nil ? .signedOut : .loading
     foregroundObserver = NotificationCenter.default.addObserver(
       forName: UIApplication.didBecomeActiveNotification,
       object: nil,
@@ -122,6 +127,9 @@ final class AfilmorySessionStore: @unchecked Sendable {
       clearSession()
       return
     }
+    lock.withLock {
+      self.cookie = normalized
+    }
     cookieStorage.write(normalized)
     refreshSession()
   }
@@ -141,6 +149,7 @@ final class AfilmorySessionStore: @unchecked Sendable {
       refreshGeneration &+= 1
       refreshTask?.cancel()
       refreshTask = nil
+      cookie = nil
       tenantBaseURL = nil
       state = .signedOut
       return Array(self.observers.values)
@@ -152,12 +161,12 @@ final class AfilmorySessionStore: @unchecked Sendable {
   }
 
   func current() -> AfilmorySessionSnapshot {
-    let environment = lock.withLock { (platformBaseURL, tenantBaseURL) }
+    let snapshot = lock.withLock { (cookie, platformBaseURL, tenantBaseURL, state) }
     return AfilmorySessionSnapshot(
-      cookie: cookieStorage.read(),
-      platformBaseURL: environment.0,
-      tenantBaseURL: environment.1,
-      state: lock.withLock { state }
+      cookie: snapshot.0,
+      platformBaseURL: snapshot.1,
+      tenantBaseURL: snapshot.2,
+      state: snapshot.3
     )
   }
 
@@ -198,12 +207,12 @@ final class AfilmorySessionStore: @unchecked Sendable {
   }
 
   func hasStoredCookie() -> Bool {
-    cookieStorage.read() != nil
+    lock.withLock { cookie != nil }
   }
 
   @MainActor
   private func publishCachedSession() {
-    guard cookieStorage.read() != nil,
+    guard loadCookieIfNeeded() != nil,
           let payload = repository.loadSession(),
           let session = try? JSONDecoder().decode(AfilmorySession.self, from: payload)
     else { return }
@@ -212,7 +221,7 @@ final class AfilmorySessionStore: @unchecked Sendable {
   }
 
   private func startRefresh(joinInFlight: Bool) {
-    guard cookieStorage.read() != nil else {
+    guard loadCookieIfNeeded() != nil else {
       if lock.withLock({ state != .signedOut }) {
         publish(.signedOut)
       }
@@ -268,6 +277,9 @@ final class AfilmorySessionStore: @unchecked Sendable {
     guard isCurrentRefresh(generation) else { return }
     APNsRegistrationCoordinator.unregisterCurrentDevice(using: current())
     cookieStorage.clear()
+    lock.withLock {
+      cookie = nil
+    }
     ApiEnvironmentStore.shared.activateTenant(slug: nil)
     await repository.wipeAll()
     completeRefresh(generation: generation, state: .signedOut)
@@ -330,6 +342,19 @@ final class AfilmorySessionStore: @unchecked Sendable {
   ) {
     for observer in observers {
       observer(state)
+    }
+  }
+
+  private func loadCookieIfNeeded() -> String? {
+    if let cached = lock.withLock({ cookie }) {
+      return cached
+    }
+    guard let stored = cookieStorage.read() else { return nil }
+    return lock.withLock {
+      if cookie == nil {
+        cookie = stored
+      }
+      return cookie
     }
   }
 

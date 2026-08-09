@@ -1,8 +1,9 @@
 import UIKit
 import XCTest
 
-@testable import PhotoMasonry
+@testable import Afilmory
 
+@MainActor
 final class GallerySubscriptionStateTests: XCTestCase {
   func testOwnWorkspaceDoesNotExposeSubscriptionAction() {
     XCTAssertEqual(

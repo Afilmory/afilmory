@@ -1,8 +1,6 @@
-import ExpoModulesCore
 import UIKit
 
 final class PhotoMapController: UIViewController {
-  private let appContext: AppContext?
   private let localization = Localization.shared
   private let onRequestSignIn: () -> Void
   private let mapView: PhotoMapView
@@ -13,10 +11,9 @@ final class PhotoMapController: UIViewController {
   private var gallerySlug: String?
   private var displayedPhotos: [GalleryPhoto] = []
 
-  init(appContext: AppContext?, onRequestSignIn: @escaping () -> Void) {
-    self.appContext = appContext
+  init(onRequestSignIn: @escaping () -> Void) {
     self.onRequestSignIn = onRequestSignIn
-    mapView = PhotoMapView(appContext: appContext)
+    mapView = PhotoMapView(frame: .zero)
     super.init(nibName: nil, bundle: nil)
     configureMap()
   }
@@ -132,7 +129,6 @@ final class PhotoMapController: UIViewController {
       photos: displayedPhotos,
       initialIndex: index,
       gallerySlug: gallerySlug,
-      appContext: appContext,
       localization: localization,
       onRequestSignIn: onRequestSignIn,
       sourceProvider: { [weak mapView] photoId in
@@ -174,7 +170,7 @@ final class PhotoMapController: UIViewController {
     photos.enumerated().compactMap { index, photo in
       guard let location = location(photo) else { return nil }
       let title = photo.title.isEmpty ? photo.id : photo.title
-      let item = MapPhoto()
+      var item = MapPhoto()
       item.accessibilityLabel = localization.value(
         "map.marker.accessibility",
         arguments: ["title": title]

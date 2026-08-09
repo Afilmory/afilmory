@@ -1,7 +1,6 @@
-import ExpoModulesCore
 import Foundation
 
-enum UploadJobStatus: String, Codable {
+enum UploadJobStatus: String, Codable, Sendable {
   case queued
   case uploading
   case processing
@@ -14,18 +13,18 @@ enum UploadJobStatus: String, Codable {
   }
 }
 
-struct UploadServerLogLine: Codable, Hashable {
+struct UploadServerLogLine: Codable, Hashable, Sendable {
   var message: String
   var level: String
 }
 
-struct UploadStagedFile {
+struct UploadStagedFile: Sendable {
   let url: URL
   let name: String
   let mimeType: String
 }
 
-struct UploadStagedAsset {
+struct UploadStagedAsset: Sendable {
   let id: String
   let photo: UploadStagedFile
   let pairedVideo: UploadStagedFile?
@@ -59,7 +58,7 @@ struct UploadStagedAsset {
   }
 }
 
-struct UploadJobState: Codable {
+struct UploadJobState: Codable, Sendable {
   let id: String
   let assetId: String
   var name: String
@@ -78,14 +77,14 @@ struct UploadJobState: Codable {
   }
 }
 
-struct UploadEnqueueItemRecord: Record {
-  @Field var id: String = ""
-  @Field var name: String = ""
+struct UploadEnqueueItemRecord {
+  var id: String = ""
+  var name: String = ""
 }
 
-struct UploadEnqueueRecord: Record {
-  @Field var endpoint: String = ""
-  @Field var directory: String?
-  @Field var activityTitle: String = ""
-  @Field var items: [UploadEnqueueItemRecord] = []
+struct UploadEnqueueRecord {
+  var endpoint: String = ""
+  var directory: String?
+  var activityTitle: String = ""
+  var items: [UploadEnqueueItemRecord] = []
 }

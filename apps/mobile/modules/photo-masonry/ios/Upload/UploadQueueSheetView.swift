@@ -76,6 +76,7 @@ struct UploadQueueSummary {
   }
 }
 
+@MainActor
 final class UploadQueueViewModel: ObservableObject {
   @Published private(set) var jobs: [UploadJobState] = []
   private var token: UUID?
@@ -97,6 +98,7 @@ final class UploadQueueViewModel: ObservableObject {
   }
 }
 
+@MainActor
 enum UploadQueuePresenter {
   private static weak var current: UIViewController?
 

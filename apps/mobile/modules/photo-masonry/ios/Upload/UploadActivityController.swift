@@ -1,6 +1,7 @@
-import ActivityKit
+@preconcurrency import ActivityKit
 import Foundation
 
+@MainActor
 final class UploadActivityController {
   static let shared = UploadActivityController()
 

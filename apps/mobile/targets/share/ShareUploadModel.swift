@@ -101,7 +101,7 @@ final class ShareUploadModel: ObservableObject {
         self.store = store
         for provider in providers {
           try Task.checkCancellation()
-          let item = try await store.stage(provider)
+          let item = try await store.stage(ShareItemProvider(value: provider))
           items.append(item)
           if let previewURL = await store.previewURL(for: item) {
             previewURLs[item.id] = previewURL

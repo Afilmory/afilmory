@@ -1,0 +1,237 @@
+name: Afilmory
+
+options:
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: en
+  groupSortPosition: top
+  minimumXcodeGenVersion: 2.45.4
+
+configs:
+  Debug: debug
+  Release: release
+
+packages:
+  SDWebImage:
+    url: https://github.com/SDWebImage/SDWebImage.git
+    exactVersion: 5.21.7
+
+settings:
+  base:
+    CLANG_ENABLE_MODULES: YES
+    DEVELOPMENT_TEAM: KAMM5N88X3
+    GENERATE_INFOPLIST_FILE: NO
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_STRICT_CONCURRENCY: targeted
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+
+targets:
+  Afilmory:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: NativeApp
+      - path: assets/images/google-g.png
+        buildPhase: resources
+      - path: modules/photo-masonry/ios
+        excludes:
+          - Tests/**
+    resources:
+      - path: NativeApp/Resources
+      - path: modules/photo-masonry/ios/Resources/Locales
+    dependencies:
+      - package: SDWebImage
+        product: SDWebImage
+      - target: AfilmoryShare
+        embed: true
+      - target: AfilmoryWidgets
+        embed: true
+    info:
+      path: NativeApp/Info.plist
+      properties:
+        AfilmoryAppGroupIdentifier: "$(AFILMORY_APP_GROUP_IDENTIFIER)"
+        AfilmoryAppVariant: "$(AFILMORY_APP_VARIANT)"
+        AfilmoryURLScheme: "$(AFILMORY_URL_SCHEME)"
+        CFBundleAllowMixedLocalizations: true
+        CFBundleDisplayName: "$(AFILMORY_DISPLAY_NAME)"
+        CFBundleLocalizations:
+          - en
+          - zh-Hans
+          - zh-HK
+          - zh-TW
+          - ja
+          - ko
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLName: "$(PRODUCT_BUNDLE_IDENTIFIER)"
+            CFBundleURLSchemes:
+              - "$(AFILMORY_URL_SCHEME)"
+        ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.photography
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+          NSAllowsLocalNetworking: true
+          NSExceptionDomains:
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+              NSIncludesSubdomains: true
+        NSPhotoLibraryUsageDescription: Allow Afilmory Studio to select photos for your gallery.
+        NSSupportsLiveActivities: true
+        UIBackgroundModes:
+          - remote-notification
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: "$(PRODUCT_MODULE_NAME).SceneDelegate"
+        UILaunchScreen: {}
+        UIRequiresFullScreen: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIUserInterfaceStyle: Dark
+        UIViewControllerBasedStatusBarAppearance: true
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0"
+        PRODUCT_MODULE_NAME: Afilmory
+        SUPPORTS_MACCATALYST: NO
+      configs:
+        Debug:
+          AFILMORY_API_ENVIRONMENT: local
+          AFILMORY_APP_GROUP_IDENTIFIER: ""
+          AFILMORY_APP_VARIANT: local
+          AFILMORY_DISPLAY_NAME: Afilmory Local
+          AFILMORY_URL_SCHEME: afilmory-local
+          ASSETCATALOG_COMPILER_APPICON_NAME: AppIconLocal
+          CODE_SIGN_ENTITLEMENTS: NativeApp/AfilmoryLocal.entitlements
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.local
+          PRODUCT_NAME: Afilmory
+        Release:
+          AFILMORY_API_ENVIRONMENT: production
+          AFILMORY_APP_GROUP_IDENTIFIER: group.app.afilmory
+          AFILMORY_APP_VARIANT: production
+          AFILMORY_DISPLAY_NAME: Afilmory
+          AFILMORY_URL_SCHEME: afilmory
+          ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+          CODE_SIGN_ENTITLEMENTS: NativeApp/Afilmory.entitlements
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory
+          PRODUCT_NAME: Afilmory
+
+  AfilmoryShare:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: targets/share
+    info:
+      path: targets/share/Info.plist
+      properties:
+        CFBundleDisplayName: Afilmory
+        NSExtension:
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsImageWithMaxCount: 20
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).ShareViewController"
+        NSPhotoLibraryUsageDescription: Allow Afilmory to upload both parts of a shared Live Photo.
+    settings:
+      base:
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0"
+        PRODUCT_MODULE_NAME: AfilmoryShare
+        PRODUCT_NAME: AfilmoryShare
+        SKIP_INSTALL: YES
+      configs:
+        Debug:
+          CODE_SIGN_ENTITLEMENTS: NativeApp/AfilmoryLocal.entitlements
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.local.share
+        Release:
+          CODE_SIGN_ENTITLEMENTS: targets/share/AfilmoryShare.entitlements
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.share
+
+  AfilmoryWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: targets/widgets
+    resources:
+      - path: targets/widgets/Assets.xcassets
+    info:
+      path: targets/widgets/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: $accent
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0"
+        PRODUCT_MODULE_NAME: AfilmoryWidgets
+        PRODUCT_NAME: AfilmoryWidgets
+        SKIP_INSTALL: YES
+      configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.local.widgets
+        Release:
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.widgets
+
+  AfilmoryTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: modules/photo-masonry/ios/Tests
+    dependencies:
+      - target: Afilmory
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.tests
+        SWIFT_VERSION: "6.0"
+
+schemes:
+  Afilmory Local:
+    build:
+      targets:
+        Afilmory: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AfilmoryTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  Afilmory:
+    build:
+      targets:
+        Afilmory: all
+    run:
+      config: Release
+    profile:
+      config: Release
+    test:
+      config: Debug
+      targets:
+        - AfilmoryTests
+    analyze:
+      config: Release
+    archive:
+      config: Release

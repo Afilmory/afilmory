@@ -1,4 +1,3 @@
-import ExpoModulesCore
 import MapKit
 import SDWebImage
 import UIKit
@@ -186,7 +185,7 @@ private final class PhotoMapClusterView: MKMarkerAnnotationView {
   }
 }
 
-final class PhotoMapView: ExpoView, MKMapViewDelegate {
+final class PhotoMapView: UIView, MKMapViewDelegate {
   var onNativeClearFilters: (() -> Void)?
   var onNativePhotoPress: ((String, Int) -> Void)?
   var onNativeRetry: (() -> Void)?
@@ -228,13 +227,18 @@ final class PhotoMapView: ExpoView, MKMapViewDelegate {
   private var selectedPhotoId = ""
   private var needsInitialFit = false
 
-  required init(appContext: AppContext? = nil) {
-    super.init(appContext: appContext)
+  override init(frame: CGRect) {
+    super.init(frame: frame)
     backgroundColor = .black
     configureMap()
     configureChrome()
     updateLabels()
     updatePresentation(animated: false)
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) is not supported")
   }
 
   override func layoutSubviews() {
@@ -440,9 +444,7 @@ final class PhotoMapView: ExpoView, MKMapViewDelegate {
 
   private static func makeGlassSurface(interactive: Bool = false) -> UIVisualEffectView {
     let surface = UIVisualEffectView()
-    let effect = UIGlassEffect(style: .regular)
-    effect.isInteractive = interactive
-    surface.effect = effect
+    surface.effect = AdaptiveGlass.effect(interactive: interactive)
     surface.clipsToBounds = true
     surface.layer.cornerCurve = .continuous
     return surface

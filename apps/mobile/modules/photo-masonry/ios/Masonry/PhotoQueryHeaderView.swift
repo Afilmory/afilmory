@@ -298,7 +298,7 @@ final class PhotoQueryHeaderView: UIView {
   }
 
   private func configureActionButton(_ button: UIButton, imageName: String) {
-    var configuration = UIButton.Configuration.glass()
+    var configuration = AdaptiveGlass.buttonConfiguration()
     configuration.baseForegroundColor = .white
     configuration.buttonSize = .medium
     configuration.cornerStyle = .capsule

@@ -94,7 +94,7 @@ private struct PhotoMapViewRepresentable: UIViewRepresentable {
   }
 }
 
-private struct PhotoHistogram {
+private struct PhotoHistogram: Sendable {
   let red: [Double]
   let green: [Double]
   let blue: [Double]
@@ -110,6 +110,7 @@ private struct PhotoHistogram {
   }
 }
 
+@MainActor
 private final class PhotoHistogramLoader: ObservableObject {
   enum State {
     case loading
@@ -119,7 +120,7 @@ private final class PhotoHistogramLoader: ObservableObject {
 
   @Published private(set) var state: State = .loading
 
-  private var request: URLSessionDataTask?
+  private var request: Task<Void, Never>?
 
   init(urlString: String) {
     load(urlString: urlString)
@@ -135,26 +136,28 @@ private final class PhotoHistogramLoader: ObservableObject {
       return
     }
 
-    request = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-      let histogram: PhotoHistogram?
-      if error == nil,
-        let response = response as? HTTPURLResponse,
-        (200..<300).contains(response.statusCode),
-        let data
-      {
-        histogram = PhotoHistogramLoader.calculateHistogram(data: data)
-      } else {
-        histogram = nil
-      }
-
-      DispatchQueue.main.async {
+    request = Task { [weak self] in
+      do {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let response = response as? HTTPURLResponse,
+              (200..<300).contains(response.statusCode)
+        else {
+          self?.state = .failed
+          return
+        }
+        let histogram = await Task.detached(priority: .utility) {
+          PhotoHistogramLoader.calculateHistogram(data: data)
+        }.value
+        guard !Task.isCancelled else { return }
         self?.state = histogram.map(State.loaded) ?? .failed
+      } catch {
+        guard !Task.isCancelled else { return }
+        self?.state = .failed
       }
     }
-    request?.resume()
   }
 
-  private static func calculateHistogram(data: Data) -> PhotoHistogram? {
+  nonisolated private static func calculateHistogram(data: Data) -> PhotoHistogram? {
     guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
       return nil
     }

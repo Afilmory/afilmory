@@ -96,13 +96,13 @@ struct PhotoHeaderModel: Codable, Equatable, Sendable {
 }
 
 enum PhotoDateParser {
-  private static let fractional: ISO8601DateFormatter = {
+  private nonisolated(unsafe) static let fractional: ISO8601DateFormatter = {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     return formatter
   }()
 
-  private static let standard: ISO8601DateFormatter = {
+  private nonisolated(unsafe) static let standard: ISO8601DateFormatter = {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime]
     return formatter

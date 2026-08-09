@@ -172,7 +172,7 @@ enum PhotoFilterEngine {
     now: Date,
     calendar sourceCalendar: Calendar = .current
   ) -> (from: String, to: String) {
-    var calendar = sourceCalendar
+    let calendar = sourceCalendar
     let today = dateString(now, calendar: calendar)
     switch preset {
     case .last7:

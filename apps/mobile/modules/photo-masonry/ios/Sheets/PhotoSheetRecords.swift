@@ -1,219 +1,200 @@
-import ExpoModulesCore
 import CoreGraphics
 import Foundation
 
-struct PresentationAnchorRecord: Record {
-  @Field var x: Double = 0
-  @Field var y: Double = 0
-  @Field var width: Double = 0
-  @Field var height: Double = 0
+struct PresentationAnchorRecord {
+  var x: Double = 0
+  var y: Double = 0
+  var width: Double = 0
+  var height: Double = 0
 
   var rect: CGRect {
     CGRect(x: x, y: y, width: width, height: height)
   }
 }
 
-struct PhotoInfoRowRecord: Record, Identifiable {
-  @Field var id: String = ""
-  @Field var label: String = ""
-  @Field var value: String = ""
+struct PhotoInfoLocalizationRecord: Decodable {
+  let done: String
+  let histogram: String
+  let histogramAccessibilityLabel: String
+  let histogramFailure: String
+  let mapAccessibilityLabel: String
+  let ratingLabel: String
+  let tags: String
+  let title: String
+
+  init() {
+    done = ""
+    histogram = ""
+    histogramAccessibilityLabel = ""
+    histogramFailure = ""
+    mapAccessibilityLabel = ""
+    ratingLabel = ""
+    tags = ""
+    title = ""
+  }
 }
 
-struct PhotoInfoSectionRecord: Record, Identifiable {
-  @Field var id: String = ""
-  @Field var title: String = ""
-  @Field var summary: String?
-  @Field var rows: [PhotoInfoRowRecord] = []
-}
+struct PhotoInfoSheetRecord: Decodable {
+  let gear: PhotoInfoGear
+  let description: String?
+  let histogramUrl: String?
+  let sections: [PhotoInfoSection]
+  let tags: [String]
+  let place: String?
+  let mapLocation: PhotoInfoMapLocation?
+  let emptyMessage: String?
+  let localization: PhotoInfoLocalizationRecord
 
-struct PhotoInfoGearRecord: Record {
-  @Field var model: String = ""
-  @Field var formatBadge: String?
-  @Field var styleBadge: String?
-  @Field var lens: String?
-  @Field var rating: Int = 0
-  @Field var specs: [String] = []
-  @Field var tone: String?
-  @Field var exposure: [String] = []
-}
-
-struct PhotoMapLocationRecord: Record {
-  @Field var latitude: Double = 0
-  @Field var longitude: Double = 0
-}
-
-struct PhotoInfoLocalizationRecord: Record {
-  @Field var done: String = ""
-  @Field var histogram: String = ""
-  @Field var histogramAccessibilityLabel: String = ""
-  @Field var histogramFailure: String = ""
-  @Field var mapAccessibilityLabel: String = ""
-  @Field var ratingLabel: String = ""
-  @Field var tags: String = ""
-  @Field var title: String = ""
-}
-
-struct PhotoInfoSheetRecord: Record {
-  @Field var gear: PhotoInfoGearRecord = .init()
-  @Field var description: String?
-  @Field var histogramUrl: String?
-  @Field var sections: [PhotoInfoSectionRecord] = []
-  @Field var tags: [String] = []
-  @Field var place: String?
-  @Field var mapLocation: PhotoMapLocationRecord?
-  @Field var emptyMessage: String?
-  @Field var localization: PhotoInfoLocalizationRecord = .init()
+  init() {
+    gear = PhotoInfoGear(
+      model: "",
+      formatBadge: nil,
+      styleBadge: nil,
+      lens: nil,
+      rating: 0,
+      specs: [],
+      tone: nil,
+      exposure: []
+    )
+    description = nil
+    histogramUrl = nil
+    sections = []
+    tags = []
+    place = nil
+    mapLocation = nil
+    emptyMessage = nil
+    localization = PhotoInfoLocalizationRecord()
+  }
 }
 
 extension PhotoInfoSheetRecord {
-  static func decode(json: String, appContext: AppContext) -> PhotoInfoSheetRecord? {
-    guard let data = json.data(using: .utf8),
-          let jsonObject = try? JSONSerialization.jsonObject(with: data),
-          let dictionary = normalizeJSONValue(jsonObject) as? [String: Any]
-    else { return nil }
-
-    return try? PhotoInfoSheetRecord(from: dictionary, appContext: appContext)
-  }
-
-  private static func normalizeJSONValue(_ value: Any) -> Any? {
-    if value is NSNull {
-      return nil
-    }
-    if let dictionary = value as? [String: Any] {
-      return dictionary.reduce(into: [String: Any]()) { result, element in
-        if let normalized = normalizeJSONValue(element.value) {
-          result[element.key] = normalized
-        }
-      }
-    }
-    if let array = value as? [Any] {
-      return array.compactMap(normalizeJSONValue)
-    }
-    return value
+  static func decode(json: String) -> PhotoInfoSheetRecord? {
+    guard let data = json.data(using: .utf8) else { return nil }
+    return try? JSONDecoder().decode(PhotoInfoSheetRecord.self, from: data)
   }
 }
 
-struct PhotoFilterDatePresetRecord: Record, Identifiable {
-  @Field var label: String = ""
-  @Field var value: String = ""
+struct PhotoFilterDatePresetRecord: Identifiable {
+  var label: String = ""
+  var value: String = ""
 
   var id: String { value }
 }
 
-struct PhotoFilterLocalizationRecord: Record {
-  @Field var all: String = ""
-  @Field var any: String = ""
-  @Field var anyDate: String = ""
-  @Field var anyRating: String = ""
-  @Field var camera: String = ""
-  @Field var cancel: String = ""
-  @Field var customRange: String = ""
-  @Field var date: String = ""
-  @Field var datePresets: [PhotoFilterDatePresetRecord] = []
-  @Field var done: String = ""
-  @Field var from: String = ""
-  @Field var lens: String = ""
-  @Field var match: String = ""
-  @Field var minimumRating: String = ""
-  @Field var notSelected: String = ""
-  @Field var range: String = ""
-  @Field var rating: String = ""
-  @Field var ratingOptions: [String] = []
-  @Field var reset: String = ""
-  @Field var search: String = ""
-  @Field var searchPlaceholder: String = ""
-  @Field var selected: String = ""
-  @Field var tags: String = ""
-  @Field var title: String = ""
-  @Field var to: String = ""
+struct PhotoFilterLocalizationRecord {
+  var all: String = ""
+  var any: String = ""
+  var anyDate: String = ""
+  var anyRating: String = ""
+  var camera: String = ""
+  var cancel: String = ""
+  var customRange: String = ""
+  var date: String = ""
+  var datePresets: [PhotoFilterDatePresetRecord] = []
+  var done: String = ""
+  var from: String = ""
+  var lens: String = ""
+  var match: String = ""
+  var minimumRating: String = ""
+  var notSelected: String = ""
+  var range: String = ""
+  var rating: String = ""
+  var ratingOptions: [String] = []
+  var reset: String = ""
+  var search: String = ""
+  var searchPlaceholder: String = ""
+  var selected: String = ""
+  var tags: String = ""
+  var title: String = ""
+  var to: String = ""
 }
 
-struct PhotoFilterOptionRecord: Record, Identifiable {
-  @Field var value: String = ""
-  @Field var count: Int = 0
+struct PhotoFilterOptionRecord: Identifiable {
+  var value: String = ""
+  var count: Int = 0
 
   var id: String { value }
 }
 
-struct PhotoFilterOptionsRecord: Record {
-  @Field var tags: [PhotoFilterOptionRecord] = []
-  @Field var cameras: [PhotoFilterOptionRecord] = []
-  @Field var lenses: [PhotoFilterOptionRecord] = []
-  @Field var ratedCount: Int = 0
+struct PhotoFilterOptionsRecord {
+  var tags: [PhotoFilterOptionRecord] = []
+  var cameras: [PhotoFilterOptionRecord] = []
+  var lenses: [PhotoFilterOptionRecord] = []
+  var ratedCount: Int = 0
 }
 
-struct PhotoFiltersRecord: Record {
-  @Field var query: String = ""
-  @Field var tags: [String] = []
-  @Field var tagMode: String = "any"
-  @Field var datePreset: String?
-  @Field var dateFrom: String?
-  @Field var dateTo: String?
-  @Field var cameras: [String] = []
-  @Field var lenses: [String] = []
-  @Field var minRating: Int?
+struct PhotoFiltersRecord {
+  var query: String = ""
+  var tags: [String] = []
+  var tagMode: String = "any"
+  var datePreset: String?
+  var dateFrom: String?
+  var dateTo: String?
+  var cameras: [String] = []
+  var lenses: [String] = []
+  var minRating: Int?
 }
 
-struct PhotoFilterSheetRequest: Record {
-  @Field var anchor: PresentationAnchorRecord?
-  @Field var filters: PhotoFiltersRecord = .init()
-  @Field var localization: PhotoFilterLocalizationRecord = .init()
-  @Field var options: PhotoFilterOptionsRecord = .init()
+struct PhotoFilterSheetRequest {
+  var anchor: PresentationAnchorRecord?
+  var filters: PhotoFiltersRecord = .init()
+  var localization: PhotoFilterLocalizationRecord = .init()
+  var options: PhotoFilterOptionsRecord = .init()
 }
 
-struct ProfileStripItemRecord: Record {
-  @Field var url: String = ""
-  @Field var thumbHash: String?
-  @Field var aspectRatio: Double = 1
+struct ProfileStripItemRecord {
+  var url: String = ""
+  var thumbHash: String?
+  var aspectRatio: Double = 1
 }
 
-struct ProfileLocalizationRecord: Record {
-  @Field var accountSettings: String = ""
-  @Field var cacheCleared: String = ""
-  @Field var cancel: String = ""
-  @Field var clearCache: String = ""
-  @Field var done: String = ""
-  @Field var deleteAccount: String = ""
-  @Field var openWeb: String = ""
-  @Field var signOut: String = ""
-  @Field var signOutConfirmTitle: String = ""
-  @Field var sponsorDescription: String = ""
-  @Field var sponsorFailedMessage: String = ""
-  @Field var sponsorFailedTitle: String = ""
-  @Field var sponsorPending: String = ""
-  @Field var sponsorThanks: String = ""
-  @Field var sponsorTitle: String = ""
-  @Field var sponsorUnavailable: String = ""
+struct ProfileLocalizationRecord {
+  var accountSettings: String = ""
+  var cacheCleared: String = ""
+  var cancel: String = ""
+  var clearCache: String = ""
+  var done: String = ""
+  var deleteAccount: String = ""
+  var openWeb: String = ""
+  var signOut: String = ""
+  var signOutConfirmTitle: String = ""
+  var sponsorDescription: String = ""
+  var sponsorFailedMessage: String = ""
+  var sponsorFailedTitle: String = ""
+  var sponsorPending: String = ""
+  var sponsorThanks: String = ""
+  var sponsorTitle: String = ""
+  var sponsorUnavailable: String = ""
 }
 
-struct ProfileSheetRecord: Record {
-  @Field var anchor: PresentationAnchorRecord?
-  @Field var userName: String = ""
-  @Field var avatarUrl: String = ""
-  @Field var avatarInitial: String = ""
-  @Field var tenantLine: String = ""
-  @Field var webUrl: String = ""
-  @Field var statsLine: String = ""
-  @Field var strip: [ProfileStripItemRecord] = []
-  @Field var localization: ProfileLocalizationRecord = .init()
+struct ProfileSheetRecord {
+  var anchor: PresentationAnchorRecord?
+  var userName: String = ""
+  var avatarUrl: String = ""
+  var avatarInitial: String = ""
+  var tenantLine: String = ""
+  var webUrl: String = ""
+  var statsLine: String = ""
+  var strip: [ProfileStripItemRecord] = []
+  var localization: ProfileLocalizationRecord = .init()
 }
 
-struct UploadReviewItemRecord: Record {
-  @Field var id: String = ""
-  @Field var isLivePhoto: Bool = false
+struct UploadReviewItemRecord {
+  var id: String = ""
+  var isLivePhoto: Bool = false
 }
 
-struct UploadReviewLocalizationRecord: Record {
-  @Field var addMore: String = ""
-  @Field var cancel: String = ""
-  @Field var remove: String = ""
-  @Field var startOne: String = ""
-  @Field var startOther: String = ""
-  @Field var summaryOne: String = ""
-  @Field var summaryOther: String = ""
-  @Field var tagsLabel: String = ""
-  @Field var tagsPlaceholder: String = ""
-  @Field var title: String = ""
+struct UploadReviewLocalizationRecord {
+  var addMore: String = ""
+  var cancel: String = ""
+  var remove: String = ""
+  var startOne: String = ""
+  var startOther: String = ""
+  var summaryOne: String = ""
+  var summaryOther: String = ""
+  var tagsLabel: String = ""
+  var tagsPlaceholder: String = ""
+  var title: String = ""
 
   func start(count: Int) -> String {
     template(count == 1 ? startOne : startOther, count: count)
@@ -230,9 +211,9 @@ struct UploadReviewLocalizationRecord: Record {
   }
 }
 
-struct UploadReviewSheetRecord: Record {
-  @Field var items: [UploadReviewItemRecord] = []
-  @Field var initialTags: [String] = []
-  @Field var suggestedTags: [String] = []
-  @Field var localization: UploadReviewLocalizationRecord = .init()
+struct UploadReviewSheetRecord {
+  var items: [UploadReviewItemRecord] = []
+  var initialTags: [String] = []
+  var suggestedTags: [String] = []
+  var localization: UploadReviewLocalizationRecord = .init()
 }

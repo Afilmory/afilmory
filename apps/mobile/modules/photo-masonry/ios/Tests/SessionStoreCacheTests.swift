@@ -1,5 +1,5 @@
 import XCTest
-@testable import PhotoMasonry
+@testable import Afilmory
 
 @MainActor
 final class SessionStoreCacheTests: XCTestCase {
@@ -27,6 +27,23 @@ final class SessionStoreCacheTests: XCTestCase {
 
     await gate.open()
     token.cancel()
+  }
+
+  func testCurrentUsesTheCookieLoadedAtInitializationWithoutRepeatedStorageReads() {
+    let repository = InMemoryPhotoCacheRepository()
+    let cookies = InMemorySessionCookieStorage(cookie: Self.cookie)
+    let store = AfilmorySessionStore(
+      repository: repository,
+      transport: FakeSessionTransport(steps: []),
+      cookieStorage: cookies
+    )
+    let readsAfterInitialization = cookies.readCount
+
+    for _ in 0..<8 {
+      XCTAssertEqual(store.current().cookie, Self.cookie)
+    }
+
+    XCTAssertEqual(cookies.readCount, readsAfterInitialization)
   }
 
   func testConcurrentBootstrapsIssueASingleSessionRequest() async throws {
@@ -373,13 +390,21 @@ private actor FakeSessionTransport: SessionTransport {
 private final class InMemorySessionCookieStorage: SessionCookieStorage, @unchecked Sendable {
   private let lock = NSLock()
   private var cookie: String?
+  private var reads = 0
+
+  var readCount: Int {
+    lock.withLock { reads }
+  }
 
   init(cookie: String? = nil) {
     self.cookie = cookie
   }
 
   func read() -> String? {
-    lock.withLock { cookie }
+    lock.withLock {
+      reads += 1
+      return cookie
+    }
   }
 
   func write(_ cookie: String) {

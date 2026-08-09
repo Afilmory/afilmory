@@ -1,7 +1,6 @@
-import ExpoModulesCore
 import UIKit
 
-final class PhotoDetailView: ExpoView, UIGestureRecognizerDelegate {
+final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   var onNativeScreenTraitsChange: ((Bool, Bool) -> Void)?
   var onNativeTransitionClose: (() -> Void)?
   var onNativeCommentsRequest: ((String, Int) -> Void)?
@@ -51,9 +50,9 @@ final class PhotoDetailView: ExpoView, UIGestureRecognizerDelegate {
   private var dismissalState = PhotoTransitionTransform(scale: 1, translation: .zero)
   private var dismissalGeneration = 0
 
-  required init(appContext: AppContext? = nil) {
-    viewer = PhotoViewerView(appContext: appContext)
-    super.init(appContext: appContext)
+  override init(frame: CGRect) {
+    viewer = PhotoViewerView(frame: .zero)
+    super.init(frame: frame)
 
     backgroundColor = .clear
     clipsToBounds = true
@@ -670,7 +669,7 @@ final class PhotoDetailView: ExpoView, UIGestureRecognizerDelegate {
       return
     }
     navigationBar.setTitle(metadata.title, subtitle: metadata.subtitle)
-    infoView.setInfoJSON(metadata.infoJSON, appContext: appContext)
+    infoView.setInfoJSON(metadata.infoJSON)
     setNeedsLayout()
   }
 
@@ -772,7 +771,7 @@ final class PhotoDetailView: ExpoView, UIGestureRecognizerDelegate {
 
   private func shareCurrentPhoto() {
     guard photos.indices.contains(currentIndex),
-          let presenter = appContext?.utilities?.currentViewController()
+          let presenter = nearestViewController
     else { return }
 
     let photo = photos[currentIndex]

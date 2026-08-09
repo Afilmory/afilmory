@@ -169,6 +169,9 @@ final class StudioHomeController: UITableViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
+    title = localization.value("tabs.studio")
+    navigationItem.largeTitleDisplayMode = .always
+    navigationController?.navigationBar.prefersLargeTitles = true
     tableView.backgroundColor = .systemGroupedBackground
     tableView.cellLayoutMarginsFollowReadableWidth = true
     tableView.keyboardDismissMode = .interactive

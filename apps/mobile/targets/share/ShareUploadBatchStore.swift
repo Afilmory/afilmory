@@ -3,6 +3,10 @@ import ImageIO
 import Photos
 import UniformTypeIdentifiers
 
+struct ShareItemProvider: @unchecked Sendable {
+  let value: NSItemProvider
+}
+
 actor ShareUploadBatchStore {
   static let appGroupIdentifier = "group.app.afilmory"
   static let contextKey = "share-upload.context.v1"
@@ -72,7 +76,8 @@ actor ShareUploadBatchStore {
     }
   }
 
-  func stage(_ provider: NSItemProvider) async throws -> ShareUploadBatchItem {
+  func stage(_ input: ShareItemProvider) async throws -> ShareUploadBatchItem {
+    let provider = input.value
     if provider.canLoadObject(ofClass: PHLivePhoto.self)
       || provider.hasItemConformingToTypeIdentifier(UTType.livePhoto.identifier) {
       return try await stageLivePhoto(provider)
@@ -388,7 +393,7 @@ actor ShareUploadBatchStore {
       role: role,
       relativePath: relativePath,
       name: "\(baseName).\(extensionName)",
-      mimeType: resource.contentType.preferredMIMEType ?? "application/octet-stream",
+      mimeType: resourceType(resource)?.preferredMIMEType ?? "application/octet-stream",
       bytes: Int64(bytes)
     )
   }
@@ -398,7 +403,14 @@ actor ShareUploadBatchStore {
     if !originalExtension.isEmpty {
       return originalExtension.lowercased()
     }
-    return resource.contentType.preferredFilenameExtension ?? "bin"
+    return resourceType(resource)?.preferredFilenameExtension ?? "bin"
+  }
+
+  private func resourceType(_ resource: PHAssetResource) -> UTType? {
+    if #available(iOS 26.0, *) {
+      return resource.contentType
+    }
+    return UTType(resource.uniformTypeIdentifier)
   }
 
   private func write(resource: PHAssetResource, to destinationURL: URL) async throws {

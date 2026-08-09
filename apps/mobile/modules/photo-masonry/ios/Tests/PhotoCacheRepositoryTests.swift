@@ -1,22 +1,11 @@
 import SwiftData
 import XCTest
-@testable import PhotoMasonry
+@testable import Afilmory
 
+@MainActor
 final class PhotoCacheRepositoryTests: XCTestCase {
-  private var container: ModelContainer!
-  private var repository: SwiftDataPhotoCacheRepository!
-
-  override func setUp() {
-    super.setUp()
-    container = AfilmoryDatabase.makeInMemoryContainer()
-    repository = SwiftDataPhotoCacheRepository(container: container)
-  }
-
-  override func tearDown() {
-    repository = nil
-    container = nil
-    super.tearDown()
-  }
+  private lazy var container = AfilmoryDatabase.makeInMemoryContainer()
+  private lazy var repository = SwiftDataPhotoCacheRepository(container: container)
 
   func testFeedRoundTripPreservesOrderAndEtag() async {
     let key = PhotoFeedKey.manifest("acme")
@@ -28,13 +17,13 @@ final class PhotoCacheRepositoryTests: XCTestCase {
 
     await repository.saveFeed(key, photos: photos, etag: "etag-1")
 
-    let loaded = await repository.loadFeed(key)
+    let loaded = repository.loadFeed(key)
     XCTAssertEqual(loaded?.photos.map(\.id), ["a", "b", "c"])
     XCTAssertEqual(loaded?.etag, "etag-1")
   }
 
   func testLoadFeedReturnsNilWhenNeverSaved() async {
-    let loaded = await repository.loadFeed(.manifest("missing"))
+    let loaded = repository.loadFeed(.manifest("missing"))
     XCTAssertNil(loaded)
   }
 
@@ -58,12 +47,12 @@ final class PhotoCacheRepositoryTests: XCTestCase {
       etag: "etag-2"
     )
 
-    let loaded = await repository.loadFeed(key)
+    let loaded = repository.loadFeed(key)
     XCTAssertEqual(loaded?.photos.map(\.id), ["a", "c"])
     XCTAssertEqual(loaded?.photos.first?.title, "Updated")
     XCTAssertEqual(loaded?.etag, "etag-2")
 
-    let remainingRows = try await fetchPhotoRows(feedKey: key.rawValue)
+    let remainingRows = try fetchPhotoRows(feedKey: key.rawValue)
     XCTAssertEqual(remainingRows.count, 2)
   }
 
@@ -74,9 +63,9 @@ final class PhotoCacheRepositoryTests: XCTestCase {
       photos: [NativeFixtureTestSupport.photo(id: "a"), NativeFixtureTestSupport.photo(id: "b")],
       etag: "etag-1"
     )
-    try await corruptPayload(photoId: "b", feedKey: key.rawValue)
+    try corruptPayload(photoId: "b", feedKey: key.rawValue)
 
-    let loaded = await repository.loadFeed(key)
+    let loaded = repository.loadFeed(key)
     XCTAssertEqual(loaded?.photos.map(\.id), ["a"])
     XCTAssertNil(loaded?.etag)
 
@@ -91,10 +80,10 @@ final class PhotoCacheRepositoryTests: XCTestCase {
       photos: [NativeFixtureTestSupport.photo(id: "a"), NativeFixtureTestSupport.photo(id: "b")],
       etag: "etag-1"
     )
-    try await corruptPayload(photoId: "a", feedKey: key.rawValue)
-    try await corruptPayload(photoId: "b", feedKey: key.rawValue)
+    try corruptPayload(photoId: "a", feedKey: key.rawValue)
+    try corruptPayload(photoId: "b", feedKey: key.rawValue)
 
-    let loaded = await repository.loadFeed(key)
+    let loaded = repository.loadFeed(key)
     XCTAssertNil(loaded)
 
     let remainingRows = try await waitForPhotoRows(feedKey: key.rawValue, toMatch: [])
@@ -105,15 +94,15 @@ final class PhotoCacheRepositoryTests: XCTestCase {
     let key = PhotoFeedKey.manifest("acme")
     await repository.saveFeed(key, photos: [NativeFixtureTestSupport.photo(id: "a")], etag: "etag-1")
     let backdated = Date(timeIntervalSinceNow: -1000)
-    try await backdateFeed(feedKey: key.rawValue, to: backdated)
+    try backdateFeed(feedKey: key.rawValue, to: backdated)
 
     await repository.touchFeed(key)
 
-    let updatedFetchedAt = try await feedFetchedAt(feedKey: key.rawValue)
+    let updatedFetchedAt = try feedFetchedAt(feedKey: key.rawValue)
     XCTAssertNotNil(updatedFetchedAt)
     XCTAssertGreaterThan(updatedFetchedAt!, backdated)
 
-    let loaded = await repository.loadFeed(key)
+    let loaded = repository.loadFeed(key)
     XCTAssertEqual(loaded?.etag, "etag-1")
     XCTAssertEqual(loaded?.photos.map(\.id), ["a"])
   }
@@ -124,15 +113,15 @@ final class PhotoCacheRepositoryTests: XCTestCase {
 
     await repository.saveFeed(freshKey, photos: [NativeFixtureTestSupport.photo(id: "fresh-1")], etag: nil)
     await repository.saveFeed(staleKey, photos: [NativeFixtureTestSupport.photo(id: "stale-1")], etag: nil)
-    try await backdateFeed(feedKey: staleKey.rawValue, to: Date(timeIntervalSinceNow: -60 * 60 * 24 * 40))
+    try backdateFeed(feedKey: staleKey.rawValue, to: Date(timeIntervalSinceNow: -60 * 60 * 24 * 40))
 
     await repository.pruneStale(olderThan: Date(timeIntervalSinceNow: -60 * 60 * 24 * 30))
 
-    let freshLoaded = await repository.loadFeed(freshKey)
-    let staleLoaded = await repository.loadFeed(staleKey)
+    let freshLoaded = repository.loadFeed(freshKey)
+    let staleLoaded = repository.loadFeed(staleKey)
     XCTAssertNotNil(freshLoaded)
     XCTAssertNil(staleLoaded)
-    let remainingStaleRows = try await fetchPhotoRows(feedKey: staleKey.rawValue)
+    let remainingStaleRows = try fetchPhotoRows(feedKey: staleKey.rawValue)
     XCTAssertTrue(remainingStaleRows.isEmpty)
   }
 
@@ -144,46 +133,45 @@ final class PhotoCacheRepositoryTests: XCTestCase {
 
     await repository.wipeAll()
 
-    let loadedFeed = await repository.loadFeed(key)
-    let loadedDirectory = await repository.loadGalleryDirectory()
-    let loadedSession = await repository.loadSession()
+    let loadedFeed = repository.loadFeed(key)
+    let loadedDirectory = repository.loadGalleryDirectory()
+    let loadedSession = repository.loadSession()
     XCTAssertNil(loadedFeed)
     XCTAssertNil(loadedDirectory)
     XCTAssertNil(loadedSession)
-    let remainingRows = try await fetchPhotoRows(feedKey: key.rawValue)
+    let remainingRows = try fetchPhotoRows(feedKey: key.rawValue)
     XCTAssertTrue(remainingRows.isEmpty)
   }
 
   func testGalleryDirectoryRoundTrip() async {
-    let initial = await repository.loadGalleryDirectory()
+    let initial = repository.loadGalleryDirectory()
     XCTAssertNil(initial)
 
     let payload = Data("directory-payload".utf8)
     await repository.saveGalleryDirectory(payload)
-    let loaded = await repository.loadGalleryDirectory()
+    let loaded = repository.loadGalleryDirectory()
     XCTAssertEqual(loaded, payload)
 
     let updated = Data("updated-directory-payload".utf8)
     await repository.saveGalleryDirectory(updated)
-    let reloaded = await repository.loadGalleryDirectory()
+    let reloaded = repository.loadGalleryDirectory()
     XCTAssertEqual(reloaded, updated)
   }
 
   func testSessionRoundTripAndClear() async {
-    let initial = await repository.loadSession()
+    let initial = repository.loadSession()
     XCTAssertNil(initial)
 
     let payload = Data("session-payload".utf8)
     await repository.saveSession(payload)
-    let loaded = await repository.loadSession()
+    let loaded = repository.loadSession()
     XCTAssertEqual(loaded, payload)
 
     await repository.clearSession()
-    let cleared = await repository.loadSession()
+    let cleared = repository.loadSession()
     XCTAssertNil(cleared)
   }
 
-  @MainActor
   private func fetchPhotoRows(feedKey: String) throws -> [CachedPhoto] {
     let descriptor = FetchDescriptor<CachedPhoto>(predicate: #Predicate<CachedPhoto> { $0.feedKey == feedKey })
     return try container.mainContext.fetch(descriptor)
@@ -196,7 +184,7 @@ final class PhotoCacheRepositoryTests: XCTestCase {
   ) async throws -> [CachedPhoto] {
     let deadline = Date().addingTimeInterval(timeout)
     while true {
-      let rows = try await fetchPhotoRows(feedKey: feedKey)
+      let rows = try fetchPhotoRows(feedKey: feedKey)
       if rows.map(\.photoId).sorted() == expectedPhotoIds.sorted() {
         return rows
       }
@@ -207,13 +195,11 @@ final class PhotoCacheRepositoryTests: XCTestCase {
     }
   }
 
-  @MainActor
   private func feedFetchedAt(feedKey: String) throws -> Date? {
     let descriptor = FetchDescriptor<CachedFeed>(predicate: #Predicate<CachedFeed> { $0.feedKey == feedKey })
     return try container.mainContext.fetch(descriptor).first?.fetchedAt
   }
 
-  @MainActor
   private func backdateFeed(feedKey: String, to date: Date) throws {
     let descriptor = FetchDescriptor<CachedFeed>(predicate: #Predicate<CachedFeed> { $0.feedKey == feedKey })
     guard let feed = try container.mainContext.fetch(descriptor).first else {
@@ -224,7 +210,6 @@ final class PhotoCacheRepositoryTests: XCTestCase {
     try container.mainContext.save()
   }
 
-  @MainActor
   private func corruptPayload(photoId: String, feedKey: String) throws {
     let descriptor = FetchDescriptor<CachedPhoto>(
       predicate: #Predicate<CachedPhoto> { $0.feedKey == feedKey && $0.photoId == photoId }

@@ -1,13 +1,13 @@
 import Foundation
 import Photos
 
-final class UploadCenter: NSObject {
+final class UploadCenter: NSObject, @unchecked Sendable {
   static let shared = UploadCenter()
   static let sessionIdentifier = "app.afilmory.upload"
-  static var backgroundCompletionHandler: (() -> Void)?
+  @MainActor static var backgroundCompletionHandler: (() -> Void)?
 
   var onChange: (([[String: Any?]]) -> Void)?
-  private var jobObservers: [UUID: ([UploadJobState]) -> Void] = [:]
+  private var jobObservers: [UUID: @MainActor @Sendable ([UploadJobState]) -> Void] = [:]
 
   private static let maxAttempts = 3
   private static let retryDelays: [TimeInterval] = [1, 3]
@@ -151,7 +151,9 @@ final class UploadCenter: NSObject {
     stateQueue.sync { jobs }
   }
 
-  func observe(_ handler: @escaping ([UploadJobState]) -> Void) -> UUID {
+  func observe(
+    _ handler: @escaping @MainActor @Sendable ([UploadJobState]) -> Void
+  ) -> UUID {
     let token = UUID()
     stateQueue.sync {
       jobObservers[token] = handler
@@ -568,7 +570,7 @@ extension UploadCenter: URLSessionDataDelegate {
   }
 
   func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-    DispatchQueue.main.async {
+    Task { @MainActor in
       UploadCenter.backgroundCompletionHandler?()
       UploadCenter.backgroundCompletionHandler = nil
     }

@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 
+@MainActor
 final class PhotoFilterViewModel: ObservableObject {
   static let noDate = "none"
   static let customDate = "custom"

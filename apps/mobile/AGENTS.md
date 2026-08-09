@@ -13,7 +13,7 @@ requires validating production-only capabilities.
 | Default API | `http://localhost:1841` |
 | Authentication | Local password account |
 
-- Build and launch it with `pnpm --filter @afilmory/mobile ios:local`.
+- Build it with `pnpm --filter @afilmory/mobile ios:local`.
 - Start the local Core service before testing authentication or API-backed flows. A connection
   failure to port `1841` means the app selected the correct environment but the backend is not
   running.
@@ -23,31 +23,34 @@ requires validating production-only capabilities.
   widgets, Live Activities, and StoreKit sponsorship are also production-only.
 - Debug builds may temporarily change the API environment from Lab. Reset it to **Local** after a
   custom-environment test so later Agent Testing starts from the variant default.
-- Treat `apps/mobile/ios` and `apps/mobile/android` as generated output. Make persistent changes in
-  `app.config.ts`, config plugins, Expo modules, or `targets/`, then regenerate the native project.
+- Treat `apps/mobile/Afilmory.xcodeproj` as generated output. Make persistent project changes in
+  `apps/mobile/project.yml`, then run `pnpm --filter @afilmory/mobile native:generate`.
+- The deployment target is iOS 18. APIs introduced after iOS 18 must be guarded with availability
+  checks and provide an iOS 18 fallback.
 
 ## Verification
+
+Before launching either application variant in Simulator, start the memory guard in a separate
+terminal and keep it alive for the complete runtime verification:
+
+```bash
+pnpm --filter @afilmory/mobile native:memory-guard -- --limit-gib 30 --log /tmp/afilmory-memory-guard.log
+```
+
+The guard samples the Simulator app's physical memory footprint every 0.5 seconds. Reaching 30 GiB
+terminates the app and makes the verification fail. Start the guard before `simctl launch`, retain
+its log as verification evidence, and stop it only after the app has been terminated. CoreSimulator
+does not expose a per-app kernel hard limit, so this watchdog is mandatory for Agent Testing.
 
 Run the smallest relevant checks first:
 
 ```bash
-pnpm --filter @afilmory/mobile variant:test
-pnpm --filter @afilmory/mobile type-check
-pnpm --filter @afilmory/mobile bundle
+pnpm --filter @afilmory/mobile native:generate
+pnpm --filter @afilmory/mobile native:test
 ```
 
 For Local runtime changes, perform at least one Simulator build and verify that requests target
 `localhost:1841`.
-
-The native test setup currently expects the Production-generated `Afilmory` Xcode target. After a
-Local run, regenerate Production before executing native tests:
-
-```bash
-cd apps/mobile
-pnpm native:locales
-AFILMORY_APP_VARIANT=production pnpm exec expo prebuild -p ios --clean
-pnpm native:test
-```
 
 Use `pnpm --filter @afilmory/mobile ios:production` only when the task explicitly requires running
 the production application or validating production-only integrations.

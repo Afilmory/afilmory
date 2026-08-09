@@ -1,25 +1,23 @@
 # iOS Release
 
-CI: `.github/workflows/mobile-testflight.yml` — prebuild → archive → upload to TestFlight.
+CI: `.github/workflows/mobile-testflight.yml` — XcodeGen → SwiftPM resolution → archive → TestFlight upload.
 Trigger: push a `mobile-v*` tag, or run manually via workflow_dispatch.
 
 ## Local simulator variant
 
-The generated iOS project supports two independently installable variants. Production remains the
-safe default when `AFILMORY_APP_VARIANT` is omitted.
+The Xcode project exposes two independently installable schemes from the same Swift sources.
 
 | Variant | Command | Bundle ID | Default API |
 | --- | --- | --- | --- |
 | Production | `pnpm --filter @afilmory/mobile ios:production` | `app.afilmory` | `https://api.afilmory.art` |
 | Local | `pnpm --filter @afilmory/mobile ios:local` | `app.afilmory.local` | `http://localhost:1841` |
 
-Both commands run a clean Expo Prebuild before compiling because the generated native project keeps
-the previous variant's identifier. The Local build generates only the main application: Sign in with
-Apple, push notifications, Share Extension, widgets, Live Activities, and StoreKit sponsorship are
-production-only. Use the local password account for agent testing.
+Both commands synchronize localization resources, regenerate `Afilmory.xcodeproj`, and resolve the
+SwiftPM dependency graph. The Local scheme uses an empty entitlement set and disables Sign in with
+Apple, push registration, shared-upload handoff, Live Activity creation, and StoreKit sponsorship.
+Use the local password account for development testing.
 
-Run `pnpm --filter @afilmory/mobile variant:test` to verify the variant boundary without generating
-the native project.
+Run `pnpm --filter @afilmory/mobile native:test` for the Swift behavior suite.
 
 ## One-time setup
 
@@ -72,8 +70,7 @@ submitting a build:
    Connect.
 2. Under **Afilmory → Monetization → In-App Purchases**, create the consumable
    product above and add its required localization and review screenshot.
-3. Test the purchase with a Sandbox Apple Account on a development or TestFlight
-   build. Expo Go cannot load StoreKit purchases.
+3. Test the purchase with a Sandbox Apple Account on a signed development or TestFlight build.
 4. Submit the first in-app purchase together with the app version that exposes
    it, and describe the profile-sheet sponsorship path in App Review notes.
 
@@ -98,7 +95,7 @@ submitting a build:
 
 ## Per release
 
-1. Bump `expo.version` in `app.json` (build number: CI seeds it from the run number,
+1. Bump `MARKETING_VERSION` in `project.yml` (the build number is seeded from the CI run number,
    then Xcode auto-bumps past any build already on ASC via
    `manageAppVersionAndBuildNumber` — collisions with manual Xcode uploads are fine).
 2. Tag and push:

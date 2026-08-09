@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import PhotoMasonry
+@testable import Afilmory
 
 final class StudioHomeDataTests: XCTestCase {
   private let decoder: JSONDecoder = {

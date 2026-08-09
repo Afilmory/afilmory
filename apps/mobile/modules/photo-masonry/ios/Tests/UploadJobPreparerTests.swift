@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import PhotoMasonry
+@testable import Afilmory
 
 final class UploadJobPreparerTests: XCTestCase {
   func testFileBodySanitizesMultipartHeadersWithoutChangingPayload() throws {
@@ -98,11 +98,16 @@ final class UploadJobPreparerTests: XCTestCase {
     )
 
     XCTAssertEqual(
-      ShareUploadHandoff.parameters(from: url),
+      ShareUploadHandoff.parameters(from: url, scheme: "afilmory"),
       .init(batchID: batchID, tags: "travel,night")
     )
     XCTAssertNil(ShareUploadHandoff.parameters(from: URL(string: "https://example.com")!))
-    XCTAssertNil(ShareUploadHandoff.parameters(from: URL(string: "afilmory://share-upload?batchID=invalid")!))
+    XCTAssertNil(
+      ShareUploadHandoff.parameters(
+        from: URL(string: "afilmory://share-upload?batchID=invalid")!,
+        scheme: "afilmory"
+      )
+    )
     XCTAssertNil(ShareUploadHandoff.parameters(from: url, scheme: "afilmory-local"))
   }
 

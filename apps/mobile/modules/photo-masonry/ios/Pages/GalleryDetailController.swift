@@ -1,9 +1,7 @@
-import ExpoModulesCore
 import SwiftUI
 import UIKit
 
 final class GalleryDetailController: UIViewController {
-  private let appContext: AppContext?
   private let onRequestSignIn: () -> Void
   private let slug: String
   private let localization = Localization.shared
@@ -14,13 +12,11 @@ final class GalleryDetailController: UIViewController {
   init(
     slug: String,
     title: String,
-    appContext: AppContext?,
     onRequestSignIn: @escaping () -> Void
   ) {
     self.slug = slug
-    self.appContext = appContext
     self.onRequestSignIn = onRequestSignIn
-    masonryView = PhotoMasonryView(appContext: appContext)
+    masonryView = PhotoMasonryView(frame: .zero)
     super.init(nibName: nil, bundle: nil)
     self.title = title
     configureMasonry()
@@ -106,7 +102,6 @@ final class GalleryDetailController: UIViewController {
       photos: feed.photos,
       initialIndex: index,
       gallerySlug: slug,
-      appContext: appContext,
       localization: localization,
       onRequestSignIn: onRequestSignIn,
       sourceProvider: { [weak masonryView] photoId in
@@ -125,15 +120,14 @@ final class GalleryDetailController: UIViewController {
       present(controller, animated: true)
       return
     }
-    guard action == "info", let appContext else { return }
+    guard action == "info" else { return }
     let model = PhotoInfoModel.build(
       photo: photo,
       localization: localization,
       localeIdentifier: localization.language.localeIdentifier
     )
     guard let info = PhotoInfoSheetRecord.decode(
-      json: model.detailJSON(localization: localization),
-      appContext: appContext
+      json: model.detailJSON(localization: localization)
     ) else { return }
     let host = UIHostingController(rootView: PhotoInfoSectionsList(info: info))
     host.navigationItem.title = info.localization.title

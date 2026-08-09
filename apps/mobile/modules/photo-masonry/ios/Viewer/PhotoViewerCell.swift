@@ -1,6 +1,18 @@
 import SDWebImage
 import UIKit
 
+enum PhotoViewerImageLoadCallbacks {
+  nonisolated static func progress(
+    _ update: @escaping @MainActor @Sendable (_ receivedBytes: Int, _ expectedBytes: Int) -> Void
+  ) -> SDImageLoaderProgressBlock {
+    { receivedBytes, expectedBytes, _ in
+      Task { @MainActor in
+        update(receivedBytes, expectedBytes)
+      }
+    }
+  }
+}
+
 enum PhotoViewerImageSizing {
   static func aspectRatio(for photo: MasonryPhoto) -> CGFloat {
     if photo.width > 0, photo.height > 0 {
@@ -302,13 +314,11 @@ final class PhotoViewerCell: UICollectionViewCell, UIGestureRecognizerDelegate, 
         .imagePreserveAspectRatio: true,
         .imageThumbnailPixelSize: NSValue(cgSize: pixelSize),
       ],
-      progress: { [weak self] receivedBytes, expectedBytes, _ in
-        DispatchQueue.main.async {
-          guard let self, self.photo?.id == expectedPhotoId, self.loadedTier == tier else { return }
-          self.setOriginalLoadState(
-            .loading(tier: tier, receivedBytes: receivedBytes, expectedBytes: expectedBytes)
-          )
-        }
+      progress: PhotoViewerImageLoadCallbacks.progress { [weak self] receivedBytes, expectedBytes in
+        guard let self, self.photo?.id == expectedPhotoId, self.loadedTier == tier else { return }
+        self.setOriginalLoadState(
+          .loading(tier: tier, receivedBytes: receivedBytes, expectedBytes: expectedBytes)
+        )
       },
       completed: { [weak self] image, error, _, _ in
         guard let self, self.photo?.id == expectedPhotoId, self.loadedTier == tier else { return }

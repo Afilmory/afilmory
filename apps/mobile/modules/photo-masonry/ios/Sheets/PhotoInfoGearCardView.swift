@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PhotoInfoGearCardView: View {
-  let gear: PhotoInfoGearRecord
+  let gear: PhotoInfoGear
   let ratingLabel: String
 
   var body: some View {

@@ -2,10 +2,12 @@ import PhotosUI
 import SDWebImage
 import UIKit
 
+@MainActor
 enum LivePhotoBadgeArtwork {
   static let overContent: UIImage? = PHLivePhotoView.livePhotoBadgeImage(options: .overContent)
 }
 
+@MainActor
 enum ThumbHashCache {
   private static let cache = NSCache<NSString, UIImage>()
 

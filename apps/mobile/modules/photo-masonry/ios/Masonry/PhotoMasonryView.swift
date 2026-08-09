@@ -1,4 +1,3 @@
-import ExpoModulesCore
 import SDWebImage
 import UIKit
 
@@ -24,7 +23,7 @@ private final class PassthroughOverlayView: UIView {
   }
 }
 
-final class PhotoMasonryView: ExpoView {
+final class PhotoMasonryView: UIView {
   var onNativePhotoPress: ((Int) -> Void)?
   var onNativeVisibleRangeChange: ((Int, Int) -> Void)?
   var onNativeColumnCountChange: ((Int, CGFloat) -> Void)?
@@ -188,8 +187,8 @@ final class PhotoMasonryView: ExpoView {
   private var queryHeaderHeight: CGFloat = 0
   private var showsFilterSummary = false
 
-  required init(appContext: AppContext? = nil) {
-    super.init(appContext: appContext)
+  override init(frame: CGRect) {
+    super.init(frame: frame)
 
     layout.zoomPosition = CGFloat(columnCount)
     layout.gap = gap
@@ -202,12 +201,13 @@ final class PhotoMasonryView: ExpoView {
     collectionView.contentInsetAdjustmentBehavior = .always
     collectionView.showsVerticalScrollIndicator = false
     collectionView.alwaysBounceVertical = true
-    collectionView.topEdgeEffect.style = .soft
-
-    let interaction = UIScrollEdgeElementContainerInteraction()
-    interaction.scrollView = collectionView
-    interaction.edge = .top
-    overlayView.addInteraction(interaction)
+    if #available(iOS 26.0, *) {
+      collectionView.topEdgeEffect.style = .soft
+      let interaction = UIScrollEdgeElementContainerInteraction()
+      interaction.scrollView = collectionView
+      interaction.edge = .top
+      overlayView.addInteraction(interaction)
+    }
     collectionView.register(PhotoCell.self, forCellWithReuseIdentifier: PhotoCell.reuseIdentifier)
     collectionView.addSubview(queryHeaderView)
     queryHeaderView.isHidden = true
@@ -231,6 +231,11 @@ final class PhotoMasonryView: ExpoView {
     addSubview(overlayView)
 
     configureChrome()
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) is not supported")
   }
 
   override func layoutSubviews() {
@@ -381,17 +386,20 @@ final class PhotoMasonryView: ExpoView {
     // Apple's floating control clusters are a glass container holding individual glass
     // elements, which is what makes adjacent controls merge as they near each other and
     // deform under touch. Two standalone .glass() button configurations render neither.
-    let clusterEffect = UIGlassContainerEffect()
-    clusterEffect.spacing = chromeControlGap
-    controlCluster.effect = clusterEffect
+    if #available(iOS 26.0, *) {
+      let clusterEffect = UIGlassContainerEffect()
+      clusterEffect.spacing = chromeControlGap
+      controlCluster.effect = clusterEffect
+    }
     overlayView.addSubview(controlCluster)
 
     for glass in [profileGlass, filterGlass] {
       // The glass element is the surface only; its own interactive behaviour would
       // swallow touches before they reach the button hosted in its content view.
-      let effect = UIGlassEffect(style: .regular)
-      effect.isInteractive = true
-      glass.effect = effect
+      glass.effect = AdaptiveGlass.effect(
+        interactive: true,
+        fallbackStyle: .systemThinMaterialDark
+      )
       glass.clipsToBounds = true
       glass.layer.cornerCurve = .circular
       controlCluster.contentView.addSubview(glass)
@@ -443,7 +451,7 @@ final class PhotoMasonryView: ExpoView {
   }
 
   private func makeChromeConfiguration(prominent: Bool = false) -> UIButton.Configuration {
-    var configuration: UIButton.Configuration = prominent ? .prominentGlass() : .glass()
+    var configuration = AdaptiveGlass.buttonConfiguration(prominent: prominent)
     if prominent {
       // Prominent glass takes its fill from the tint, which would otherwise resolve to the
       // system accent. A neutral translucent black keeps it glass while giving the fixed
@@ -513,12 +521,16 @@ final class PhotoMasonryView: ExpoView {
   }
 
   private func armDateIdleTimer(after delay: TimeInterval) {
-    dateIdleTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
-      self?.handleDateIdleTimer()
-    }
+    dateIdleTimer = Timer.scheduledTimer(
+      timeInterval: delay,
+      target: self,
+      selector: #selector(handleDateIdleTimer),
+      userInfo: nil,
+      repeats: false
+    )
   }
 
-  private func handleDateIdleTimer() {
+  @objc private func handleDateIdleTimer() {
     dateIdleTimer = nil
     let elapsed = CACurrentMediaTime() - lastUserScrollAt
     if elapsed >= dateAnchorIdleDelay {

@@ -141,7 +141,7 @@ struct ShareUploadView: View {
       .lineLimit(1)
       .frame(maxWidth: .infinity)
     }
-    .buttonStyle(.glassProminent)
+    .shareUploadButtonStyle()
     .controlSize(.large)
     .disabled(model.items.isEmpty || model.isSubmitting)
     .simultaneousGesture(
@@ -153,5 +153,16 @@ struct ShareUploadView: View {
     .padding(.horizontal, 20)
     .padding(.vertical, 12)
     .background(.bar)
+  }
+}
+
+private extension View {
+  @ViewBuilder
+  func shareUploadButtonStyle() -> some View {
+    if #available(iOS 26.0, *) {
+      buttonStyle(.glassProminent)
+    } else {
+      buttonStyle(.borderedProminent)
+    }
   }
 }

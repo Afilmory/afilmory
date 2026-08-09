@@ -1,11 +1,10 @@
-import ExpoModulesCore
 import SwiftUI
 import UIKit
 
 final class PhotoDetailInfoView: UIView {
   private var info = PhotoInfoSheetRecord()
   private var hostingController: UIHostingController<PhotoInfoInspectorView>!
-  private var scrollEdgeInteraction: UIScrollEdgeElementContainerInteraction?
+  private var scrollEdgeInteraction: AnyObject?
   private weak var edgeEffectScrollView: UIScrollView?
 
   override init(frame: CGRect) {
@@ -31,8 +30,9 @@ final class PhotoDetailInfoView: UIView {
   /// it gets the system soft edge effect. SwiftUI cannot do this itself — the
   /// toolbar is a UIKit sibling, so it is invisible to `scrollEdgeEffectStyle`.
   func installScrollEdgeEffect(under container: UIView) {
+    guard #available(iOS 26.0, *) else { return }
     guard let scrollView = firstScrollView(in: self), scrollView !== edgeEffectScrollView else { return }
-    if let interaction = scrollEdgeInteraction {
+    if let interaction = scrollEdgeInteraction as? UIScrollEdgeElementContainerInteraction {
       container.removeInteraction(interaction)
     }
     scrollView.bottomEdgeEffect.style = .soft
@@ -66,10 +66,8 @@ final class PhotoDetailInfoView: UIView {
     }
   }
 
-  func setInfoJSON(_ json: String, appContext: AppContext?) {
-    guard let appContext,
-          let decoded = PhotoInfoSheetRecord.decode(json: json, appContext: appContext)
-    else { return }
+  func setInfoJSON(_ json: String) {
+    guard let decoded = PhotoInfoSheetRecord.decode(json: json) else { return }
     info = decoded
     hostingController.rootView = makeRootView()
   }

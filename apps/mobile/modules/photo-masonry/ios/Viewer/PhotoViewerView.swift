@@ -1,8 +1,7 @@
-import ExpoModulesCore
 import SDWebImage
 import UIKit
 
-final class PhotoViewerView: ExpoView {
+final class PhotoViewerView: UIView {
   var onNativeIndexChange: ((MasonryPhoto, Int) -> Void)?
   var onNativeInfoRequest: (() -> Void)?
   var onNativeRequestClose: (() -> Void)?
@@ -41,8 +40,8 @@ final class PhotoViewerView: ExpoView {
   private var prefetchTokens: [Int: SDWebImagePrefetchToken] = [:]
   private var liveBadgeAlpha: CGFloat = 1
 
-  required init(appContext: AppContext? = nil) {
-    super.init(appContext: appContext)
+  override init(frame: CGRect) {
+    super.init(frame: frame)
 
     backgroundColor = .clear
     layout.minimumInteritemSpacing = 0
@@ -60,6 +59,11 @@ final class PhotoViewerView: ExpoView {
     collectionView.register(PhotoViewerCell.self, forCellWithReuseIdentifier: PhotoViewerCell.reuseIdentifier)
     addSubview(collectionView)
 
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) is not supported")
   }
 
   override func layoutSubviews() {

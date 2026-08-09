@@ -18,7 +18,7 @@
     "create:doc": "tsx scripts/create-doc.ts",
     "dev": "pnpm --filter @afilmory/ssr dev",
     "dev:be": "pnpm --filter @afilmory/be dev",
-    "dev:mobile": "pnpm --filter @afilmory/mobile start",
+    "dev:mobile": "pnpm --filter @afilmory/mobile ios:local",
     "docs:build": "pnpm --filter @afilmory/docs build",
     "docs:dev": "pnpm --filter @afilmory/docs dev",
     "docs:preview": "pnpm --filter @afilmory/docs preview",

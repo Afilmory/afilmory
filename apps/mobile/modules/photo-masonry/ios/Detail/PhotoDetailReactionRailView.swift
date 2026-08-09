@@ -11,7 +11,9 @@ final class PhotoDetailReactionRailView: UIView {
 
   // One glass surface for the whole group, with the reactions sitting on it as
   // plain buttons — not six separate glass circles.
-  private let container = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
+  private let container = UIVisualEffectView(
+    effect: AdaptiveGlass.effect(fallbackStyle: .systemThinMaterialDark)
+  )
   private let chargeRing = PhotoDetailReactionChargeRing()
   private let focusLabel = PhotoDetailReactionFocusLabel()
   private let haptics = PhotoDetailReactionHaptics()

@@ -1,4 +1,3 @@
-import ExpoModulesCore
 import SwiftUI
 import UIKit
 
@@ -48,7 +47,6 @@ final class PhotoDetailViewController: UIViewController {
     photos: [GalleryPhoto],
     initialIndex: Int,
     gallerySlug: String?,
-    appContext: AppContext?,
     localization: Localization = .shared,
     onRequestSignIn: @escaping () -> Void = {},
     sourceProvider: @escaping (String) -> UIView?
@@ -60,7 +58,7 @@ final class PhotoDetailViewController: UIViewController {
     self.onRequestSignIn = onRequestSignIn
     self.sourceProvider = sourceProvider
     currentIndex = self.initialIndex
-    detailView = PhotoDetailView(appContext: appContext)
+    detailView = PhotoDetailView(frame: .zero)
     super.init(nibName: nil, bundle: nil)
 
     transitionDelegateOwner = PhotoTransitionDelegate(detailController: self)
@@ -352,7 +350,7 @@ final class PhotoDetailViewController: UIViewController {
           let baseURL = try? ApiEnvironmentStore.shared.galleryAPIBaseURL(slug: gallerySlug)
     else { return }
 
-    let request = PhotoCommentsSheetRequest()
+    var request = PhotoCommentsSheetRequest()
     request.gallerySlug = gallerySlug
     request.photoId = photoId
     request.photoTitle = photos[index].title

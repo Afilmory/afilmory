@@ -38,7 +38,6 @@ final class LivePhotoPlaybackView: UIView {
   private var playbackGeneration = 0
   private var videoURL: URL?
   private var player: AVPlayer?
-  private var playbackEndObserver: NSObjectProtocol?
   private var reverseProgressObserver: Any?
   private var layerReadinessObservation: NSKeyValueObservation?
   private var itemStatusObservation: NSKeyValueObservation?
@@ -61,7 +60,7 @@ final class LivePhotoPlaybackView: UIView {
     fatalError("init(coder:) is not supported")
   }
 
-  deinit {
+  isolated deinit {
     tearDownPlayer()
   }
 
@@ -161,14 +160,19 @@ final class LivePhotoPlaybackView: UIView {
       }
     }
 
-    playbackEndObserver = NotificationCenter.default.addObserver(
-      forName: .AVPlayerItemDidPlayToEndTime,
-      object: item,
-      queue: .main
-    ) { [weak self] _ in
-      guard let self, self.player?.currentItem === item else { return }
-      self.handlePlaybackReachedEnd()
-    }
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(playbackReachedEnd(_:)),
+      name: .AVPlayerItemDidPlayToEndTime,
+      object: item
+    )
+  }
+
+  @objc private func playbackReachedEnd(_ notification: Notification) {
+    guard let item = notification.object as? AVPlayerItem,
+          player?.currentItem === item
+    else { return }
+    handlePlaybackReachedEnd()
   }
 
   private func handlePlaybackReachedEnd() {
@@ -187,10 +191,13 @@ final class LivePhotoPlaybackView: UIView {
     guard let player else { return }
     let generation = playbackGeneration
     player.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] finished in
-      guard finished, let self, self.playbackGeneration == generation, self.isPlaying else {
-        return
+      guard finished else { return }
+      DispatchQueue.main.async {
+        guard let self, self.playbackGeneration == generation, self.isPlaying else {
+          return
+        }
+        self.player?.play()
       }
-      self.player?.play()
     }
   }
 
@@ -211,12 +218,14 @@ final class LivePhotoPlaybackView: UIView {
       forInterval: CMTime(value: 1, timescale: 30),
       queue: .main
     ) { [weak self] time in
-      guard let self, let player = self.player, player.rate < 0, time.seconds <= 0.05 else {
-        return
+      DispatchQueue.main.async {
+        guard let self, let player = self.player, player.rate < 0, time.seconds <= 0.05 else {
+          return
+        }
+        self.stopReverseProgressObserver()
+        guard self.isPlaying else { return }
+        self.replayFromStart()
       }
-      self.stopReverseProgressObserver()
-      guard self.isPlaying else { return }
-      self.replayFromStart()
     }
   }
 
@@ -232,10 +241,11 @@ final class LivePhotoPlaybackView: UIView {
     layerReadinessObservation = nil
     itemStatusObservation?.invalidate()
     itemStatusObservation = nil
-    if let playbackEndObserver {
-      NotificationCenter.default.removeObserver(playbackEndObserver)
-    }
-    playbackEndObserver = nil
+    NotificationCenter.default.removeObserver(
+      self,
+      name: .AVPlayerItemDidPlayToEndTime,
+      object: nil
+    )
     player?.pause()
     player?.replaceCurrentItem(with: nil)
     playerLayer.player = nil

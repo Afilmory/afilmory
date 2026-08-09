@@ -6,7 +6,7 @@ private let streamInterval: TimeInterval = 0.18
 // The hold-then-repeat timing lives here rather than in the rail: it is a clock,
 // not a view, and keeping it separate is what lets the rail be tested by looking
 // at geometry alone.
-final class PhotoDetailReactionStreamDriver {
+final class PhotoDetailReactionStreamDriver: NSObject {
   var onStreamBegan: (() -> Void)?
   var onShot: ((Int, CGFloat) -> Void)?
 
@@ -23,9 +23,13 @@ final class PhotoDetailReactionStreamDriver {
 
   func armHold() {
     holdTimer?.invalidate()
-    holdTimer = Timer.scheduledTimer(withTimeInterval: holdToStreamDelay, repeats: false) { [weak self] _ in
-      self?.beginStream()
-    }
+    holdTimer = Timer.scheduledTimer(
+      timeInterval: holdToStreamDelay,
+      target: self,
+      selector: #selector(beginStream),
+      userInfo: nil,
+      repeats: false
+    )
   }
 
   func stopTimers() {
@@ -42,17 +46,21 @@ final class PhotoDetailReactionStreamDriver {
     shots = 0
   }
 
-  private func beginStream() {
+  @objc private func beginStream() {
     guard !isStreaming else { return }
     isStreaming = true
     onStreamBegan?()
     fire()
-    streamTimer = Timer.scheduledTimer(withTimeInterval: streamInterval, repeats: true) { [weak self] _ in
-      self?.fire()
-    }
+    streamTimer = Timer.scheduledTimer(
+      timeInterval: streamInterval,
+      target: self,
+      selector: #selector(fire),
+      userInfo: nil,
+      repeats: true
+    )
   }
 
-  private func fire() {
+  @objc private func fire() {
     guard isStreaming, pendingCount < PhotoDetailReactionGeometry.comboCap else { return }
     pendingCount += 1
     let progress = PhotoDetailReactionGeometry.streamProgress(shotIndex: shots)

@@ -5,6 +5,7 @@ import UIKit
 // elsewhere in the system. Only the stream drops to Core Haptics: repeated
 // generator calls at the stream interval get coalesced into mush, and they
 // cannot ramp intensity, which is the whole point of holding longer.
+@MainActor
 final class PhotoDetailReactionHaptics {
   private let selection = UISelectionFeedbackGenerator()
   private let soft = UIImpactFeedbackGenerator(style: .soft)

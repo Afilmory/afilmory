@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import PhotoMasonry
+@testable import Afilmory
 
 final class PhotoLoadPillStateMachineTests: XCTestCase {
   func testFastLoadNeverShows() {
@@ -94,5 +94,24 @@ final class PhotoLoadPillStateMachineTests: XCTestCase {
 
     machine.handle(.failed, now: 0.5)
     XCTAssertEqual(machine.nextDeadline, 0.5 + PhotoLoadPillStateMachine.errorHold)
+  }
+}
+
+final class PhotoViewerImageLoadCallbacksTests: XCTestCase {
+  @MainActor
+  func testProgressCallbackReturnsToMainActorWhenInvokedFromBackgroundQueue() async {
+    let callbackHandled = expectation(description: "Progress callback handled on MainActor")
+    let callback = PhotoViewerImageLoadCallbacks.progress { receivedBytes, expectedBytes in
+      MainActor.assertIsolated()
+      XCTAssertEqual(receivedBytes, 256)
+      XCTAssertEqual(expectedBytes, 1_024)
+      callbackHandled.fulfill()
+    }
+
+    DispatchQueue.global(qos: .userInitiated).async {
+      callback(256, 1_024, nil)
+    }
+
+    await fulfillment(of: [callbackHandled], timeout: 1)
   }
 }

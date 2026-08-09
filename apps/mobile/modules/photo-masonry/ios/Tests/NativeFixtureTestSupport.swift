@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import PhotoMasonry
+@testable import Afilmory
 
 final class NativeFixtureBundleToken {}
 

@@ -1,8 +1,7 @@
-import ExpoModulesCore
 import UIKit
 
-final class UploadFabView: ExpoView {
-  private let glass = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
+final class UploadFabView: UIView {
+  private let glass = UIVisualEffectView(effect: AdaptiveGlass.effect())
   private let trackLayer = CAShapeLayer()
   private let ringLayer = CAShapeLayer()
   private let countLabel = UILabel()
@@ -10,8 +9,12 @@ final class UploadFabView: ExpoView {
   private var observerToken: UUID?
   private var localization: [String: String] = [:]
 
-  required init(appContext: AppContext? = nil) {
-    super.init(appContext: appContext)
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+
+    isAccessibilityElement = true
+    accessibilityTraits = .button
+    accessibilityLabel = "Uploads"
 
     glass.clipsToBounds = true
     addSubview(glass)
@@ -46,6 +49,11 @@ final class UploadFabView: ExpoView {
     }
   }
 
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) is not supported")
+  }
+
   deinit {
     if let observerToken {
       UploadCenter.shared.unobserve(observerToken)
@@ -54,6 +62,7 @@ final class UploadFabView: ExpoView {
 
   func setLocalization(_ value: [String: String]) {
     localization = value
+    accessibilityLabel = value["title"] ?? "Uploads"
   }
 
   override func layoutSubviews() {
@@ -84,14 +93,20 @@ final class UploadFabView: ExpoView {
       ringLayer.strokeColor = UIColor.systemRed.cgColor
       ringLayer.strokeEnd = 1
       showSymbol("exclamationmark", tint: .systemRed)
+      accessibilityValue = UploadQueueLocalization(dictionary: localization)
+        .failed(count: summary.failed)
     } else if summary.running {
       ringLayer.strokeColor = UIColor.tintColor.cgColor
       ringLayer.strokeEnd = max(0.02, summary.progress)
       showCount(done: summary.done, total: summary.total)
+      accessibilityValue = UploadQueueLocalization(dictionary: localization)
+        .headline(done: summary.done, total: summary.total)
     } else {
       ringLayer.strokeColor = UIColor.systemGreen.cgColor
       ringLayer.strokeEnd = 1
       showSymbol("checkmark", tint: .systemGreen)
+      accessibilityValue = UploadQueueLocalization(dictionary: localization)
+        .headline(done: summary.done, total: summary.total)
     }
     CATransaction.commit()
   }
@@ -110,7 +125,7 @@ final class UploadFabView: ExpoView {
   }
 
   @objc private func handleTap() {
-    guard let presenter = appContext?.utilities?.currentViewController() else { return }
+    guard let presenter = nearestViewController else { return }
     UploadQueuePresenter.present(
       from: presenter,
       localization: UploadQueueLocalization(dictionary: localization)

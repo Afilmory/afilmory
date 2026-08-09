@@ -26,29 +26,17 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: .
-
       - name: Generate native localization resources
-        run: pnpm native:locales
+        run: bash scripts/sync-locales.sh
 
-      - name: Prebuild iOS project
-        run: pnpm exec expo prebuild -p ios --no-install
+      - name: Install XcodeGen
+        run: brew list xcodegen > /dev/null 2>&1 || brew install xcodegen
 
-      - name: Pod install
-        run: pod install --project-directory=ios
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
 
-      - name: Set build number
-        run: /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" ios/Afilmory/Info.plist
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project Afilmory.xcodeproj -scheme Afilmory
 
       - name: Import signing assets
         env:
@@ -72,7 +60,7 @@ jobs:
           command -v xcbeautify > /dev/null || brew install xcbeautify
           # The widget extension generates its Info.plist, so its CFBundleVersion comes
           # from CURRENT_PROJECT_VERSION — it must match the app or ASC rejects the build.
-          xcodebuild -workspace ios/Afilmory.xcworkspace \
+          xcodebuild -project Afilmory.xcodeproj \
             -scheme Afilmory \
             -configuration Release \
             -destination generic/platform=iOS \
@@ -85,7 +73,7 @@ jobs:
 
       - name: Verify native localization resources
         run: |
-          LOCALES_BUNDLE="$RUNNER_TEMP/Afilmory.xcarchive/Products/Applications/Afilmory.app/AfilmoryLocales.bundle"
+          LOCALES_BUNDLE="$RUNNER_TEMP/Afilmory.xcarchive/Products/Applications/Afilmory.app"
           for namespace in app mobile; do
             for language in en jp ko zh-CN zh-HK zh-TW; do
               test -s "$LOCALES_BUNDLE/$namespace-$language.json"

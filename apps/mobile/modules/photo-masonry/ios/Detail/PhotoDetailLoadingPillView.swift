@@ -97,7 +97,9 @@ final class PhotoDetailLoadingPillView: UIView {
   private static let ringSpacing: CGFloat = 8
   private static let lineSpacing: CGFloat = 2
 
-  private let backgroundView = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
+  private let backgroundView = UIVisualEffectView(
+    effect: AdaptiveGlass.effect(fallbackStyle: .systemThinMaterialDark)
+  )
   private let ringView = UIView()
   private let trackLayer = CAShapeLayer()
   private let progressLayer = CAShapeLayer()

@@ -73,7 +73,9 @@ final class LivePhotoBadgeView: UIButton {
   // `.clear` reads as truer glass but adds no dimming, and the 75%-white caption
   // loses the backdrop over a saturated frame. `.regular` is what the rest of the
   // chrome floats on.
-  private let backgroundView = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
+  private let backgroundView = UIVisualEffectView(
+    effect: AdaptiveGlass.effect(fallbackStyle: .systemThinMaterialDark)
+  )
   private let glyphView = UIImageView()
   private let captionLabel = UILabel()
   private let chevronView = UIImageView()

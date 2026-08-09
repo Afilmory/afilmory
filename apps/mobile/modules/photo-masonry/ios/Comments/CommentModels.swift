@@ -1,5 +1,37 @@
-import ExpoModulesCore
 import Foundation
+
+@propertyWrapper
+struct FlexibleReactionCounts: Decodable, Equatable, Sendable {
+  var wrappedValue: [String: Int]
+
+  init(wrappedValue: [String: Int]) {
+    self.wrappedValue = wrappedValue
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.singleValueContainer().decode([String: JSONValue].self)
+    wrappedValue = try values.reduce(into: [:]) { result, entry in
+      let count: Int?
+      switch entry.value {
+      case .number(let value):
+        count = Int(exactly: value)
+      case .string(let value):
+        count = Int(value)
+      default:
+        count = nil
+      }
+      guard let count else {
+        throw DecodingError.dataCorrupted(
+          .init(
+            codingPath: decoder.codingPath,
+            debugDescription: "Reaction count for \(entry.key) is not an integer"
+          )
+        )
+      }
+      result[entry.key] = count
+    }
+  }
+}
 
 enum CommentStatus: String, Decodable {
   case approved
@@ -22,7 +54,7 @@ struct CommentItem: Decodable, Identifiable {
   var status: CommentStatus
   var createdAt: String
   var updatedAt: String
-  var reactionCounts: [String: Int]
+  @FlexibleReactionCounts var reactionCounts: [String: Int]
   var viewerReactions: [String]
   var clientId: String?
   var deliveryState: CommentDeliveryState?
@@ -70,14 +102,14 @@ struct CommentReactionBody: Encodable {
   let reaction: String
 }
 
-struct PhotoCommentsSheetRequest: Record {
-  @Field var gallerySlug: String = ""
-  @Field var photoId: String = ""
-  @Field var photoTitle: String = ""
-  @Field var baseURL: String = ""
-  @Field var viewerUserId: String?
-  @Field var initialCommentCount: Int = -1
-  @Field var localizationJSON: String = ""
+struct PhotoCommentsSheetRequest {
+  var gallerySlug: String = ""
+  var photoId: String = ""
+  var photoTitle: String = ""
+  var baseURL: String = ""
+  var viewerUserId: String?
+  var initialCommentCount: Int = -1
+  var localizationJSON: String = ""
 }
 
 struct CommentLocalization: Decodable {

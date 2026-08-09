@@ -1,5 +1,5 @@
 import XCTest
-@testable import PhotoMasonry
+@testable import Afilmory
 
 @MainActor
 final class PhotoFeedStoreCacheTests: XCTestCase {

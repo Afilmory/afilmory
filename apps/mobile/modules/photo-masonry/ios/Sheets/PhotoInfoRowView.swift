@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PhotoInfoRowView: View {
-  let row: PhotoInfoRowRecord
+  let row: PhotoInfoRow
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: 16) {

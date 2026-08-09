@@ -72,7 +72,7 @@ struct UploadReviewSheetView: View {
 
       HStack(spacing: 12) {
         Button(localization.cancel) { onFinish(.cancel) }
-          .buttonStyle(.glass)
+          .uploadReviewSecondaryButtonStyle()
           .controlSize(.large)
 
         Button {
@@ -80,7 +80,7 @@ struct UploadReviewSheetView: View {
         } label: {
           Text(localization.start(count: items.count)).frame(maxWidth: .infinity)
         }
-        .buttonStyle(.glassProminent)
+        .uploadReviewPrimaryButtonStyle()
         .controlSize(.large)
         .disabled(items.isEmpty)
       }
@@ -154,6 +154,26 @@ struct UploadReviewSheetView: View {
       }
     }
     draft = ""
+  }
+}
+
+private extension View {
+  @ViewBuilder
+  func uploadReviewSecondaryButtonStyle() -> some View {
+    if #available(iOS 26.0, *) {
+      buttonStyle(.glass)
+    } else {
+      buttonStyle(.bordered)
+    }
+  }
+
+  @ViewBuilder
+  func uploadReviewPrimaryButtonStyle() -> some View {
+    if #available(iOS 26.0, *) {
+      buttonStyle(.glassProminent)
+    } else {
+      buttonStyle(.borderedProminent)
+    }
   }
 }
 

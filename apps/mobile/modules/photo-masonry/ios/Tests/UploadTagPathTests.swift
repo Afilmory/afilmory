@@ -1,5 +1,5 @@
 import XCTest
-@testable import PhotoMasonry
+@testable import Afilmory
 
 final class UploadTagPathTests: XCTestCase {
   func testParseNormalizesAndDeduplicatesTags() {
