@@ -51,6 +51,7 @@ struct StudioSSEFramer: Sendable {
 
 enum NativeStudioAPI {
   private static let logger = Logger(subsystem: "app.afilmory", category: "studio-data-sync")
+  private static let session = AfilmoryURLSessionFactory.cookieIsolated()
 
   static func analytics() async throws -> StudioAnalyticsResponse {
     try await AfilmoryAPI.shared.request(
@@ -132,7 +133,7 @@ enum NativeStudioAPI {
       request.setValue(cookie, forHTTPHeaderField: "Cookie")
     }
 
-    let (bytes, response) = try await URLSession.shared.bytes(for: request)
+    let (bytes, response) = try await session.bytes(for: request)
     guard let http = response as? HTTPURLResponse else { throw NativeAuthError.invalidResponse }
     guard (200..<300).contains(http.statusCode) else {
       throw NativeAuthError.server("HTTP \(http.statusCode)")
@@ -203,7 +204,7 @@ enum NativeStudioAPI {
     if let cookie = snapshot.cookie {
       request.setValue(cookie, forHTTPHeaderField: "Cookie")
     }
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await session.data(for: request)
     guard let http = response as? HTTPURLResponse else { throw NativeAuthError.invalidResponse }
     guard (200..<300).contains(http.statusCode) else {
       throw APIError.response(status: http.statusCode, body: data) ?? NativeAuthError.invalidResponse

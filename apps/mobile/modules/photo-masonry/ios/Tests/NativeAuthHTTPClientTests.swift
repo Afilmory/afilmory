@@ -43,11 +43,22 @@ final class NativeAuthHTTPClientTests: XCTestCase {
     XCTAssertEqual(request.httpMethod, "POST")
     XCTAssertEqual(request.timeoutInterval, 15)
     XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "application/json")
+    XCTAssertEqual(
+      request.value(forHTTPHeaderField: "Origin"),
+      "\(AfilmoryBuildConfiguration.urlScheme)://"
+    )
     let body = try XCTUnwrap(request.httpBody)
     let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
     XCTAssertEqual(payload["email"], "native@example.com")
     XCTAssertEqual(payload["password"], "secret")
     XCTAssertEqual(response.cookie, "afilmory-tenant.session=session-value")
+  }
+
+  func testDefaultAuthSessionDoesNotRetainAmbientCookies() {
+    let configuration = AfilmoryURLSessionFactory.cookieIsolatedConfiguration()
+
+    XCTAssertFalse(configuration.httpShouldSetCookies)
+    XCTAssertNil(configuration.httpCookieStorage)
   }
 
   func testOAuthCallbackErrorPreservesProviderDescriptionAndCode() throws {

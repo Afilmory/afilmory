@@ -13,9 +13,9 @@ The Xcode project exposes two independently installable schemes from the same Sw
 | Local | `pnpm --filter @afilmory/mobile ios:local` | `app.afilmory.local` | `http://localhost:1841` |
 
 Both commands synchronize localization resources, regenerate `Afilmory.xcodeproj`, and resolve the
-SwiftPM dependency graph. The Local scheme uses an empty entitlement set and disables Sign in with
-Apple, push registration, shared-upload handoff, Live Activity creation, and StoreKit sponsorship.
-Use the local password account for development testing.
+SwiftPM dependency graph. The Local scheme carries only its default Keychain access group and
+disables Sign in with Apple, push registration, shared-upload handoff, Live Activity creation, and
+StoreKit sponsorship. Use the local password account for development testing.
 
 Run `pnpm --filter @afilmory/mobile native:test` for the Swift behavior suite.
 

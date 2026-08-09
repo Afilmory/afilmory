@@ -1,4 +1,18 @@
 import Foundation
+import OSLog
+
+enum AfilmoryURLSessionFactory {
+  static func cookieIsolatedConfiguration() -> URLSessionConfiguration {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.httpCookieStorage = nil
+    configuration.httpShouldSetCookies = false
+    return configuration
+  }
+
+  static func cookieIsolated() -> URLSession {
+    URLSession(configuration: cookieIsolatedConfiguration())
+  }
+}
 
 private enum AfilmoryAPIConfigurationError: LocalizedError {
   case invalidBaseURL
@@ -30,16 +44,17 @@ enum ManifestFetchOutcome: Sendable {
 
 final class AfilmoryAPI: @unchecked Sendable {
   static let shared = AfilmoryAPI()
+  private static let logger = Logger(subsystem: "app.afilmory", category: "session-store")
 
   private let session: URLSession
   private let sessionStore: AfilmorySessionStore
   private let decoder: JSONDecoder
 
   init(
-    session: URLSession = .shared,
+    session: URLSession? = nil,
     sessionStore: AfilmorySessionStore = .shared
   ) {
-    self.session = session
+    self.session = session ?? AfilmoryURLSessionFactory.cookieIsolated()
     self.sessionStore = sessionStore
     decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -120,6 +135,11 @@ final class AfilmoryAPI: @unchecked Sendable {
 
     guard let httpResponse = response as? HTTPURLResponse else {
       throw APIError.transport(AfilmoryAPIConfigurationError.nonHTTPResponse)
+    }
+    if case .platform = endpoint.baseURL, endpoint.path == "auth/session" {
+      Self.logger.notice(
+        "Session validation response; status=\(httpResponse.statusCode, privacy: .public); suppliedCookie=\(sessionSnapshot.cookie != nil, privacy: .public)"
+      )
     }
     if let responseError = APIError.response(status: httpResponse.statusCode, body: data) {
       throw responseError

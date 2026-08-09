@@ -48,7 +48,7 @@ Dependencies: SwiftPM only — SDWebImage, pinned to an exact version in `projec
 | Default API | `http://localhost:1841` | `https://api.afilmory.art` |
 | App Group | none | `group.app.afilmory` |
 
-The variant flows `project.yml` build settings → `Info.plist` (`AfilmoryAppVariant`, `AfilmoryURLScheme`, `AfilmoryAppGroupIdentifier`) → `AfilmoryBuildConfiguration`. That enum is the single gate for variant-conditional capabilities (`supportsAppleAuthentication`, `supportsPushNotifications`, `supportsShareExtension`, `supportsStoreKitSponsorship`, `allowsApiEnvironmentOverride`). **Add new capability gates there** rather than scattering `#if DEBUG` or bundle-ID checks. Local runs with an empty entitlement set, so Sign in with Apple, APNs, share-extension handoff, Live Activities, and StoreKit are all unavailable there by construction.
+The variant flows `project.yml` build settings → `Info.plist` (`AfilmoryAppVariant`, `AfilmoryURLScheme`, `AfilmoryAppGroupIdentifier`) → `AfilmoryBuildConfiguration`. That enum is the single gate for variant-conditional capabilities (`supportsAppleAuthentication`, `supportsPushNotifications`, `supportsShareExtension`, `supportsStoreKitSponsorship`, `allowsApiEnvironmentOverride`). **Add new capability gates there** rather than scattering `#if DEBUG` or bundle-ID checks. Local carries only its default Keychain access group for native session persistence, so Sign in with Apple, APNs, share-extension handoff, Live Activities, and StoreKit remain unavailable there by construction.
 
 ## Source layout
 

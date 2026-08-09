@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Security
 import UIKit
 
@@ -28,6 +29,7 @@ protocol SessionCookieStorage: Sendable {
 }
 
 struct KeychainSessionCookieStorage: SessionCookieStorage {
+  private static let logger = Logger(subsystem: "app.afilmory", category: "session-store")
   private static var service: String {
     "\(Bundle.main.bundleIdentifier ?? "app.afilmory").session.cookie"
   }
@@ -39,9 +41,16 @@ struct KeychainSessionCookieStorage: SessionCookieStorage {
     query[kSecMatchLimit as String] = kSecMatchLimitOne
 
     var result: CFTypeRef?
-    guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+    let status = SecItemCopyMatching(query as CFDictionary, &result)
+    guard status == errSecSuccess,
           let data = result as? Data
-    else { return nil }
+    else {
+      Self.logger.notice("Keychain session read; status=\(status, privacy: .public); found=false")
+      return nil
+    }
+    Self.logger.notice(
+      "Keychain session read; status=\(status, privacy: .public); found=true; bytes=\(data.count, privacy: .public)"
+    )
     return String(data: data, encoding: .utf8)
   }
 
@@ -55,6 +64,10 @@ struct KeychainSessionCookieStorage: SessionCookieStorage {
     let status = SecItemAdd(attributes as CFDictionary, nil)
     if status != errSecSuccess {
       NSLog("[AfilmorySessionStore] Unable to persist the session cookie: %d", status)
+    } else {
+      Self.logger.notice(
+        "Keychain session write succeeded; bytes=\(cookie.utf8.count, privacy: .public)"
+      )
     }
   }
 
@@ -76,6 +89,7 @@ struct KeychainSessionCookieStorage: SessionCookieStorage {
 
 final class AfilmorySessionStore: @unchecked Sendable {
   static let shared = AfilmorySessionStore()
+  private static let logger = Logger(subsystem: "app.afilmory", category: "session-store")
 
   private let repository: PhotoCacheRepository
   private let transport: SessionTransport
@@ -130,6 +144,7 @@ final class AfilmorySessionStore: @unchecked Sendable {
     lock.withLock {
       self.cookie = normalized
     }
+    Self.logger.notice("Registering validated session; bytes=\(normalized.utf8.count, privacy: .public)")
     cookieStorage.write(normalized)
     refreshSession()
   }
@@ -256,19 +271,25 @@ final class AfilmorySessionStore: @unchecked Sendable {
       let response = try await transport.fetchSession()
       guard !Task.isCancelled, isCurrentRefresh(generation) else { return }
       guard let session = response?.resolved() else {
+        Self.logger.error("Session validation returned no active session.")
         await applyServerSignOut(generation: generation)
         return
       }
+      Self.logger.notice("Session validation succeeded.")
       ApiEnvironmentStore.shared.activateTenant(slug: session.activeWorkspace?.slug)
       if let payload = try? JSONEncoder().encode(session) {
         await repository.saveSession(payload)
       }
       completeRefresh(generation: generation, state: .signedIn(session))
     } catch APIError.unauthorized {
+      Self.logger.error("Session validation returned unauthorized.")
       await applyServerSignOut(generation: generation)
     } catch APIError.cancelled {
       return
     } catch {
+      Self.logger.error(
+        "Session validation failed; error=\(error.localizedDescription, privacy: .public)"
+      )
       completeRefreshKeepingSession(generation: generation, error: error)
     }
   }

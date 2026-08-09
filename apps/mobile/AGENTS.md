@@ -19,8 +19,9 @@ requires validating production-only capabilities.
   running.
 - Confirm that the Simulator target is `Afilmory Local`; the production `Afilmory` app may be
   installed at the same time and must not be used accidentally.
-- Do not attempt Sign in with Apple in the Local variant. Push notifications, Share Extension,
-  widgets, Live Activities, and StoreKit sponsorship are also production-only.
+- The Local variant carries only its default Keychain access group so native sessions survive an
+  app relaunch. Do not attempt Sign in with Apple in the Local variant. Push notifications, Share
+  Extension, widgets, Live Activities, and StoreKit sponsorship are also production-only.
 - Debug builds may temporarily change the API environment from Lab. Reset it to **Local** after a
   custom-environment test so later Agent Testing starts from the variant default.
 - Treat `apps/mobile/Afilmory.xcodeproj` as generated output. Make persistent project changes in

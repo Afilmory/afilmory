@@ -89,11 +89,11 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
   private let transport: Transport?
 
   init(
-    session: URLSession = .shared,
+    session: URLSession? = nil,
     requestTimeoutInterval: TimeInterval = 15,
     transport: Transport? = nil
   ) {
-    self.session = session
+    self.session = session ?? AfilmoryURLSessionFactory.cookieIsolated()
     self.requestTimeoutInterval = requestTimeoutInterval
     self.transport = transport
     decoder = JSONDecoder()
@@ -143,6 +143,9 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
     request.httpBody = body
     request.timeoutInterval = requestTimeoutInterval
     request.setValue("application/json", forHTTPHeaderField: "Accept")
+    if !["GET", "HEAD", "OPTIONS"].contains(method.uppercased()) {
+      request.setValue("\(AfilmoryBuildConfiguration.urlScheme)://", forHTTPHeaderField: "Origin")
+    }
     if body != nil {
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     }
@@ -513,6 +516,9 @@ final class NativeAuthenticationService {
     guard let session, !requiresWorkspace || session.activeWorkspace != nil else {
       throw invalidSessionError
     }
+    Self.logger.notice(
+      "Validated native session before persistence; cookieBytes=\((response.cookie ?? cookie).utf8.count, privacy: .public)"
+    )
     ApiEnvironmentStore.shared.activateTenant(slug: session.activeWorkspace?.slug)
     sessionStore.register(cookie: response.cookie ?? cookie)
   }
