@@ -49,4 +49,26 @@ final class NativeAuthHTTPClientTests: XCTestCase {
     XCTAssertEqual(payload["password"], "secret")
     XCTAssertEqual(response.cookie, "afilmory-tenant.session=session-value")
   }
+
+  func testOAuthCallbackErrorPreservesProviderDescriptionAndCode() throws {
+    let callback = try XCTUnwrap(
+      URL(
+        string: "afilmory:///?error=configuration_error&error_description=GitHub%20OAuth%20is%20not%20configured"
+      )
+    )
+
+    XCTAssertEqual(
+      NativeAuthHTTPClient.oauthError(in: callback),
+      "GitHub OAuth is not configured (configuration_error)"
+    )
+  }
+
+  func testSignInFailureMessageIncludesUnderlyingReason() {
+    let reason = "GitHub OAuth is not configured (configuration_error)"
+
+    XCTAssertEqual(
+      NativeAuthFailureMessage.text(for: NativeAuthError.server(reason)),
+      reason
+    )
+  }
 }

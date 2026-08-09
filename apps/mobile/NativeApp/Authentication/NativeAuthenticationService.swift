@@ -222,6 +222,41 @@ final class NativeAuthHTTPClient: @unchecked Sendable {
     }?.value
   }
 
+  static func oauthError(in callbackURL: URL) -> String? {
+    guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false) else {
+      return nil
+    }
+    var items = components.queryItems ?? []
+    if let fragment = components.fragment,
+       let fragmentItems = URLComponents(string: "https://callback.invalid/?\(fragment)")?.queryItems
+    {
+      items.append(contentsOf: fragmentItems)
+    }
+
+    var values: [String: String] = [:]
+    for item in items {
+      guard let value = item.value?.trimmingCharacters(in: .whitespacesAndNewlines),
+            !value.isEmpty
+      else { continue }
+      values[item.name.lowercased()] = value
+    }
+
+    let description = values["error_description"]
+      ?? values["errordescription"]
+      ?? values["message"]
+    let code = values["error"]
+    switch (description, code) {
+    case let (.some(description), .some(code)) where description != code:
+      return "\(description) (\(code))"
+    case let (.some(description), _):
+      return description
+    case let (_, .some(code)):
+      return code
+    default:
+      return nil
+    }
+  }
+
   private static func parseCookieHeader(_ header: String?) -> [String: String] {
     guard let header else { return [:] }
     var result: [String: String] = [:]
@@ -308,7 +343,12 @@ final class NativeAuthenticationService {
     )
     guard let callbackCookie = URLComponents(url: callback, resolvingAgainstBaseURL: false)?
       .queryItems?.first(where: { $0.name == "cookie" })?.value
-    else { throw NativeAuthError.missingSession }
+    else {
+      if let callbackError = NativeAuthHTTPClient.oauthError(in: callback) {
+        throw NativeAuthError.server(callbackError)
+      }
+      throw NativeAuthError.missingSession
+    }
     let cookie = NativeAuthHTTPClient.merge(setCookieHeader: callbackCookie, into: initial.cookie)
     try await registerValidated(cookie: cookie)
   }

@@ -7,6 +7,17 @@ private enum SignInBusyAction: Equatable {
   case password
 }
 
+enum NativeAuthFailureMessage {
+  static func text(for error: Error) -> String {
+    let fallback = Localization.t("auth.failed")
+    let reason = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !reason.isEmpty,
+          reason.caseInsensitiveCompare(fallback) != .orderedSame
+    else { return fallback }
+    return reason
+  }
+}
+
 struct SignInView: View {
   @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
   @Environment(\.dismiss) private var dismiss
@@ -150,8 +161,11 @@ struct SignInView: View {
             .font(.system(size: 13))
             .foregroundStyle(.red)
             .multilineTextAlignment(.center)
+            .lineSpacing(3)
             .frame(maxWidth: .infinity, minHeight: 44)
+            .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isStaticText)
+            .accessibilityIdentifier("auth.error")
         } else {
           Color.clear.frame(height: 44)
         }
@@ -301,7 +315,7 @@ struct SignInView: View {
       } catch NativeAuthError.cancelled {
         return
       } catch {
-        self.error = Localization.t("auth.failed")
+        self.error = NativeAuthFailureMessage.text(for: error)
       }
     }
   }
