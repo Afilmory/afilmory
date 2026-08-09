@@ -171,6 +171,7 @@ targets:
     info:
       path: targets/widgets/Info.plist
       properties:
+        CFBundleDisplayName: Afilmory
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
