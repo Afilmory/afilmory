@@ -1,0 +1,33 @@
+{
+  "fill": {
+    "solid": "extended-srgb:0.18824,0.19608,0.21569,1.00000"
+  },
+  "groups": [
+    {
+      "blur-material": 0.5,
+      "layers": [
+        {
+          "glass": true,
+          "image-name": "afilmory-mark.png",
+          "name": "afilmory-mark"
+        }
+      ],
+      "lighting": "individual",
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.22
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.35
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}
