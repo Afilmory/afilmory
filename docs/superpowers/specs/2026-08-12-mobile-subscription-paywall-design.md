@@ -84,6 +84,10 @@ The warning is a table row, not a dismissible banner: it appears while the condi
 
 **Wall.** Operation returns 402 → `QuotaWallReason` parses `details` → `QuotaWallSheet` states current usage against the limit and offers Upgrade → `SubscriptionView` at the relevant section → on successful purchase, refresh the snapshot and dismiss.
 
+The sheet reports **three numbers, not one**: current usage, the projected value after the attempted operation, and the plan limit. "Not enough storage" alone gives the user no way to judge whether to delete a few photos or to upgrade. All three come from `details`.
+
+Every wall also carries a **secondary action that costs nothing** — freeing up space, removing a domain, waiting for the monthly reset — because in each case that genuinely resolves the block. A wall whose only exit is a purchase reads as extortion and earns App Store reviews that say so.
+
 **A 402 never raises a sheet by itself.** Each of the three entry points renders a failure state with an explicit "see why / upgrade" affordance, and only a tap presents the wall:
 
 - Upload — on the failed job in the upload queue.
@@ -115,6 +119,10 @@ Uploads run on a background `URLSession`; the user may be on the lock screen or 
 SwiftUI views themselves are not tested; per `apps/mobile/AGENTS.md` the verification surface is `native:test` plus a Simulator build.
 
 **Manual verification splits cleanly.** The warning row and the wall depend only on the backend's 402 and overview — no StoreKit — so both are fully exercisable on `Afilmory Local` against a local Core by shrinking a plan quota and uploading a few photos. The purchase flow cannot run there at all (`supportsStoreKitBilling` is production-only; Local has no entitlements) and waits for TestFlight/Sandbox. The split means no variant gate has to be loosened for testing, and most of the new code lands on the locally-verifiable side.
+
+## Not Blocking Implementation
+
+Offer names, prices, quota numbers, and the free managed-storage allowance are App Store Connect and system-setting configuration, not code. Nothing in the client hardcodes them: offers arrive from `billing/overview` and `billing/app-store/offers`, prices from `Product.displayPrice`. The mockups use placeholders and the screens adapt to whatever the catalog says.
 
 ## Open Items Deferred
 
