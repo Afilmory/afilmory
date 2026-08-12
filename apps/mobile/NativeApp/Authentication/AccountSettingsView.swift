@@ -105,6 +105,10 @@ struct AccountSettingsView: View {
       .background(Color(uiColor: .secondarySystemGroupedBackground))
       .clipShape(.rect(cornerRadius: 16, style: .continuous))
 
+      if AfilmoryBuildConfiguration.supportsStoreKitBilling {
+        SubscriptionSectionView()
+      }
+
       Text("A deletion request signs out every device and permanently removes account data after external storage and billing cleanup.")
         .font(.system(size: 12))
         .foregroundStyle(.tertiary)

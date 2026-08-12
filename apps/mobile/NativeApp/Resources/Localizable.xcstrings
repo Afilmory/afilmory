@@ -5603,6 +5603,40 @@
         }
       }
     },
+    "Loading plans…": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プランを読み込み中…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요금제를 불러오는 중…"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在載入方案…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载方案…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在載入方案…"
+          }
+        }
+      }
+    },
     "Location Details": {
       "localizations": {
         "ja": {
@@ -5803,6 +5837,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "管理"
+          }
+        }
+      }
+    },
+    "Manage subscription": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを管理"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구독 관리"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理訂閱"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理订阅"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理訂閱"
           }
         }
       }
@@ -6449,6 +6517,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "尚無照片"
+          }
+        }
+      }
+    },
+    "No purchases were found to restore.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復元できる購入はありませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "복원할 구매 항목이 없습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到可還原的購買項目。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有找到可恢复的购买。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到可還原的購買項目。"
           }
         }
       }
@@ -8251,6 +8353,92 @@
           "stringUnit": {
             "state": "translated",
             "value": "解決衝突"
+          }
+        }
+      }
+    },
+    "Restore purchases": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "購入を復元"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구매 복원"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還原購買項目"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复购买"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還原購買項目"
+          }
+        }
+      }
+    },
+    "Restored %lld purchases.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restored %lld purchase."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restored %lld purchases."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 件の購入を復元しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구매 %lld개를 복원했습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已還原 %lld 個購買項目。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已恢复 %lld 个购买。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已還原 %lld 個購買項目。"
           }
         }
       }
@@ -10159,6 +10347,74 @@
         }
       }
     },
+    "Subscription": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプション"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구독"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "訂閱"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "订阅"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "訂閱"
+          }
+        }
+      }
+    },
+    "Subscriptions are not available right now.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在サブスクリプションはご利用いただけません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금은 구독을 이용할 수 없습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前無法使用訂閱。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "订阅当前不可用。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前無法使用訂閱。"
+          }
+        }
+      }
+    },
     "Sync complete": {
       "localizations": {
         "ja": {
@@ -10733,6 +10989,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "此操作會永久刪除帳號，且無法復原。"
+          }
+        }
+      }
+    },
+    "This purchase is waiting for approval.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この購入は承認待ちです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 구매는 승인을 기다리고 있습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此購買項目正在等待批准。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此购买正在等待批准。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此購買項目正在等待批准。"
           }
         }
       }
@@ -12875,6 +13165,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作階段已過期，請重新登入。"
+          }
+        }
+      }
+    },
+    "Your subscription is active.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションが有効になりました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구독이 활성화되었습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的訂閱已生效。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的订阅已生效。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的訂閱已生效。"
           }
         }
       }

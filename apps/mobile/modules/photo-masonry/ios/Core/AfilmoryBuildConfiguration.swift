@@ -38,6 +38,7 @@ enum AfilmoryBuildConfiguration {
   static var supportsPushNotifications: Bool { variant == .production }
   static var supportsShareExtension: Bool { variant == .production }
   static var supportsStoreKitSponsorship: Bool { variant == .production }
+  static var supportsStoreKitBilling: Bool { variant == .production }
 
   static var allowsApiEnvironmentOverride: Bool {
     #if DEBUG
