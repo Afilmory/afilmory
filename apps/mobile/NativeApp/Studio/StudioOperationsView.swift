@@ -77,7 +77,13 @@ final class StudioOperationsViewModel: ObservableObject {
 
 struct StudioOperationsView: View {
   @StateObject private var model = StudioOperationsViewModel()
+  @State private var pendingQuotaReason: QuotaWallReason?
+  @State private var showingQuotaWall = false
   @State private var showRunModes = false
+
+  private var quotaRejection: StudioQuotaRejection? {
+    model.operationError as? StudioQuotaRejection
+  }
   @State private var resolutionConflict: StudioDataSyncConflictRecord?
 
   var body: some View {
@@ -139,9 +145,21 @@ struct StudioOperationsView: View {
         set: { if !$0 { model.operationError = nil } }
       )
     ) {
+      if quotaRejection != nil {
+        Button(String(localized: "Why?")) {
+          pendingQuotaReason = quotaRejection?.reason
+          model.operationError = nil
+          showingQuotaWall = true
+        }
+      }
       Button(String(localized: "Done")) { model.operationError = nil }
     } message: {
-      Text(model.operationError?.localizedDescription ?? "")
+      Text(quotaRejection?.message ?? model.operationError?.localizedDescription ?? "")
+    }
+    .sheet(isPresented: $showingQuotaWall) {
+      if let reason = pendingQuotaReason {
+        QuotaWallSheet(reason: reason)
+      }
     }
     .alert(
       String(localized: "Sync complete"),

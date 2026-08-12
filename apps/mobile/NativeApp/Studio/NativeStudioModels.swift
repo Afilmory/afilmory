@@ -98,6 +98,44 @@ struct StudioDataSyncConflictRecord: Decodable, Identifiable, Sendable {
   let updatedAt: String
 }
 
+struct StudioQuotaDetails: Decodable, Sendable {
+  let reason: String?
+  let actualMb: Double?
+  let capacityBytes: Double?
+  let current: Double?
+  let incomingBytes: Double?
+  let limit: Double?
+  let limitMb: Double?
+  let requested: Double?
+  let used: Double?
+  let usedBytes: Double?
+
+  var dictionary: [String: Any] {
+    var values: [String: Any] = [:]
+    if let reason { values["reason"] = reason }
+    let numbers: [String: Double?] = [
+      "actualMb": actualMb,
+      "capacityBytes": capacityBytes,
+      "current": current,
+      "incomingBytes": incomingBytes,
+      "limit": limit,
+      "limitMb": limitMb,
+      "requested": requested,
+      "used": used,
+      "usedBytes": usedBytes,
+    ]
+    for (key, value) in numbers {
+      if let value { values[key] = NSNumber(value: value) }
+    }
+    return values
+  }
+}
+
+struct StudioQuotaRejection: Error {
+  let message: String
+  let reason: QuotaWallReason
+}
+
 struct StudioDataSyncProgressEvent: Decodable, Sendable {
   struct Payload: Decodable, Sendable {
     let summary: StudioDataSyncSummary?
@@ -105,6 +143,7 @@ struct StudioDataSyncProgressEvent: Decodable, Sendable {
     let total: Int?
     let index: Int?
     let message: String?
+    let details: StudioQuotaDetails?
   }
 
   let type: String

@@ -74,3 +74,31 @@ final class QuotaWallReasonTests: XCTestCase {
     XCTAssertTrue(uploadSize.readout.isEmpty)
   }
 }
+
+final class UploadQuotaFailureTests: XCTestCase {
+  func testKeepsTheStructuredDetailsFromAnErrorEvent() {
+    let payload: [String: Any] = [
+      "message": "托管存储空间不足",
+      "code": 41,
+      "details": ["reason": "storage", "usedBytes": 10, "incomingBytes": 5, "capacityBytes": 12],
+    ]
+
+    let failure = UploadTerminalFailure(payload: payload)
+
+    XCTAssertEqual(failure.message, "托管存储空间不足")
+    guard case .storage? = failure.quotaReason else {
+      return XCTFail("A quota rejection must survive the stream.")
+    }
+  }
+
+  func testAPlainErrorEventCarriesNoQuotaReason() {
+    let failure = UploadTerminalFailure(payload: ["message": "boom"])
+
+    XCTAssertEqual(failure.message, "boom")
+    XCTAssertNil(failure.quotaReason)
+  }
+
+  func testAnEmptyPayloadStillProducesAMessage() {
+    XCTAssertFalse(UploadTerminalFailure(payload: [:]).message.isEmpty)
+  }
+}

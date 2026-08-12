@@ -155,8 +155,12 @@ enum NativeStudioAPI {
         throw error
       }
       if event.type == "error" {
+        let message = event.payload.message ?? String(localized: "The server could not complete the operation.")
+        if let reason = QuotaWallReason.parse(details: event.payload.details?.dictionary) {
+          throw StudioQuotaRejection(message: message, reason: reason)
+        }
         throw NativeAuthError.server(
-          event.payload.message ?? "The server could not complete the operation."
+          message
         )
       }
       if event.type == "complete" { completed = true }

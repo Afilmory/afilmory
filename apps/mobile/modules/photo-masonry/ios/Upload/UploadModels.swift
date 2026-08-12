@@ -78,6 +78,7 @@ struct UploadJobState: Codable, Sendable {
   var progress: Double
   var attempt: Int
   var error: String?
+  var quotaDetails: String?
   var serverLogs: [UploadServerLogLine]?
   var endpoint: String
   var directory: String?
@@ -85,6 +86,13 @@ struct UploadJobState: Codable, Sendable {
 
   var latestServerLog: String? {
     serverLogs?.last?.message
+  }
+
+  var quotaReason: QuotaWallReason? {
+    guard let payload = quotaDetails?.data(using: .utf8),
+          let details = try? JSONSerialization.jsonObject(with: payload) as? [String: Any]
+    else { return nil }
+    return QuotaWallReason.parse(details: details)
   }
 }
 

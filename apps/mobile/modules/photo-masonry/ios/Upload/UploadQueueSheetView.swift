@@ -201,6 +201,8 @@ struct UploadQueueSheetView: View {
 }
 
 private struct UploadQueueRow: View {
+  @State private var showingQuotaWall = false
+
   let job: UploadJobState
   let onOpenLogs: (UploadJobState) -> Void
 
@@ -250,6 +252,13 @@ private struct UploadQueueRow: View {
             .foregroundStyle(.red)
             .lineLimit(2)
         }
+
+        if job.status == .failed, job.quotaReason != nil {
+          Button(String(localized: "Why?")) { showingQuotaWall = true }
+            .font(.caption.weight(.semibold))
+            .buttonStyle(.plain)
+            .foregroundStyle(Color.accentColor)
+        }
       }
 
       Spacer(minLength: 8)
@@ -267,6 +276,11 @@ private struct UploadQueueRow: View {
     .onTapGesture {
       if hasLogs {
         onOpenLogs(job)
+      }
+    }
+    .sheet(isPresented: $showingQuotaWall) {
+      if let reason = job.quotaReason {
+        QuotaWallSheet(reason: reason)
       }
     }
   }

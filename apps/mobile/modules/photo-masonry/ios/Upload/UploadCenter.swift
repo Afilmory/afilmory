@@ -1,6 +1,21 @@
 import Foundation
 import Photos
 
+struct UploadTerminalFailure: Sendable {
+  let message: String
+  let quotaReason: QuotaWallReason?
+  let detailsJSON: String?
+
+  init(payload: [String: Any]) {
+    message = (payload["message"] as? String) ?? String(localized: "The server could not complete the operation.")
+    let details = payload["details"] as? [String: Any]
+    quotaReason = QuotaWallReason.parse(details: details)
+    detailsJSON = details
+      .flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+      .flatMap { String(data: $0, encoding: .utf8) }
+  }
+}
+
 final class UploadCenter: NSObject, @unchecked Sendable {
   static let shared = UploadCenter()
   static var sessionIdentifier: String {
@@ -31,7 +46,7 @@ final class UploadCenter: NSObject, @unchecked Sendable {
   private struct SseResponseState {
     var buffer = Data()
     var sawComplete = false
-    var terminalServerError: String?
+    var terminalFailure: UploadTerminalFailure?
   }
 
   override private init() {
@@ -368,13 +383,15 @@ final class UploadCenter: NSObject, @unchecked Sendable {
       scheduleEmitLocked()
       return
     }
-    if let message = response.terminalServerError {
+    if let failure = response.terminalFailure {
       // The stream succeeded but the server rejected this payload; the same
       // bytes cannot fare better on a retry.
       jobs[index].status = .failed
-      jobs[index].error = message
+      jobs[index].error = failure.message
+      jobs[index].quotaDetails = failure.detailsJSON
       persistLocked()
       scheduleEmitLocked()
+      refreshEntitlementsLocked()
       return
     }
     if let error {
@@ -387,12 +404,14 @@ final class UploadCenter: NSObject, @unchecked Sendable {
       jobs[index].status = .done
       jobs[index].progress = 1
       jobs[index].error = nil
+      jobs[index].quotaDetails = nil
       try? FileManager.default.removeItem(at: Self.bodyURL(jobId))
       persistLocked()
       scheduleEmitLocked()
+      refreshEntitlementsLocked()
       return
     }
-    let responseError = APIError.response(status: status, body: nil)
+    let responseError = APIError.response(status: status, body: response.buffer.isEmpty ? nil : response.buffer)
     let retryable = status == 0
       || status == 408
       || status == 429
@@ -481,12 +500,18 @@ final class UploadCenter: NSObject, @unchecked Sendable {
         job.progress = 1
       }
     case "error":
-      state.terminalServerError = ((payload["payload"] as? [String: Any])?["message"] as? String)
-        ?? "The server could not complete the operation."
+      state.terminalFailure = UploadTerminalFailure(payload: (payload["payload"] as? [String: Any]) ?? [:])
       tasks[jobId]?.cancel()
     default:
       break
     }
+  }
+
+  // A batch that finished changed the workspace's usage, so Studio's plan section would otherwise
+  // keep showing the numbers from before the upload.
+  private func refreshEntitlementsLocked() {
+    guard jobs.allSatisfy({ $0.status == .done || $0.status == .failed || $0.status == .cancelled }) else { return }
+    Task { @MainActor in await EntitlementStore.shared.refresh() }
   }
 
   private func updateJobLocked(_ jobId: String, _ mutate: (inout UploadJobState) -> Void) {

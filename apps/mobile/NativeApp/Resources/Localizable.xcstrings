@@ -1455,6 +1455,40 @@
         }
       }
     },
+    "Ask the workspace owner to upgrade this plan.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ワークスペースの所有者にプランのアップグレードを依頼してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "워크스페이스 소유자에게 요금제 업그레이드를 요청하세요."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請聯絡工作空間擁有者升級方案。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请联系工作空间所有者升级套餐。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請聯絡工作空間擁有者升級方案。"
+          }
+        }
+      }
+    },
     "Attribution": {
       "localizations": {
         "ja": {
@@ -11775,6 +11809,40 @@
         }
       }
     },
+    "The server could not complete the operation.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーは操作を完了できませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버가 작업을 완료하지 못했습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器無法完成此操作。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器无法完成此操作。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器無法完成此操作。"
+          }
+        }
+      }
+    },
     "The workspace could not be created. The identifier may already be in use.": {
       "localizations": {
         "ja": {
@@ -13203,6 +13271,40 @@
         }
       }
     },
+    "Upgrade": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップグレード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업그레이드"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "升級"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "升级"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "升級"
+          }
+        }
+      }
+    },
     "Upload %lld": {
       "localizations": {
         "ja": {
@@ -14117,6 +14219,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "白平衡偏移 (綠色 - 洋紅色)"
+          }
+        }
+      }
+    },
+    "Why?": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "理由を見る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이유 보기"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "為什麼？"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "为什么？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "為什麼？"
           }
         }
       }
