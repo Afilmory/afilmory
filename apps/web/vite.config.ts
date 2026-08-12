@@ -166,6 +166,7 @@ const staticWebBuildPlugins: PluginOption[] = [
       data: {
         title: siteConfig.title,
         description: siteConfig.description,
+        vibeloft: siteConfig.telemetry?.vibeloft !== false,
       },
     },
   }),

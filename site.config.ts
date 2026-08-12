@@ -15,6 +15,19 @@ export interface SiteConfig {
   mapStyle?: string
   mapProjection?: 'globe' | 'mercator'
   beian?: BeianConfig
+  /** 第三方遥测配置 */
+  telemetry?: TelemetryConfig
+}
+
+/**
+ * 第三方遥测配置
+ */
+interface TelemetryConfig {
+  /**
+   * 是否启用 VibeLoft 页面浏览遥测（https://vibeloft.ai）。
+   * 默认开启；自托管站点可通过 `"telemetry": { "vibeloft": false }` 关闭。
+   */
+  vibeloft?: boolean
 }
 
 /**
@@ -88,6 +101,9 @@ const defaultConfig: SiteConfig = {
     name: 'Afilmory',
     url: 'https://afilmory.art/',
     avatar: 'https://cdn.jsdelivr.net/gh/Afilmory/Afilmory@main/logo.jpg',
+  },
+  telemetry: {
+    vibeloft: true,
   },
 }
 export const siteConfig: SiteConfig = merge(defaultConfig, userConfig) as any

@@ -26,6 +26,9 @@
   ],
   "mapStyle": "builtin",
   "mapProjection": "mercator",
+  "telemetry": {
+    "vibeloft": true
+  },
   "beian": {
     "icp": {
       "enabled": false,

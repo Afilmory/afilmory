@@ -24,12 +24,15 @@
       window.__SITE_CONFIG__ = {}
     </script>
     <script id="manifest"></script>
+    <% if (vibeloft) { %>
+    <!-- VibeLoft 页面浏览遥测（可通过 config.json 的 telemetry.vibeloft 关闭） -->
     <script
       defer
       src="https://vibeloft.ai/telemetry/v1.js"
       data-vl-product-id="e99696d9-d5af-492b-8768-67d12f09af2c"
       data-vl-auth-key="vl_web.cXoOzToLqG2I4TrBn6p0KViwbFjw3DhQ0AWkGp5Xixs"
     ></script>
+    <% } %>
   </head>
   <body>
     <div id="root">
