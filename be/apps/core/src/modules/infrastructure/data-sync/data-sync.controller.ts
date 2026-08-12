@@ -1,6 +1,7 @@
 import type { BuilderConfig, StorageConfig } from '@afilmory/builder'
 import { TenantRoles } from '@core/guards/roles.decorator'
 import { createProgressSseResponse } from '@core/modules/shared/http/sse'
+import { describeStreamError } from '@core/modules/shared/http/sse-error'
 import { Body, ContextParam, Controller, createLogger, Get, Param, Post } from '@tsuki-hono/common'
 import type { Context } from 'hono'
 
@@ -41,13 +42,11 @@ export class DataSyncController {
                 dryRun: payload.dryRun ?? false,
               },
               progressHandler,
-            ),
-          )
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Unknown error'
-
+            ))
+        }
+        catch (error) {
           this.logger.error('Failed to run data sync', error)
-          await sendEvent({ type: 'error', payload: { message } })
+          await sendEvent({ type: 'error', payload: describeStreamError(error) })
         }
       },
     })

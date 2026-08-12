@@ -4,6 +4,7 @@ import { TenantRoles } from '@core/guards/roles.decorator'
 import { BypassResponseTransform } from '@core/interceptors/response-transform.decorator'
 import type { DataSyncProgressEvent } from '@core/modules/infrastructure/data-sync/data-sync.types'
 import { createProgressSseResponse } from '@core/modules/shared/http/sse'
+import { describeStreamError } from '@core/modules/shared/http/sse-error'
 import {
   Body,
   ContextParam,
@@ -34,9 +35,7 @@ type DeleteAssetsDto = {
 @Controller('photos')
 @TenantRoles('admin')
 export class PhotoController {
-  constructor(
-    @inject(PhotoAssetService) private readonly photoAssetService: PhotoAssetService,
-  ) {}
+  constructor(@inject(PhotoAssetService) private readonly photoAssetService: PhotoAssetService) {}
 
   private readonly logger = createLogger(this.constructor.name)
 
@@ -86,11 +85,10 @@ export class PhotoController {
             },
             abortSignal,
           })
-        } catch (error) {
-          const message = error instanceof Error ? error.message : '上传失败'
-
+        }
+        catch (error) {
           this.logger.error(error)
-          await sendEvent({ type: 'error', payload: { message } })
+          await sendEvent({ type: 'error', payload: describeStreamError(error) })
         }
       },
     })
