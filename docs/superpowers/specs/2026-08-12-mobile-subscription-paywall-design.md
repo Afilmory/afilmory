@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-12
 **Scope:** Give the iOS app a real subscription home in Studio (application plan and managed storage as two independent sections, with live usage), warn before a quota runs out, and turn every quota rejection into a localized, actionable upgrade prompt instead of a generic failure. Covers the three enforcement paths the app can reach: in-app upload, Studio data sync, and Studio custom domain.
-**Touches:** `be/apps/core/src/errors/biz-exception.ts`, six quota enforcement sites in `be/apps/core/src/modules/{platform/billing/plan,content/photo/assets,infrastructure/data-sync}`, `be/apps/core/src/modules/platform/billing/{billing.controller.ts,overview/**}` (new), `apps/mobile/NativeApp/Billing/**`, `apps/mobile/NativeApp/Studio/**`, `apps/mobile/NativeApp/Authentication/AccountSettingsView.swift`, `apps/mobile/modules/photo-masonry/ios/Upload/UploadCenter.swift`.
+**Touches:** `be/apps/core/src/errors/biz-exception.ts`, `be/apps/core/src/modules/content/photo/assets/photo.controller.ts`, `be/apps/core/src/modules/infrastructure/data-sync/data-sync.controller.ts`, six quota enforcement sites in `be/apps/core/src/modules/{platform/billing/plan,content/photo/assets,infrastructure/data-sync}`, `be/apps/core/src/modules/platform/billing/{billing.controller.ts,overview/**}` (new), `apps/mobile/NativeApp/Billing/**`, `apps/mobile/NativeApp/Studio/**`, `apps/mobile/NativeApp/Authentication/AccountSettingsView.swift`, `apps/mobile/modules/photo-masonry/ios/Upload/UploadCenter.swift`.
 
 ## Problem
 
@@ -14,7 +14,15 @@ That section also flattens two different things into one list. The backend gener
 
 Studio — the actual workspace-management surface — shows nothing about plans or usage at all.
 
-Worst of all, quota rejections are invisible. The backend raises `BILLING_PLAN_QUOTA_EXCEEDED` (40) and `BILLING_STORAGE_QUOTA_EXCEEDED` (41) as HTTP 402 with a precise message, but `UploadCenter.swift:395` constructs `APIError.response(status: status, body: nil)` and throws the body away. A user who exceeds their monthly allowance sees an anonymous upload failure — no cause, no remedy. And even if the body survived, those messages are hardcoded Chinese prose, while the app ships six languages.
+Worst of all, quota rejections are invisible, and the reason is not the one it first appears to be.
+
+Upload and data sync both stream over SSE (`createProgressSseResponse`). Their handlers catch every exception and emit `sendEvent({ type: 'error', payload: { message } })` with an HTTP status of 200, because the response has already begun (`photo.controller.ts:93`, `data-sync.controller.ts:50`). **The two highest-traffic quota paths never produce an HTTP 402 at all** — the error code and every number are discarded at the controller, leaving one prose string.
+
+Only the custom-domain path is a plain REST call that returns a real 402, and there the client already preserves the body (`AfilmoryAPI.swift:144`).
+
+Either way the copy is hardcoded Chinese prose while the app ships six languages, so it could not be shown as-is even when it arrives intact.
+
+(`UploadCenter.swift:395` separately builds `APIError.response(status:body:nil)` and drops the body. That path handles pre-stream failures only, so it is a correctness fix rather than a blocker for this feature.)
 
 ## Goals
 
@@ -32,7 +40,7 @@ Worst of all, quota rejections are invisible. The backend raises `BILLING_PLAN_Q
 
 ## Core Invariant
 
-**The client never blocks an operation based on its local snapshot.** The snapshot drives warnings and copy only; the authority is always the server's 402. When the snapshot is stale or wrong, the worst outcome is a missing warning — never a blocked upload. Upload buttons are never disabled on quota grounds.
+**The client never blocks an operation based on its local snapshot.** The snapshot drives warnings and copy only; the authority is always the server's rejection. When the snapshot is stale or wrong, the worst outcome is a missing warning — never a blocked upload. Upload buttons are never disabled on quota grounds.
 
 ## Architecture
 
@@ -53,11 +61,13 @@ Add an optional `details?: Record<string, unknown>`, surfaced by `toResponse()`.
 | `photo-asset.service.ts:1812`, `:1827` | `storage` | `capacityBytes`, `usedBytes`, `incomingBytes` |
 | `data-sync.service.ts:1419` | `sync_object_size` | `limitMb`, `actualMb` |
 
-**3. `GET billing/overview`** (owner-only, alongside the existing `billing/*` routes) returns one snapshot: current application plan, current storage plan, the five quota limits, current usage per dimension, the provider of the active subscription, and whether managed storage is enabled at all.
+**3. SSE error events carry the same structure.** `photo.controller.ts:93` and `data-sync.controller.ts:50` widen their payload from `{ message }` to `{ message, code, details }` whenever the caught error is a `BizException`. Without this, the two paths that matter most stay a bare string. `data-sync.service.ts:1419` also moves from `COMMON_BAD_REQUEST` to the quota error — a plan limit reported as a generic 400 cannot be recognized by the client.
+
+**4. `GET billing/overview`** (owner-only, alongside the existing `billing/*` routes) returns one snapshot: current application plan, current storage plan, the five quota limits, current usage per dimension, the provider of the active subscription, and whether managed storage is enabled at all.
 
 Every input already exists; none of them has ever been assembled in one response. `BillingOverviewService` composes `BillingPlanService`, `StoragePlanService`, `BillingUsageService`, and `ManagedStorageService`, keeping the controller thin.
 
-**4. `billing-quota.policy.ts`** is a pure function mapping quotas plus usage to `[{reason, used, limit, unit, nearingLimit}]`.
+**5. `billing-quota.policy.ts`** is a pure function mapping quotas plus usage to `[{reason, used, limit, unit, nearingLimit}]`.
 
 **The 80% threshold lives here, on the server.** A shipped app cannot change it; this is a product parameter that will be tuned. The client renders `nearingLimit` and never computes it.
 
@@ -67,14 +77,14 @@ Four new files under the existing `NativeApp/Billing/`:
 
 - **`EntitlementStore`** — singleton holding the snapshot, using the observer-token pattern of `AfilmorySessionStore` (no Combine, matching surrounding code). Refreshes on entering Studio, on upload-batch completion, and after a successful purchase.
 - **`BillingOverviewAPI`** — entitlement reads, deliberately separate from `AppStoreBillingAPI`, which handles purchases. One reads state, one mutates money.
-- **`QuotaWallReason`** — parses `details.reason` from a 402 and produces localized copy. Pure, unit-tested.
+- **`QuotaWallReason`** — parses `details.reason` out of either transport (a REST 402 body or an SSE `error` payload) and produces localized copy. Pure, unit-tested.
 - **`QuotaWallSheet`** — the shared presentation.
 
 Three existing files change:
 
 - **`SubscriptionSectionView`** (150 lines) becomes a `SubscriptionView` page plus a reusable `OfferSectionView`. With two sections and a usage header it would otherwise pass the 300-line component ceiling.
 - **`AccountSettingsView`** drops its subscription section and keeps a single "Manage subscription" row that deep-links to the App Store. That row genuinely is account-scoped — the subscription hangs off the Apple ID — while plans, usage, and purchase are workspace-scoped and move to Studio.
-- **`UploadCenter.swift:395`** passes the response body through. Nothing else in this design can work until it does.
+- **`UploadCenter`** keeps `code` and `details` from the SSE `error` event — its `terminalServerError: String?` widens to hold the structured failure — and separately stops discarding the body at `:395`.
 
 ## Data Flow
 
