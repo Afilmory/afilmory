@@ -1047,6 +1047,40 @@
         }
       }
     },
+    "After this upload": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このアップロード後"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 업로드 후"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此次上傳後"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本次上传后"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此次上傳後"
+          }
+        }
+      }
+    },
     "All": {
       "localizations": {
         "ja": {
@@ -3121,6 +3155,40 @@
         }
       }
     },
+    "Custom domains are not included": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カスタムドメインは含まれていません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용자 지정 도메인이 포함되어 있지 않습니다"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方案不包含自訂網域"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "套餐不包含自定义域名"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方案不包含自訂網域"
+          }
+        }
+      }
+    },
     "DELETE": {
       "localizations": {
         "ja": {
@@ -4345,6 +4413,40 @@
         }
       }
     },
+    "File is too large": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルが大きすぎます"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "파일이 너무 큽니다"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檔案過大"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件过大"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檔案過大"
+          }
+        }
+      }
+    },
     "Filename": {
       "localizations": {
         "ja": {
@@ -4545,6 +4647,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "焦平面解析度"
+          }
+        }
+      }
+    },
+    "Free up space instead": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代わりに空き容量を増やす"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대신 공간 확보하기"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改為釋出空間"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改为清理空间"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改為釋出空間"
           }
         }
       }
@@ -5365,6 +5501,40 @@
         }
       }
     },
+    "Library is full": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブラリがいっぱいです"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "라이브러리가 가득 찼습니다"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圖庫已滿"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图库已满"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圖庫已滿"
+          }
+        }
+      }
+    },
     "Light Source": {
       "localizations": {
         "ja": {
@@ -6113,6 +6283,40 @@
         }
       }
     },
+    "Monthly photo limit reached": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今月の写真上限に達しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이번 달 사진 한도에 도달했습니다"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已達本月照片上限"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已达本月照片上限"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已達本月照片上限"
+          }
+        }
+      }
+    },
     "My photography": {
       "localizations": {
         "ja": {
@@ -6823,6 +7027,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "暫不開啟"
+          }
+        }
+      }
+    },
+    "Not now": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今はしない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나중에"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫時不要"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂时不用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫時不要"
           }
         }
       }
@@ -7677,6 +7915,74 @@
         }
       }
     },
+    "Plan limit": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プラン上限"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요금제 한도"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方案上限"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "套餐上限"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "方案上限"
+          }
+        }
+      }
+    },
+    "Plan limit reached": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プランの上限に達しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요금제 한도에 도달했습니다"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已達方案上限"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已达套餐上限"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已達方案上限"
+          }
+        }
+      }
+    },
     "Popular tags": {
       "localizations": {
         "ja": {
@@ -8183,6 +8489,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "移除"
+          }
+        }
+      }
+    },
+    "Remove an existing domain": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既存のドメインを削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기존 도메인 삭제"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除現有網域"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除现有域名"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除現有網域"
           }
         }
       }
@@ -10177,6 +10517,40 @@
         }
       }
     },
+    "Storage is full": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ストレージがいっぱいです"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장 공간이 가득 찼습니다"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存空間已滿"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存储空间已满"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儲存空間已滿"
+          }
+        }
+      }
+    },
     "Storage providers": {
       "localizations": {
         "ja": {
@@ -10993,6 +11367,40 @@
         }
       }
     },
+    "This file is %@, over the %@ limit.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このファイルは %@ で、上限の %@ を超えています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 파일은 %@로 %@ 한도를 초과합니다。"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此檔案為 %@，超出 %@ 上限。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此文件为 %@，超出 %@ 上限。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此檔案為 %@，超出 %@ 上限。"
+          }
+        }
+      }
+    },
     "This month": {
       "localizations": {
         "ja": {
@@ -11125,6 +11533,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "此工作區及其託管儲存空間將被刪除。"
+          }
+        }
+      }
+    },
+    "This workspace has reached a limit of its current plan.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このワークスペースは現在のプランの上限に達しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 워크스페이스가 현재 요금제의 한도에 도달했습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工作空間已達目前方案的上限。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工作空间已达当前套餐的上限。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此工作空間已達目前方案的上限。"
           }
         }
       }
@@ -12421,6 +12863,40 @@
         }
       }
     },
+    "Uploading needs %@ more than your plan allows.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アップロードにはプランの上限を %@ 超える容量が必要です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업로드하려면 요금제 한도보다 %@가 더 필요합니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此次上傳超出方案上限 %@。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这次上传超出套餐上限 %@。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此次上傳超出方案上限 %@。"
+          }
+        }
+      }
+    },
     "Uploading photos": {
       "localizations": {
         "ja": {
@@ -12625,6 +13101,40 @@
         }
       }
     },
+    "Used": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用中"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용됨"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已使用"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已使用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已使用"
+          }
+        }
+      }
+    },
     "User %@": {
       "localizations": {
         "ja": {
@@ -12757,6 +13267,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "查看照片詳細資訊"
+          }
+        }
+      }
+    },
+    "Wait for next month's reset": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翌月のリセットを待つ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다음 달 초기화 기다리기"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待下月重設"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待下月重置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "等待下月重設"
           }
         }
       }
@@ -13067,6 +13611,40 @@
         }
       }
     },
+    "You have processed %lld of %lld photos this month, and %lld more are queued.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今月は %2$lld 枚中 %1$lld 枚を処理済みで、さらに %3$lld 枚が待機中です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이번 달에 사진 %2$lld장 중 %1$lld장을 처리했고 %3$lld장이 대기 중입니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本月已處理 %1$lld／%2$lld 張照片，另有 %3$lld 張待處理。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本月已处理 %1$lld／%2$lld 张照片，另有 %3$lld 张待处理。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本月已處理 %1$lld／%2$lld 張照片，另有 %3$lld 張待處理。"
+          }
+        }
+      }
+    },
     "Your comments, reactions, followed galleries, device registrations, and other account data will be removed. %lld joined workspaces will be left. %lld subscriptions require cleanup.": {
       "localizations": {
         "ja": {
@@ -13135,6 +13713,40 @@
         }
       }
     },
+    "Your library holds %lld of %lld photos.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ライブラリには %2$lld 枚中 %1$lld 枚の写真があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "라이브러리에 사진 %2$lld장 중 %1$lld장이 있습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圖庫已有 %1$lld 張照片，上限 %2$lld 張。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图库已有 %1$lld 张照片，上限 %2$lld 张。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圖庫已有 %1$lld 張照片，上限 %2$lld 張。"
+          }
+        }
+      }
+    },
     "Your photo map": {
       "localizations": {
         "ja": {
@@ -13165,6 +13777,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "你的照片地圖"
+          }
+        }
+      }
+    },
+    "Your plan does not include a custom domain.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ご利用のプランにはカスタムドメインが含まれていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "현재 요금제에는 사용자 지정 도메인이 포함되지 않습니다."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你目前的方案不包含自訂網域。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你当前的套餐不包含自定义域名。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你目前的方案不包含自訂網域。"
           }
         }
       }

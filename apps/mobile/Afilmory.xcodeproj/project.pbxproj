@@ -117,6 +117,7 @@
 		74FAB31BD397E430F6DD19D9 /* mobile-en.json in Resources */ = {isa = PBXBuildFile; fileRef = D8B3A7CD036B8D220EDCC26A /* mobile-en.json */; };
 		772464345F51E51CCE578209 /* expected-normalized.json in Resources */ = {isa = PBXBuildFile; fileRef = 5F0B7BF1B4A0C5AA5CA93DD3 /* expected-normalized.json */; };
 		78015A81AB72E35FE4629E65 /* ShareUploadBatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AD9AFF6CD81B996D491826 /* ShareUploadBatchStore.swift */; };
+		786BF28E84649831680B3B62 /* QuotaWallReasonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B45BD636FF26D107C2A2E8 /* QuotaWallReasonTests.swift */; };
 		7A9870E5FA6E3A324ACF64B3 /* UploadTagPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C8BC8F6F889B1060D97320 /* UploadTagPathTests.swift */; };
 		7D651BA5DA115EF26C39ABD8 /* PhotoTransitionGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CEA1C721FA092210BDF6C07 /* PhotoTransitionGeometry.swift */; };
 		7EF7DC74370E540CD5300F4A /* PhotoHeaderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A1913A1D85DFAE02EC97B5 /* PhotoHeaderModel.swift */; };
@@ -161,6 +162,7 @@
 		AF274338BBFF344A7BAEBFE9 /* Afilmory.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2B40A13E3BF517C4D52948AA /* Afilmory.icon */; };
 		AFD425A06DA8FE481B9FCD51 /* LivePhotoBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 716CAA23CF1DC402DCFE9345 /* LivePhotoBadgeView.swift */; };
 		AFD91C77BA9C22686A25AC94 /* PhotoDetailChromeVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F44F5E01EDC6A610F098CD3 /* PhotoDetailChromeVisibility.swift */; };
+		B003D7E663B8FEC5234D0D70 /* QuotaWallReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 328FE7C41CC9CF416E6EF6FB /* QuotaWallReason.swift */; };
 		B03816C51BD22943D4459224 /* UploadActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EA572A34F9E635E2793700D /* UploadActivityAttributes.swift */; };
 		B1452319C34E649F843737BC /* PhotoInfoGearCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1801BAD9029077DE9FF254 /* PhotoInfoGearCardView.swift */; };
 		B15081558598A0B46B40AFF3 /* StudioAssetDecoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4577957272CD07412A734FB1 /* StudioAssetDecoding.swift */; };
@@ -327,6 +329,7 @@
 		303B61F95EDB47F5FA0F2A08 /* GalleryDirectoryStoreCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryDirectoryStoreCacheTests.swift; sourceTree = "<group>"; };
 		306D2409C236E1CC311E46F1 /* PushNotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationTests.swift; sourceTree = "<group>"; };
 		312A2460368CB2508B41F627 /* mobile-zh-HK.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "mobile-zh-HK.json"; sourceTree = "<group>"; };
+		328FE7C41CC9CF416E6EF6FB /* QuotaWallReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotaWallReason.swift; sourceTree = "<group>"; };
 		32F51B742314FE4EB115E1DB /* PhotoUploadModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoUploadModule.swift; sourceTree = "<group>"; };
 		3414FBA08B56EF456EEBF17D /* ShareUploadModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareUploadModel.swift; sourceTree = "<group>"; };
 		35AD9AFF6CD81B996D491826 /* ShareUploadBatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareUploadBatchStore.swift; sourceTree = "<group>"; };
@@ -471,6 +474,7 @@
 		C25B25506B005D82BCA65EAF /* mobile-zh-TW.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "mobile-zh-TW.json"; sourceTree = "<group>"; };
 		C2708199DD5366786A679093 /* GalleryNotificationPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryNotificationPermission.swift; sourceTree = "<group>"; };
 		C47FB592E13AB4CA590934F3 /* CommentRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentRowView.swift; sourceTree = "<group>"; };
+		C5B45BD636FF26D107C2A2E8 /* QuotaWallReasonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotaWallReasonTests.swift; sourceTree = "<group>"; };
 		C9294CE0D6142857B992A471 /* ShareUploadThumbnailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareUploadThumbnailView.swift; sourceTree = "<group>"; };
 		CC018DF8AE1C494FD93E66A0 /* expected-header-zh-HK.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "expected-header-zh-HK.json"; sourceTree = "<group>"; };
 		CC10302880E10992B226FE02 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
@@ -569,6 +573,7 @@
 				2A9D986DCF4D09D1AEFBEDC3 /* PhotoTransitionGeometryTests.swift */,
 				034672C5D252BD726B1CD55A /* ProfileStatsTests.swift */,
 				306D2409C236E1CC311E46F1 /* PushNotificationTests.swift */,
+				C5B45BD636FF26D107C2A2E8 /* QuotaWallReasonTests.swift */,
 				875CFCA65BF5BD2FA5192A82 /* SessionStoreCacheTests.swift */,
 				EFF4B5D9C284407EAFF5F08E /* StudioAssetDecodingTests.swift */,
 				FA1C22CA340A3CCDD42833DB /* StudioHomeDataTests.swift */,
@@ -647,6 +652,7 @@
 				8821D4D09E634307604EBC49 /* AppStoreBillingService.swift */,
 				B1B65BBF669EC4ED86DD2EC1 /* AppStoreTerminalTransactions.swift */,
 				D717B4DBF01D4E7DA2E75794 /* AppStoreTransactionAcknowledger.swift */,
+				328FE7C41CC9CF416E6EF6FB /* QuotaWallReason.swift */,
 				21E9C605445E756A57351E4A /* SubscriptionSectionView.swift */,
 				A1EE9D94CC320E80A87FD609 /* SubscriptionStore.swift */,
 			);
@@ -1399,6 +1405,7 @@
 				EA6B66CF035C87F8E95A03E2 /* PhotosHomeController.swift in Sources */,
 				CFFC6E520DBCEED5C7ED73E6 /* ProfileSheetView.swift in Sources */,
 				A760042E86215647383AE095 /* ProfileStats.swift in Sources */,
+				B003D7E663B8FEC5234D0D70 /* QuotaWallReason.swift in Sources */,
 				20488369448B8653114065B8 /* SceneDelegate.swift in Sources */,
 				C052E46CA6503B1126208862 /* ShareUploadContextStore.swift in Sources */,
 				33195D2E7B20E6C2E8F50267 /* ShareUploadHandoff.swift in Sources */,
@@ -1464,6 +1471,7 @@
 				20F3F6D9CEE8734E9DC1347A /* PhotoTransitionGeometryTests.swift in Sources */,
 				F3F6AD41D8B7D2E9F2CB906A /* ProfileStatsTests.swift in Sources */,
 				992D6CF7036C9B2217750CED /* PushNotificationTests.swift in Sources */,
+				786BF28E84649831680B3B62 /* QuotaWallReasonTests.swift in Sources */,
 				984641E43A9613328369C233 /* SessionStoreCacheTests.swift in Sources */,
 				A8061612705AE3BE671E64A2 /* StudioAssetDecodingTests.swift in Sources */,
 				B3BFA6BA1FA4A78AB8BACE0A /* StudioHomeDataTests.swift in Sources */,
