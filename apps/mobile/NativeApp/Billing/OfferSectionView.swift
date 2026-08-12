@@ -12,12 +12,22 @@ enum QuotaFormatter {
   }
 
   static func warningTitle(for dimension: BillingOverview.QuotaDimension) -> String {
+    let exceeded = dimension.limit.map { dimension.used >= $0 } ?? false
     switch dimension.reason {
-    case "custom_domain": String(localized: "Custom domain limit reached")
-    case "library_items": String(localized: "Library is almost full")
-    case "monthly_process": String(localized: "Monthly photo limit is almost reached")
-    case "storage": String(localized: "Storage is almost full")
-    default: String(localized: "Plan limit is almost reached")
+    case "custom_domain":
+      return String(localized: "Custom domain limit reached")
+    case "library_items":
+      return exceeded ? String(localized: "Library is full") : String(localized: "Library is almost full")
+    case "monthly_process":
+      return exceeded
+        ? String(localized: "Monthly photo limit reached")
+        : String(localized: "Monthly photo limit is almost reached")
+    case "storage":
+      return exceeded ? String(localized: "Storage is full") : String(localized: "Storage is almost full")
+    default:
+      return exceeded
+        ? String(localized: "Plan limit reached")
+        : String(localized: "Plan limit is almost reached")
     }
   }
 
@@ -37,7 +47,10 @@ enum QuotaFormatter {
   }
 
   static func bytes(_ value: Double) -> String {
-    ByteCountFormatter.string(fromByteCount: Int64(max(0, value)), countStyle: .file)
+    let formatter = ByteCountFormatter()
+    formatter.countStyle = .binary
+    formatter.allowsNonnumericFormatting = false
+    return formatter.string(fromByteCount: Int64(max(0, value)))
   }
 }
 
@@ -56,7 +69,7 @@ struct OfferSectionView: View {
         .font(.system(size: 12.5))
         .textCase(.uppercase)
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 4)
 
       VStack(spacing: 0) {
         if let dimension {
@@ -79,7 +92,7 @@ struct OfferSectionView: View {
         Text(managedElsewhereNote)
           .font(.system(size: 12))
           .foregroundStyle(.tertiary)
-          .padding(.horizontal, 20)
+          .padding(.horizontal, 4)
       }
     }
   }

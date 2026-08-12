@@ -40,14 +40,17 @@ struct QuotaWallSheet: View {
       }
 
       if entitlements.isAvailable {
-        Button {
+        // HIG sizes a prominent call to action as a Large control. Express that through controlSize
+        // rather than a height: the glass background draws past an explicit frame, and a minHeight
+        // on the label adds to the style's own padding instead of replacing it.
+        AfilmoryButton(prominent: true) {
           showingPlan = true
         } label: {
           Text("Upgrade")
-            .font(.system(size: 16, weight: .semibold))
-            .frame(maxWidth: .infinity, minHeight: 48)
+            .font(.system(size: 17, weight: .semibold))
+            .frame(maxWidth: .infinity)
         }
-        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
       } else {
         Text("Ask the workspace owner to upgrade this plan.")
           .font(.system(size: 13))

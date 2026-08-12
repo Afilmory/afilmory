@@ -70,7 +70,10 @@ extension QuotaWallReason {
     case .storage(let used, let incoming, let capacity):
       String(localized: "Uploading needs \(Self.bytes(used + incoming - capacity)) more than your plan allows.")
     case .syncObjectSize(let actual, let limit), .uploadSize(let actual, let limit):
-      String(localized: "This file is \(Self.megabytes(actual)), over the \(Self.megabytes(limit)) limit.")
+      // The multipart parser aborts the stream at the limit, so the real size is unknowable there.
+      actual > 0
+        ? String(localized: "This file is \(Self.megabytes(actual)), over the \(Self.megabytes(limit)) limit.")
+        : String(localized: "This file is over the \(Self.megabytes(limit)) limit.")
     case .unknown:
       String(localized: "This workspace has reached a limit of its current plan.")
     }

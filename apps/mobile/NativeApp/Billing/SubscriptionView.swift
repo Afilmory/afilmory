@@ -24,6 +24,7 @@ struct SubscriptionView: View {
             actionsSection
             statusText
           }
+          .padding(.horizontal, 20)
           .padding(.vertical, 18)
         }
         .onAppear {
@@ -103,7 +104,7 @@ struct SubscriptionView: View {
       Text("Billing applies to this workspace. Payment is charged to your Apple ID.")
         .font(.system(size: 12))
         .foregroundStyle(.tertiary)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 4)
     }
   }
 
@@ -120,7 +121,7 @@ struct SubscriptionView: View {
     Text(text)
       .font(.system(size: 12))
       .foregroundStyle(.secondary)
-      .padding(.horizontal, 20)
+      .padding(.horizontal, 4)
   }
 
   private var canPurchase: Bool {

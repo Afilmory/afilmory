@@ -221,7 +221,7 @@ final class StudioHomeController: UITableViewController {
     guard let storagePlan = overview.storagePlan else {
       return String(localized: "Bring your own storage")
     }
-    return String(localized: "Managed storage · \(storagePlan.name)")
+    return storagePlan.name
   }
 
   private func warningRow(_ dimension: BillingOverview.QuotaDimension) -> Row {
