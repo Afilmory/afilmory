@@ -2,6 +2,18 @@ import Combine
 import Foundation
 import StoreKit
 
+enum OfferFamily {
+  case plan
+  case storage
+
+  func filter(_ offers: [BillingOffer]) -> [BillingOffer] {
+    switch self {
+    case .plan: offers.filter { $0.applicationPlanId != nil }
+    case .storage: offers.filter { $0.storagePlanId != nil }
+    }
+  }
+}
+
 @MainActor
 final class SubscriptionStore: ObservableObject {
   enum State: Equatable {
