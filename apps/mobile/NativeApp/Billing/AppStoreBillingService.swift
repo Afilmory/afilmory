@@ -43,13 +43,23 @@ struct LiveAppStoreAcknowledgementPort: AppStoreAcknowledgementPort {
   }
 }
 
+struct AppStoreReconciliationSummary: Equatable {
+  let reconciled: Int
+  let unlinkable: Int
+}
+
 final class AppStoreBillingService: Sendable {
   static let shared = AppStoreBillingService()
 
   private let acknowledger: AppStoreTransactionAcknowledger
+  private let terminalTransactions: AppStoreTerminalTransactionStore
 
-  init(port: AppStoreAcknowledgementPort = LiveAppStoreAcknowledgementPort()) {
+  init(
+    port: AppStoreAcknowledgementPort = LiveAppStoreAcknowledgementPort(),
+    terminalTransactions: AppStoreTerminalTransactionStore = UserDefaultsTerminalTransactionStore()
+  ) {
     acknowledger = AppStoreTransactionAcknowledger(port: port)
+    self.terminalTransactions = terminalTransactions
   }
 
   func loadProducts(for productIds: [String]) async throws -> [String: Product] {
@@ -77,10 +87,17 @@ final class AppStoreBillingService: Sendable {
       guard case .verified(let transaction) = verification else {
         throw AppStoreBillingError.unverifiedTransaction
       }
-      try await acknowledger.acknowledge(
-        transactionId: String(transaction.id),
-        signedTransactionInfo: verification.jwsRepresentation
-      )
+      do {
+        try await acknowledger.acknowledge(
+          transactionId: String(transaction.id),
+          signedTransactionInfo: verification.jwsRepresentation
+        )
+      } catch {
+        if AppStoreBillingFailure.isTerminal(error) {
+          terminalTransactions.record(String(transaction.id))
+        }
+        throw error
+      }
       return .completed
     case .pending:
       return .pending
@@ -127,32 +144,52 @@ final class AppStoreBillingService: Sendable {
     return acceptedIds.count
   }
 
+  // A transaction the server has permanently refused is never replayed: it stays unfinished so it
+  // remains recoverable by support, but it is not resubmitted on every launch.
   @discardableResult
-  func reconcileUnfinishedTransactions() async -> Int {
+  func reconcileUnfinishedTransactions() async -> AppStoreReconciliationSummary {
     var reconciled = 0
+    var unlinkable = 0
     for await result in StoreKit.Transaction.unfinished {
       guard case .verified(let transaction) = result else { continue }
+      let transactionId = String(transaction.id)
+      if terminalTransactions.contains(transactionId) {
+        unlinkable += 1
+        continue
+      }
       do {
         try await acknowledger.acknowledge(
-          transactionId: String(transaction.id),
+          transactionId: transactionId,
           signedTransactionInfo: result.jwsRepresentation
         )
         reconciled += 1
       } catch {
+        if AppStoreBillingFailure.isTerminal(error) {
+          terminalTransactions.record(transactionId)
+          unlinkable += 1
+        }
         continue
       }
     }
-    return reconciled
+    return AppStoreReconciliationSummary(reconciled: reconciled, unlinkable: unlinkable)
   }
 
   func observeTransactionUpdates() async {
     for await result in StoreKit.Transaction.updates {
       guard !Task.isCancelled else { return }
       guard case .verified(let transaction) = result else { continue }
-      try? await acknowledger.acknowledge(
-        transactionId: String(transaction.id),
-        signedTransactionInfo: result.jwsRepresentation
-      )
+      let transactionId = String(transaction.id)
+      guard !terminalTransactions.contains(transactionId) else { continue }
+      do {
+        try await acknowledger.acknowledge(
+          transactionId: transactionId,
+          signedTransactionInfo: result.jwsRepresentation
+        )
+      } catch {
+        if AppStoreBillingFailure.isTerminal(error) {
+          terminalTransactions.record(transactionId)
+        }
+      }
     }
   }
 

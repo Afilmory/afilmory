@@ -15,6 +15,7 @@ import type { BillingPurchaseOffer } from '../../catalog/billing-catalog.types'
 import { BillingEntitlementService } from '../../entitlement/billing-entitlement.service'
 import { getAppStoreEnvironment, normalizeAppStoreEnvironment } from '../billing-environment'
 import { BillingProviderEventService } from '../billing-provider-event.service'
+import { describeTerminalClientBillingError } from './app-store-billing.policy'
 import { AppStoreSignedDataService } from './app-store-signed-data.service'
 
 export interface AppStorePurchaseContext {
@@ -67,27 +68,55 @@ export class AppStoreBillingService {
   }
 
   async submitTransaction(input: { billingOwnerUserId: string, signedTransactionInfo: string, tenantId: string }) {
-    const transaction = await this.signedData.verifyTransaction(input.signedTransactionInfo)
-    return await this.reconcileVerifiedTransaction(transaction, {
-      expectedOwnerUserId: input.billingOwnerUserId,
-      expectedTenantId: input.tenantId,
-      eventId: transaction.transactionId ?? sha256Hex(input.signedTransactionInfo),
-      eventType: 'client_transaction',
-    })
+    try {
+      const transaction = await this.signedData.verifyTransaction(input.signedTransactionInfo)
+      return await this.reconcileVerifiedTransaction(transaction, {
+        expectedOwnerUserId: input.billingOwnerUserId,
+        expectedTenantId: input.tenantId,
+        eventId: transaction.transactionId ?? sha256Hex(input.signedTransactionInfo),
+        eventType: 'client_transaction',
+      })
+    }
+    catch (error) {
+      throw this.toClientFacingError(error)
+    }
   }
 
+  // One foreign transaction on the device must not sink the customer's own restore, so terminal
+  // rejections are skipped rather than thrown. Anything retryable still fails the whole request.
   async restoreTransactions(input: { billingOwnerUserId: string, signedTransactions: string[], tenantId: string }) {
     const results: unknown[] = []
+    const rejected: Array<{ message: string }> = []
     for (const signedTransaction of input.signedTransactions) {
-      results.push(
-        await this.submitTransaction({
-          billingOwnerUserId: input.billingOwnerUserId,
-          signedTransactionInfo: signedTransaction,
-          tenantId: input.tenantId,
-        }),
-      )
+      try {
+        results.push(
+          await this.submitTransaction({
+            billingOwnerUserId: input.billingOwnerUserId,
+            signedTransactionInfo: signedTransaction,
+            tenantId: input.tenantId,
+          }),
+        )
+      }
+      catch (error) {
+        if (error instanceof BizException && error.code === ErrorCode.BILLING_TRANSACTION_NOT_ATTRIBUTABLE) {
+          rejected.push({ message: error.message })
+          continue
+        }
+        throw error
+      }
     }
-    return { restored: results.length, results }
+    return { rejected, restored: results.length, results }
+  }
+
+  private toClientFacingError(error: unknown): unknown {
+    if (!(error instanceof BillingError)) {
+      return error
+    }
+    const message = describeTerminalClientBillingError(error.code)
+    if (!message) {
+      return error
+    }
+    return new BizException(ErrorCode.BILLING_TRANSACTION_NOT_ATTRIBUTABLE, { cause: error, message })
   }
 
   async processNotification(signedPayload: string): Promise<{ accepted: true, duplicate: boolean }> {

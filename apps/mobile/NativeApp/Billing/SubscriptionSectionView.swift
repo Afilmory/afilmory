@@ -34,6 +34,12 @@ struct SubscriptionSectionView: View {
           .clipShape(.rect(cornerRadius: 16, style: .continuous))
       }
 
+      if store.hasUnlinkablePurchase {
+        Text("A purchase on this Apple ID could not be linked to this workspace. Contact support if you believe this is a mistake.")
+          .font(.system(size: 12))
+          .foregroundStyle(.secondary)
+      }
+
       if let message {
         Text(message)
           .font(.system(size: 12))
@@ -120,9 +126,13 @@ struct SubscriptionSectionView: View {
       case .success(.cancelled):
         return
       case .failure(let error):
-        message = error as? AppStoreBillingError == .subscribedInAnotherWorkspace
-          ? String(localized: "This Apple ID already has a subscription in another workspace. Switch back to that workspace, or use a different Apple ID.")
-          : String(localized: "The purchase could not be completed. Please try again.")
+        if error as? AppStoreBillingError == .subscribedInAnotherWorkspace {
+          message = String(localized: "This Apple ID already has a subscription in another workspace. Switch back to that workspace, or use a different Apple ID.")
+        } else if AppStoreBillingFailure.isTerminal(error) {
+          message = String(localized: "A purchase on this Apple ID could not be linked to this workspace. Contact support if you believe this is a mistake.")
+        } else {
+          message = String(localized: "The purchase could not be completed. Please try again.")
+        }
       }
     }
   }

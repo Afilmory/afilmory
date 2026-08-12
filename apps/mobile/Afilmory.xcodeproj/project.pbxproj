@@ -171,6 +171,7 @@
 		B48630E28765BF7C5F5EFDF5 /* PhotoLoadPillStateMachineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBEC38C10DD2181C853A8E95 /* PhotoLoadPillStateMachineTests.swift */; };
 		B6214C67E71BC46E9E8BA0CE /* PhotoDetailReactionGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8E1F116F47954C417A7A93 /* PhotoDetailReactionGeometryTests.swift */; };
 		B8EED95D15065459995B86EA /* app-zh-CN.json in Resources */ = {isa = PBXBuildFile; fileRef = 4D04B2B515EB956A72E8BB09 /* app-zh-CN.json */; };
+		B9188EB2A3B44667E0A47B75 /* AppStoreTerminalTransactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEEE0FF6979D385978496656 /* AppStoreTerminalTransactionTests.swift */; };
 		BB6F819657481B6EFF9B5B59 /* PhotoDetailToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123871B0CD4BBD60EF985C1F /* PhotoDetailToolbar.swift */; };
 		BECE2D660008649F8B48BB1A /* AdaptiveGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA2A147790FFB66A668FF48 /* AdaptiveGlass.swift */; };
 		BF7D4274BC0591C8E6DE4391 /* PageStateViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4D8E9B4D97B4E47307FF117 /* PageStateViews.swift */; };
@@ -214,6 +215,7 @@
 		EA51E751AD4503EF5878C5F8 /* expected-info-jp.json in Resources */ = {isa = PBXBuildFile; fileRef = 6BE89CFD8F3A3997D086A6B3 /* expected-info-jp.json */; };
 		EA6B66CF035C87F8E95A03E2 /* PhotosHomeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610CBE373F5B5F617C88ED79 /* PhotosHomeController.swift */; };
 		EB11578CCE1F7B0667A85F3C /* PhotoInfoVisualizations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC0C145A39F0AF0044F0462 /* PhotoInfoVisualizations.swift */; };
+		EBBC6D1C6E69D51D3AC3C868 /* AppStoreTerminalTransactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B65BBF669EC4ED86DD2EC1 /* AppStoreTerminalTransactions.swift */; };
 		EBD0BB853BC6EB8F84C1DBBB /* PhotoViewerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1367F117EE596255BFAF5DC0 /* PhotoViewerCell.swift */; };
 		ECA6225E71774E4D277BFC41 /* PhotoFeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF0786B8C51D95751342BE1 /* PhotoFeedStore.swift */; };
 		ECF656AA24646E37091A813F /* AfilmoryShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7D17294B38A9991D586FCEA0 /* AfilmoryShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -452,6 +454,7 @@
 		AC6E18C72345386C9F0CA894 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AC7680EB0591F85943BAE57A /* CommentBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentBubbleView.swift; sourceTree = "<group>"; };
 		AF73F8687E105BFCCC41A1E4 /* PhotoDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailViewController.swift; sourceTree = "<group>"; };
+		B1B65BBF669EC4ED86DD2EC1 /* AppStoreTerminalTransactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreTerminalTransactions.swift; sourceTree = "<group>"; };
 		B1BA69587CC7AC4FDD650F56 /* LivePhotoPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoPlaybackView.swift; sourceTree = "<group>"; };
 		B1E39D0E753215806978AA22 /* PhotoMasonryModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoMasonryModule.swift; sourceTree = "<group>"; };
 		B22E908ED79E9F769210C4C8 /* PhotoTransitionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTransitionDelegate.swift; sourceTree = "<group>"; };
@@ -472,6 +475,7 @@
 		CC018DF8AE1C494FD93E66A0 /* expected-header-zh-HK.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "expected-header-zh-HK.json"; sourceTree = "<group>"; };
 		CC10302880E10992B226FE02 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		CDA2A147790FFB66A668FF48 /* AdaptiveGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveGlass.swift; sourceTree = "<group>"; };
+		CEEE0FF6979D385978496656 /* AppStoreTerminalTransactionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreTerminalTransactionTests.swift; sourceTree = "<group>"; };
 		CF5B211870C05F56EB9DD5DE /* PhotoCommentsSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCommentsSheetView.swift; sourceTree = "<group>"; };
 		CFA049B9EC0B2B3EDC7BE141 /* MasonryLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasonryLayout.swift; sourceTree = "<group>"; };
 		D0D1839A206C9D56C26B4597 /* ShareUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareUploadView.swift; sourceTree = "<group>"; };
@@ -536,6 +540,7 @@
 			isa = PBXGroup;
 			children = (
 				E6E8C07C835771D5319DF2E5 /* Fixtures */,
+				CEEE0FF6979D385978496656 /* AppStoreTerminalTransactionTests.swift */,
 				A43C93654E40C007FEC4E362 /* AppStoreTransactionAcknowledgerTests.swift */,
 				8F0859C1B635F3EBE1AAF98F /* CacheLifecycleTests.swift */,
 				997058BF0A601E88FD588EBC /* CommentDecodingTests.swift */,
@@ -640,6 +645,7 @@
 			children = (
 				EB579ED54EB85F4E4E274B6C /* AppStoreBillingAPI.swift */,
 				8821D4D09E634307604EBC49 /* AppStoreBillingService.swift */,
+				B1B65BBF669EC4ED86DD2EC1 /* AppStoreTerminalTransactions.swift */,
 				D717B4DBF01D4E7DA2E75794 /* AppStoreTransactionAcknowledger.swift */,
 				21E9C605445E756A57351E4A /* SubscriptionSectionView.swift */,
 				A1EE9D94CC320E80A87FD609 /* SubscriptionStore.swift */,
@@ -1291,6 +1297,7 @@
 				3EDD6901A250D895804811DE /* AppDelegate.swift in Sources */,
 				31F4728E2608020E3C08F230 /* AppStoreBillingAPI.swift in Sources */,
 				CFCB9BF2A0282CFC091DED62 /* AppStoreBillingService.swift in Sources */,
+				EBBC6D1C6E69D51D3AC3C868 /* AppStoreTerminalTransactions.swift in Sources */,
 				70391153A336E180A96415AE /* AppStoreTransactionAcknowledger.swift in Sources */,
 				6963BAE07C6CB3563A63D4A0 /* ApplicationCoordinator.swift in Sources */,
 				27DC4E85767157972B68167F /* CacheLifecycle.swift in Sources */,
@@ -1428,6 +1435,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B9188EB2A3B44667E0A47B75 /* AppStoreTerminalTransactionTests.swift in Sources */,
 				33A15BCEC3533A7EB49706CE /* AppStoreTransactionAcknowledgerTests.swift in Sources */,
 				2F0C622632EB42B6A408B6F6 /* CacheLifecycleTests.swift in Sources */,
 				F2A5509C7941D857984ECF21 /* CommentDecodingTests.swift in Sources */,

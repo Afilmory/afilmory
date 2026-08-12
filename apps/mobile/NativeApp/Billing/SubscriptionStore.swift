@@ -20,6 +20,7 @@ final class SubscriptionStore: ObservableObject {
     var id: String { offer.id }
   }
 
+  @Published private(set) var hasUnlinkablePurchase = false
   @Published private(set) var offers: [PurchasableOffer] = []
   @Published private(set) var purchasingOfferId: String?
   @Published private(set) var restoring = false
@@ -99,6 +100,6 @@ final class SubscriptionStore: ObservableObject {
   }
 
   func reconcileUnfinishedTransactions() async {
-    await service.reconcileUnfinishedTransactions()
+    hasUnlinkablePurchase = await service.reconcileUnfinishedTransactions().unlinkable > 0
   }
 }

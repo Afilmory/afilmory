@@ -639,6 +639,40 @@
         }
       }
     },
+    "A purchase on this Apple ID could not be linked to this workspace. Contact support if you believe this is a mistake.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この Apple ID の購入をこのワークスペースに関連付けられませんでした。お心当たりがない場合はサポートにお問い合わせください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 Apple ID의 구매를 이 워크스페이스에 연결하지 못했습니다. 잘못된 것 같다면 고객지원에 문의해 주세요."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Apple ID 的購買項目無法連結至此工作空間。如認為有誤，請聯絡支援。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Apple ID 的购买无法关联到此工作空间。如果你认为这是错误，请联系支持。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Apple ID 的購買項目無法連結至此工作空間。如認為有誤，請聯絡支援。"
+          }
+        }
+      }
+    },
     "Access has been revoked. Cleanup will continue safely in the background.": {
       "localizations": {
         "ja": {
