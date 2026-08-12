@@ -22,7 +22,7 @@ import type {
   BillingPlanQuotaOverride,
 } from './billing-plan.types'
 
-function startOfUtcMonth(reference = new Date()): Date {
+export function startOfUtcMonth(reference = new Date()): Date {
   return new Date(Date.UTC(reference.getUTCFullYear(), reference.getUTCMonth(), 1, 0, 0, 0, 0))
 }
 
