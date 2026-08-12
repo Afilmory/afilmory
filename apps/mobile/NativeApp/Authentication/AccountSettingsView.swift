@@ -85,6 +85,22 @@ struct AccountSettingsView: View {
         }
         .buttonStyle(.plain)
         .disabled(busy)
+        if AfilmoryBuildConfiguration.supportsStoreKitBilling {
+          Divider().padding(.leading, 16)
+          Button {
+            Task { await SubscriptionStore().manageSubscriptions() }
+          } label: {
+            HStack {
+              Text("Manage subscription")
+              Spacer()
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 50)
+            .contentShape(.rect)
+          }
+          .buttonStyle(.plain)
+          .disabled(busy)
+        }
         Divider().padding(.leading, 16)
         Button {
           Task { await inspectDeletion() }
@@ -104,10 +120,6 @@ struct AccountSettingsView: View {
       }
       .background(Color(uiColor: .secondarySystemGroupedBackground))
       .clipShape(.rect(cornerRadius: 16, style: .continuous))
-
-      if AfilmoryBuildConfiguration.supportsStoreKitBilling {
-        SubscriptionSectionView()
-      }
 
       Text("A deletion request signs out every device and permanently removes account data after external storage and billing cleanup.")
         .font(.system(size: 12))

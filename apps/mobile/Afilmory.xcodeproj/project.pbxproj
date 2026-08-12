@@ -135,8 +135,8 @@
 		8F438DB65CC420934C08C060 /* ShareUploadIntentBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D82DE36F8871D52C3064458 /* ShareUploadIntentBridge.swift */; };
 		93635EFE19F9CA10EB391A34 /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EE9D94CC320E80A87FD609 /* SubscriptionStore.swift */; };
 		93961EB3861FF96242456FE9 /* PhotoDetailReactionHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F414A207E399C72D55EF9 /* PhotoDetailReactionHaptics.swift */; };
+		94933768FF91E9563BAEE001 /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28450CD0C962F1DAD385FFCB /* SubscriptionView.swift */; };
 		95D128266E855F424A1930F3 /* LocalizedFormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 479CCC7CD4B0AA27241C8430 /* LocalizedFormatTests.swift */; };
-		97829744EF6DB00D799D06B3 /* SubscriptionSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E9C605445E756A57351E4A /* SubscriptionSectionView.swift */; };
 		97AC453A9F52A8B42F43DBE7 /* ShareUploadModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE70EA85C9525399B8A6A5F /* ShareUploadModels.swift */; };
 		984641E43A9613328369C233 /* SessionStoreCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875CFCA65BF5BD2FA5192A82 /* SessionStoreCacheTests.swift */; };
 		98B401882B98BF32EB4A14F4 /* PhotoDetailReactionStreamDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C186A4F0C0F10E3E6F51D27C /* PhotoDetailReactionStreamDriver.swift */; };
@@ -189,6 +189,7 @@
 		CDC29B9734F9918B4A76A43D /* app-zh-HK.json in Resources */ = {isa = PBXBuildFile; fileRef = 0B70031D708BB6C1AD0863FF /* app-zh-HK.json */; };
 		CE4965608BF007E83B0E3EB6 /* SwiftDataPhotoCacheRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFCAE775BD51F8F69D485ACC /* SwiftDataPhotoCacheRepository.swift */; };
 		CE8E3F7BE2A169D4761F05EB /* ShareUploadModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3414FBA08B56EF456EEBF17D /* ShareUploadModel.swift */; };
+		CEC6AB27CF08545E126712AE /* OfferSectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8986DEBD4F1AF65A3C895E /* OfferSectionView.swift */; };
 		CFCB9BF2A0282CFC091DED62 /* AppStoreBillingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8821D4D09E634307604EBC49 /* AppStoreBillingService.swift */; };
 		CFDDB9DCDDA4284858DDFC79 /* PhotoUploadModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32F51B742314FE4EB115E1DB /* PhotoUploadModule.swift */; };
 		CFFC6E520DBCEED5C7ED73E6 /* ProfileSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8429BAE902C1CF83DFD4D480 /* ProfileSheetView.swift */; };
@@ -319,10 +320,10 @@
 		1FC0C145A39F0AF0044F0462 /* PhotoInfoVisualizations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoInfoVisualizations.swift; sourceTree = "<group>"; };
 		1FE70EA85C9525399B8A6A5F /* ShareUploadModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareUploadModels.swift; sourceTree = "<group>"; };
 		217CD2253A0F95C5429BD8DD /* PhotoDetailReactionChargeRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailReactionChargeRing.swift; sourceTree = "<group>"; };
-		21E9C605445E756A57351E4A /* SubscriptionSectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionSectionView.swift; sourceTree = "<group>"; };
 		232BCE206D58FF08D5DA6B64 /* PhotoFeedStoreCacheTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoFeedStoreCacheTests.swift; sourceTree = "<group>"; };
 		25B5393D7A1A38FF74141B1C /* google-g.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "google-g.png"; sourceTree = "<group>"; };
 		2679AC9427A5A9816A7E49BD /* GallerySearchSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GallerySearchSummaryView.swift; sourceTree = "<group>"; };
+		28450CD0C962F1DAD385FFCB /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
 		29998B59CB0C0870AEC9F0F0 /* PhotoQueryHeaderViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoQueryHeaderViewTests.swift; sourceTree = "<group>"; };
 		29DD2A31AA242FC5CB1DEDA6 /* PhotoReactionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoReactionState.swift; sourceTree = "<group>"; };
 		2A9D986DCF4D09D1AEFBEDC3 /* PhotoTransitionGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoTransitionGeometryTests.swift; sourceTree = "<group>"; };
@@ -530,6 +531,7 @@
 		F9101E9CF3B0B3569BD09EA3 /* StudioSiteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioSiteView.swift; sourceTree = "<group>"; };
 		FA1C22CA340A3CCDD42833DB /* StudioHomeDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioHomeDataTests.swift; sourceTree = "<group>"; };
 		FA2BB03251D0C746D2B09EB9 /* StudioHomeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioHomeController.swift; sourceTree = "<group>"; };
+		FD8986DEBD4F1AF65A3C895E /* OfferSectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfferSectionView.swift; sourceTree = "<group>"; };
 		FEB8433C8F78FF335129D792 /* PhotoInfoModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoInfoModelTests.swift; sourceTree = "<group>"; };
 		FEE968D4BE0DBBA8B158C2E4 /* NativeStudioFormattersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeStudioFormattersTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -661,9 +663,10 @@
 				D717B4DBF01D4E7DA2E75794 /* AppStoreTransactionAcknowledger.swift */,
 				5E3D2ED1661DC711BD34D91D /* BillingOverviewAPI.swift */,
 				1FB1592F48020DA3EB14B554 /* EntitlementStore.swift */,
+				FD8986DEBD4F1AF65A3C895E /* OfferSectionView.swift */,
 				328FE7C41CC9CF416E6EF6FB /* QuotaWallReason.swift */,
-				21E9C605445E756A57351E4A /* SubscriptionSectionView.swift */,
 				A1EE9D94CC320E80A87FD609 /* SubscriptionStore.swift */,
+				28450CD0C962F1DAD385FFCB /* SubscriptionView.swift */,
 			);
 			path = Billing;
 			sourceTree = "<group>";
@@ -1358,6 +1361,7 @@
 				FBC8D8E1B182C65ACF8CF6EA /* NativeStudioAPI.swift in Sources */,
 				4AC0336AE5892A17042592E7 /* NativeStudioFormatters.swift in Sources */,
 				ADCDC176B17D4131C5B4AD1F /* NativeStudioModels.swift in Sources */,
+				CEC6AB27CF08545E126712AE /* OfferSectionView.swift in Sources */,
 				BF7D4274BC0591C8E6DE4391 /* PageStateViews.swift in Sources */,
 				6D4717D06C90DAF15CA60D1C /* PhotoCacheRepository.swift in Sources */,
 				FDBE9A7C871A4FCBA064BA42 /* PhotoCell.swift in Sources */,
@@ -1431,8 +1435,8 @@
 				0774E2003796E701528C81F0 /* StudioLibraryController.swift in Sources */,
 				F2C8458D81E86A94F9307C53 /* StudioOperationsView.swift in Sources */,
 				59FA7967C4B3F2E57E1F0397 /* StudioSiteView.swift in Sources */,
-				97829744EF6DB00D799D06B3 /* SubscriptionSectionView.swift in Sources */,
 				93635EFE19F9CA10EB391A34 /* SubscriptionStore.swift in Sources */,
+				94933768FF91E9563BAEE001 /* SubscriptionView.swift in Sources */,
 				CE4965608BF007E83B0E3EB6 /* SwiftDataPhotoCacheRepository.swift in Sources */,
 				FEB22997335E5A0BE721FB46 /* ThumbHash.swift in Sources */,
 				67D072C4D8DBC167140169E3 /* UIView+ViewController.swift in Sources */,
