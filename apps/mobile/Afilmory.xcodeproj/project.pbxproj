@@ -133,6 +133,7 @@
 		8D49EA18263A680DEC01470F /* LivePhotoPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1BA69587CC7AC4FDD650F56 /* LivePhotoPlaybackView.swift */; };
 		8D9F3DE4B056BDD68C21E34B /* PhotoInfoSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D335F66C041584D86C64B7 /* PhotoInfoSheetView.swift */; };
 		8F438DB65CC420934C08C060 /* ShareUploadIntentBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D82DE36F8871D52C3064458 /* ShareUploadIntentBridge.swift */; };
+		90A71B24DAAF9EA34EF4C2BE /* QuotaWarningCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFCC01D6A33BE847EF73BFA /* QuotaWarningCell.swift */; };
 		93635EFE19F9CA10EB391A34 /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1EE9D94CC320E80A87FD609 /* SubscriptionStore.swift */; };
 		93961EB3861FF96242456FE9 /* PhotoDetailReactionHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F414A207E399C72D55EF9 /* PhotoDetailReactionHaptics.swift */; };
 		94933768FF91E9563BAEE001 /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28450CD0C962F1DAD385FFCB /* SubscriptionView.swift */; };
@@ -404,6 +405,7 @@
 		75EBC0377C5B85A27A5B3B00 /* UploadCenterSessionIdentifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadCenterSessionIdentifierTests.swift; sourceTree = "<group>"; };
 		771F9B8996B3B69066591B49 /* PhotoDetailNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailNavigationBar.swift; sourceTree = "<group>"; };
 		793D294B286E824B0621EE26 /* PhotoDetailModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailModels.swift; sourceTree = "<group>"; };
+		7BFCC01D6A33BE847EF73BFA /* QuotaWarningCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuotaWarningCell.swift; sourceTree = "<group>"; };
 		7D17294B38A9991D586FCEA0 /* AfilmoryShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AfilmoryShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D75404EEB8F84280379D79D /* PhotoDetailScrimView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailScrimView.swift; sourceTree = "<group>"; };
 		7F1D5476656A150BB8F9172F /* app-en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "app-en.json"; sourceTree = "<group>"; };
@@ -665,6 +667,7 @@
 				1FB1592F48020DA3EB14B554 /* EntitlementStore.swift */,
 				FD8986DEBD4F1AF65A3C895E /* OfferSectionView.swift */,
 				328FE7C41CC9CF416E6EF6FB /* QuotaWallReason.swift */,
+				7BFCC01D6A33BE847EF73BFA /* QuotaWarningCell.swift */,
 				A1EE9D94CC320E80A87FD609 /* SubscriptionStore.swift */,
 				28450CD0C962F1DAD385FFCB /* SubscriptionView.swift */,
 			);
@@ -1421,6 +1424,7 @@
 				CFFC6E520DBCEED5C7ED73E6 /* ProfileSheetView.swift in Sources */,
 				A760042E86215647383AE095 /* ProfileStats.swift in Sources */,
 				B003D7E663B8FEC5234D0D70 /* QuotaWallReason.swift in Sources */,
+				90A71B24DAAF9EA34EF4C2BE /* QuotaWarningCell.swift in Sources */,
 				20488369448B8653114065B8 /* SceneDelegate.swift in Sources */,
 				C052E46CA6503B1126208862 /* ShareUploadContextStore.swift in Sources */,
 				33195D2E7B20E6C2E8F50267 /* ShareUploadHandoff.swift in Sources */,

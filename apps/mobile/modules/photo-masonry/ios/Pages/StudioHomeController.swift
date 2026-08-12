@@ -1,3 +1,4 @@
+import SwiftUI
 import UIKit
 
 enum StudioHomeRoute: String, CaseIterable, Sendable {
@@ -125,6 +126,8 @@ final class StudioHomeController: UITableViewController {
       badge: String?,
       route: StudioHomeRoute
     )
+    case plan(name: String, detail: String)
+    case quotaWarning(reason: String, title: String, detail: String, ratio: Double)
     case signOut
     case workspace(id: String, name: String)
   }
@@ -195,6 +198,39 @@ final class StudioHomeController: UITableViewController {
       loadStudio()
     }
     hasAppeared = true
+    Task { @MainActor in
+      await EntitlementStore.shared.refresh()
+      self.renderSections()
+    }
+  }
+
+  private func presentPlan(focus: QuotaWallReason?) {
+    present(UIHostingController(rootView: SubscriptionView(focus: focus)), animated: true)
+  }
+
+  private func makePlanSection() -> Section? {
+    guard EntitlementStore.shared.isAvailable, let overview = EntitlementStore.shared.snapshot else { return nil }
+    var rows: [Row] = [
+      .plan(name: overview.applicationPlan.name, detail: planDetail(overview)),
+    ]
+    rows.append(contentsOf: EntitlementStore.shared.warnings.map(warningRow))
+    return Section(title: String(localized: "Plan"), rows: rows)
+  }
+
+  private func planDetail(_ overview: BillingOverview) -> String {
+    guard let storagePlan = overview.storagePlan else {
+      return String(localized: "Bring your own storage")
+    }
+    return String(localized: "Managed storage · \(storagePlan.name)")
+  }
+
+  private func warningRow(_ dimension: BillingOverview.QuotaDimension) -> Row {
+    .quotaWarning(
+      reason: dimension.reason,
+      title: QuotaFormatter.warningTitle(for: dimension),
+      detail: QuotaFormatter.detail(for: dimension),
+      ratio: QuotaFormatter.ratio(for: dimension)
+    )
   }
 
   override func numberOfSections(in tableView: UITableView) -> Int {
@@ -236,6 +272,20 @@ final class StudioHomeController: UITableViewController {
         indicator.startAnimating()
         cell.accessoryView = indicator
       }
+
+    case .plan(let name, let detail):
+      var content = UIListContentConfiguration.subtitleCell()
+      content.image = UIImage(systemName: "creditcard")
+      content.imageProperties.tintColor = .tintColor
+      content.text = name
+      content.secondaryText = detail
+      cell.contentConfiguration = content
+      cell.accessoryType = .disclosureIndicator
+
+    case .quotaWarning(_, let title, let detail, let ratio):
+      let warningCell = QuotaWarningCell(style: .default, reuseIdentifier: nil)
+      warningCell.configure(title: title, detail: detail, ratio: ratio)
+      return warningCell
 
     case .navigation(let title, let detail, let symbol, let badge, _):
       var content = UIListContentConfiguration.subtitleCell()
@@ -301,11 +351,15 @@ final class StudioHomeController: UITableViewController {
     switch row {
     case .navigation(_, _, _, _, let route):
       onNavigate(route)
+    case .plan:
+      presentPlan(focus: nil)
     case .workspace(let id, _):
       switchWorkspace(id: id)
     case .signOut:
       onRequestSignOut()
       AfilmorySessionStore.shared.clearSession()
+    case .quotaWarning(let reason, _, _, _):
+      presentPlan(focus: QuotaWallReason.parse(details: ["reason": reason]))
     case .activity, .labeled:
       break
     }
@@ -472,6 +526,11 @@ final class StudioHomeController: UITableViewController {
 
     var nextSections: [Section] = [
       Section(title: String(localized: "Workspace"), rows: workspaceRows),
+    ]
+    if let planSection = makePlanSection() {
+      nextSections.append(planSection)
+    }
+    nextSections.append(contentsOf: [
       Section(
         title: String(localized: "Overview"),
         rows: [
@@ -540,7 +599,7 @@ final class StudioHomeController: UITableViewController {
           ),
         ]
       ),
-    ]
+    ])
 
     let recentActivity = Array(snapshot.overview.recentActivity.prefix(4))
     if !recentActivity.isEmpty {
@@ -591,7 +650,7 @@ final class StudioHomeController: UITableViewController {
 
   private func isRowEnabled(_ row: Row) -> Bool {
     switch row {
-    case .navigation, .signOut:
+    case .navigation, .plan, .quotaWarning, .signOut:
       true
     case .workspace:
       switchingWorkspaceID == nil
