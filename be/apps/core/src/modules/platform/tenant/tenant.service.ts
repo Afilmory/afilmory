@@ -1,7 +1,7 @@
 import { isTenantSlugReserved } from '@afilmory/utils'
 import { BizException, ErrorCode } from '@core/errors'
 import { normalizeString } from '@core/helpers/normalize.helper'
-import type { BillingPlanId } from '@core/modules/platform/billing/billing-plan.types'
+import type { BillingPlanId } from '@core/modules/platform/billing/plan/billing-plan.types'
 import { injectable } from 'tsyringe'
 
 import { PENDING_TENANT_DEFAULT_NAME, ROOT_TENANT_NAME, ROOT_TENANT_SLUG } from './tenant.constants'
@@ -51,7 +51,7 @@ export class TenantService {
 
   async resolve(
     input: TenantResolutionInput,
-    options?: { noThrow?: boolean; allowPending?: boolean },
+    options?: { noThrow?: boolean, allowPending?: boolean },
   ): Promise<TenantContext | null> {
     const { noThrow = false, allowPending = false } = options ?? {}
     const tenantId = normalizeString(input.tenantId)
@@ -123,7 +123,7 @@ export class TenantService {
     sortBy?: 'createdAt' | 'name'
     sortDir?: 'asc' | 'desc'
     requireStoragePlan?: boolean
-  }): Promise<{ items: TenantAggregate[]; total: number }> {
+  }): Promise<{ items: TenantAggregate[], total: number }> {
     return await this.repository.listTenants({
       page: options?.page ?? 1,
       limit: options?.limit ?? 20,
@@ -137,10 +137,6 @@ export class TenantService {
 
   async setBanned(id: string, banned: boolean): Promise<void> {
     await this.repository.updateBanned(id, banned)
-  }
-
-  async updateStoragePlan(id: string, storagePlanId: string | null): Promise<void> {
-    await this.repository.updateStoragePlan(id, storagePlanId)
   }
 
   async isSlugAvailable(slug: string): Promise<boolean> {

@@ -11,13 +11,7 @@ import { env } from '@afilmory/env'
 import { DrizzleProvider } from '@core/database/database.provider'
 import { BizException } from '@core/errors'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
-import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/billing-plan.constants'
-import { BillingPlanService } from '@core/modules/platform/billing/billing-plan.service'
-import type { BillingPlanId } from '@core/modules/platform/billing/billing-plan.types'
-import { StoragePlanService } from '@core/modules/platform/billing/storage-plan.service'
-import { TenantDomainService } from '@core/modules/platform/tenant/tenant-domain.service'
-import type { FlatSubscriptionEvent } from '@creem_io/better-auth'
-import { creem } from '@creem_io/better-auth'
+import { CreemWebhookService } from '@core/modules/platform/billing/providers/creem/creem-webhook.service'
 import type { OnModuleInit } from '@tsuki-hono/common'
 import { createLogger, HttpContext } from '@tsuki-hono/common'
 import type { BetterAuthOptions } from 'better-auth'
@@ -66,9 +60,7 @@ export class AuthProvider implements OnModuleInit {
     private readonly memberships: WorkspaceMembershipService,
     private readonly appleAuthorizations: AppleAuthorizationService,
     private readonly appleClientSecrets: AppleClientSecretService,
-    private readonly billingPlanService: BillingPlanService,
-    private readonly storagePlanService: StoragePlanService,
-    private readonly tenantDomainService: TenantDomainService,
+    private readonly creemWebhooks: CreemWebhookService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -310,37 +302,7 @@ export class AuthProvider implements OnModuleInit {
       plugins: [
         nativeOAuthSessionBridge(),
         admin(AUTH_ADMIN_PLUGIN_OPTIONS),
-        ...(env.CREEM_API_KEY && env.CREEM_WEBHOOK_SECRET
-          ? [
-              creem({
-                apiKey: env.CREEM_API_KEY,
-                webhookSecret: env.CREEM_WEBHOOK_SECRET,
-                persistSubscriptions: true,
-                testMode: env.NODE_ENV !== 'production',
-                onCheckoutCompleted: async (data) => {
-                  await this.handleCreemWebhook({
-                    event: data.webhookEventType,
-                    metadata: this.mergeMetadata(data.metadata, data.subscription?.metadata),
-                    status: data.subscription?.status ?? null,
-                    subscriptionId: data.subscription?.id ?? null,
-                    defaultGrant: true,
-                  })
-                },
-                // onRefundCreated: async (data: FlatRefundCreated) => {
-                //   await this.handleCreemRefundCreated(data)
-                // },
-                onSubscriptionCanceled: async (data) => {
-                  await this.handleCreemSubscriptionEvent(data, true)
-                },
-                onSubscriptionExpired: async (data) => {
-                  await this.handleCreemSubscriptionEvent(data, true)
-                },
-                onSubscriptionUpdate: async (data) => {
-                  await this.handleCreemSubscriptionEvent(data, false)
-                },
-              }),
-            ]
-          : []),
+        ...this.creemWebhooks.createBetterAuthPlugins(),
       ],
       hooks: {
         before: createAuthMiddleware(async (ctx) => {
@@ -403,216 +365,6 @@ export class AuthProvider implements OnModuleInit {
     const options = await this.config.getOptions()
     const tenantSlug = tenant.slug ?? null
     return await this.createAuthForEndpoint(tenantSlug, options, tenant.id)
-  }
-
-  private async handleCreemSubscriptionEvent(data: FlatSubscriptionEvent<string>, forceRevoke: boolean): Promise<void> {
-    await this.handleCreemWebhook({
-      event: data.webhookEventType,
-      metadata: this.mergeMetadata(data.metadata),
-      status: data.status,
-      subscriptionId: data.id,
-      forceRevoke,
-    })
-  }
-
-  private async handleCreemWebhook(params: {
-    event: string
-    metadata?: Record<string, unknown> | null
-    status?: string | null
-    subscriptionId?: string | null
-    defaultGrant?: boolean
-    forceRevoke?: boolean
-  }): Promise<void> {
-    const { event, metadata, status, subscriptionId, defaultGrant = false, forceRevoke = false } = params
-    const tenantId = this.extractMetadataValue(metadata ?? undefined, 'tenantId')
-    const planId = this.extractPlanIdFromMetadata(metadata ?? undefined)
-    const storagePlanId = this.extractStoragePlanIdFromMetadata(metadata ?? undefined)
-
-    if (!tenantId) {
-      logger.warn(`[AuthProvider] Creem ${event} event missing tenantId metadata`)
-      return
-    }
-
-    if (subscriptionId) {
-      await this.attachSubscriptionTenant(subscriptionId, tenantId)
-    }
-
-    const shouldGrant = this.shouldGrantStatus(status, event, defaultGrant, forceRevoke)
-    if (shouldGrant === null) {
-      logger.warn(`[AuthProvider] Creem ${event} event for tenant ${tenantId} missing actionable status, skipping`)
-      return
-    }
-    if (shouldGrant) {
-      await this.applyPlanUpdates({ tenantId, planId, storagePlanId, event })
-      return
-    }
-
-    await this.applyRevocation({ tenantId, planId, storagePlanId, event })
-  }
-
-  private async attachSubscriptionTenant(subscriptionId: string, tenantId: string): Promise<void> {
-    const db = this.drizzleProvider.getDb()
-    await db
-      .update(creemSubscriptions)
-      .set({ tenantId, updatedAt: new Date().toISOString() })
-      .where(eq(creemSubscriptions.creemSubscriptionId, subscriptionId))
-  }
-
-  private mergeMetadata(...sources: Array<Record<string, unknown> | null | undefined>): Record<string, unknown> | null {
-    const merged = sources.filter(Boolean).reduce<Record<string, unknown>>((acc, curr) => {
-      Object.assign(acc, curr as Record<string, unknown>)
-      return acc
-    }, {})
-    return Object.keys(merged).length > 0 ? merged : null
-  }
-
-  private shouldGrantStatus(
-    status: string | null | undefined,
-    event: string,
-    defaultGrant: boolean,
-    forceRevoke: boolean,
-  ): boolean | null {
-    if (forceRevoke) {
-      return false
-    }
-    const normalized = status?.toLowerCase() ?? null
-    const grantStatuses = new Set(['active', 'trialing', 'paid'])
-
-    if (event === 'checkout.completed') {
-      return true
-    }
-
-    if (normalized && grantStatuses.has(normalized)) {
-      return true
-    }
-
-    if (event === 'subscription.update') {
-      if (!normalized) {
-        return defaultGrant ? true : null
-      }
-      return grantStatuses.has(normalized)
-    }
-
-    if (!normalized && !defaultGrant) {
-      return null
-    }
-
-    return defaultGrant
-  }
-
-  private async applyPlanUpdates(params: {
-    tenantId: string
-    planId: BillingPlanId | null
-    storagePlanId: string | null
-    event: string
-  }): Promise<void> {
-    const { tenantId, planId, storagePlanId, event } = params
-    let handled = false
-
-    if (planId) {
-      handled = true
-      try {
-        await this.billingPlanService.updateTenantPlan(tenantId, planId)
-        logger.info(`[AuthProvider] Tenant ${tenantId} set to billing plan ${planId} via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to update tenant ${tenantId} billing plan from Creem (${event})`, error)
-      }
-    }
-
-    if (storagePlanId) {
-      handled = true
-      try {
-        await this.storagePlanService.updateTenantPlan(tenantId, storagePlanId)
-        logger.info(`[AuthProvider] Tenant ${tenantId} storage plan set to ${storagePlanId} via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to update tenant ${tenantId} storage plan from Creem (${event})`, error)
-      }
-    }
-
-    if (!handled) {
-      logger.warn(`[AuthProvider] Creem ${event} event for tenant ${tenantId} missing plan metadata`)
-    }
-  }
-
-  private async applyRevocation(params: {
-    tenantId: string
-    planId: BillingPlanId | null
-    storagePlanId: string | null
-    event: string
-  }): Promise<void> {
-    const { tenantId, planId, storagePlanId, event } = params
-    let handled = false
-    let shouldDeleteCustomDomains = false
-
-    if (planId) {
-      handled = true
-      try {
-        await this.billingPlanService.updateTenantPlan(tenantId, 'free')
-        shouldDeleteCustomDomains = true
-        logger.info(`[AuthProvider] Tenant ${tenantId} downgraded to free via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to downgrade tenant ${tenantId} after Creem ${event}`, error)
-      }
-    }
-
-    if (storagePlanId) {
-      handled = true
-      try {
-        await this.storagePlanService.updateTenantPlan(tenantId, null)
-        logger.info(`[AuthProvider] Tenant ${tenantId} storage plan cleared via Creem (${event})`)
-      }
-      catch (error) {
-        logger.error(`[AuthProvider] Failed to clear tenant ${tenantId} storage plan after Creem ${event}`, error)
-      }
-    }
-
-    if (shouldDeleteCustomDomains) {
-      try {
-        const deletedCount = await this.tenantDomainService.deleteDomainsForTenant(tenantId)
-        logger.info(`[AuthProvider] Deleted ${deletedCount} custom domains for tenant ${tenantId} after Creem ${event}`)
-      }
-      catch (error) {
-        logger.error(
-          `[AuthProvider] Failed to delete custom domains for tenant ${tenantId} after Creem ${event}`,
-          error,
-        )
-        throw error
-      }
-    }
-
-    if (!handled) {
-      logger.warn(`[AuthProvider] Creem ${event} event for tenant ${tenantId} missing plan metadata`)
-    }
-  }
-
-  private extractPlanIdFromMetadata(metadata?: Record<string, unknown>): BillingPlanId | null {
-    const planId = this.extractMetadataValue(metadata, 'planId')
-    if (!planId) {
-      return null
-    }
-    if (BILLING_PLAN_IDS.includes(planId as BillingPlanId)) {
-      return planId as BillingPlanId
-    }
-    return null
-  }
-
-  private extractStoragePlanIdFromMetadata(metadata?: Record<string, unknown>): string | null {
-    return this.extractMetadataValue(metadata, 'storagePlanId')
-  }
-
-  private extractMetadataValue(metadata: Record<string, unknown> | undefined, key: string): string | null {
-    if (!metadata) {
-      return null
-    }
-    const raw = metadata[key]
-    if (typeof raw !== 'string') {
-      return null
-    }
-    const trimmed = raw.trim()
-    return trimmed.length > 0 ? trimmed : null
   }
 
   async handler(context: Context): Promise<Response> {

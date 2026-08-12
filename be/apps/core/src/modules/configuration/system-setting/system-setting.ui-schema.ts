@@ -1,4 +1,4 @@
-import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/billing-plan.constants'
+import { BILLING_PLAN_IDS } from '@core/modules/platform/billing/plan/billing-plan.constants'
 import type { UiSchemaTFunction } from '@core/modules/ui/ui-schema/ui-schema.i18n'
 import { identityUiSchemaT } from '@core/modules/ui/ui-schema/ui-schema.i18n'
 import type { UiNode, UiSchema } from '@core/modules/ui/ui-schema/ui-schema.type'
@@ -65,6 +65,12 @@ const PLAN_PAYMENT_FIELDS = [
     titleKey: 'system.sections.billing.fields.payment.creem-product.title',
     descriptionKey: 'system.sections.billing.fields.payment.creem-product.description',
     placeholderKey: 'system.sections.billing.fields.payment.creem-product.placeholder',
+  },
+  {
+    suffix: 'appStoreProductId',
+    titleKey: 'system.sections.billing.fields.payment.app-store-product.title',
+    descriptionKey: 'system.sections.billing.fields.payment.app-store-product.description',
+    placeholderKey: 'system.sections.billing.fields.payment.app-store-product.placeholder',
   },
 ] as const
 

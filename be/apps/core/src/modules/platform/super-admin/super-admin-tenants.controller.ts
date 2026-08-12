@@ -3,14 +3,15 @@ import { DbAccessor } from '@core/database/database.provider'
 import { PlatformRoles } from '@core/guards/roles.decorator'
 import { BypassResponseTransform } from '@core/interceptors/response-transform.decorator'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
-import { BillingPlanService } from '@core/modules/platform/billing/billing-plan.service'
-import { BillingUsageService } from '@core/modules/platform/billing/billing-usage.service'
+import { BillingEntitlementService } from '@core/modules/platform/billing/entitlement/billing-entitlement.service'
+import { BillingPlanService } from '@core/modules/platform/billing/plan/billing-plan.service'
+import { BillingUsageService } from '@core/modules/platform/billing/usage/billing-usage.service'
 import { ManagedStorageService } from '@core/modules/platform/managed-storage/managed-storage.service'
 import { TenantService } from '@core/modules/platform/tenant/tenant.service'
 import { Body, Controller, Delete, Get, Param, Patch, Query } from '@tsuki-hono/common'
 import { desc, eq } from 'drizzle-orm'
 
-import type { BillingPlanId } from '../billing/billing-plan.types'
+import type { BillingPlanId } from '../billing/plan/billing-plan.types'
 import { DataManagementService } from '../data-management/data-management.service'
 import {
   ListTenantsQueryDto,
@@ -30,6 +31,7 @@ export class SuperAdminTenantController {
     private readonly tenantService: TenantService,
     private readonly dataManagementService: DataManagementService,
     private readonly billingPlanService: BillingPlanService,
+    private readonly billingEntitlements: BillingEntitlementService,
     private readonly billingUsageService: BillingUsageService,
     private readonly managedStorageService: ManagedStorageService,
     private readonly systemSettings: SystemSettingService,
@@ -144,7 +146,12 @@ export class SuperAdminTenantController {
         before,
       },
       async () => {
-        await this.billingPlanService.updateTenantPlan(params.tenantId, dto.planId as BillingPlanId)
+        await this.billingEntitlements.setManualGrant({
+          kind: 'application_plan',
+          sourceId: `superadmin:${params.tenantId}`,
+          tenantId: params.tenantId,
+          value: dto.planId as BillingPlanId,
+        })
         return { updated: true, planId: dto.planId }
       },
       result => ({ after: result }),
@@ -162,7 +169,12 @@ export class SuperAdminTenantController {
         before,
       },
       async () => {
-        await this.tenantService.updateStoragePlan(params.tenantId, dto.storagePlanId)
+        await this.billingEntitlements.setManualGrant({
+          kind: 'managed_storage',
+          sourceId: `superadmin:${params.tenantId}`,
+          tenantId: params.tenantId,
+          value: dto.storagePlanId,
+        })
         return { updated: true, storagePlanId: dto.storagePlanId }
       },
       result => ({ after: result }),

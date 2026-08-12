@@ -37,6 +37,18 @@ export function extractClientIp(context: Context): string | null {
 }
 
 /**
+ * A TLS-terminating proxy forwards the inner request as plain http, so `req.url` alone
+ * under-reports HTTPS and would silently drop the Secure flag from cookies.
+ */
+export function isSecureRequest(context: Context): boolean {
+  const forwardedProto = context.req.header('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase()
+  if (forwardedProto) {
+    return forwardedProto === 'https'
+  }
+  return new URL(context.req.url).protocol === 'https:'
+}
+
+/**
  * Get client IP from current HTTP context
  * Returns null if not in HTTP request context
  */
@@ -47,7 +59,8 @@ export function getClientIp(): string | null {
       return null
     }
     return extractClientIp(context)
-  } catch {
+  }
+  catch {
     return null
   }
 }

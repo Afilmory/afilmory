@@ -28,6 +28,7 @@
     "@afilmory/sdk": "workspace:*",
     "@afilmory/task-queue": "workspace:*",
     "@afilmory/utils": "workspace:*",
+    "@apple/app-store-server-library": "3.1.0",
     "@aws-crypto/sha256-js": "5.2.0",
     "@aws-sdk/client-s3": "3.1069.0",
     "@creem_io/better-auth": "1.1.1",

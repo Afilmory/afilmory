@@ -278,6 +278,11 @@ const zhCnUiSchema = {
               description: '用于创建结算会话的 Creem 商品 ID。留空表示该计划不会显示升级入口。',
               placeholder: 'prod_xxx',
             },
+            'app-store-product': {
+              title: 'App Store 商品 ID',
+              description: '在 iOS 应用内提供的自动续期订阅商品。',
+              placeholder: 'app.afilmory.subscription.pro',
+            },
             'helper': '为空将隐藏升级入口。',
           },
         },

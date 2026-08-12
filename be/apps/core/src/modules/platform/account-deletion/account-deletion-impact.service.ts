@@ -1,9 +1,9 @@
-import { authAccounts, authUsers, creemSubscriptions, tenantMemberships, tenants } from '@afilmory/db'
+import { authAccounts, authUsers, billingSubscriptions, tenantMemberships, tenants } from '@afilmory/db'
 import { DbAccessor } from '@core/database/database.provider'
 import { eq, inArray, or } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
-import { selectOwnerSuccessor } from './account-deletion.policy'
+import { requiresExternalSubscriptionCancellation, selectOwnerSuccessor } from './account-deletion.policy'
 import type {
   AccountDeletionImpact,
   AccountDeletionProofMethod,
@@ -16,28 +16,23 @@ export class AccountDeletionImpactService {
 
   async build(userId: string): Promise<AccountDeletionImpact> {
     const db = this.dbAccessor.get()
-    const [user, memberships, accounts] = await Promise.all([
-      db
-        .select({ creemCustomerId: authUsers.creemCustomerId })
-        .from(authUsers)
-        .where(eq(authUsers.id, userId))
-        .limit(1)
-        .then(records => records[0] ?? null),
-      db
-        .select({
-          createdAt: tenantMemberships.createdAt,
-          membershipId: tenantMemberships.id,
-          name: tenants.name,
-          role: tenantMemberships.role,
-          slug: tenants.slug,
-          status: tenantMemberships.status,
-          tenantId: tenants.id,
-        })
-        .from(tenantMemberships)
-        .innerJoin(tenants, eq(tenants.id, tenantMemberships.tenantId))
-        .where(eq(tenantMemberships.userId, userId)),
-      db.select({ providerId: authAccounts.providerId }).from(authAccounts).where(eq(authAccounts.userId, userId)),
-    ])
+    const memberships = await db
+      .select({
+        createdAt: tenantMemberships.createdAt,
+        membershipId: tenantMemberships.id,
+        name: tenants.name,
+        role: tenantMemberships.role,
+        slug: tenants.slug,
+        status: tenantMemberships.status,
+        tenantId: tenants.id,
+      })
+      .from(tenantMemberships)
+      .innerJoin(tenants, eq(tenants.id, tenantMemberships.tenantId))
+      .where(eq(tenantMemberships.userId, userId))
+    const accounts = await db
+      .select({ providerId: authAccounts.providerId })
+      .from(authAccounts)
+      .where(eq(authAccounts.userId, userId))
 
     const ownedTenantIds = memberships
       .filter(membership => membership.status === 'active' && membership.role === 'owner')
@@ -82,7 +77,7 @@ export class AccountDeletionImpactService {
         }
       })
 
-    const subscriptions = await this.listSubscriptions(ownedTenantIds, user?.creemCustomerId ?? null)
+    const subscriptions = await this.listSubscriptions(userId, ownedTenantIds)
 
     return {
       joinedWorkspaces: memberships
@@ -94,24 +89,29 @@ export class AccountDeletionImpactService {
     }
   }
 
-  private async listSubscriptions(tenantIds: string[], creemCustomerId: string | null) {
+  private async listSubscriptions(userId: string, tenantIds: string[]) {
     const conditions = [
-      tenantIds.length > 0 ? inArray(creemSubscriptions.tenantId, tenantIds) : null,
-      creemCustomerId ? eq(creemSubscriptions.creemCustomerId, creemCustomerId) : null,
+      tenantIds.length > 0 ? inArray(billingSubscriptions.tenantId, tenantIds) : null,
+      eq(billingSubscriptions.billingOwnerUserId, userId),
     ].filter((condition): condition is NonNullable<typeof condition> => Boolean(condition))
-    if (conditions.length === 0) {
-      return []
-    }
     const db = this.dbAccessor.get()
-    return await db
+    const records = await db
       .select({
-        id: creemSubscriptions.id,
-        status: creemSubscriptions.status,
-        subscriptionId: creemSubscriptions.creemSubscriptionId,
-        tenantId: creemSubscriptions.tenantId,
+        id: billingSubscriptions.id,
+        provider: billingSubscriptions.provider,
+        status: billingSubscriptions.status,
+        subscriptionId: billingSubscriptions.externalSubscriptionId,
+        tenantId: billingSubscriptions.tenantId,
       })
-      .from(creemSubscriptions)
+      .from(billingSubscriptions)
       .where(conditions.length === 1 ? conditions[0] : or(...conditions))
+    return records.map(subscription => ({
+      ...subscription,
+      requiresExternalCancellation: requiresExternalSubscriptionCancellation(
+        subscription.provider,
+        subscription.status,
+      ),
+    }))
   }
 
   private resolveProofMethods(providerIds: string[]): AccountDeletionProofMethod[] {

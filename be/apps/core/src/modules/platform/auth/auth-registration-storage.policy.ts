@@ -1,5 +1,5 @@
 import type { BuilderStorageProvider } from '@core/modules/configuration/setting/storage-provider.utils'
-import { DEFAULT_MANAGED_STORAGE_PLAN_ID } from '@core/modules/platform/billing/storage-plan.constants'
+import { DEFAULT_MANAGED_STORAGE_PLAN_ID } from '@core/modules/platform/billing/plan/storage-plan.constants'
 
 export interface RegistrationStorageDefaults {
   activeProvider: 'managed'

@@ -3,7 +3,7 @@ import { BizException, ErrorCode } from '@core/errors'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
 import type { CloudflareCustomHostname } from '@core/modules/infrastructure/cloudflare/cloudflare-custom-hostname.service'
 import { CloudflareCustomHostnameService } from '@core/modules/infrastructure/cloudflare/cloudflare-custom-hostname.service'
-import { BillingPlanService } from '@core/modules/platform/billing/billing-plan.service'
+import { BillingPlanService } from '@core/modules/platform/billing/plan/billing-plan.service'
 import { requireTenantContext } from '@core/modules/platform/tenant/tenant.context'
 import { injectable } from 'tsyringe'
 

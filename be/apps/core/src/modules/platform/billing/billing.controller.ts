@@ -3,11 +3,11 @@ import { Controller, createZodSchemaDto, Get, Query } from '@tsuki-hono/common'
 import { inject } from 'tsyringe'
 import z from 'zod'
 
-import type { BillingPlanSummary } from './billing-plan.service'
-import { BillingPlanService } from './billing-plan.service'
-import type { BillingUsageOverview } from './billing-usage.service'
-import { BillingUsageService } from './billing-usage.service'
-import { StoragePlanService } from './storage-plan.service'
+import type { BillingPlanSummary } from './plan/billing-plan.service'
+import { BillingPlanService } from './plan/billing-plan.service'
+import { StoragePlanService } from './plan/storage-plan.service'
+import type { BillingUsageOverview } from './usage/billing-usage.service'
+import { BillingUsageService } from './usage/billing-usage.service'
 
 const usageQuerySchema = z.object({
   limit: z.coerce.number().positive().int().optional().default(10),
@@ -29,7 +29,7 @@ export class BillingController {
   }
 
   @Get('plan')
-  async getCurrentPlan(): Promise<{ plan: BillingPlanSummary; availablePlans: BillingPlanSummary[] }> {
+  async getCurrentPlan(): Promise<{ plan: BillingPlanSummary, availablePlans: BillingPlanSummary[] }> {
     const [plan, availablePlans] = await Promise.all([
       this.billingPlanService.getCurrentPlanSummary(),
       this.billingPlanService.getPublicPlanSummaries(),

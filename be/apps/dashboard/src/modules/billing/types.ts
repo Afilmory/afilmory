@@ -16,6 +16,7 @@ export interface BillingPlanSummary {
     currency: string | null
   }
   payment?: {
+    appStoreProductId?: string | null
     creemProductId?: string | null
   }
 }

@@ -30,6 +30,12 @@ export function selectOwnerSuccessor(
   )
 }
 
+const TERMINAL_SUBSCRIPTION_STATUSES = new Set(['canceled', 'cancelled', 'expired', 'revoked'])
+
+export function requiresExternalSubscriptionCancellation(provider: 'app_store' | 'creem', status: string): boolean {
+  return provider === 'app_store' && !TERMINAL_SUBSCRIPTION_STATUSES.has(status.toLowerCase())
+}
+
 function roleRank(role: OwnerSuccessorCandidate['role']): number {
   return role === 'admin' ? 0 : role === 'member' ? 1 : 2
 }

@@ -36,6 +36,15 @@ export const env = createEnv({
     // Payment
     CREEM_API_KEY: z.string().min(1).optional(),
     CREEM_WEBHOOK_SECRET: z.string().min(1).optional(),
+    APP_STORE_BUNDLE_ID: z.string().min(1).default('app.afilmory'),
+    APP_STORE_APPLE_ID: z.string().regex(/^\d+$/).transform(Number).optional(),
+    APP_STORE_ROOT_CA_CERTIFICATES: z.string().min(1).optional(),
+    APP_STORE_ENABLE_ONLINE_CHECKS: z
+      .enum(['true', 'false'])
+      .transform(value => value === 'true')
+      .default(true),
+    MOBILE_STORAGE_HANDOFF_WEB_ORIGIN: z.url().optional(),
+    MOBILE_STORAGE_HANDOFF_RETURN_URL: z.string().min(1).default('afilmory://onboarding/storage'),
 
     // Mail
     RESEND_API_KEY: z.string().min(1).optional(),

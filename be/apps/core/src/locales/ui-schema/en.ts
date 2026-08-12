@@ -280,6 +280,11 @@ const enUiSchema = {
               description: 'Creem product used to create checkout sessions. Leave blank to hide the upgrade entry.',
               placeholder: 'prod_xxx',
             },
+            'app-store-product': {
+              title: 'App Store product ID',
+              description: 'Auto-renewable subscription product offered in the iOS application.',
+              placeholder: 'app.afilmory.subscription.pro',
+            },
             'helper': 'Blank values hide the upgrade entry.',
           },
         },

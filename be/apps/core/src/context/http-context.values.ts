@@ -6,7 +6,7 @@ import type { Session } from 'better-auth'
 
 export interface HttpContextAuth {
   user?: AuthSession['user']
-  session?: Session
+  session?: Session & { activeTenantId?: string | null }
 }
 declare module '@tsuki-hono/common' {
   interface HttpContextValues {

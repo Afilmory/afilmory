@@ -19,6 +19,15 @@ export const App: FC = () => {
 }
 
 function AppLayer() {
+  const location = useLocation()
+  if (location.pathname === '/storage-handoff') {
+    return <Outlet />
+  }
+
+  return <AuthenticatedAppLayer />
+}
+
+function AuthenticatedAppLayer() {
   const pageRedirect = usePageRedirect()
   useRoutePermission({
     session: pageRedirect.sessionQuery.data ?? null,

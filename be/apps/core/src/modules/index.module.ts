@@ -36,6 +36,7 @@ import { DashboardModule } from './platform/dashboard/dashboard.module'
 import { DataManagementModule } from './platform/data-management/data-management.module'
 import { FeaturedGalleriesModule } from './platform/featured-galleries/featured-galleries.module'
 import { GallerySubscriptionModule } from './platform/gallery-subscriptions/gallery-subscription.module'
+import { MobileModule } from './platform/mobile/mobile.module'
 import { PushNotificationModule } from './platform/push-notifications/push-notification.module'
 import { SuperAdminModule } from './platform/super-admin/super-admin.module'
 import { TenantModule } from './platform/tenant/tenant.module'
@@ -72,6 +73,7 @@ function createEventModuleOptions(redis: RedisAccessor) {
     ReactionModule,
     DashboardModule,
     BillingModule,
+    MobileModule,
     DataManagementModule,
     TenantModule,
     FeaturedGalleriesModule,

@@ -2,7 +2,7 @@ import { generateId, tenants } from '@afilmory/db'
 import { RESERVED_TENANT_SLUGS } from '@afilmory/utils'
 import { DbAccessor } from '@core/database/database.provider'
 import { BizException, ErrorCode } from '@core/errors'
-import type { BillingPlanId } from '@core/modules/platform/billing/billing-plan.types'
+import type { BillingPlanId } from '@core/modules/platform/billing/plan/billing-plan.types'
 import { and, asc, count, desc, eq, ilike, isNotNull, notInArray, or } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
@@ -66,16 +66,6 @@ export class TenantRepository {
     await db.delete(tenants).where(eq(tenants.id, id))
   }
 
-  async updatePlan(id: string, planId: BillingPlanId): Promise<void> {
-    const db = this.dbAccessor.get()
-    await db.update(tenants).set({ planId, updatedAt: new Date().toISOString() }).where(eq(tenants.id, id))
-  }
-
-  async updateStoragePlan(id: string, storagePlanId: string | null): Promise<void> {
-    const db = this.dbAccessor.get()
-    await db.update(tenants).set({ storagePlanId, updatedAt: new Date().toISOString() }).where(eq(tenants.id, id))
-  }
-
   async updateBanned(id: string, banned: boolean): Promise<void> {
     const db = this.dbAccessor.get()
     await db.update(tenants).set({ banned, updatedAt: new Date().toISOString() }).where(eq(tenants.id, id))
@@ -89,7 +79,7 @@ export class TenantRepository {
     sortBy?: 'createdAt' | 'name'
     sortDir?: 'asc' | 'desc'
     requireStoragePlan?: boolean
-  }): Promise<{ items: TenantAggregate[]; total: number }> {
+  }): Promise<{ items: TenantAggregate[], total: number }> {
     const db = this.dbAccessor.get()
     const { page, limit, search, status, sortBy = 'createdAt', sortDir = 'desc' } = options
 
@@ -116,7 +106,8 @@ export class TenantRepository {
     const sortColumn = sortBy === 'name' ? tenants.name : tenants.createdAt
     if (sortDir === 'asc') {
       orderBy = asc(sortColumn)
-    } else {
+    }
+    else {
       orderBy = desc(sortColumn)
     }
 
@@ -129,7 +120,7 @@ export class TenantRepository {
       .orderBy(orderBy)
 
     return {
-      items: rows.map((tenant) => ({ tenant })),
+      items: rows.map(tenant => ({ tenant })),
       total: total?.count ?? 0,
     }
   }

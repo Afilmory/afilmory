@@ -2,6 +2,7 @@ import { DatabaseModule } from '@core/database/database.module'
 import { AppStateModule } from '@core/modules/app/app-state/app-state.module'
 import { SettingModule } from '@core/modules/configuration/setting/setting.module'
 import { SystemSettingModule } from '@core/modules/configuration/system-setting/system-setting.module'
+import { BillingModule } from '@core/modules/platform/billing/billing.module'
 import { Module } from '@tsuki-hono/common'
 
 import { TenantModule } from '../tenant/tenant.module'
@@ -16,7 +17,7 @@ import { AuthRegistrationService } from './auth-registration.service'
 import { WorkspaceMembershipService } from './workspace-membership.service'
 
 @Module({
-  imports: [DatabaseModule, SystemSettingModule, SettingModule, TenantModule, AppStateModule],
+  imports: [DatabaseModule, SystemSettingModule, SettingModule, TenantModule, AppStateModule, BillingModule],
   controllers: [AuthController, AppleAuthController],
   providers: [
     AuthProvider,

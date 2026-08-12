@@ -1,10 +1,9 @@
-import { creemSubscriptions, tenants } from '@afilmory/db'
+import { tenants } from '@afilmory/db'
 import { DbAccessor } from '@core/database/database.provider'
 import { BizException, ErrorCode } from '@core/errors'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
 import { requireTenantContext } from '@core/modules/platform/tenant/tenant.context'
-import { createLogger } from '@tsuki-hono/common'
-import { and, desc, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
 import { BillingPlanService } from './billing-plan.service'
@@ -26,7 +25,6 @@ export interface StorageQuotaSummary {
 
 @injectable()
 export class StoragePlanService {
-  private readonly logger = createLogger('StoragePlanService')
   constructor(
     private readonly dbAccessor: DbAccessor,
     private readonly systemSettingService: SystemSettingService,
@@ -49,9 +47,8 @@ export class StoragePlanService {
           },
           pricing[id],
           products[id],
-        ),
-      )
-      .filter((plan) => plan.isActive !== false)
+        ))
+      .filter(plan => plan.isActive !== false)
   }
 
   async getPlanById(planId: string): Promise<StoragePlanSummary | null> {
@@ -81,8 +78,8 @@ export class StoragePlanService {
     const storagePlanCapacity = storagePlan?.capacityBytes
     const storagePlanBytes = storagePlanCapacity === undefined ? 0 : storagePlanCapacity
 
-    const totalBytes =
-      appIncluded === Number.POSITIVE_INFINITY || storagePlanCapacity === null
+    const totalBytes
+      = appIncluded === Number.POSITIVE_INFINITY || storagePlanCapacity === null
         ? null
         : (appIncluded || 0) + (storagePlanBytes || 0)
 
@@ -105,24 +102,13 @@ export class StoragePlanService {
     return plan
   }
 
+  /**
+   * `tenants.storagePlanId` is written only by the entitlement projection, so a resolved plan
+   * already implies a live grant — no second lookup against provider tables.
+   */
   async getActivePlanSummaryForTenant(tenantId: string): Promise<StoragePlanSummary | null> {
     const plan = await this.getPlanSummaryForTenant(tenantId)
-    if (!plan || plan.isActive === false) {
-      return null
-    }
-
-    const productId = plan.payment?.creemProductId ?? null
-    if (!productId) {
-      return plan
-    }
-
-    const subscription = await this.resolveLatestSubscriptionForTenant(tenantId, productId)
-    if (!subscription) {
-      return plan
-    }
-
-    const state = this.resolveSubscriptionState(subscription)
-    return state === 'inactive' ? null : plan
+    return plan && plan.isActive !== false ? plan : null
   }
 
   async getOverviewForCurrentTenant(): Promise<StoragePlanOverview> {
@@ -142,19 +128,6 @@ export class StoragePlanService {
     }
   }
 
-  async updateCurrentTenantPlan(planId: string | null): Promise<StoragePlanOverview> {
-    const tenant = requireTenantContext()
-    await this.assignPlanToTenant(tenant.tenant.id, planId)
-    return await this.getOverviewForCurrentTenant()
-  }
-
-  /**
-   * Update the managed storage plan for the given tenant directly (e.g. from billing webhooks).
-   */
-  async updateTenantPlan(tenantId: string, planId: string | null): Promise<void> {
-    await this.assignPlanToTenant(tenantId, planId)
-  }
-
   private async resolveStoragePlanIdForTenant(tenantId: string): Promise<string | null> {
     const db = this.dbAccessor.get()
     const [record] = await db
@@ -168,48 +141,6 @@ export class StoragePlanService {
     }
     const planId = record.storagePlanId?.trim()
     return planId && planId.length > 0 ? planId : null
-  }
-
-  private async resolveLatestSubscriptionForTenant(tenantId: string, productId: string) {
-    const db = this.dbAccessor.get()
-    const [record] = await db
-      .select()
-      .from(creemSubscriptions)
-      .where(and(eq(creemSubscriptions.tenantId, tenantId), eq(creemSubscriptions.productId, productId)))
-      .orderBy(desc(creemSubscriptions.updatedAt))
-      .limit(1)
-
-    return record ?? null
-  }
-
-  private resolveSubscriptionState(
-    subscription: typeof creemSubscriptions.$inferSelect,
-  ): 'active' | 'inactive' | 'unknown' {
-    const now = Date.now()
-    const status = subscription.status?.toLowerCase() ?? null
-    const periodEndRaw = subscription.periodEnd
-    const periodEnd = periodEndRaw ? new Date(periodEndRaw).getTime() : null
-    const hasValidPeriodEnd = periodEnd !== null && !Number.isNaN(periodEnd)
-
-    if (hasValidPeriodEnd && periodEnd <= now) {
-      return 'inactive'
-    }
-
-    const activeStatuses = new Set(['active', 'trialing', 'paid'])
-    if (status && activeStatuses.has(status)) {
-      return 'active'
-    }
-
-    if (subscription.cancelAtPeriodEnd && hasValidPeriodEnd && periodEnd > now) {
-      return 'active'
-    }
-
-    const inactiveStatuses = new Set(['canceled', 'cancelled', 'expired', 'past_due', 'unpaid'])
-    if (status && inactiveStatuses.has(status)) {
-      return 'inactive'
-    }
-
-    return 'unknown'
   }
 
   private async getPlanCatalog(): Promise<Record<string, StoragePlanDefinition>> {
@@ -240,42 +171,5 @@ export class StoragePlanService {
       pricing,
       payment,
     }
-  }
-
-  private async assignPlanToTenant(tenantId: string, planId: string | null): Promise<void> {
-    const normalizedPlanId = this.normalizePlanId(planId)
-    const managedProviderKey = await this.systemSettingService.getManagedStorageProviderKey()
-    if (!managedProviderKey) {
-      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
-        message: '托管存储尚未启用，暂时无法订阅托管存储方案。',
-      })
-    }
-
-    if (normalizedPlanId) {
-      const plan = await this.getPlanById(normalizedPlanId)
-      if (!plan || plan.isActive === false) {
-        throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
-          message: `未知或未启用的托管存储方案：${normalizedPlanId}`,
-        })
-      }
-    }
-
-    await this.persistTenantStoragePlan(tenantId, normalizedPlanId)
-  }
-
-  private async persistTenantStoragePlan(tenantId: string, planId: string | null): Promise<void> {
-    const db = this.dbAccessor.get()
-    await db
-      .update(tenants)
-      .set({ storagePlanId: planId, updatedAt: new Date().toISOString() })
-      .where(eq(tenants.id, tenantId))
-  }
-
-  private normalizePlanId(planId?: string | null): string | null {
-    if (typeof planId !== 'string') {
-      return null
-    }
-    const trimmed = planId.trim()
-    return trimmed.length > 0 ? trimmed : null
   }
 }

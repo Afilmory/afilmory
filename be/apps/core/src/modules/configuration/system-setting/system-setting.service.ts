@@ -7,7 +7,7 @@ import {
   BILLING_PLAN_OVERRIDES_SETTING_KEY,
   BILLING_PLAN_PRICING_SETTING_KEY,
   BILLING_PLAN_PRODUCTS_SETTING_KEY,
-} from '@core/modules/platform/billing/billing-plan.constants'
+} from '@core/modules/platform/billing/plan/billing-plan.constants'
 import type {
   BillingPlanId,
   BillingPlanOverrides,
@@ -16,12 +16,12 @@ import type {
   BillingPlanPricingConfigs,
   BillingPlanProductConfigs,
   BillingPlanQuota,
-} from '@core/modules/platform/billing/billing-plan.types'
+} from '@core/modules/platform/billing/plan/billing-plan.types'
 import type {
   StoragePlanCatalog,
   StoragePlanPricingConfigs,
   StoragePlanProductConfigs,
-} from '@core/modules/platform/billing/storage-plan.types'
+} from '@core/modules/platform/billing/plan/storage-plan.types'
 import { sql } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 import type { ZodType } from 'zod'
@@ -64,6 +64,7 @@ const PLAN_OVERRIDE_ENTRY_SCHEMA = z.object({
 const BILLING_PLAN_OVERRIDES_SCHEMA = z.record(z.string(), PLAN_OVERRIDE_ENTRY_SCHEMA).default({})
 
 const PLAN_PRODUCT_ENTRY_SCHEMA = z.object({
+  appStoreProductId: z.string().trim().min(1).optional(),
   creemProductId: z.string().trim().min(1).optional(),
 })
 
@@ -542,7 +543,7 @@ export class SystemSettingService {
     const products = settings.billingPlanProducts ?? {}
     BILLING_PLAN_FIELD_DESCRIPTORS.payment.forEach((descriptor) => {
       const entry = products[descriptor.planId]
-      ;(map as Record<string, unknown>)[descriptor.field] = entry?.creemProductId ?? null
+      ;(map as Record<string, unknown>)[descriptor.field] = entry?.[descriptor.key] ?? null
     })
 
     return map
@@ -659,7 +660,10 @@ export class SystemSettingService {
           : typeof raw === 'string'
             ? normalizeNullableString(raw)
             : normalizeNullableString(String(raw))
-      summary.products[descriptor.planId] = { creemProductId: normalized }
+      summary.products[descriptor.planId] = {
+        ...summary.products[descriptor.planId],
+        [descriptor.key]: normalized,
+      }
     }
 
     return summary
@@ -720,12 +724,22 @@ export class SystemSettingService {
       for (const [planId, product] of Object.entries(updates.products) as Array<
         [BillingPlanId, BillingPlanPaymentInfo]
       >) {
-        const normalized = normalizeNullableString(product.creemProductId)
-        if (!normalized) {
+        const existing = nextProducts[planId] ?? {}
+        const next = {
+          appStoreProductId:
+            product.appStoreProductId === undefined
+              ? normalizeNullableString(existing.appStoreProductId)
+              : normalizeNullableString(product.appStoreProductId),
+          creemProductId:
+            product.creemProductId === undefined
+              ? normalizeNullableString(existing.creemProductId)
+              : normalizeNullableString(product.creemProductId),
+        }
+        if (!next.appStoreProductId && !next.creemProductId) {
           delete nextProducts[planId]
         }
         else {
-          nextProducts[planId] = { creemProductId: normalized }
+          nextProducts[planId] = next
         }
       }
       await this.systemSettingStore.set(BILLING_PLAN_PRODUCTS_SETTING_KEY, nextProducts)

@@ -56,6 +56,31 @@ export const accountDeletionStageEnum = pgEnum('account_deletion_stage', [
   'finalize_database',
   'completed',
 ])
+export const billingProviderEnum = pgEnum('billing_provider', ['creem', 'app_store'])
+export const billingSubscriptionStatusEnum = pgEnum('billing_subscription_status', [
+  'pending',
+  'active',
+  'grace_period',
+  'billing_retry',
+  'cancel_scheduled',
+  'expired',
+  'revoked',
+  'conflict',
+])
+export const billingEntitlementKindEnum = pgEnum('billing_entitlement_kind', ['application_plan', 'managed_storage'])
+export const billingEntitlementSourceEnum = pgEnum('billing_entitlement_source', ['subscription', 'manual'])
+export const billingEntitlementStatusEnum = pgEnum('billing_entitlement_status', ['active', 'inactive'])
+export const billingProviderEventStatusEnum = pgEnum('billing_provider_event_status', [
+  'pending',
+  'processed',
+  'failed',
+])
+export const mobileStorageHandoffStatusEnum = pgEnum('mobile_storage_handoff_status', [
+  'issued',
+  'exchanged',
+  'completed',
+  'expired',
+])
 export const CURRENT_PHOTO_MANIFEST_VERSION: ManifestVersion = CURRENT_MANIFEST_VERSION
 
 export type PhotoAssetConflictType = 'missing-in-storage' | 'metadata-mismatch' | 'photo-id-conflict'
@@ -347,6 +372,168 @@ export const creemSubscriptions = pgTable('creem_subscription', {
   createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
 })
+
+export const billingSubjects = pgTable(
+  'billing_subject',
+  {
+    tenantId: text('tenant_id')
+      .primaryKey()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    appAccountToken: text('app_account_token').notNull(),
+    billingOwnerUserId: text('billing_owner_user_id').references(() => authUsers.id, { onDelete: 'set null' }),
+    tombstonedAt: timestamp('tombstoned_at', { mode: 'string' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [unique('uq_billing_subject_app_account_token').on(t.appAccountToken)],
+)
+
+export const billingOffers = pgTable('billing_offer', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  applicationPlanId: text('application_plan_id'),
+  storagePlanId: text('storage_plan_id'),
+  rank: integer('rank').notNull().default(0),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+})
+
+export const billingOfferProducts = pgTable(
+  'billing_offer_product',
+  {
+    id: snowflakeId,
+    offerId: text('offer_id')
+      .notNull()
+      .references(() => billingOffers.id, { onDelete: 'cascade' }),
+    provider: billingProviderEnum('provider').notNull(),
+    externalProductId: text('external_product_id').notNull(),
+    environment: text('environment').notNull(),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_billing_offer_product_provider_environment_external').on(t.provider, t.environment, t.externalProductId),
+    index('idx_billing_offer_product_offer').on(t.offerId),
+  ],
+)
+
+export const billingSubscriptions = pgTable(
+  'billing_subscription',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    billingOwnerUserId: text('billing_owner_user_id').references(() => authUsers.id, { onDelete: 'set null' }),
+    offerId: text('offer_id')
+      .notNull()
+      .references(() => billingOffers.id, { onDelete: 'restrict' }),
+    provider: billingProviderEnum('provider').notNull(),
+    externalSubscriptionId: text('external_subscription_id').notNull(),
+    originalTransactionId: text('original_transaction_id'),
+    appAccountToken: text('app_account_token'),
+    environment: text('environment').notNull(),
+    status: billingSubscriptionStatusEnum('status').notNull().default('pending'),
+    periodStart: timestamp('period_start', { mode: 'string' }),
+    periodEnd: timestamp('period_end', { mode: 'string' }),
+    cancelAtPeriodEnd: boolean('cancel_at_period_end').notNull().default(false),
+    providerUpdatedAt: timestamp('provider_updated_at', { mode: 'string' }),
+    metadata: jsonb('metadata').$type<Record<string, unknown> | null>().default(null),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_billing_subscription_provider_environment_external').on(
+      t.provider,
+      t.environment,
+      t.externalSubscriptionId,
+    ),
+    uniqueIndex('uq_billing_subscription_provider_environment_original')
+      .on(t.provider, t.environment, t.originalTransactionId)
+      .where(sql`${t.originalTransactionId} is not null`),
+    index('idx_billing_subscription_tenant_status').on(t.tenantId, t.status),
+    index('idx_billing_subscription_app_account_token').on(t.appAccountToken),
+  ],
+)
+
+export const billingEntitlements = pgTable(
+  'billing_entitlement',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    kind: billingEntitlementKindEnum('kind').notNull(),
+    value: text('value').notNull(),
+    sourceType: billingEntitlementSourceEnum('source_type').notNull(),
+    sourceId: text('source_id').notNull(),
+    status: billingEntitlementStatusEnum('status').notNull().default('active'),
+    rank: integer('rank').notNull().default(0),
+    startsAt: timestamp('starts_at', { mode: 'string' }).defaultNow().notNull(),
+    endsAt: timestamp('ends_at', { mode: 'string' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_billing_entitlement_source_kind').on(t.sourceType, t.sourceId, t.kind),
+    index('idx_billing_entitlement_tenant_status').on(t.tenantId, t.status, t.kind),
+  ],
+)
+
+export const billingProviderEvents = pgTable(
+  'billing_provider_event',
+  {
+    id: snowflakeId,
+    provider: billingProviderEnum('provider').notNull(),
+    environment: text('environment').notNull(),
+    externalEventId: text('external_event_id').notNull(),
+    externalSubscriptionId: text('external_subscription_id'),
+    signedAt: timestamp('signed_at', { mode: 'string' }),
+    receivedAt: timestamp('received_at', { mode: 'string' }).defaultNow().notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+    payloadDigest: text('payload_digest').notNull(),
+    processingStatus: billingProviderEventStatusEnum('processing_status').notNull().default('pending'),
+    processedAt: timestamp('processed_at', { mode: 'string' }),
+    errorCode: text('error_code'),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_billing_provider_event_provider_environment_external').on(t.provider, t.environment, t.externalEventId),
+    index('idx_billing_provider_event_processing').on(t.processingStatus, t.receivedAt),
+  ],
+)
+
+export const mobileStorageHandoffs = pgTable(
+  'mobile_storage_handoff',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    capabilityTokenHash: text('capability_token_hash'),
+    status: mobileStorageHandoffStatusEnum('status').notNull().default('issued'),
+    expiresAt: timestamp('expires_at', { mode: 'string' }).notNull(),
+    capabilityExpiresAt: timestamp('capability_expires_at', { mode: 'string' }),
+    exchangedAt: timestamp('exchanged_at', { mode: 'string' }),
+    completedAt: timestamp('completed_at', { mode: 'string' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_mobile_storage_handoff_token_hash').on(t.tokenHash),
+    uniqueIndex('uq_mobile_storage_handoff_capability_token_hash')
+      .on(t.capabilityTokenHash)
+      .where(sql`${t.capabilityTokenHash} is not null`),
+    index('idx_mobile_storage_handoff_tenant_status').on(t.tenantId, t.status),
+  ],
+)
 
 export const settings = pgTable(
   'settings',
@@ -678,6 +865,13 @@ export const dbSchema = {
   appleAuthorizations,
   accountDeletionRequests,
   creemSubscriptions,
+  billingSubjects,
+  billingOffers,
+  billingOfferProducts,
+  billingSubscriptions,
+  billingEntitlements,
+  billingProviderEvents,
+  mobileStorageHandoffs,
 
   settings,
   systemSettings,

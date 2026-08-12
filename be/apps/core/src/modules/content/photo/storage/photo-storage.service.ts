@@ -19,7 +19,7 @@ import { BuilderConfigService } from '@core/modules/configuration/builder-config
 import { SettingService } from '@core/modules/configuration/setting/setting.service'
 import type { BuilderStorageProvider } from '@core/modules/configuration/setting/storage-provider.utils'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
-import { StoragePlanService } from '@core/modules/platform/billing/storage-plan.service'
+import { StoragePlanService } from '@core/modules/platform/billing/plan/storage-plan.service'
 import { injectable } from 'tsyringe'
 
 import { parseRetryMode } from './storage-config-parser.utils'
@@ -43,10 +43,10 @@ export class PhotoStorageService {
   async resolveConfigForTenant(
     tenantId: string,
     overrides: ResolveOverrides = {},
-  ): Promise<{ builderConfig: BuilderConfig; storageConfig: StorageConfig }> {
+  ): Promise<{ builderConfig: BuilderConfig, storageConfig: StorageConfig }> {
     const activeProviderIdRaw = await this.settingService.get('builder.storage.activeProvider', { tenantId })
-    const activeProviderId =
-      typeof activeProviderIdRaw === 'string' && activeProviderIdRaw.trim().length > 0
+    const activeProviderId
+      = typeof activeProviderIdRaw === 'string' && activeProviderIdRaw.trim().length > 0
         ? activeProviderIdRaw.trim()
         : null
 
@@ -131,45 +131,64 @@ export class PhotoStorageService {
         }
 
         const region = normalizeStringToUndefined(config.region)
-        if (region) result.region = region
+        if (region)
+          result.region = region
         const endpoint = normalizeStringToUndefined(config.endpoint)
-        if (endpoint) result.endpoint = endpoint
+        if (endpoint)
+          result.endpoint = endpoint
         const accessKeyId = normalizeStringToUndefined(config.accessKeyId)
-        if (accessKeyId) result.accessKeyId = accessKeyId
+        if (accessKeyId)
+          result.accessKeyId = accessKeyId
         const secretAccessKey = normalizeStringToUndefined(config.secretAccessKey)
-        if (secretAccessKey) result.secretAccessKey = secretAccessKey
+        if (secretAccessKey)
+          result.secretAccessKey = secretAccessKey
 
         const prefix = normalizeStringToUndefined(config.prefix)
-        if (prefix) result.prefix = prefix
+        if (prefix)
+          result.prefix = prefix
         const customDomain = normalizeStringToUndefined(config.customDomain)
-        if (customDomain) result.customDomain = customDomain
+        if (customDomain)
+          result.customDomain = customDomain
         const excludeRegex = normalizeStringToUndefined(config.excludeRegex)
-        if (excludeRegex) result.excludeRegex = excludeRegex
+        if (excludeRegex)
+          result.excludeRegex = excludeRegex
 
         const maxFileLimit = parseNumber(config.maxFileLimit)
-        if (typeof maxFileLimit === 'number') result.maxFileLimit = maxFileLimit
+        if (typeof maxFileLimit === 'number')
+          result.maxFileLimit = maxFileLimit
         const keepAlive = parseBoolean(config.keepAlive)
-        if (typeof keepAlive === 'boolean') result.keepAlive = keepAlive
+        if (typeof keepAlive === 'boolean')
+          result.keepAlive = keepAlive
         const maxSockets = parseNumber(config.maxSockets)
-        if (typeof maxSockets === 'number') result.maxSockets = maxSockets
+        if (typeof maxSockets === 'number')
+          result.maxSockets = maxSockets
         const connectionTimeoutMs = parseNumber(config.connectionTimeoutMs)
-        if (typeof connectionTimeoutMs === 'number') result.connectionTimeoutMs = connectionTimeoutMs
+        if (typeof connectionTimeoutMs === 'number')
+          result.connectionTimeoutMs = connectionTimeoutMs
         const socketTimeoutMs = parseNumber(config.socketTimeoutMs)
-        if (typeof socketTimeoutMs === 'number') result.socketTimeoutMs = socketTimeoutMs
+        if (typeof socketTimeoutMs === 'number')
+          result.socketTimeoutMs = socketTimeoutMs
         const requestTimeoutMs = parseNumber(config.requestTimeoutMs)
-        if (typeof requestTimeoutMs === 'number') result.requestTimeoutMs = requestTimeoutMs
+        if (typeof requestTimeoutMs === 'number')
+          result.requestTimeoutMs = requestTimeoutMs
         const idleTimeoutMs = parseNumber(config.idleTimeoutMs)
-        if (typeof idleTimeoutMs === 'number') result.idleTimeoutMs = idleTimeoutMs
+        if (typeof idleTimeoutMs === 'number')
+          result.idleTimeoutMs = idleTimeoutMs
         const totalTimeoutMs = parseNumber(config.totalTimeoutMs)
-        if (typeof totalTimeoutMs === 'number') result.totalTimeoutMs = totalTimeoutMs
+        if (typeof totalTimeoutMs === 'number')
+          result.totalTimeoutMs = totalTimeoutMs
         const retryMode = parseRetryMode(config.retryMode)
-        if (retryMode) result.retryMode = retryMode
+        if (retryMode)
+          result.retryMode = retryMode
         const maxAttempts = parseNumber(config.maxAttempts)
-        if (typeof maxAttempts === 'number') result.maxAttempts = maxAttempts
+        if (typeof maxAttempts === 'number')
+          result.maxAttempts = maxAttempts
         const downloadConcurrency = parseNumber(config.downloadConcurrency)
-        if (typeof downloadConcurrency === 'number') result.downloadConcurrency = downloadConcurrency
+        if (typeof downloadConcurrency === 'number')
+          result.downloadConcurrency = downloadConcurrency
         const sigV4Service = normalizeStringToUndefined(config.sigV4Service)
-        if (sigV4Service) result.sigV4Service = sigV4Service
+        if (sigV4Service)
+          result.sigV4Service = sigV4Service
 
         return result
       }
@@ -184,15 +203,20 @@ export class PhotoStorageService {
         }
 
         const branch = normalizeStringToUndefined(config.branch)
-        if (branch) result.branch = branch
+        if (branch)
+          result.branch = branch
         const token = normalizeStringToUndefined(config.token)
-        if (token) result.token = token
+        if (token)
+          result.token = token
         const pathValue = normalizeStringToUndefined(config.path)
-        if (pathValue) result.path = pathValue
+        if (pathValue)
+          result.path = pathValue
         const useRawUrl = parseBoolean(config.useRawUrl)
-        if (typeof useRawUrl === 'boolean') result.useRawUrl = useRawUrl
+        if (typeof useRawUrl === 'boolean')
+          result.useRawUrl = useRawUrl
         const customDomain = normalizeStringToUndefined(config.customDomain)
-        if (customDomain) result.customDomain = customDomain
+        if (customDomain)
+          result.customDomain = customDomain
 
         return result
       }
@@ -220,18 +244,24 @@ export class PhotoStorageService {
           bucketName,
         }
         const prefix = normalizeStringToUndefined(config.prefix)
-        if (prefix) result.prefix = prefix
+        if (prefix)
+          result.prefix = prefix
         const customDomain = normalizeStringToUndefined(config.customDomain)
-        if (customDomain) result.customDomain = customDomain
+        if (customDomain)
+          result.customDomain = customDomain
         const excludeRegex = normalizeStringToUndefined(config.excludeRegex)
-        if (excludeRegex) result.excludeRegex = excludeRegex
+        if (excludeRegex)
+          result.excludeRegex = excludeRegex
 
         const maxFileLimit = parseNumber(config.maxFileLimit)
-        if (typeof maxFileLimit === 'number') result.maxFileLimit = maxFileLimit
+        if (typeof maxFileLimit === 'number')
+          result.maxFileLimit = maxFileLimit
         const authorizationTtlMs = parseNumber(config.authorizationTtlMs)
-        if (typeof authorizationTtlMs === 'number') result.authorizationTtlMs = authorizationTtlMs
+        if (typeof authorizationTtlMs === 'number')
+          result.authorizationTtlMs = authorizationTtlMs
         const uploadUrlTtlMs = parseNumber(config.uploadUrlTtlMs)
-        if (typeof uploadUrlTtlMs === 'number') result.uploadUrlTtlMs = uploadUrlTtlMs
+        if (typeof uploadUrlTtlMs === 'number')
+          result.uploadUrlTtlMs = uploadUrlTtlMs
 
         return result
       }
