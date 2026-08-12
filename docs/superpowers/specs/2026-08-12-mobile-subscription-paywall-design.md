@@ -61,7 +61,7 @@ Add an optional `details?: Record<string, unknown>`, surfaced by `toResponse()`.
 | `photo-asset.service.ts:1812`, `:1827` | `storage` | `capacityBytes`, `usedBytes`, `incomingBytes` |
 | `data-sync.service.ts:1419` | `sync_object_size` | `limitMb`, `actualMb` |
 
-**3. SSE error events carry the same structure.** `photo.controller.ts:93` and `data-sync.controller.ts:50` widen their payload from `{ message }` to `{ message, code, details }` whenever the caught error is a `BizException`. Without this, the two paths that matter most stay a bare string. `data-sync.service.ts:1419` also moves from `COMMON_BAD_REQUEST` to the quota error — a plan limit reported as a generic 400 cannot be recognized by the client.
+**3. SSE error events carry the same structure.** `photo.controller.ts:93` and `data-sync.controller.ts:50` widen their payload from `{ message }` to `{ message, code, details }` whenever the caught error is a `BizException`. Without this, the two paths that matter most stay a bare string. Three sites also move from `COMMON_BAD_REQUEST` to the quota error — `photo-asset.service.ts:1436` (upload size), `:1460` (library items), and `data-sync.service.ts:1436` (sync object size). A plan limit reported as a generic 400 cannot be recognized by the client, and today all three are.
 
 **4. `GET billing/overview`** (owner-only, alongside the existing `billing/*` routes) returns one snapshot: current application plan, current storage plan, the five quota limits, current usage per dimension, the provider of the active subscription, and whether managed storage is enabled at all.
 
