@@ -10,6 +10,7 @@ import { PhotoBuilderService } from '@core/modules/content/photo/builder/photo-b
 import { PhotoStorageService } from '@core/modules/content/photo/storage/photo-storage.service'
 import { formatBytesToMb } from '@core/modules/content/photo/storage/storage.utils'
 import { BillingPlanService } from '@core/modules/platform/billing/plan/billing-plan.service'
+import { quotaExceeded } from '@core/modules/platform/billing/quota/billing-quota.error'
 import { BILLING_USAGE_EVENT } from '@core/modules/platform/billing/usage/billing-usage.constants'
 import { BillingUsageService } from '@core/modules/platform/billing/usage/billing-usage.service'
 import { GalleryPushQueue } from '@core/modules/platform/push-notifications/gallery-push.queue'
@@ -1433,8 +1434,10 @@ export class DataSyncService {
     const readableLimit = limits?.maxObjectSizeMb ?? formatBytesToMb(maxBytes)
     const actualSize = formatBytesToMb(size)
 
-    throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
+    throw quotaExceeded({
+      reason: 'sync_object_size',
       message: `存储对象 ${storageObject.key} (${actualSize} MB) 超出允许的同步大小 ${readableLimit} MB`,
+      details: { limitMb: maxBytes / 1024 / 1024, actualMb: size / 1024 / 1024 },
     })
   }
 

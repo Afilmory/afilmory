@@ -24,6 +24,7 @@ import type {
 } from '@core/modules/infrastructure/data-sync/data-sync.types'
 import { BillingPlanService } from '@core/modules/platform/billing/plan/billing-plan.service'
 import { StoragePlanService } from '@core/modules/platform/billing/plan/storage-plan.service'
+import { quotaExceeded } from '@core/modules/platform/billing/quota/billing-quota.error'
 import { BILLING_USAGE_EVENT } from '@core/modules/platform/billing/usage/billing-usage.constants'
 import { BillingUsageService } from '@core/modules/platform/billing/usage/billing-usage.service'
 import { ManagedStorageService } from '@core/modules/platform/managed-storage/managed-storage.service'
@@ -1432,8 +1433,10 @@ export class PhotoAssetService {
 
       const displayLimit = limitMb ?? formatBytesToMb(maxBytes)
       const actualSize = formatBytesToMb(size)
-      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
+      throw quotaExceeded({
+        reason: 'upload_size',
         message: `文件 ${input.filename} (${actualSize} MB) 超出允许的单张大小 ${displayLimit} MB`,
+        details: { limitMb: limitMb ?? maxBytes / 1024 / 1024, actualMb: size / 1024 / 1024 },
       })
     }
   }
@@ -1457,8 +1460,10 @@ export class PhotoAssetService {
 
     const current = await this.countTenantPhotos(tenantId, db)
     if (current + newPhotos > limit) {
-      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
+      throw quotaExceeded({
+        reason: 'library_items',
         message: `当前图库已有 ${current} 张图片，超过上限 ${limit}，无法继续上传`,
+        details: { limit, current },
       })
     }
   }
@@ -1809,10 +1814,12 @@ export class PhotoAssetService {
         totalBytes: usage.totalBytes,
         fileCount: usage.fileCount,
       })
-      throw new BizException(ErrorCode.BILLING_STORAGE_QUOTA_EXCEEDED, {
+      throw quotaExceeded({
+        reason: 'storage',
         message: `托管存储空间已超出套餐上限：当前已用 ${formatBytesForDisplay(
           usage.totalBytes,
         )}，套餐上限 ${formatBytesForDisplay(capacity)}。请清理空间或升级存储方案后再试。`,
+        details: { capacityBytes: capacity, usedBytes: usage.totalBytes, incomingBytes: params.incomingBytes },
       })
     }
 
@@ -1824,12 +1831,14 @@ export class PhotoAssetService {
         totalBytes: usage.totalBytes,
         fileCount: usage.fileCount,
       })
-      throw new BizException(ErrorCode.BILLING_STORAGE_QUOTA_EXCEEDED, {
+      throw quotaExceeded({
+        reason: 'storage',
         message: `托管存储空间不足：当前已用 ${formatBytesForDisplay(
           usage.totalBytes,
         )}，上传后预计 ${formatBytesForDisplay(projectedBytes)}，已超过套餐上限 ${formatBytesForDisplay(
           capacity,
         )}。请清理空间或升级存储方案后再试。`,
+        details: { capacityBytes: capacity, usedBytes: usage.totalBytes, incomingBytes: params.incomingBytes },
       })
     }
   }

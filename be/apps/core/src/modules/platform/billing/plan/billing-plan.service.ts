@@ -1,12 +1,12 @@
 import { tenants } from '@afilmory/db'
 import { DbAccessor } from '@core/database/database.provider'
-import { BizException, ErrorCode } from '@core/errors'
 import { normalizeString } from '@core/helpers/normalize.helper'
 import { SystemSettingService } from '@core/modules/configuration/system-setting/system-setting.service'
 import { requireTenantContext } from '@core/modules/platform/tenant/tenant.context'
 import { eq } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
+import { quotaExceeded } from '../quota/billing-quota.error'
 import { BILLING_USAGE_EVENT } from '../usage/billing-usage.constants'
 import { BillingUsageService } from '../usage/billing-usage.service'
 import { BILLING_PLAN_DEFINITIONS, BILLING_PLAN_IDS } from './billing-plan.constants'
@@ -137,8 +137,10 @@ export class BillingPlanService {
 
     if (used + incomingItems > quota.monthlyAssetProcessLimit) {
       const remaining = Math.max(quota.monthlyAssetProcessLimit - used, 0)
-      throw new BizException(ErrorCode.BILLING_PLAN_QUOTA_EXCEEDED, {
+      throw quotaExceeded({
+        reason: 'monthly_process',
         message: `当月新增照片额度不足，可用剩余：${remaining}，请求新增：${incomingItems}。升级订阅后即可提升限额。`,
+        details: { limit: quota.monthlyAssetProcessLimit, used, requested: incomingItems },
       })
     }
   }
@@ -154,7 +156,11 @@ export class BillingPlanService {
       = limit === 0
         ? '当前套餐不包含自定义域名。升级至 Pro 后可绑定 1 个自定义域名并使用托管 HTTPS。'
         : `自定义域名额度已用完（${currentDomainCount}/${limit}）。请删除现有域名后再绑定新的域名。`
-    throw new BizException(ErrorCode.BILLING_PLAN_QUOTA_EXCEEDED, { message })
+    throw quotaExceeded({
+      reason: 'custom_domain',
+      message,
+      details: { limit, current: currentDomainCount },
+    })
   }
 
   async hasCustomDomainEntitlement(tenantId: string): Promise<boolean> {
