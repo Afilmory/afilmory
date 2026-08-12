@@ -62,7 +62,10 @@ final class SubscriptionStore: ObservableObject {
     purchasingOfferId = offer.id
     defer { purchasingOfferId = nil }
     do {
-      let outcome = try await service.purchase(offerId: offer.id)
+      let outcome = try await service.purchase(
+        offerId: offer.id,
+        knownProductIds: offers.map(\.offer.externalProductId)
+      )
       if outcome == .completed {
         await load()
       }

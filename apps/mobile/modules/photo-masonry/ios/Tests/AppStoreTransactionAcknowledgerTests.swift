@@ -34,6 +34,35 @@ private actor RecordingPort: AppStoreAcknowledgementPort {
 
 private struct PortFailure: Error {}
 
+final class AppStoreOwnershipTests: XCTestCase {
+  private let workspaceToken = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
+  private let otherWorkspaceToken = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
+
+  func testATransactionBoughtForAnotherWorkspaceConflicts() {
+    XCTAssertTrue(
+      AppStoreOwnership.conflictsWithAnotherWorkspace(
+        transactionToken: otherWorkspaceToken,
+        workspaceToken: workspaceToken
+      )
+    )
+  }
+
+  func testResubscribingWithinTheSameWorkspaceDoesNotConflict() {
+    XCTAssertFalse(
+      AppStoreOwnership.conflictsWithAnotherWorkspace(
+        transactionToken: workspaceToken,
+        workspaceToken: workspaceToken
+      )
+    )
+  }
+
+  func testAnUnattributedTransactionDoesNotBlockThePurchase() {
+    XCTAssertFalse(
+      AppStoreOwnership.conflictsWithAnotherWorkspace(transactionToken: nil, workspaceToken: workspaceToken)
+    )
+  }
+}
+
 final class AppStoreTransactionAcknowledgerTests: XCTestCase {
   func testFinishesOnlyAfterTheServerRecordsTheSameTransaction() async throws {
     let port = RecordingPort(acknowledgedId: "2000000001")

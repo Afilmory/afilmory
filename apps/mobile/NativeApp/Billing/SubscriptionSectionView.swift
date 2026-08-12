@@ -119,8 +119,10 @@ struct SubscriptionSectionView: View {
         message = String(localized: "This purchase is waiting for approval.")
       case .success(.cancelled):
         return
-      case .failure:
-        message = String(localized: "The purchase could not be completed. Please try again.")
+      case .failure(let error):
+        message = error as? AppStoreBillingError == .subscribedInAnotherWorkspace
+          ? String(localized: "This Apple ID already has a subscription in another workspace. Switch back to that workspace, or use a different Apple ID.")
+          : String(localized: "The purchase could not be completed. Please try again.")
       }
     }
   }

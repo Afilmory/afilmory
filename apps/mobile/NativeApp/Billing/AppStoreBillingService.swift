@@ -8,10 +8,23 @@ enum AppStorePurchaseOutcome: Equatable {
   case pending
 }
 
-enum AppStoreBillingError: Error {
+enum AppStoreBillingError: Error, Equatable {
   case productUnavailable
+  case subscribedInAnotherWorkspace
   case unverifiedTransaction
   case windowSceneUnavailable
+}
+
+// Apple reuses one originalTransactionId across an Apple ID's whole subscription lineage — including
+// a resubscription within 180 days and any cross-grade inside the subscription group — so a second
+// workspace buying on the same Apple ID is charged by Apple and then rejected by the server as a
+// tenant conflict. Checking ownership before the purchase sheet is the only place that avoids taking
+// the customer's money for an entitlement we can never grant.
+enum AppStoreOwnership {
+  static func conflictsWithAnotherWorkspace(transactionToken: UUID?, workspaceToken: UUID) -> Bool {
+    guard let transactionToken else { return false }
+    return transactionToken != workspaceToken
+  }
 }
 
 struct LiveAppStoreAcknowledgementPort: AppStoreAcknowledgementPort {
@@ -46,10 +59,13 @@ final class AppStoreBillingService: Sendable {
     return Dictionary(uniqueKeysWithValues: products.map { ($0.id, $0) })
   }
 
-  func purchase(offerId: String) async throws -> AppStorePurchaseOutcome {
+  func purchase(offerId: String, knownProductIds: [String] = []) async throws -> AppStorePurchaseOutcome {
     let context = try await AppStoreBillingAPI.purchaseContext(offerId: offerId)
     guard let token = UUID(uuidString: context.appAccountToken) else {
       throw AppStoreBillingError.unverifiedTransaction
+    }
+    if await foreignOwnedProductId(among: Set(knownProductIds + [context.productId]), workspaceToken: token) != nil {
+      throw AppStoreBillingError.subscribedInAnotherWorkspace
     }
     guard let product = try await Product.products(for: [context.productId]).first(where: { $0.id == context.productId })
     else {
@@ -73,6 +89,23 @@ final class AppStoreBillingService: Sendable {
     @unknown default:
       throw AppStoreBillingError.unverifiedTransaction
     }
+  }
+
+  // `latest(for:)` rather than `currentEntitlements`: an expired subscription is exactly the case
+  // that still collides, because resubscribing within 180 days keeps the original transaction id.
+  private func foreignOwnedProductId(among productIds: Set<String>, workspaceToken: UUID) async -> String? {
+    for productId in productIds {
+      guard let result = await StoreKit.Transaction.latest(for: productId),
+            case .verified(let transaction) = result
+      else { continue }
+      if AppStoreOwnership.conflictsWithAnotherWorkspace(
+        transactionToken: transaction.appAccountToken,
+        workspaceToken: workspaceToken
+      ) {
+        return productId
+      }
+    }
+    return nil
   }
 
   func restore(productIds: [String]) async throws -> Int {

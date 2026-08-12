@@ -10857,6 +10857,40 @@
         }
       }
     },
+    "This Apple ID already has a subscription in another workspace. Switch back to that workspace, or use a different Apple ID.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この Apple ID は別のワークスペースですでにサブスクリプションを利用しています。そのワークスペースに戻るか、別の Apple ID をご利用ください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 Apple ID는 다른 워크스페이스에서 이미 구독 중입니다. 해당 워크스페이스로 돌아가거나 다른 Apple ID를 사용해 주세요."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Apple ID 已在另一個工作空間訂閱。請切換回該工作空間，或改用其他 Apple ID。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Apple ID 已在另一个工作空间订阅。请切换回该工作空间，或改用其他 Apple ID。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此 Apple ID 已在另一個工作空間訂閱。請切換回該工作空間，或改用其他 Apple ID。"
+          }
+        }
+      }
+    },
     "This account is no longer signed in.": {
       "localizations": {
         "ja": {
