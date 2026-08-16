@@ -6,7 +6,7 @@
 
 > **Partly superseded by `2026-08-03-photo-transition-native-rebuild-design.md`.** Rows 16, 17, 21, 23 and 27 of the decision table below — the animation-less route transition, the opening window snapshot, the absent system interactive dismiss, the painted placeholder slot and the presenter handoff — exist only to survive React driving the navigation. Once the detail view controller is presented natively they are deleted and replaced by standard UIKit custom transitions with a live presenter. Every other row, including all of the visual design and the commit rule, still holds.
 
-> **Gesture amendment (2026-08-11).** The earlier zoom gate is removed after direct comparison with the iOS Photos app. A downward one-finger drag may begin at any zoom scale and preserves the current zoomed crop during the transition. A non-cancelling pinch tracker recognizes simultaneously with `UIScrollView` so the same touch sequence can zoom from an arbitrary scale to fit and continue directly into interactive dismissal.
+> **Gesture amendment (2026-08-16).** A downward one-finger drag may begin at any zoom scale and preserves the current zoomed crop during the transition. Pinch-to-dismiss is instead gated by the zoom scale at the beginning of each pinch gesture. A gesture that begins above fit may only return the image to fit; the user must release and begin a new inward pinch from fit before interactive dismissal can start. This explicit boundary prevents the inner zoom and outer dismissal transforms from producing a visible alignment discontinuity.
 
 ## Problem
 
@@ -21,7 +21,7 @@ The iOS 18+ zoom transition treats the complete `RNSScreen` as the shared elemen
 | Opening snapshot | Capture the complete presenter synchronously at press time and retain it above the window until `PhotoDetailView` is ready, preventing navigation or React mounting from exposing an intermediate screen |
 | Opening photo | Reuse the already-decoded source-cell image as the viewer placeholder, then animate only `mediaViewport` from source geometry to identity |
 | Opening choreography | Backdrop remains full-bleed and fades 0→1 independently; detail chrome appears only during the final 0.16s of the photo's 0.42s spring |
-| Interactive tracking | Own one-finger pan and non-cancelling pinch-tracker recognizers on `PhotoDetailView`. The tracker recognizes simultaneously with the current cell's `UIScrollView` pinch and preserves its full cumulative scale. Both dismissal inputs transform **only** `mediaViewport`; pinch ownership is handed from inner zoom to dismissal when its effective scale crosses below fit |
+| Interactive tracking | Own one-finger pan and a pinch-dismiss recognizer on `PhotoDetailView`. A pinch gesture may participate in dismissal only when it begins at fit; a pinch that begins zoomed remains exclusively owned by the current cell's `UIScrollView` until all touches end. Both dismissal inputs transform **only** `mediaViewport` |
 | System interactive dismiss | Absent because the route has no zoom transition; the local detail pan is the only interactive dismiss owner |
 | Backdrop | Single full-bleed black `backgroundView` at the bottom of `PhotoDetailView`; alpha = 1 − progress during the drag, never transformed |
 | Grid placeholder | The masonry keeps a blank slot where the previewed photo came from — painted onto the presenter snapshot at capture time from the same rect the commit animation targets |
@@ -53,9 +53,9 @@ The source tap creates a transition session before React pushes the detail route
 
 `dismissPanGestureRecognizer` begins when: `interactiveDismissEnabled`, inspector closed (`progress ≤ 0.001`), no Live Photo hold, vertical dominance (|dy| > |dx| × 1.12), and downward. Zoom is deliberately not a gate. The pager and each zooming scroll view's pan require the dismiss pan to fail, so a downward drag dismisses while other directions retain their existing pan behavior.
 
-`PhotoTransitionInteraction` installs a non-cancelling pinch tracker on `PhotoDetailView` and permits simultaneous recognition only with another pinch recognizer. This tracker observes touch scale without modifying the viewer while `UIScrollView` remains the sole visual zoom owner at or above fit. Keeping an independent cumulative scale is required because `UIScrollView` consumes contraction at its minimum zoom boundary. Once the tracked effective scale crosses below fit, the cell is clamped to fit, paging is disabled, and the same uninterrupted touch sequence drives the outer interactive dismissal. The outer scale is anchored at the handoff centroid and includes later centroid translation.
+`PhotoTransitionInteraction` installs a non-cancelling pinch-dismiss recognizer on `PhotoDetailView` and permits simultaneous recognition only with another pinch recognizer. Eligibility is resolved once when the recognizer attempts to begin. If the current cell is above its minimum zoom scale, the dismiss recognizer fails for that complete touch sequence while `UIScrollView` remains the sole visual zoom owner. Reaching fit does not reactivate it. After the touches end, a fresh inward pinch beginning at fit may drive the outer interactive dismissal. The outer scale is anchored at the gesture centroid and includes later centroid translation.
 
-- **began:** For pan, dismissal begins immediately. For pinch, dismissal begins only at the below-fit handoff. `visibility.dismissing = true`; chrome fades in 0.15s; reaction rail closes.
+- **began:** For pan, dismissal begins immediately. For pinch, dismissal begins only after an eligible gesture that started at fit crosses below fit. `visibility.dismissing = true`; chrome fades in 0.15s; reaction rail closes.
 - **changed (pan):** `mediaViewport.transform = translate(tx, ty·rubberBandIfUpward) → scale(1 − 0.32·progress)`; `backgroundView.alpha = 1 − progress`. A zoomed image remains zoomed and cropped inside the transformed viewport.
 - **changed (pinch):** scale the viewport from 1 toward 0.48 around the handoff centroid and add centroid movement. Progress is the greater of inward-scale progress and downward-centroid progress; `backgroundView.alpha = 1 − progress`.
 - **layout:** `layoutSubviews` skips `inspector.reapplyProgress()` while dismissing — frame writes under a transform are undefined.
@@ -90,6 +90,6 @@ On the simulator, verify these paths:
 5. Tap Back — use the same photo-only close path, finish the route pop, and allow the same source photo to open again immediately.
 6. Repeat open/close cycles and inspect the recording for any full-screen luminance dip.
 7. Zoom in, pan the image away from center, then drag downward with one finger — dismissal begins without resetting to fit; early release cancels and a committed release lands in the source cell.
-8. From fit, pinch inward — crossing below fit continues as an image-only dismissal around the fingers. Repeat from a zoomed state and verify the same gesture first zooms back to fit, then continues below fit without a discontinuity.
+8. From fit, pinch inward — crossing below fit continues as an image-only dismissal around the fingers. Repeat from a zoomed state and verify the first gesture stops at fit without dismissal; release, then begin a second inward pinch from fit and verify that only this new gesture can dismiss.
 
-Run `pnpm --filter @afilmory/mobile type-check` and compile the iOS application after native changes.
+Run `pnpm --filter @afilmory/mobile native:test` and `pnpm --filter @afilmory/mobile ios:local` after native changes.

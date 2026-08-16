@@ -535,6 +535,10 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
       && viewer.allowsDismissGesture()
   }
 
+  func canBeginViewerPinchDismissal() -> Bool {
+    canBeginViewControllerDismissal() && viewer.allowsPinchDismissGesture()
+  }
+
   func configureExternalDismissGesture(_ gestureRecognizer: UIPanGestureRecognizer) {
     viewer.configureExternalDismissGesture(gestureRecognizer)
   }

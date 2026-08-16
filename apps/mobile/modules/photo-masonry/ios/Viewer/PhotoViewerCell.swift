@@ -94,7 +94,14 @@ final class PhotoViewerCell: UICollectionViewCell, UIGestureRecognizerDelegate, 
   }
 
   var isZoomed: Bool {
-    scrollView.zoomScale > scrollView.minimumZoomScale + 0.01
+    !allowsPinchDismissGesture
+  }
+
+  var allowsPinchDismissGesture: Bool {
+    PhotoPinchDismissalPolicy.canBeginGesture(
+      startZoomScale: scrollView.zoomScale,
+      minimumZoomScale: scrollView.minimumZoomScale
+    )
   }
 
   // Only a held finger may lock paging. Playback also runs unattended (on entry

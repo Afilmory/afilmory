@@ -371,6 +371,11 @@ final class PhotoViewerView: UIView {
     !(currentCell()?.blocksPaging ?? false)
   }
 
+  func allowsPinchDismissGesture() -> Bool {
+    guard let cell = currentCell() else { return false }
+    return !cell.blocksPaging && cell.allowsPinchDismissGesture
+  }
+
   func mediaBottomInset(in viewportSize: CGSize) -> CGFloat {
     guard photos.indices.contains(currentIndex), viewportSize.width > 0, viewportSize.height > 0 else {
       return 0

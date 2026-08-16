@@ -1,5 +1,16 @@
 import UIKit
 
+enum PhotoPinchDismissalPolicy {
+  static let zoomTolerance: CGFloat = 0.01
+
+  static func canBeginGesture(
+    startZoomScale: CGFloat,
+    minimumZoomScale: CGFloat
+  ) -> Bool {
+    startZoomScale <= minimumZoomScale + zoomTolerance
+  }
+}
+
 final class PhotoTransitionInteraction: UIPercentDrivenInteractiveTransition,
   UIGestureRecognizerDelegate
 {
@@ -87,7 +98,7 @@ final class PhotoTransitionInteraction: UIPercentDrivenInteractiveTransition,
 
     switch gesture.state {
     case .began:
-      pinchCanStart = detailView.canBeginViewControllerDismissal()
+      pinchCanStart = detailView.canBeginViewerPinchDismissal()
       pinchStartZoomScale = max(detailView.currentViewerZoomScale(), 1)
       pinchAnchor = location
       pinchScale = 1
@@ -258,10 +269,11 @@ final class PhotoTransitionInteraction: UIPercentDrivenInteractiveTransition,
   }
 
   func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-    guard let detailView, detailView.canBeginViewControllerDismissal() else { return false }
+    guard let detailView else { return false }
     if gestureRecognizer === pinchGestureRecognizer {
-      return true
+      return detailView.canBeginViewerPinchDismissal()
     }
+    guard detailView.canBeginViewControllerDismissal() else { return false }
     guard gestureRecognizer === panGestureRecognizer else { return false }
     let translation = panGestureRecognizer.translation(in: detailView)
     let velocity = panGestureRecognizer.velocity(in: detailView)

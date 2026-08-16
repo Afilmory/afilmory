@@ -69,22 +69,11 @@ struct NativeAppleAuthorizationButton: UIViewRepresentable {
 
 struct AfilmoryBrandIcon: View {
   var body: some View {
-    Group {
-      if let image = UIImage(
-        named: AfilmoryBuildConfiguration.variant == .local ? "AppIconLocal60x60" : "AppIcon60x60"
-      ) {
-        Image(uiImage: image).resizable()
-      } else {
-        ZStack {
-          RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(.linearGradient(colors: [.indigo, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
-          Image(systemName: "camera.aperture")
-            .font(.system(size: 20, weight: .semibold))
-            .foregroundStyle(.white)
-        }
-      }
-    }
-    .clipShape(.rect(cornerRadius: 8, style: .continuous))
+    Image("AfilmoryLogo")
+      .resizable()
+      .scaledToFit()
+      .clipShape(.rect(cornerRadius: 8, style: .continuous))
+      .accessibilityHidden(true)
   }
 }
 
