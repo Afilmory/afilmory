@@ -18,7 +18,8 @@ export function SessionProvider() {
     if (sessionQuery.data?.user) {
       setSessionUser(sessionQuery.data.user)
       setSessionMembership(sessionQuery.data.requestedMembership ?? null)
-    } else if (sessionQuery.data === null) {
+    }
+    else if (sessionQuery.data === null) {
       setSessionUser(null)
       setSessionMembership(null)
     }
