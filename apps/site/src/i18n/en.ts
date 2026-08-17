@@ -11,6 +11,7 @@ export const en: Translations = {
     discover: 'Galleries',
     docs: 'Docs',
     github: 'GitHub',
+    login: 'Log in',
     create: 'Create space',
     lang: '中文',
   },
@@ -20,6 +21,7 @@ export const en: Translations = {
     subtitle:
       'They deserve an exhibition floor. Afilmory gives you a space of your own: hang work in your order, open a frame to read EXIF, share a link that feels like a show.',
     cta: 'Create my space',
+    login: 'Log in',
     secondary: 'See how it hangs →',
     note: 'SaaS live in minutes · self-host if you prefer',
   },
@@ -86,6 +88,21 @@ export const en: Translations = {
       generic: 'Something went wrong. Try again.',
       network: 'Network error. Try again.',
       missingRedirect: 'Missing redirect URL. Try again.',
+    },
+  },
+  loginModal: {
+    label: 'Log in',
+    title: 'Enter your space',
+    description: 'Your space name is the first part of your gallery URL. We will take you to the existing login.',
+    inputLabel: 'Space name',
+    placeholder: 'your-name',
+    domainSuffix: '.afilmory.art',
+    button: 'Continue to login',
+    close: 'Close',
+    validations: {
+      required: 'Enter a space name',
+      minLength: 'At least 3 characters',
+      invalid: 'Lowercase letters, numbers, and hyphens only',
     },
   },
   discover: {

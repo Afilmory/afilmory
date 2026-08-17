@@ -14,10 +14,10 @@ import { useNavigate } from 'react-router'
 import { Drawer } from 'vaul'
 
 import { gallerySettingAtom, isCommandPaletteOpenAtom } from '~/atoms/app'
-import { sessionUserAtom } from '~/atoms/session'
+import { sessionMembershipAtom, sessionUserAtom } from '~/atoms/session'
 import { injectConfig, siteConfig } from '~/config'
 import { useMobile } from '~/hooks/useMobile'
-import { authApi } from '~/lib/api/auth'
+import { authApi, canAccessDashboard } from '~/lib/api/auth'
 
 import { UserAvatar } from '../../social/comments/UserAvatar'
 import { ViewPanel } from '../panels/ViewPanel'
@@ -341,9 +341,11 @@ const UserMenuButton = ({
 }) => {
   const { t } = useTranslation()
   const setSessionUser = useSetAtom(sessionUserAtom)
+  const setSessionMembership = useSetAtom(sessionMembershipAtom)
+  const requestedMembership = useAtomValue(sessionMembershipAtom)
   const queryClient = useQueryClient()
   const [isSigningOut, setIsSigningOut] = useState(false)
-  const isAdmin = user.role === 'admin' || user.role === 'superadmin'
+  const showDashboard = canAccessDashboard({ user, requestedMembership })
 
   const handleSignOut = async () => {
     if (isSigningOut) {
@@ -353,6 +355,7 @@ const UserMenuButton = ({
     try {
       await authApi.signOut()
       setSessionUser(null)
+      setSessionMembership(null)
       await queryClient.invalidateQueries({ queryKey: ['session'] })
     }
     catch (error) {
@@ -363,22 +366,6 @@ const UserMenuButton = ({
     }
   }
 
-  // 如果是 admin，点击头像直接导航到 dashboard
-  if (isAdmin) {
-    return (
-      <button
-        type="button"
-        className="relative flex size-7 items-center justify-center rounded text-white/60 transition-colors duration-200 hover:bg-white/10 hover:text-white lg:size-8"
-        title={t('action.dashboard')}
-        aria-label={t('action.dashboard')}
-        onClick={() => (window.location.href = '/platform')}
-      >
-        <UserAvatar image={user.image} name={user.name || user.id} fallback="?" size={28} className="lg:size-8" />
-      </button>
-    )
-  }
-
-  // 非 admin 用户显示菜单
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -396,6 +383,16 @@ const UserMenuButton = ({
           <div className="text-sm font-medium text-white/90">{user.name || user.id}</div>
         </div>
         <DropdownMenuSeparator />
+        {showDashboard && (
+          <DropdownMenuItem
+            onClick={() => {
+              window.location.href = '/platform'
+            }}
+            icon={<i className="i-mingcute-settings-3-line text-base" />}
+          >
+            {t('action.dashboard')}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={handleSignOut} icon={<LogOut className="size-4" />} disabled={isSigningOut}>
           {t('action.signOut')}
         </DropdownMenuItem>

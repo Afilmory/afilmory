@@ -10,6 +10,7 @@ export interface Translations {
     discover: string
     docs: string
     github: string
+    login: string
     create: string
     lang: string
   }
@@ -18,6 +19,7 @@ export interface Translations {
     title: string
     subtitle: string
     cta: string
+    login: string
     secondary: string
     note: string
   }
@@ -67,6 +69,21 @@ export interface Translations {
       generic: string
       network: string
       missingRedirect: string
+    }
+  }
+  loginModal: {
+    label: string
+    title: string
+    description: string
+    inputLabel: string
+    placeholder: string
+    domainSuffix: string
+    button: string
+    close: string
+    validations: {
+      required: string
+      minLength: string
+      invalid: string
     }
   }
   discover: {

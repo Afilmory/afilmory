@@ -69,3 +69,7 @@ export function galleryPublicUrl(gallery: FeaturedGallery): string {
   }
   return `https://${gallery.slug}.afilmory.art`
 }
+
+export function tenantLoginUrl(slug: string): string {
+  return `https://${slug}.afilmory.art/platform/login`
+}

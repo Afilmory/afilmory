@@ -5,6 +5,7 @@ import { otherLocale, resolveLocale, t as translate } from '../i18n'
 import { CreateSpaceModal } from './CreateSpaceModal'
 import { Discover } from './Discover'
 import { LiveDemo } from './LiveDemo'
+import { LoginSpaceModal } from './LoginSpaceModal'
 
 const DOCS_URL = (import.meta.env.PUBLIC_DOCS_URL as string | undefined) ?? 'https://docs.afilmory.art'
 const GITHUB_URL = (import.meta.env.PUBLIC_GITHUB_URL as string | undefined) ?? 'https://github.com/Afilmory/Afilmory'
@@ -17,6 +18,7 @@ export interface LandingAppProps {
 export function LandingApp({ initialLocale }: LandingAppProps) {
   const [locale, setLocale] = useState<Locale>(() => resolveLocale(initialLocale))
   const [createOpen, setCreateOpen] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
   const copy = useMemo(() => translate(locale), [locale])
 
   useEffect(() => {
@@ -26,6 +28,8 @@ export function LandingApp({ initialLocale }: LandingAppProps) {
 
   const openCreate = useCallback(() => setCreateOpen(true), [])
   const closeCreate = useCallback(() => setCreateOpen(false), [])
+  const openLogin = useCallback(() => setLoginOpen(true), [])
+  const closeLogin = useCallback(() => setLoginOpen(false), [])
 
   const switchLocale = () => {
     const next = otherLocale(locale)
@@ -65,6 +69,9 @@ export function LandingApp({ initialLocale }: LandingAppProps) {
             >
               {copy.nav.lang}
             </button>
+            <button type="button" className="hover:text-fg" onClick={openLogin}>
+              {copy.nav.login}
+            </button>
             <button type="button" className="btn btn-compact" onClick={openCreate}>
               {copy.nav.create}
             </button>
@@ -85,6 +92,9 @@ export function LandingApp({ initialLocale }: LandingAppProps) {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <button type="button" className="btn" onClick={openCreate}>
                 {copy.hero.cta}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={openLogin}>
+                {copy.hero.login}
               </button>
               <a href="#demo" className="text-sm tracking-wide text-muted hover:text-fg">
                 {copy.hero.secondary}
@@ -125,6 +135,7 @@ export function LandingApp({ initialLocale }: LandingAppProps) {
       </footer>
 
       <CreateSpaceModal open={createOpen} onClose={closeCreate} locale={locale} />
+      <LoginSpaceModal open={loginOpen} onClose={closeLogin} locale={locale} />
     </>
   )
 }
