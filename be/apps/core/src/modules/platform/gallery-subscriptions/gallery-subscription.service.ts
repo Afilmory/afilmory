@@ -10,7 +10,8 @@ import {
 import { DbAccessor } from '@core/database/database.provider'
 import { BizException, ErrorCode } from '@core/errors'
 import { normalizeDate } from '@core/helpers/normalize.helper'
-import { and, asc, eq, gte, inArray, sql } from 'drizzle-orm'
+import { UserSafetyService } from '@core/modules/platform/user-safety/user-safety.service'
+import { and, asc, eq, gte, inArray, notInArray, sql } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
 import { evaluateGallerySubscription } from './gallery-subscription.policy'
@@ -30,7 +31,10 @@ export type GallerySubscriptionRecord = {
 
 @injectable()
 export class GallerySubscriptionService {
-  constructor(private readonly dbAccessor: DbAccessor) {}
+  constructor(
+    private readonly dbAccessor: DbAccessor,
+    private readonly userSafety: UserSafetyService,
+  ) {}
 
   async listForUser(userId: string): Promise<GallerySubscriptionSummary[]> {
     const context = await this.loadEligibleTargets(userId)
@@ -94,13 +98,19 @@ export class GallerySubscriptionService {
     targets: Record<string, SubscriptionTarget>
   }> {
     const db = this.dbAccessor.get()
+    const blockedTenantIds = await this.userSafety.blockedOwnerTenantIds(userId)
     const subscriptions = await db
       .select({
         tenantId: gallerySubscriptions.targetTenantId,
         createdAt: gallerySubscriptions.createdAt,
       })
       .from(gallerySubscriptions)
-      .where(eq(gallerySubscriptions.subscriberUserId, userId))
+      .where(
+        and(
+          eq(gallerySubscriptions.subscriberUserId, userId),
+          blockedTenantIds.length > 0 ? notInArray(gallerySubscriptions.targetTenantId, blockedTenantIds) : undefined,
+        ),
+      )
 
     if (subscriptions.length === 0) {
       return { memberTenantIds: new Set(), subscriptions: [], targets: {} }
@@ -247,6 +257,10 @@ export class GallerySubscriptionService {
 
   async subscribe(userId: string, targetTenantId: string): Promise<GallerySubscriptionRecord> {
     const db = this.dbAccessor.get()
+    const blockedTenantIds = await this.userSafety.blockedOwnerTenantIds(userId)
+    if (blockedTenantIds.includes(targetTenantId)) {
+      throw new BizException(ErrorCode.COMMON_NOT_FOUND, { message: 'Gallery not found.' })
+    }
     const [[target], [activeMembership]] = await Promise.all([
       db
         .select({

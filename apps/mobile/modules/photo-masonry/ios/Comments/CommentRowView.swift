@@ -8,6 +8,8 @@ struct CommentRowView: View {
 
   @Environment(\.openURL) private var openURL
   @Environment(\.displayScale) private var displayScale
+  @State private var confirmingBlock = false
+  @State private var showingReportReasons = false
 
   private var own: Bool { comment.userId == store.viewerUserId }
   private var user: CommentUser? { store.user(for: comment) }
@@ -16,6 +18,7 @@ struct CommentRowView: View {
   private var likeCount: Int { comment.reactionCounts["like"] ?? 0 }
   private var liked: Bool { comment.viewerReactions.contains("like") }
   private var reactionBusy: Bool { store.pendingReactionIds.contains(comment.id) }
+  private var moderationBusy: Bool { store.pendingModerationIds.contains(comment.id) }
   private var isSending: Bool { comment.deliveryState == .sending }
   private var isFlightTarget: Bool { store.flight?.clientId == comment.identity }
 
@@ -52,6 +55,48 @@ struct CommentRowView: View {
       Button(String(localized: "Copy"), systemImage: "document.on.document") {
         UIPasteboard.general.string = comment.content
       }
+
+      if !own, !isSending {
+        Divider()
+        Button(String(localized: "Report Comment"), systemImage: "exclamationmark.bubble") {
+          showingReportReasons = true
+        }
+        .disabled(moderationBusy)
+        Button(
+          String(localized: "Block User"),
+          systemImage: "person.crop.circle.badge.xmark",
+          role: .destructive
+        ) {
+          confirmingBlock = true
+        }
+        .disabled(moderationBusy)
+      }
+    }
+    .confirmationDialog(
+      String(localized: "Why are you reporting this comment?"),
+      isPresented: $showingReportReasons,
+      titleVisibility: .visible
+    ) {
+      ForEach(CommentReportReason.allCases) { reason in
+        Button(reason.title) {
+          Task { await store.report(comment, reason: reason) }
+        }
+      }
+      Button(String(localized: "Cancel"), role: .cancel) {}
+    } message: {
+      Text(String(localized: "The report will be sent to the Afilmory moderation team."))
+    }
+    .confirmationDialog(
+      String(localized: "Block \(author)?"),
+      isPresented: $confirmingBlock,
+      titleVisibility: .visible
+    ) {
+      Button(String(localized: "Block User"), role: .destructive) {
+        Task { await store.blockAuthor(comment) }
+      }
+      Button(String(localized: "Cancel"), role: .cancel) {}
+    } message: {
+      Text(String(localized: "Their comments and galleries will be removed from your view immediately. This comment will also be reported to Afilmory."))
     }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(accessibilityLabel)
@@ -65,6 +110,14 @@ struct CommentRowView: View {
     }
     .accessibilityAction(named: Text(String(localized: "Copy"))) {
       UIPasteboard.general.string = comment.content
+    }
+    .accessibilityAction(named: Text(String(localized: "Report Comment"))) {
+      guard !own, !isSending, !moderationBusy else { return }
+      showingReportReasons = true
+    }
+    .accessibilityAction(named: Text(String(localized: "Block User"))) {
+      guard !own, !isSending, !moderationBusy else { return }
+      confirmingBlock = true
     }
   }
 
@@ -182,6 +235,9 @@ struct CommentRowView: View {
 
       likeButton
       replyButton
+      if !own {
+        moderationMenu
+      }
     }
     .frame(minHeight: 26)
     .padding(own ? .trailing : .leading, 3)
@@ -236,6 +292,38 @@ struct CommentRowView: View {
     .disabled(isSending)
     .opacity(isSending ? 0.38 : 1)
     .accessibilityLabel(String(localized: "Reply"))
+  }
+
+  private var moderationMenu: some View {
+    Menu {
+      Button(String(localized: "Report Comment"), systemImage: "exclamationmark.bubble") {
+        showingReportReasons = true
+      }
+      Button(
+        String(localized: "Block User"),
+        systemImage: "person.crop.circle.badge.xmark",
+        role: .destructive
+      ) {
+        confirmingBlock = true
+      }
+    } label: {
+      Group {
+        if moderationBusy {
+          ProgressView()
+            .controlSize(.mini)
+        } else {
+          Image(systemName: "ellipsis")
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(.secondary)
+        }
+      }
+      .frame(width: 28, height: 26)
+      .contentShape(.rect)
+    }
+    .buttonStyle(.plain)
+    .disabled(isSending || moderationBusy)
+    .accessibilityLabel(String(localized: "Comment safety actions"))
+    .accessibilityIdentifier("comments.moderation.\(comment.id)")
   }
 
   private var profileURL: URL? {

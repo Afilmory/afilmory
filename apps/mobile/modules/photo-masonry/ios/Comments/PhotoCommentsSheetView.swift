@@ -30,6 +30,16 @@ struct PhotoCommentsSheetView: View {
       .task {
         await store.loadInitial()
       }
+      .alert(
+        String(localized: "Content safety"),
+        isPresented: $store.showingModerationNotice
+      ) {
+        Button(String(localized: "Done"), role: .cancel) {}
+      } message: {
+        if let moderationNotice = store.moderationNotice {
+          Text(moderationNotice)
+        }
+      }
   }
 
   @ViewBuilder private var content: some View {

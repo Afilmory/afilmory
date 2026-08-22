@@ -6,9 +6,11 @@ import { injectable } from 'tsyringe'
 
 import baseTemplate from './templates/base.ejs?raw'
 import commentNotificationTemplate from './templates/comment-notification.ejs?raw'
+import contentReportNotificationTemplate from './templates/content-report-notification.ejs?raw'
 
 export const TEMPLATES = {
   commentNotification: commentNotificationTemplate,
+  contentReportNotification: contentReportNotificationTemplate,
 }
 
 @injectable()
@@ -19,7 +21,8 @@ export class MailService {
   constructor() {
     if (env.RESEND_API_KEY) {
       this.resend = new Resend(env.RESEND_API_KEY)
-    } else {
+    }
+    else {
       this.logger.warn('RESEND_API_KEY is not set. Mail service will be disabled.')
     }
   }
@@ -40,7 +43,8 @@ export class MailService {
       this.logger.info(`Email sent to ${to}, id: ${data.data?.id}`)
       this.logger.verbose(data)
       return data
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error(`Failed to send email to ${to}`, error)
       // We don't throw here to prevent blocking the main flow, but we log it.
       // Or should we throw? For notifications, maybe better to just log.

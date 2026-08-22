@@ -4,6 +4,8 @@ protocol CommentsTransport: Sendable {
   func list(photoId: String, cursor: String?) async throws -> CommentPage
   func create(content: String, photoId: String, parentId: String?) async throws -> CommentPage
   func toggleReaction(commentId: String) async throws -> CommentReactionResponse
+  func report(commentId: String, reason: CommentReportReason) async throws -> CommentReportResponse
+  func blockAuthor(commentId: String) async throws -> CommentBlockResponse
 }
 
 struct LiveCommentsTransport: CommentsTransport {
@@ -27,6 +29,14 @@ struct LiveCommentsTransport: CommentsTransport {
 
   func toggleReaction(commentId: String) async throws -> CommentReactionResponse {
     try await api.request(CommentsAPI.toggleReaction(baseURL: baseURL, commentId: commentId))
+  }
+
+  func report(commentId: String, reason: CommentReportReason) async throws -> CommentReportResponse {
+    try await api.request(CommentsAPI.report(baseURL: baseURL, commentId: commentId, reason: reason))
+  }
+
+  func blockAuthor(commentId: String) async throws -> CommentBlockResponse {
+    try await api.request(CommentsAPI.blockAuthor(baseURL: baseURL, commentId: commentId))
   }
 }
 
@@ -115,6 +125,32 @@ actor DemoCommentsTransport: CommentsTransport {
     toggled.deliveryState = nil
     items[commentId] = toggled
     return CommentReactionResponse(item: toggled)
+  }
+
+  func report(commentId: String, reason _: CommentReportReason) async throws -> CommentReportResponse {
+    try await Task.sleep(for: .milliseconds(250))
+    if outcome == .failure {
+      throw APIError.http(status: 500, body: "Simulated report failure.")
+    }
+    guard items[commentId] != nil else {
+      throw APIError.http(status: 404, body: nil)
+    }
+    return CommentReportResponse(reportId: "demo-report-\(commentId)", reported: true, status: "pending")
+  }
+
+  func blockAuthor(commentId: String) async throws -> CommentBlockResponse {
+    try await Task.sleep(for: .milliseconds(250))
+    if outcome == .failure {
+      throw APIError.http(status: 500, body: "Simulated block failure.")
+    }
+    guard let item = items[commentId] else {
+      throw APIError.http(status: 404, body: nil)
+    }
+    let blockedUserId = item.userId
+    order.removeAll { items[$0]?.userId == blockedUserId }
+    items = items.filter { $0.value.userId != blockedUserId }
+    users.removeValue(forKey: blockedUserId)
+    return CommentBlockResponse(blocked: true, blockedUserId: blockedUserId, reported: true)
   }
 
   private func page(for comments: [CommentItem]) -> CommentPage {

@@ -36,6 +36,8 @@ struct AfilmoryButton<Label: View>: View {
 }
 
 struct NativeAppleAuthorizationButton: UIViewRepresentable {
+  @Environment(\.isEnabled) private var isEnabled
+
   let type: ASAuthorizationAppleIDButton.ButtonType
   let action: () -> Void
 
@@ -46,11 +48,13 @@ struct NativeAppleAuthorizationButton: UIViewRepresentable {
   func makeUIView(context: Context) -> ASAuthorizationAppleIDButton {
     let button = ASAuthorizationAppleIDButton(authorizationButtonType: type, authorizationButtonStyle: .white)
     button.cornerRadius = 14
+    button.isEnabled = isEnabled
     button.addTarget(context.coordinator, action: #selector(Coordinator.invoke), for: .touchUpInside)
     return button
   }
 
-  func updateUIView(_: ASAuthorizationAppleIDButton, context: Context) {
+  func updateUIView(_ button: ASAuthorizationAppleIDButton, context: Context) {
+    button.isEnabled = isEnabled
     context.coordinator.action = action
   }
 

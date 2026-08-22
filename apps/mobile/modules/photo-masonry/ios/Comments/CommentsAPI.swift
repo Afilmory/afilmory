@@ -49,4 +49,33 @@ enum CommentsAPI {
       body: try APIEndpoint.jsonBody(CommentReactionBody(reaction: reaction))
     )
   }
+
+  static func report(
+    baseURL: String,
+    commentId: String,
+    reason: CommentReportReason
+  ) throws -> APIEndpoint {
+    APIEndpoint(
+      baseURL: .explicit(baseURL),
+      path: "/comments/\(commentId)/reports",
+      method: .post,
+      body: try APIEndpoint.jsonBody(
+        CommentModerationBody(reason: reason.rawValue, details: nil)
+      )
+    )
+  }
+
+  static func blockAuthor(
+    baseURL: String,
+    commentId: String
+  ) throws -> APIEndpoint {
+    APIEndpoint(
+      baseURL: .explicit(baseURL),
+      path: "/comments/\(commentId)/block-author",
+      method: .post,
+      body: try APIEndpoint.jsonBody(
+        CommentModerationBody(reason: "abusive_behavior", details: nil)
+      )
+    )
+  }
 }

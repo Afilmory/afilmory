@@ -16,9 +16,10 @@ import { SystemSettingService } from '@core/modules/configuration/system-setting
 import { CommentCreatedEvent } from '@core/modules/content/comment/events/comment-created.event'
 import { WorkspaceMembershipService } from '@core/modules/platform/auth/workspace-membership.service'
 import { requireTenantContext } from '@core/modules/platform/tenant/tenant.context'
+import { UserSafetyService } from '@core/modules/platform/user-safety/user-safety.service'
 import { HttpContext } from '@tsuki-hono/common'
 import { EventEmitterService } from '@tsuki-hono/event-emitter'
-import { and, asc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, asc, eq, gt, inArray, isNull, notInArray, or, sql } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { inject, injectable } from 'tsyringe'
 
@@ -53,11 +54,11 @@ interface CommentResponseItem extends CommentViewModel {
   viewerReactions: string[]
 }
 
-type AuthContextValue =
-  | {
-      user?: AuthUser
-      session?: unknown
-    }
+type AuthContextValue
+  = | {
+    user?: AuthUser
+    session?: unknown
+  }
   | undefined
 
 @injectable()
@@ -68,6 +69,7 @@ export class CommentService {
     private readonly eventEmitter: EventEmitterService,
     private readonly systemSettings: SystemSettingService,
     private readonly memberships: WorkspaceMembershipService,
+    private readonly userSafety: UserSafetyService,
   ) {}
 
   async createComment(
@@ -157,7 +159,7 @@ export class CommentService {
     }
 
     // Fetch user info
-    const userIds = [userId, ...Object.values(relations).map((r) => r.userId)].filter(Boolean)
+    const userIds = [userId, ...Object.values(relations).map(r => r.userId)].filter(Boolean)
     const users = await this.fetchUsersWithProfiles(userIds)
 
     // Emit event asynchronously
@@ -191,6 +193,7 @@ export class CommentService {
     const authUser = this.getAuthUser()
     const viewerUserId = authUser?.id ?? null
     const isAdmin = viewerUserId ? await this.memberships.isWorkspaceAdmin(viewerUserId, tenant.tenant.id) : false
+    const blockedUserIds = viewerUserId ? await this.userSafety.blockedUserIds(viewerUserId) : []
     const db = this.dbAccessor.get()
 
     const filters = [
@@ -198,16 +201,21 @@ export class CommentService {
       eq(comments.photoId, query.photoId),
       isNull(comments.deletedAt),
     ]
+    if (blockedUserIds.length > 0) {
+      filters.push(notInArray(comments.userId, blockedUserIds))
+    }
 
     let statusCondition
     if (isAdmin) {
       statusCondition = inArray(comments.status, ['approved', 'pending'])
-    } else if (viewerUserId) {
+    }
+    else if (viewerUserId) {
       statusCondition = or(
         eq(comments.status, 'approved'),
         and(eq(comments.status, 'pending'), eq(comments.userId, viewerUserId)),
       )
-    } else {
+    }
+    else {
       statusCondition = eq(comments.status, 'approved')
     }
     filters.push(statusCondition)
@@ -241,23 +249,22 @@ export class CommentService {
 
     const hasMore = rows.length > query.limit
     const items = rows.slice(0, query.limit)
-    const commentIds = items.map((item) => item.id)
+    const commentIds = items.map(item => item.id)
 
     const reactions = await this.fetchReactionAggregations(tenant.tenant.id, commentIds, viewerUserId)
 
     const nextCursor = hasMore && items.length > 0 ? items.at(-1)!.id : null
 
-    const commentItems = items.map((item) =>
+    const commentItems = items.map(item =>
       this.toResponse({
         ...item,
         reactionCounts: reactions.counts.get(item.id) ?? {},
         viewerReactions: reactions.viewer.get(item.id) ?? [],
-      }),
-    )
+      }))
 
     // Build relations map (parentId -> parent comment)
     const relations: Record<string, CommentResponseItem> = {}
-    const parentIds = [...new Set(items.filter((item) => item.parentId).map((item) => item.parentId!))]
+    const parentIds = [...new Set(items.filter(item => item.parentId).map(item => item.parentId!))]
 
     if (parentIds.length > 0) {
       const parentRows = await db
@@ -273,12 +280,17 @@ export class CommentService {
         })
         .from(comments)
         .where(
-          and(eq(comments.tenantId, tenant.tenant.id), inArray(comments.id, parentIds), isNull(comments.deletedAt)),
+          and(
+            eq(comments.tenantId, tenant.tenant.id),
+            inArray(comments.id, parentIds),
+            isNull(comments.deletedAt),
+            blockedUserIds.length > 0 ? notInArray(comments.userId, blockedUserIds) : undefined,
+          ),
         )
 
       const parentReactions = await this.fetchReactionAggregations(
         tenant.tenant.id,
-        parentRows.map((p) => p.id),
+        parentRows.map(p => p.id),
         viewerUserId,
       )
 
@@ -293,7 +305,7 @@ export class CommentService {
 
     // Build users map (userId -> user)
     const allUserIds = [
-      ...new Set([...items.map((item) => item.userId), ...Object.values(relations).map((r) => r.userId)]),
+      ...new Set([...items.map(item => item.userId), ...Object.values(relations).map(r => r.userId)]),
     ]
 
     const users = await this.fetchUsersWithProfiles(allUserIds)
@@ -358,23 +370,22 @@ export class CommentService {
 
     const hasMore = rows.length > query.limit
     const items = rows.slice(0, query.limit)
-    const commentIds = items.map((item) => item.id)
+    const commentIds = items.map(item => item.id)
 
     const reactions = await this.fetchReactionAggregations(tenant.tenant.id, commentIds, viewerUserId)
 
     const nextCursor = hasMore && items.length > 0 ? items.at(-1)!.id : null
 
-    const commentItems = items.map((item) =>
+    const commentItems = items.map(item =>
       this.toResponse({
         ...item,
         reactionCounts: reactions.counts.get(item.id) ?? {},
         viewerReactions: reactions.viewer.get(item.id) ?? [],
-      }),
-    )
+      }))
 
     // Build relations map (parentId -> parent comment)
     const relations: Record<string, CommentResponseItem> = {}
-    const parentIds = [...new Set(items.filter((item) => item.parentId).map((item) => item.parentId!))]
+    const parentIds = [...new Set(items.filter(item => item.parentId).map(item => item.parentId!))]
 
     if (parentIds.length > 0) {
       const parentRows = await db
@@ -395,7 +406,7 @@ export class CommentService {
 
       const parentReactions = await this.fetchReactionAggregations(
         tenant.tenant.id,
-        parentRows.map((p) => p.id),
+        parentRows.map(p => p.id),
         viewerUserId,
       )
 
@@ -410,7 +421,7 @@ export class CommentService {
 
     // Build users map (userId -> user)
     const allUserIds = [
-      ...new Set([...items.map((item) => item.userId), ...Object.values(relations).map((r) => r.userId)]),
+      ...new Set([...items.map(item => item.userId), ...Object.values(relations).map(r => r.userId)]),
     ]
 
     const users = await this.fetchUsersWithProfiles(allUserIds)
@@ -449,7 +460,8 @@ export class CommentService {
 
     if (existing) {
       await db.delete(commentReactions).where(eq(commentReactions.id, existing.id))
-    } else {
+    }
+    else {
       await db.insert(commentReactions).values({
         tenantId: tenant.tenant.id,
         commentId: comment.id,
@@ -512,6 +524,7 @@ export class CommentService {
     const authUser = this.getAuthUser()
     const viewerUserId = authUser?.id ?? null
     const isAdmin = viewerUserId ? await this.memberships.isWorkspaceAdmin(viewerUserId, tenant.tenant.id) : false
+    const blockedUserIds = viewerUserId ? await this.userSafety.blockedUserIds(viewerUserId) : []
     const db = this.dbAccessor.get()
 
     const filters = [
@@ -519,16 +532,21 @@ export class CommentService {
       eq(comments.photoId, query.photoId),
       isNull(comments.deletedAt),
     ]
+    if (blockedUserIds.length > 0) {
+      filters.push(notInArray(comments.userId, blockedUserIds))
+    }
 
     let statusCondition
     if (isAdmin) {
       statusCondition = inArray(comments.status, ['approved', 'pending'])
-    } else if (viewerUserId) {
+    }
+    else if (viewerUserId) {
       statusCondition = or(
         eq(comments.status, 'approved'),
         and(eq(comments.status, 'pending'), eq(comments.userId, viewerUserId)),
       )
-    } else {
+    }
+    else {
       statusCondition = eq(comments.status, 'approved')
     }
     filters.push(statusCondition)
@@ -697,7 +715,7 @@ export class CommentService {
     return comment
   }
 
-  private toResponse(model: CommentViewModel & { reactionCounts: Record<string, number>; viewerReactions: string[] }) {
+  private toResponse(model: CommentViewModel & { reactionCounts: Record<string, number>, viewerReactions: string[] }) {
     return {
       id: model.id,
       photoId: model.photoId,

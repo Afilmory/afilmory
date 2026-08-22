@@ -40,6 +40,7 @@ import { MobileModule } from './platform/mobile/mobile.module'
 import { PushNotificationModule } from './platform/push-notifications/push-notification.module'
 import { SuperAdminModule } from './platform/super-admin/super-admin.module'
 import { TenantModule } from './platform/tenant/tenant.module'
+import { UserSafetyModule } from './platform/user-safety/user-safety.module'
 
 function createEventModuleOptions(redis: RedisAccessor) {
   return {
@@ -76,6 +77,7 @@ function createEventModuleOptions(redis: RedisAccessor) {
     MobileModule,
     DataManagementModule,
     TenantModule,
+    UserSafetyModule,
     FeaturedGalleriesModule,
     GallerySubscriptionModule,
     PushNotificationModule,

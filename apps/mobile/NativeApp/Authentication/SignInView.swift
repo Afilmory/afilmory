@@ -27,6 +27,7 @@ struct SignInView: View {
   @State private var busyAction: SignInBusyAction?
   @State private var email = ""
   @State private var error: String?
+  @State private var hasAcceptedLegalTerms = false
   @State private var password = ""
   @State private var showPasswordForm = false
 
@@ -104,7 +105,10 @@ struct SignInView: View {
         .font(.system(size: 14))
         .foregroundStyle(.secondary)
         .padding(.top, 4)
-        .padding(.bottom, 20)
+        .padding(.bottom, 14)
+
+      legalAgreement
+        .padding(.bottom, 16)
 
       VStack(spacing: 10) {
         if AfilmoryBuildConfiguration.supportsAppleAuthentication {
@@ -117,8 +121,9 @@ struct SignInView: View {
                 try await authentication.signInWithApple(anchor: anchor)
               }
             }
-            .opacity(busyAction == nil || busyAction == .apple ? 1 : 0.45)
-            .allowsHitTesting(busyAction == nil)
+            .opacity((busyAction == nil || busyAction == .apple) && hasAcceptedLegalTerms ? 1 : 0.45)
+            .allowsHitTesting(busyAction == nil && hasAcceptedLegalTerms)
+            .disabled(busyAction != nil || !hasAcceptedLegalTerms)
             if busyAction == .apple {
               RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(.white)
@@ -150,7 +155,7 @@ struct SignInView: View {
             .frame(maxWidth: .infinity, minHeight: 32)
         }
         .buttonStyle(.plain)
-        .disabled(busyAction != nil)
+        .disabled(busyAction != nil || !hasAcceptedLegalTerms)
         .accessibilityIdentifier("auth.email.toggle")
 
         if showPasswordForm {
@@ -173,6 +178,24 @@ struct SignInView: View {
         }
       }
     }
+  }
+
+  private var legalAgreement: some View {
+    Toggle(isOn: $hasAcceptedLegalTerms) {
+      VStack(alignment: .leading, spacing: 4) {
+        Text("I agree to Afilmory's Terms of Use and Privacy Policy.")
+          .font(.system(size: 13, weight: .medium))
+          .foregroundStyle(.primary)
+        HStack(spacing: 12) {
+          Link(String(localized: "Terms of Use"), destination: URL(string: "https://afilmory.art/terms/")!)
+          Link(String(localized: "Privacy Policy"), destination: URL(string: "https://afilmory.art/privacy/")!)
+        }
+        .font(.system(size: 12, weight: .semibold))
+      }
+    }
+    .toggleStyle(.switch)
+    .tint(Color(red: 0, green: 123 / 255, blue: 1))
+    .accessibilityIdentifier("auth.legalAgreement")
   }
 
   private func providerButton(
@@ -222,8 +245,8 @@ struct SignInView: View {
       .contentShape(.rect)
     }
     .buttonStyle(.plain)
-    .disabled(busyAction != nil)
-    .opacity(busyAction == nil || busyAction == action ? 1 : 0.45)
+    .disabled(busyAction != nil || !hasAcceptedLegalTerms)
+    .opacity((busyAction == nil || busyAction == action) && hasAcceptedLegalTerms ? 1 : 0.45)
     .accessibilityIdentifier(action == .github ? "auth.github" : "auth.google")
   }
 
@@ -262,7 +285,7 @@ struct SignInView: View {
         .clipShape(.rect(cornerRadius: 22, style: .continuous))
       }
       .buttonStyle(.plain)
-      .disabled(busyAction != nil)
+      .disabled(busyAction != nil || !hasAcceptedLegalTerms)
       Text("Email sign-in is available for invited and App Review accounts. New public accounts use a social provider.")
         .font(.system(size: 12))
         .foregroundStyle(.tertiary)
@@ -292,6 +315,10 @@ struct SignInView: View {
   }
 
   private func submitPassword() {
+    guard hasAcceptedLegalTerms else {
+      error = String(localized: "Agree to the Terms of Use and Privacy Policy before signing in.")
+      return
+    }
     let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !normalizedEmail.isEmpty, !password.isEmpty else {
       error = String(localized: "Enter both email and password.")
@@ -307,6 +334,10 @@ struct SignInView: View {
     operation: @escaping @MainActor () async throws -> Void
   ) {
     guard busyAction == nil else { return }
+    guard hasAcceptedLegalTerms else {
+      error = String(localized: "Agree to the Terms of Use and Privacy Policy before signing in.")
+      return
+    }
     busyAction = action
     error = nil
     Task { @MainActor in

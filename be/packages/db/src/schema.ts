@@ -36,6 +36,7 @@ export const tenantStatusEnum = pgEnum('tenant_status', ['pending', 'active', 'i
 export const tenantDomainStatusEnum = pgEnum('tenant_domain_status', ['pending', 'verified', 'disabled'])
 export const photoSyncStatusEnum = pgEnum('photo_sync_status', ['pending', 'synced', 'conflict'])
 export const commentStatusEnum = pgEnum('comment_status', ['pending', 'approved', 'rejected', 'hidden'])
+export const contentReportStatusEnum = pgEnum('content_report_status', ['pending', 'reviewed', 'dismissed', 'actioned'])
 export const apnsEnvironmentEnum = pgEnum('apns_environment', ['development', 'production'])
 export const appleAuthorizationStatusEnum = pgEnum('apple_authorization_status', [
   'active',
@@ -643,6 +644,53 @@ export const commentReactions = pgTable(
   ],
 )
 
+export const contentReports = pgTable(
+  'content_report',
+  {
+    id: snowflakeId,
+    tenantId: text('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    commentId: text('comment_id').references(() => comments.id, { onDelete: 'set null' }),
+    reporterUserId: text('reporter_user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    reportedUserId: text('reported_user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    reason: text('reason').notNull(),
+    details: text('details'),
+    contentSnapshot: text('content_snapshot').notNull(),
+    status: contentReportStatusEnum('status').notNull().default('pending'),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_content_report_reporter_comment').on(t.reporterUserId, t.commentId),
+    index('idx_content_report_tenant_status').on(t.tenantId, t.status, t.createdAt),
+    index('idx_content_report_reported_user').on(t.reportedUserId, t.createdAt),
+  ],
+)
+
+export const userBlocks = pgTable(
+  'user_block',
+  {
+    id: snowflakeId,
+    blockerUserId: text('blocker_user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    blockedUserId: text('blocked_user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+  },
+  t => [
+    unique('uq_user_block_pair').on(t.blockerUserId, t.blockedUserId),
+    index('idx_user_block_blocker').on(t.blockerUserId, t.createdAt),
+    index('idx_user_block_blocked').on(t.blockedUserId, t.createdAt),
+  ],
+)
+
 export const managedStorageUsages = pgTable(
   'managed_storage_usage',
   {
@@ -879,6 +927,8 @@ export const dbSchema = {
   reactions,
   comments,
   commentReactions,
+  contentReports,
+  userBlocks,
   managedStorageUsages,
   managedStorageFileReferences,
   photoAssets,

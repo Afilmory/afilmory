@@ -33,7 +33,10 @@ final class CommentsStore {
   var draft = ""
   var replyCommentId: String?
   var pendingReactionIds: Set<String> = []
+  var pendingModerationIds: Set<String> = []
   var requiresAuthentication = false
+  var moderationNotice: String?
+  var showingModerationNotice = false
   var flight: CommentFlight?
   var pendingScrollIdentity: String?
   private(set) var requestedSignIn = false
@@ -44,6 +47,7 @@ final class CommentsStore {
   @ObservationIgnored private var flightLocked = false
   @ObservationIgnored private var baselineCommentCount: Int?
   @ObservationIgnored private var successfulCreateCount = 0
+  @ObservationIgnored private var successfulRemovalCount = 0
 
   init(
     request: PhotoCommentsSheetRequest,
@@ -70,7 +74,7 @@ final class CommentsStore {
   var result: PhotoCommentsSheetResult {
     let baseline = baselineCommentCount ?? max(0, collection.comments.count - successfulCreateCount)
     return PhotoCommentsSheetResult(
-      commentCount: max(0, baseline + successfulCreateCount),
+      commentCount: max(0, baseline + successfulCreateCount - successfulRemovalCount),
       requestedSignIn: requestedSignIn
     )
   }
@@ -227,6 +231,65 @@ final class CommentsStore {
       }
     }
     pendingReactionIds.remove(commentId)
+  }
+
+  func report(_ comment: CommentItem, reason: CommentReportReason) async {
+    guard isSignedIn else {
+      requestSignIn()
+      return
+    }
+    guard comment.userId != viewerUserId,
+          comment.deliveryState != .sending,
+          !pendingModerationIds.contains(comment.id)
+    else { return }
+
+    pendingModerationIds.insert(comment.id)
+    inlineError = nil
+    defer { pendingModerationIds.remove(comment.id) }
+
+    do {
+      _ = try await transport.report(commentId: comment.id, reason: reason)
+      moderationNotice = String(localized: "Report submitted. Our moderation team has been notified.")
+      showingModerationNotice = true
+    } catch {
+      if !handleUnauthorized(error), !isCancellation(error) {
+        inlineError = String(localized: "Unable to submit the report. Try again.")
+      }
+    }
+  }
+
+  func blockAuthor(_ comment: CommentItem) async {
+    guard isSignedIn else {
+      requestSignIn()
+      return
+    }
+    guard comment.userId != viewerUserId,
+          comment.deliveryState != .sending,
+          !pendingModerationIds.contains(comment.id)
+    else { return }
+
+    let previous = collection
+    let removedCount = collection.comments.count { $0.userId == comment.userId }
+    pendingModerationIds.insert(comment.id)
+    inlineError = nil
+    mutateAnimated {
+      collection = CommentsState.removingAuthor(collection, userId: comment.userId)
+    }
+
+    do {
+      _ = try await transport.blockAuthor(commentId: comment.id)
+      successfulRemovalCount += removedCount
+      moderationNotice = String(localized: "User blocked. Their content was removed.")
+      showingModerationNotice = true
+    } catch {
+      mutateAnimated {
+        collection = previous
+      }
+      if !handleUnauthorized(error), !isCancellation(error) {
+        inlineError = String(localized: "Unable to block this user. Try again.")
+      }
+    }
+    pendingModerationIds.remove(comment.id)
   }
 
   func beginReply(to comment: CommentItem) {

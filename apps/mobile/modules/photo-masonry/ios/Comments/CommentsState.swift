@@ -68,6 +68,17 @@ enum CommentsState {
     return next
   }
 
+  static func removingAuthor(
+    _ current: CommentCollection,
+    userId: String
+  ) -> CommentCollection {
+    var next = current
+    next.comments.removeAll { $0.userId == userId }
+    next.relations = next.relations.filter { $0.value.userId != userId }
+    next.users.removeValue(forKey: userId)
+    return next
+  }
+
   static func advanceCursor(
     current: String?,
     page: CommentPage,

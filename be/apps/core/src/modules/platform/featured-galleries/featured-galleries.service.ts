@@ -10,6 +10,7 @@ import {
 import { RESERVED_TENANT_SLUGS } from '@afilmory/utils'
 import { DbAccessor } from '@core/database/database.provider'
 import { normalizeDate } from '@core/helpers/normalize.helper'
+import { UserSafetyService } from '@core/modules/platform/user-safety/user-safety.service'
 import { and, asc, eq, ilike, inArray, notInArray, or, sql } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
@@ -19,16 +20,21 @@ const DIRECTORY_LIKE_META_PATTERN = /[%_\\]/g
 
 @injectable()
 export class FeaturedGalleriesService {
-  constructor(private readonly dbAccessor: DbAccessor) {}
+  constructor(
+    private readonly dbAccessor: DbAccessor,
+    private readonly userSafety: UserSafetyService,
+  ) {}
 
   async listFeaturedGalleries(userId?: string, options: { query?: string, limit?: number } = {}) {
     const db = this.dbAccessor.get()
     const query = options.query?.trim()
     const limit = Math.min(Math.max(options.limit ?? 20, 1), 40)
+    const blockedTenantIds = userId ? await this.userSafety.blockedOwnerTenantIds(userId) : []
     const visibilityConditions = [
       eq(tenants.banned, false),
       eq(tenants.status, 'active'),
       notInArray(tenants.slug, RESERVED_TENANT_SLUGS),
+      blockedTenantIds.length > 0 ? notInArray(tenants.id, blockedTenantIds) : undefined,
     ]
     const escapedQuery = query?.replaceAll(DIRECTORY_LIKE_META_PATTERN, '\\$&')
     const searchPattern = escapedQuery ? `%${escapedQuery}%` : undefined

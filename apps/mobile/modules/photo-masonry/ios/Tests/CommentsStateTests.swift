@@ -67,6 +67,26 @@ final class CommentsStateTests: XCTestCase {
     XCTAssertEqual(unliked.viewerReactions, [])
   }
 
+  func testRemovingBlockedAuthorRemovesAllOfTheirCommentsRelationsAndProfile() {
+    let blocked = comment(id: "blocked-one", userId: "blocked")
+    let visible = comment(id: "visible", userId: "visible")
+    let current = CommentCollection(
+      comments: [blocked, visible, comment(id: "blocked-two", userId: "blocked")],
+      relations: ["blocked-parent": comment(id: "blocked-parent", userId: "blocked")],
+      users: [
+        "blocked": CommentUser(id: "blocked", name: "Blocked", image: nil, website: nil),
+        "visible": CommentUser(id: "visible", name: "Visible", image: nil, website: nil),
+      ]
+    )
+
+    let result = CommentsState.removingAuthor(current, userId: "blocked")
+
+    XCTAssertEqual(result.comments.map(\.id), ["visible"])
+    XCTAssertNil(result.relations["blocked-parent"])
+    XCTAssertNil(result.users["blocked"])
+    XCTAssertEqual(result.users["visible"]?.name, "Visible")
+  }
+
   func testCursorAdvancesFromTheIncomingPage() {
     let page = CommentPage(
       comments: [comment(id: "next")],
@@ -88,12 +108,12 @@ final class CommentsStateTests: XCTestCase {
     XCTAssertEqual(status, 403)
   }
 
-  private func comment(id: String, content: String? = nil) -> CommentItem {
+  private func comment(id: String, content: String? = nil, userId: String = "user") -> CommentItem {
     CommentItem(
       id: id,
       photoId: "photo",
       parentId: nil,
-      userId: "user",
+      userId: userId,
       content: content ?? id,
       status: .approved,
       createdAt: "2026-08-02T00:00:00Z",

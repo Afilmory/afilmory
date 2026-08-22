@@ -250,6 +250,10 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate {
       }
     case .developerLab:
       #if DEBUG
+        if let navigation = window.rootViewController as? UINavigationController {
+          presentDeveloperLab(on: navigation)
+          return
+        }
         guard let tabs = window.rootViewController as? AfilmoryTabBarController,
               let navigation = tabs.viewControllers?[safe: 3] as? UINavigationController
         else { return }

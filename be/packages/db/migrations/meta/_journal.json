@@ -183,6 +183,13 @@
       "when": 1787072893843,
       "tag": "0025_premium_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1787395553951,
+      "tag": "0026_overjoyed_marauders",
+      "breakpoints": true
     }
   ]
 }
