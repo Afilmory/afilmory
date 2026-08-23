@@ -297,6 +297,10 @@ final class GalleryCardCell: UICollectionViewCell {
   static func preferredHeight(for _: CGFloat) -> CGFloat {
     14 + 36 + 8 + GalleryFilmstripView.itemHeight + 10 + 22 + 14
   }
+
+  func transitionSourceView(for photoID: String) -> UIView? {
+    filmstrip.transitionSourceView(for: photoID)
+  }
 }
 
 extension GalleryCardCell: UIPointerInteractionDelegate {
@@ -327,4 +331,3 @@ private final class InsetLabel: UILabel {
     )
   }
 }
-

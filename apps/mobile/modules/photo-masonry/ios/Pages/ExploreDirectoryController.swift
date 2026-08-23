@@ -64,6 +64,7 @@ final class ExploreDirectoryController: UIViewController {
   private let refreshControl = UIRefreshControl()
   private var galleries: [FeaturedGallery] = []
   private var coverCache: [String: [GalleryCoverPhoto]] = [:]
+  private var previewPhotoCache: [String: [GalleryPhoto]] = [:]
   private var coverTasks: [String: Task<Void, Never>] = [:]
   private var subscriptionTasks: [String: Task<Void, Never>] = [:]
   private var pendingSubscriptionTargets: [String: Bool] = [:]
@@ -251,33 +252,57 @@ final class ExploreDirectoryController: UIViewController {
         )
         let response: ManifestEnvelope = try await AfilmoryAPI.shared.request(endpoint)
         try Task.checkCancellation()
-        let covers = response.data.compactMap { photo -> GalleryCoverPhoto? in
-          guard let thumbnailUrl = photo.thumbnailUrl?.trimmingToNil else { return nil }
-          let width = photo.width ?? 0
-          let height = photo.height ?? 0
-          let video = ManifestDecoding.normalizeVideo(photo.video, baseURL: origin)
+        let photos = ManifestDecoding.normalize(response.data, galleryOrigin: origin)
+        let covers = photos.map { photo in
           let isLivePhoto: Bool
-          if case .livePhoto = video {
+          if case .livePhoto = photo.video {
             isLivePhoto = true
           } else {
             isLivePhoto = false
           }
           return GalleryCoverPhoto(
             id: photo.id,
-            thumbnailUrl: thumbnailUrl,
+            thumbnailUrl: photo.thumbnailUrl,
             thumbHash: photo.thumbHash,
-            aspectRatio: photo.aspectRatio ?? (width > 0 && height > 0 ? width / height : 1),
+            aspectRatio: photo.aspectRatio,
             isLivePhoto: isLivePhoto
           )
         }
+        previewPhotoCache[gallery.slug] = photos
         coverCache[gallery.slug] = covers
         guard let index = galleries.firstIndex(where: { $0.id == gallery.id }) else { return }
         collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
       } catch {
         guard !Task.isCancelled else { return }
+        previewPhotoCache[gallery.slug] = []
         coverCache[gallery.slug] = []
       }
     }
+  }
+
+  private func presentPhotoPreview(gallery: FeaturedGallery, photoID: String) {
+    guard presentedViewController == nil,
+          let photos = previewPhotoCache[gallery.slug],
+          let initialIndex = photos.firstIndex(where: { $0.id == photoID })
+    else { return }
+    let galleryID = gallery.id
+    let controller = PhotoDetailViewController(
+      photos: photos,
+      initialIndex: initialIndex,
+      gallerySlug: gallery.slug,
+      onRequestSignIn: onRequestSignIn,
+      sourceProvider: { [weak self] photoID in
+        self?.transitionSourceView(galleryID: galleryID, photoID: photoID)
+      }
+    )
+    present(controller, animated: true)
+  }
+
+  private func transitionSourceView(galleryID: String, photoID: String) -> UIView? {
+    guard let index = galleries.firstIndex(where: { $0.id == galleryID }),
+          let cell = collectionView.cellForItem(at: IndexPath(item: index, section: 0)) as? GalleryCardCell
+    else { return nil }
+    return cell.transitionSourceView(for: photoID)
   }
 
   private func prefetchVisibleCovers() {
@@ -584,7 +609,7 @@ extension ExploreDirectoryController: UICollectionViewDataSource, UICollectionVi
         self?.toggleSubscription(galleryID: gallery.id)
       },
       onPhotoTap: { [weak self] photoID in
-        self?.onOpenGallery(gallery.slug, gallery.name, photoID)
+        self?.presentPhotoPreview(gallery: gallery, photoID: photoID)
       }
     )
     loadCovers(for: gallery)
