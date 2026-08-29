@@ -144,7 +144,9 @@ export const CleanupModal: ModalComponent = ({ dismiss }) => {
                       />
                     </th>
                     <th className="px-3 py-2 text-left">{t('superadmin.cleanup.subject')}</th>
-                    <th className="px-3 py-2 text-left">{t('superadmin.cleanup.owner')}</th>
+                    <th className="px-3 py-2 text-left">
+                      {subjectType === 'tenant' ? t('superadmin.cleanup.owner') : t('superadmin.cleanup.workspaces')}
+                    </th>
                     <th className="px-3 py-2 text-right">{t('superadmin.cleanup.content')}</th>
                     <th className="px-3 py-2 text-left">{t('superadmin.cleanup.last-active')}</th>
                   </tr>
@@ -173,13 +175,21 @@ export const CleanupModal: ModalComponent = ({ dismiss }) => {
                         <div className="text-text-tertiary text-xs">{candidate.secondaryLabel}</div>
                       </td>
                       <td className="px-3 py-3">
-                        <div>{candidate.ownerName ?? '—'}</div>
-                        <div className="text-text-tertiary text-xs">{candidate.ownerEmail ?? '—'}</div>
+                        {candidate.subjectType === 'tenant' ? (
+                          <>
+                            <div>{candidate.ownerName ?? '—'}</div>
+                            <div className="text-text-tertiary text-xs">{candidate.ownerEmail ?? '—'}</div>
+                          </>
+                        ) : (
+                          <div className="tabular-nums">
+                            {t('superadmin.cleanup.workspace-count', { count: candidate.workspaceCount ?? 0 })}
+                          </div>
+                        )}
                       </td>
                       <td className="px-3 py-3 text-right tabular-nums">
                         <div>{t('superadmin.cleanup.photo-count', { count: candidate.photoCount })}</div>
                         <div className="text-text-tertiary text-xs">
-                          {formatMb(candidate.storageBytes)}
+                          {formatBytes(candidate.storageBytes)}
                           {candidate.reportCount > 0
                             ? ` · ${t('superadmin.cleanup.report-count', { count: candidate.reportCount })}`
                             : ''}
@@ -230,8 +240,21 @@ export const CleanupModal: ModalComponent = ({ dismiss }) => {
 
 CleanupModal.contentClassName = 'max-w-6xl w-[94vw]'
 
-function formatMb(bytes: number) {
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+const KB = 1024
+const MB = KB * 1024
+const GB = MB * 1024
+
+function formatBytes(bytes: number) {
+  if (bytes >= GB) {
+    return `${(bytes / GB).toFixed(1)} GB`
+  }
+  if (bytes >= MB) {
+    return `${(bytes / MB).toFixed(1)} MB`
+  }
+  if (bytes >= KB) {
+    return `${Math.round(bytes / KB)} KB`
+  }
+  return `${bytes} B`
 }
 
 function NumberField({

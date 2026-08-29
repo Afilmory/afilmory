@@ -66,6 +66,11 @@ const userStorageBytes = sql<number>`(
   where m.user_id = ${USER_ID} and m.status = 'active' and m.role = 'owner'
 )`
 
+const userWorkspaceCount = sql<number>`(
+  select count(*)::int from ${tenantMemberships} m
+  where m.user_id = ${USER_ID} and m.status = 'active' and m.role = 'owner'
+)`
+
 const userReportCount = sql<number>`(
   select count(*)::int from ${contentReports} r
   where r.reported_user_id = ${USER_ID} and r.status in ('pending', 'actioned')
@@ -147,8 +152,7 @@ export class CleanupCandidatesService {
     return rows.map(row => ({
       ...row,
       subjectType: 'tenant' as const,
-      ownerName: row.ownerName,
-      ownerEmail: row.ownerEmail,
+      workspaceCount: null,
     }))
   }
 
@@ -167,6 +171,7 @@ export class CleanupCandidatesService {
         photoCount: userPhotoCount,
         storageBytes: userStorageBytes,
         reportCount: userReportCount,
+        workspaceCount: userWorkspaceCount,
       })
       .from(authUsers)
       .where(
@@ -207,8 +212,8 @@ export class CleanupCandidatesService {
     return rows.map(row => ({
       ...row,
       subjectType: 'user' as const,
-      ownerName: row.label,
-      ownerEmail: row.secondaryLabel,
+      ownerName: null,
+      ownerEmail: null,
     }))
   }
 

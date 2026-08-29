@@ -18,6 +18,7 @@ export interface CleanupCandidate {
   secondaryLabel: string | null
   ownerName: string | null
   ownerEmail: string | null
+  workspaceCount: number | null
   createdAt: string
   lastActivityAt: string
   photoCount: number
