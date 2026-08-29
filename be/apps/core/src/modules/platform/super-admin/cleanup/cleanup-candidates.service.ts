@@ -38,9 +38,10 @@ const tenantReportCount = sql<number>`(
   where r.tenant_id = ${TENANT_ID} and r.status in ('pending', 'actioned')
 )`
 
+// tenants.updatedAt is deliberately excluded: suspending a tenant writes that column, as does
+// any admin edit, and counting it as owner activity would silently cancel a pending deletion.
 const tenantLastActivity = sql<string>`greatest(
   ${tenants.createdAt},
-  ${tenants.updatedAt},
   coalesce((select max(a.occurred_at) from ${platformActivityEvents} a where a.tenant_id = ${TENANT_ID}), ${tenants.createdAt}),
   coalesce((select max(s.updated_at) from ${authSessions} s where s.active_tenant_id = ${TENANT_ID}), ${tenants.createdAt}),
   coalesce((select max(m.updated_at) from ${tenantMemberships} m where m.tenant_id = ${TENANT_ID}), ${tenants.createdAt})
