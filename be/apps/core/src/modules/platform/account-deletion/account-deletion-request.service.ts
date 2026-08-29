@@ -29,7 +29,15 @@ export class AccountDeletionRequestService {
     userId: string
   }): Promise<AccountDeletionRequestResult> {
     await this.verifyProof(params)
-    const impact = await this.impactService.build(params.userId)
+    return await this.enqueueDeletion(params.userId)
+  }
+
+  async requestByAdmin(userId: string): Promise<AccountDeletionRequestResult> {
+    return await this.enqueueDeletion(userId)
+  }
+
+  private async enqueueDeletion(userId: string): Promise<AccountDeletionRequestResult> {
+    const impact = await this.impactService.build(userId)
     const statusToken = randomBytes(32).toString('base64url')
     const statusTokenHash = this.hashStatusToken(statusToken)
     const now = new Date().toISOString()
@@ -39,7 +47,7 @@ export class AccountDeletionRequestService {
       const [user] = await tx
         .select({ deletionRequestedAt: authUsers.deletionRequestedAt, role: authUsers.role })
         .from(authUsers)
-        .where(eq(authUsers.id, params.userId))
+        .where(eq(authUsers.id, userId))
         .limit(1)
       if (!user) {
         throw new BizException(ErrorCode.AUTH_UNAUTHORIZED)
@@ -55,12 +63,7 @@ export class AccountDeletionRequestService {
       const [existing] = await tx
         .select({ id: accountDeletionRequests.id })
         .from(accountDeletionRequests)
-        .where(
-          and(
-            eq(accountDeletionRequests.subjectUserId, params.userId),
-            ne(accountDeletionRequests.status, 'completed'),
-          ),
-        )
+        .where(and(eq(accountDeletionRequests.subjectUserId, userId), ne(accountDeletionRequests.status, 'completed')))
         .limit(1)
       if (existing) {
         throw new BizException(ErrorCode.COMMON_CONFLICT, { message: 'Account deletion is already in progress.' })
@@ -72,17 +75,14 @@ export class AccountDeletionRequestService {
           accessRevokedAt: now,
           impactSnapshot: { ...impact },
           statusTokenHash,
-          subjectUserId: params.userId,
+          subjectUserId: userId,
         })
         .returning({ id: accountDeletionRequests.id })
       if (!request) {
         throw new BizException(ErrorCode.COMMON_INTERNAL_SERVER_ERROR)
       }
-      await tx
-        .update(authUsers)
-        .set({ deletionRequestedAt: now, updatedAt: now })
-        .where(eq(authUsers.id, params.userId))
-      await tx.delete(authSessions).where(eq(authSessions.userId, params.userId))
+      await tx.update(authUsers).set({ deletionRequestedAt: now, updatedAt: now }).where(eq(authUsers.id, userId))
+      await tx.delete(authSessions).where(eq(authSessions.userId, userId))
       return request.id
     })
 

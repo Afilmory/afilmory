@@ -2,8 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type { StorageProvider } from '../storage-providers/types'
 import {
+  cancelCleanupPending,
   deleteSuperAdminTenant,
-  executeTenantCleanup,
+  executeCleanup,
+  fetchCleanupCandidates,
+  fetchCleanupPending,
   fetchSuperAdminAuditLogs,
   fetchSuperAdminSettings,
   fetchSuperAdminStorageTenants,
@@ -11,7 +14,6 @@ import {
   fetchSuperAdminTenants,
   fetchSuperAdminUser,
   fetchSuperAdminUsers,
-  fetchTenantCleanupCandidates,
   revokeSuperAdminUserSessions,
   testSuperAdminStorageUpload,
   updateSuperAdminSettings,
@@ -21,6 +23,8 @@ import {
   updateSuperAdminUserBan,
 } from './api'
 import type {
+  CleanupCriteria,
+  CleanupSubjectType,
   SuperAdminSettingsResponse,
   SuperAdminTenantListParams,
   SuperAdminTenantListResponse,
@@ -184,23 +188,39 @@ export function useRevokeSuperAdminUserSessionsMutation() {
   })
 }
 
-export function useTenantCleanupCandidatesQuery(enabled = false) {
+export function useCleanupCandidatesQuery(subjectType: CleanupSubjectType, criteria: CleanupCriteria, enabled = false) {
   return useQuery({
-    queryKey: SUPER_ADMIN_TENANT_CLEANUP_QUERY_KEY,
-    queryFn: () => fetchTenantCleanupCandidates(3),
+    queryKey: [...SUPER_ADMIN_TENANT_CLEANUP_QUERY_KEY, 'candidates', subjectType, criteria],
+    queryFn: () => fetchCleanupCandidates(subjectType, criteria),
     enabled,
   })
 }
 
-export function useExecuteTenantCleanupMutation() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: executeTenantCleanup,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_TENANTS_QUERY_KEY })
-      void queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_TENANT_CLEANUP_QUERY_KEY })
-    },
+export function useCleanupPendingQuery(enabled = false) {
+  return useQuery({
+    queryKey: [...SUPER_ADMIN_TENANT_CLEANUP_QUERY_KEY, 'pending'],
+    queryFn: fetchCleanupPending,
+    enabled,
   })
+}
+
+function useCleanupInvalidation() {
+  const queryClient = useQueryClient()
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_TENANTS_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_USERS_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_TENANT_CLEANUP_QUERY_KEY })
+  }
+}
+
+export function useExecuteCleanupMutation() {
+  const invalidate = useCleanupInvalidation()
+  return useMutation({ mutationFn: executeCleanup, onSuccess: invalidate })
+}
+
+export function useCancelCleanupPendingMutation() {
+  const invalidate = useCleanupInvalidation()
+  return useMutation({ mutationFn: cancelCleanupPending, onSuccess: invalidate })
 }
 
 export function useSuperAdminAuditLogsQuery(page: number, limit = 50) {

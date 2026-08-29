@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 
 import { PageTabs } from '~/components/navigation/PageTabs'
 
-import { TenantCleanupModal } from './TenantCleanupModal'
+import { CleanupModal } from './CleanupModal'
 import { TenantStoragePanel } from './TenantStoragePanel'
 import { TenantSubscriptionsPanel } from './TenantSubscriptionsPanel'
 
@@ -18,7 +18,7 @@ export function SuperAdminTenantManager() {
   return (
     <m.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={Spring.presets.smooth}>
       <div className="mb-4 flex justify-end">
-        <Button variant="destructive" size="sm" onClick={() => Modal.present(TenantCleanupModal, {})}>
+        <Button variant="destructive" size="sm" onClick={() => Modal.present(CleanupModal, {})}>
           <Trash2Icon className="size-4" />
           {t('superadmin.cleanup.action')}
         </Button>

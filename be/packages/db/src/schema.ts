@@ -861,14 +861,27 @@ export const superAdminAuditLogs = pgTable(
   ],
 )
 
+export interface CleanupCriteria {
+  inactiveMonths: number
+  maxPhotos: number
+  maxStorageMb: number
+  onlyReported: boolean
+  minSuspendedDays: number
+}
+
+// Rows cover both tenants and users; the table name predates user support.
 export const tenantCleanupBatches = pgTable(
   'tenant_cleanup_batch',
   {
     id: snowflakeId,
     actorUserId: text('actor_user_id').references(() => authUsers.id, { onDelete: 'set null' }),
+    subjectType: text('subject_type').notNull().default('tenant'),
+    mode: text('mode').notNull().default('delete'),
+    criteria: jsonb('criteria').$type<CleanupCriteria | null>().default(null),
     inactiveMonths: integer('inactive_months').notNull().default(3),
     status: text('status').notNull().default('processing'),
     candidateCount: integer('candidate_count').notNull().default(0),
+    suspendedCount: integer('suspended_count').notNull().default(0),
     deletedCount: integer('deleted_count').notNull().default(0),
     skippedCount: integer('skipped_count').notNull().default(0),
     failedCount: integer('failed_count').notNull().default(0),
@@ -886,8 +899,11 @@ export const tenantCleanupItems = pgTable(
     batchId: text('batch_id')
       .notNull()
       .references(() => tenantCleanupBatches.id, { onDelete: 'cascade' }),
-    tenantId: text('tenant_id').notNull(),
-    tenantSlug: text('tenant_slug').notNull(),
+    subjectType: text('subject_type').notNull().default('tenant'),
+    tenantId: text('tenant_id'),
+    tenantSlug: text('tenant_slug'),
+    userId: text('user_id'),
+    subjectLabel: text('subject_label'),
     status: text('status').notNull().default('pending'),
     lastActivityAt: timestamp('last_activity_at', { mode: 'string' }),
     reason: text('reason'),
@@ -897,7 +913,9 @@ export const tenantCleanupItems = pgTable(
   },
   t => [
     unique('uq_tenant_cleanup_item_batch_tenant').on(t.batchId, t.tenantId),
+    unique('uq_tenant_cleanup_item_batch_user').on(t.batchId, t.userId),
     index('idx_tenant_cleanup_item_batch_status').on(t.batchId, t.status),
+    index('idx_tenant_cleanup_item_sweep').on(t.status, t.completedAt),
   ],
 )
 

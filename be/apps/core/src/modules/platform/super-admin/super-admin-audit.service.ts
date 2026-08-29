@@ -29,8 +29,13 @@ export class SuperAdminAuditService {
   constructor(private readonly dbAccessor: DbAccessor) {}
 
   getActorUserId(): string | null {
-    const auth = HttpContext.getValue('auth') as HttpContextAuth | undefined
-    return auth?.user?.id ?? null
+    try {
+      const auth = HttpContext.getValue('auth') as HttpContextAuth | undefined
+      return auth?.user?.id ?? null
+    }
+    catch {
+      return null
+    }
   }
 
   getRequestId(): string | null {

@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro'
+import LegalPage from '../components/LegalPage.astro'
+---
+
+<Base title="账号清理政策 · Afilmory" description="Afilmory 清理长期不活跃免费账号时适用的具体期限与阈值。">
+  <LegalPage
+    eyebrow="Account Cleanup"
+    title="账号清理政策"
+    description="本页列出《服务条款》第 8.3 条所述的具体期限与阈值。数值调整会提前在本页公示。"
+    updatedAt="2026 年 8 月 29 日"
+  >
+    <div class="notice">本页是《服务条款》第 8 条的组成部分。清理仅适用于免费方案的账号与 Workspace。</div>
+
+    <section>
+      <h2>1. 当前适用的数值</h2>
+      <ul>
+        <li><strong>不活跃期限</strong>：连续 3 个月无活跃记录；</li>
+        <li><strong>内容阈值</strong>：照片数为 0 且托管存储用量为 0；</li>
+        <li><strong>停用到删除的间隔</strong>：不少于 14 天。</li>
+      </ul>
+      <p>只有同时满足上述全部条件的账号或 Workspace 才会进入清理流程。</p>
+    </section>
+
+    <section>
+      <h2>2. 什么算「活跃」</h2>
+      <p>登录、上传或修改内容、通过 App 或 API 访问 Workspace，或任何其他需要你身份验证的操作，都会刷新活跃时间。仅有自动化的后台同步不构成活跃。</p>
+    </section>
+
+    <section>
+      <h2>3. 永不参与清理的账号</h2>
+      <ul>
+        <li>存在有效订阅、赞助权益或付费存储方案的账号；</li>
+        <li>绑定了已验证自定义域名的 Workspace；</li>
+        <li>平台管理员账号。</li>
+      </ul>
+      <p>订阅到期或取消后，账号转入免费方案，并从该时点起重新计算不活跃期限。</p>
+    </section>
+
+    <section>
+      <h2>4. 如何取消针对你的清理</h2>
+      <p>在删除执行前登录一次即可。系统会检测到这次活动，自动恢复账号并取消本次删除，无需联系我们。</p>
+      <p>如果账号已被删除，数据无法恢复。若你对停用或即将执行的删除有异议，请在删除执行前通过 <a href="/support/">支持页面</a> 联系我们。</p>
+    </section>
+
+    <section>
+      <h2>5. 数值调整</h2>
+      <p>我们可能调整本页列出的期限与阈值。调整会在本页公示，并自公示之日起适用；已经进入停用阶段的账号，仍按其停用时适用的间隔执行。</p>
+    </section>
+  </LegalPage>
+</Base>

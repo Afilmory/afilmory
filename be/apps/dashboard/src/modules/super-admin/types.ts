@@ -296,26 +296,57 @@ export interface SuperAdminUserDetailResponse {
   social: { comments: number, commentReactions: number, gallerySubscriptions: number }
 }
 
-export interface TenantCleanupCandidate {
+export type CleanupSubjectType = 'tenant' | 'user'
+export type CleanupMode = 'suspend' | 'delete'
+
+export interface CleanupCriteria {
+  inactiveMonths: number
+  maxPhotos: number
+  maxStorageMb: number
+  onlyReported: boolean
+  minSuspendedDays: number
+}
+
+export interface CleanupCandidate {
+  subjectType: CleanupSubjectType
   id: string
-  slug: string
-  name: string
-  createdAt: string
-  lastActivityAt: string
+  label: string
+  secondaryLabel: string | null
   ownerName: string | null
   ownerEmail: string | null
+  createdAt: string
+  lastActivityAt: string
+  photoCount: number
+  storageBytes: number
+  reportCount: number
 }
 
-export interface TenantCleanupCandidatesResponse {
-  candidates: TenantCleanupCandidate[]
+export interface CleanupCandidatesResponse {
+  subjectType: CleanupSubjectType
+  criteria: CleanupCriteria
+  candidates: CleanupCandidate[]
   total: number
-  inactiveMonths: number
   cutoff: string
-  confirmation: string
+  suspendConfirmation: string
+  deleteConfirmation: string
 }
 
-export interface TenantCleanupResult {
+export interface CleanupPendingItem {
+  id: string
   batchId: string
+  subjectType: CleanupSubjectType
+  tenantId: string | null
+  userId: string | null
+  subjectLabel: string | null
+  tenantSlug: string | null
+  suspendedAt: string
+  minSuspendedDays: number
+  dueAt: string
+}
+
+export interface CleanupResult {
+  batchId: string
+  suspendedCount: number
   deletedCount: number
   skippedCount: number
   failedCount: number

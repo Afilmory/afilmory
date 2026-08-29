@@ -164,14 +164,37 @@ const auditQuerySchema = z.object({
   action: z.string().trim().optional(),
 })
 
-const cleanupCandidatesQuerySchema = z.object({
+const cleanupSubjectTypeSchema = z.enum(['tenant', 'user'])
+
+const cleanupCriteriaShape = {
   inactiveMonths: z.coerce.number().int().min(1).max(24).default(3),
+  maxPhotos: z.coerce.number().int().min(0).max(1000).default(0),
+  maxStorageMb: z.coerce.number().int().min(0).max(100_000).default(0),
+  onlyReported: z.preprocess((value) => {
+    if (value === 'true')
+      return true
+    if (value === 'false' || value === undefined)
+      return false
+    return value
+  }, z.boolean()),
+  minSuspendedDays: z.coerce.number().int().min(1).max(365).default(14),
+}
+
+const cleanupCandidatesQuerySchema = z.object({
+  subjectType: cleanupSubjectTypeSchema.default('tenant'),
+  ...cleanupCriteriaShape,
 })
 
 const executeCleanupSchema = z.object({
-  inactiveMonths: z.number().int().min(1).max(24).default(3),
-  tenantIds: z.array(z.string().trim().min(1)).min(1).max(500),
+  subjectType: cleanupSubjectTypeSchema,
+  mode: z.enum(['suspend', 'delete']),
+  criteria: z.object(cleanupCriteriaShape),
+  ids: z.array(z.string().trim().min(1)).min(1).max(500),
   confirmation: z.string().trim().min(1),
+})
+
+const cleanupItemParamSchema = z.object({
+  itemId: z.string().trim().min(1),
 })
 
 export class TenantIdParamDto extends createZodSchemaDto(tenantIdParamSchema) {}
@@ -183,3 +206,4 @@ export class UpdateUserBanDto extends createZodDto(updateUserBanSchema) {}
 export class AuditLogQueryDto extends createZodSchemaDto(auditQuerySchema) {}
 export class CleanupCandidatesQueryDto extends createZodSchemaDto(cleanupCandidatesQuerySchema) {}
 export class ExecuteTenantCleanupDto extends createZodDto(executeCleanupSchema) {}
+export class CleanupItemParamDto extends createZodSchemaDto(cleanupItemParamSchema) {}

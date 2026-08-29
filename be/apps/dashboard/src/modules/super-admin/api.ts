@@ -7,6 +7,12 @@ import type { StorageProvider } from '../storage-providers/types'
 import type {
   BuilderDebugProgressEvent,
   BuilderDebugResult,
+  CleanupCandidatesResponse,
+  CleanupCriteria,
+  CleanupMode,
+  CleanupPendingItem,
+  CleanupResult,
+  CleanupSubjectType,
   ManagedStorageProbeResult,
   SuperAdminAuditLogResponse,
   SuperAdminSettingsResponse,
@@ -16,8 +22,6 @@ import type {
   SuperAdminUserDetailResponse,
   SuperAdminUserListParams,
   SuperAdminUserListResponse,
-  TenantCleanupCandidatesResponse,
-  TenantCleanupResult,
   UpdateSuperAdminSettingsPayload,
   UpdateTenantBanPayload,
   UpdateTenantPlanPayload,
@@ -329,24 +333,48 @@ export async function revokeSuperAdminUserSessions(userId: string): Promise<{ re
   return await coreApi(`${SUPER_ADMIN_USERS_ENDPOINT}/${userId}/sessions`, { method: 'DELETE' })
 }
 
-export async function fetchTenantCleanupCandidates(inactiveMonths = 3): Promise<TenantCleanupCandidatesResponse> {
-  const response = await coreApi<TenantCleanupCandidatesResponse>(
-    `${SUPER_ADMIN_TENANT_CLEANUP_ENDPOINT}/candidates?inactiveMonths=${inactiveMonths}`,
+export async function fetchCleanupCandidates(
+  subjectType: CleanupSubjectType,
+  criteria: CleanupCriteria,
+): Promise<CleanupCandidatesResponse> {
+  const params = new URLSearchParams({
+    subjectType,
+    inactiveMonths: String(criteria.inactiveMonths),
+    maxPhotos: String(criteria.maxPhotos),
+    maxStorageMb: String(criteria.maxStorageMb),
+    onlyReported: String(criteria.onlyReported),
+    minSuspendedDays: String(criteria.minSuspendedDays),
+  })
+  const response = await coreApi<CleanupCandidatesResponse>(
+    `${SUPER_ADMIN_TENANT_CLEANUP_ENDPOINT}/candidates?${params.toString()}`,
     { method: 'GET' },
   )
   return camelCaseKeys(response)
 }
 
-export async function executeTenantCleanup(input: {
-  inactiveMonths: number
-  tenantIds: string[]
+export async function executeCleanup(input: {
+  subjectType: CleanupSubjectType
+  mode: CleanupMode
+  criteria: CleanupCriteria
+  ids: string[]
   confirmation: string
-}): Promise<TenantCleanupResult> {
-  const response = await coreApi<TenantCleanupResult>(`${SUPER_ADMIN_TENANT_CLEANUP_ENDPOINT}/batches`, {
+}): Promise<CleanupResult> {
+  const response = await coreApi<CleanupResult>(`${SUPER_ADMIN_TENANT_CLEANUP_ENDPOINT}/batches`, {
     method: 'POST',
     body: input,
   })
   return camelCaseKeys(response)
+}
+
+export async function fetchCleanupPending(): Promise<{ items: CleanupPendingItem[] }> {
+  const response = await coreApi<{ items: CleanupPendingItem[] }>(`${SUPER_ADMIN_TENANT_CLEANUP_ENDPOINT}/pending`, {
+    method: 'GET',
+  })
+  return camelCaseKeys(response)
+}
+
+export async function cancelCleanupPending(itemId: string): Promise<{ cancelled: boolean }> {
+  return await coreApi(`${SUPER_ADMIN_TENANT_CLEANUP_ENDPOINT}/pending/${itemId}`, { method: 'DELETE' })
 }
 
 export async function fetchSuperAdminAuditLogs(params: {
