@@ -98,6 +98,18 @@ final class ExploreDirectoryController: UIViewController {
     updateSearchQuery(nil)
   }
 
+  func reloadSubscriptionState() {
+    var changed = false
+    for index in galleries.indices {
+      let subscribed = GallerySubscriptionStore.shared.isSubscribed(tenantId: galleries[index].id)
+      guard galleries[index].isSubscribed != subscribed else { continue }
+      galleries[index].isSubscribed = subscribed
+      changed = true
+    }
+    guard changed else { return }
+    refreshNotificationPresentation()
+  }
+
   deinit {
     loadTask?.cancel()
     searchDebounceTask?.cancel()
@@ -342,6 +354,7 @@ final class ExploreDirectoryController: UIViewController {
 
     let previousValue = galleries[index].isSubscribed
     let targetValue = !previousValue
+    let header = GalleryHeaderModel(featured: galleries[index])
     galleries[index].isSubscribed = targetValue
     pendingSubscriptionTargets[galleryID] = targetValue
     refreshNotificationPresentation()
@@ -355,17 +368,19 @@ final class ExploreDirectoryController: UIViewController {
       }
 
       do {
-        let endpoint = targetValue
-          ? GallerySubscriptionAPI.subscribe(tenantId: galleryID)
-          : GallerySubscriptionAPI.unsubscribe(tenantId: galleryID)
-        let response: GallerySubscriptionMutationResponse = try await AfilmoryAPI.shared.request(endpoint)
+        if targetValue {
+          try await GallerySubscriptionStore.shared.subscribe(header)
+        } else {
+          try await GallerySubscriptionStore.shared.unsubscribe(tenantId: galleryID)
+        }
         try Task.checkCancellation()
+        let subscribed = GallerySubscriptionStore.shared.isSubscribed(tenantId: galleryID)
         guard sessionUserID == session.user.id,
               let currentIndex = galleries.firstIndex(where: { $0.id == galleryID })
         else { return }
-        galleries[currentIndex].isSubscribed = response.subscribed
+        galleries[currentIndex].isSubscribed = subscribed
         refreshNotificationPresentation()
-        if targetValue, response.subscribed {
+        if targetValue, subscribed {
           onSubscriptionsChanged()
           offerNotificationPermissionAfterSubscription()
         } else if !targetValue {
@@ -427,7 +442,7 @@ final class ExploreDirectoryController: UIViewController {
     refreshNotificationPresentation()
   }
 
-  private func offerNotificationPermissionAfterSubscription() {
+  func offerNotificationPermissionAfterSubscription() {
     guard !didOfferNotificationPermissionThisSession else { return }
     didOfferNotificationPermissionThisSession = true
     notificationPermissionTask?.cancel()

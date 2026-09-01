@@ -54,6 +54,28 @@ extension GalleryHeaderModel {
   }
 }
 
+extension GallerySubscriptionItem {
+  init(optimistic gallery: GalleryHeaderModel, now: Date = Date()) {
+    let timestamp = ISO8601DateFormatter().string(from: now)
+    self.init(
+      createdAt: timestamp,
+      gallery: Gallery(
+        author: gallery.authorName.map {
+          FeaturedGalleryAuthor(name: $0, avatar: gallery.authorAvatar)
+        },
+        domain: gallery.domain,
+        id: gallery.tenantId,
+        lastUpload: gallery.lastUpload ?? timestamp,
+        name: gallery.name,
+        photoCount: gallery.photoCount ?? 0,
+        slug: gallery.slug
+      ),
+      recentPhotos: [],
+      tenantId: gallery.tenantId
+    )
+  }
+}
+
 struct GalleryHeaderView: View {
   let model: GalleryHeaderModel
   let subscriptionState: GallerySubscriptionButtonState

@@ -4,52 +4,57 @@ import Foundation
 final class GallerySubscriptionStore {
   static let shared = GallerySubscriptionStore()
 
+  typealias SubscriptionMutation = @MainActor (String) async throws -> GallerySubscriptionMutationResponse
+
   private(set) var subscriptions: [GallerySubscriptionItem] = []
-  private var pendingSubscribedTenantIds: Set<String> = []
+  private var hasLoaded = false
 
   var hasSubscriptions: Bool { !subscriptions.isEmpty }
 
   func isSubscribed(tenantId: String) -> Bool {
-    pendingSubscribedTenantIds.contains(tenantId)
-      || subscriptions.contains { $0.tenantId == tenantId }
+    subscriptions.contains { $0.tenantId == tenantId }
   }
 
-  func subscribe(tenantId: String) async throws {
-    guard !isSubscribed(tenantId: tenantId) else { return }
-    pendingSubscribedTenantIds.insert(tenantId)
+  static func requestSubscribe(_ tenantId: String) async throws -> GallerySubscriptionMutationResponse {
+    try await AfilmoryAPI.shared.request(GallerySubscriptionAPI.subscribe(tenantId: tenantId))
+  }
+
+  static func requestUnsubscribe(_ tenantId: String) async throws -> GallerySubscriptionMutationResponse {
+    try await AfilmoryAPI.shared.request(GallerySubscriptionAPI.unsubscribe(tenantId: tenantId))
+  }
+
+  func subscribe(
+    _ gallery: GalleryHeaderModel,
+    perform: SubscriptionMutation = requestSubscribe
+  ) async throws {
+    guard !isSubscribed(tenantId: gallery.tenantId) else { return }
+    subscriptions.insert(GallerySubscriptionItem(optimistic: gallery), at: 0)
     do {
-      let response: GallerySubscriptionMutationResponse = try await AfilmoryAPI.shared.request(
-        GallerySubscriptionAPI.subscribe(tenantId: tenantId)
-      )
+      let response = try await perform(gallery.tenantId)
       if !response.subscribed {
-        pendingSubscribedTenantIds.remove(tenantId)
+        remove(tenantId: gallery.tenantId)
       }
     } catch {
-      pendingSubscribedTenantIds.remove(tenantId)
+      remove(tenantId: gallery.tenantId)
       throw error
     }
   }
 
-  func unsubscribe(tenantId: String) async throws {
-    let removed = subscriptions.filter { $0.tenantId == tenantId }
-    let wasPending = pendingSubscribedTenantIds.contains(tenantId)
-    pendingSubscribedTenantIds.remove(tenantId)
+  func unsubscribe(
+    tenantId: String,
+    perform: SubscriptionMutation = requestUnsubscribe
+  ) async throws {
+    let restore = subscriptions.enumerated()
+      .filter { $0.element.tenantId == tenantId }
+      .map { (index: $0.offset, item: $0.element) }
     subscriptions.removeAll { $0.tenantId == tenantId }
-    func rollback() {
-      subscriptions.append(contentsOf: removed)
-      if wasPending {
-        pendingSubscribedTenantIds.insert(tenantId)
-      }
-    }
     do {
-      let response: GallerySubscriptionMutationResponse = try await AfilmoryAPI.shared.request(
-        GallerySubscriptionAPI.unsubscribe(tenantId: tenantId)
-      )
+      let response = try await perform(tenantId)
       if response.subscribed {
-        rollback()
+        rollback(restore)
       }
     } catch {
-      rollback()
+      rollback(restore)
       throw error
     }
   }
@@ -62,7 +67,7 @@ final class GallerySubscriptionStore {
   }
 
   func load(userId: String, force: Bool) async {
-    if !force, !subscriptions.isEmpty {
+    if !force, hasLoaded {
       return
     }
     do {
@@ -70,7 +75,7 @@ final class GallerySubscriptionStore {
         GallerySubscriptionAPI.list()
       )
       subscriptions = response.subscriptions
-      pendingSubscribedTenantIds.removeAll()
+      hasLoaded = true
       UserDefaults.standard.set(hasSubscriptions, forKey: Self.cacheKey(userId: userId))
     } catch {
       if isAuthorizationFailure(error) {
@@ -81,6 +86,12 @@ final class GallerySubscriptionStore {
 
   func remove(tenantId: String) {
     subscriptions.removeAll { $0.tenantId == tenantId }
+  }
+
+  private func rollback(_ restore: [(index: Int, item: GallerySubscriptionItem)]) {
+    for entry in restore where entry.index <= subscriptions.count {
+      subscriptions.insert(entry.item, at: entry.index)
+    }
   }
 
   private static func cacheKey(userId: String) -> String {

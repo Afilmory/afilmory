@@ -4,6 +4,7 @@ import UIKit
 
 final class GalleryDetailController: UIViewController {
   private let onRequestSignIn: () -> Void
+  private let onSubscriptionChanged: (Bool) -> Void
   private let slug: String
   private let header: GalleryHeaderModel?
   private var focusPhotoID: String?
@@ -20,11 +21,13 @@ final class GalleryDetailController: UIViewController {
     title: String,
     header: GalleryHeaderModel? = nil,
     onRequestSignIn: @escaping () -> Void,
+    onSubscriptionChanged: @escaping (Bool) -> Void = { _ in },
     focusPhotoID: String? = nil
   ) {
     self.slug = slug
     self.header = header
     self.onRequestSignIn = onRequestSignIn
+    self.onSubscriptionChanged = onSubscriptionChanged
     self.focusPhotoID = focusPhotoID
     masonryView = PhotoMasonryView(frame: .zero)
     super.init(nibName: nil, bundle: nil)
@@ -142,7 +145,7 @@ final class GalleryDetailController: UIViewController {
       var failure: Error?
       do {
         if target {
-          try await GallerySubscriptionStore.shared.subscribe(tenantId: header.tenantId)
+          try await GallerySubscriptionStore.shared.subscribe(header)
         } else {
           try await GallerySubscriptionStore.shared.unsubscribe(tenantId: header.tenantId)
         }
@@ -151,6 +154,9 @@ final class GalleryDetailController: UIViewController {
       }
       pendingSubscriptionTarget = nil
       refreshHeader()
+      if failure == nil, !Task.isCancelled {
+        onSubscriptionChanged(GallerySubscriptionStore.shared.isSubscribed(tenantId: header.tenantId))
+      }
       guard let failure, !Task.isCancelled else { return }
       if case APIError.unauthorized = failure {
         AfilmorySessionStore.shared.refreshSession()

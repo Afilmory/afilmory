@@ -322,6 +322,7 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate, UISearc
       await GalleryTimelineStore.shared.refresh(timeZone: TimeZone.current.identifier)
       following.reloadFromStore()
       timeline.reloadFromStore()
+      directory.reloadSubscriptionState()
     }
   }
 
@@ -413,6 +414,13 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate, UISearc
         title: title,
         header: header,
         onRequestSignIn: onRequestSignIn,
+        onSubscriptionChanged: { [weak self] didSubscribe in
+          guard let self else { return }
+          refreshSubscriptionSurfaces()
+          if didSubscribe {
+            directory.offerNotificationPermissionAfterSubscription()
+          }
+        },
         focusPhotoID: focusPhotoID
       ),
       animated: viewIfLoaded?.window != nil
