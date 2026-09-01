@@ -71,6 +71,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Allow Afilmory to save photos to your library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Allow Afilmory Studio to select photos for your gallery.</string>
 	<key>NSSupportsLiveActivities</key>

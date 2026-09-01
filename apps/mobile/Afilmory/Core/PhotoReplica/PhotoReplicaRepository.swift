@@ -38,6 +38,30 @@ final class PhotoReplicaRepository: Sendable {
     }
   }
 
+  func assetId(forPhotoId photoId: String, slug: String) throws -> String? {
+    try store.queue.read { db in
+      try String.fetchOne(
+        db,
+        sql: """
+          SELECT asset_id FROM studio_assets
+          WHERE tenant_slug = ? AND (photo_id = ? OR asset_id = ?)
+          LIMIT 1
+          """,
+        arguments: [slug, photoId, photoId]
+      )
+    }
+  }
+
+  func storageProvider(forAssetId assetId: String, slug: String) throws -> String? {
+    try store.queue.read { db in
+      try String.fetchOne(
+        db,
+        sql: "SELECT storage_provider FROM studio_assets WHERE tenant_slug = ? AND asset_id = ?",
+        arguments: [slug, assetId]
+      )
+    }
+  }
+
   func studioPhotos(for slug: String) throws -> [StudioFeedPhoto] {
     try store.queue.read { db in
       let rows = try Row.fetchAll(

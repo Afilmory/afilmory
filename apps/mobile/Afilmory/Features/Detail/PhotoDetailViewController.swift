@@ -23,9 +23,9 @@ private struct PhotoSocialKey: Hashable, Sendable {
 final class PhotoDetailViewController: UIViewController {
   let detailView: PhotoDetailView
 
-  private let photos: [GalleryPhoto]
+  let photos: [GalleryPhoto]
   private let initialIndex: Int
-  private let gallerySlug: String?
+  let gallerySlug: String?
   private let onRequestSignIn: () -> Void
   private let sourceProvider: (String) -> UIView?
   private let commentCount = PhotoCommentCount()
@@ -137,6 +137,7 @@ final class PhotoDetailViewController: UIViewController {
     detailView.onNativeIndexChange = { [weak self] photoId, index in
       self?.loadSocial(photoId: photoId, index: index)
     }
+    detailView.onNativeActionsRequest = { [weak self] in self?.actionMenuElements(photoId: $0, index: $1) ?? [] }
     detailView.onNativeCommentsRequest = { [weak self] photoId, index in
       self?.presentComments(photoId: photoId, index: index)
     }

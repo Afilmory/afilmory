@@ -85,6 +85,7 @@ targets:
             localhost:
               NSExceptionAllowsInsecureHTTPLoads: true
               NSIncludesSubdomains: true
+        NSPhotoLibraryAddUsageDescription: Allow Afilmory to save photos to your library.
         NSPhotoLibraryUsageDescription: Allow Afilmory Studio to select photos for your gallery.
         NSSupportsLiveActivities: true
         UIBackgroundModes:
