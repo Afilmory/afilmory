@@ -99,20 +99,28 @@ final class PhotoSyncEngine {
 
   private func sync(slug: String, includeStudio: Bool) async {
     do {
-      let state = try repository.state(for: slug)
-      if state == nil {
+      if let state = try repository.state(for: slug) {
+        try await catchUp(slug: slug, from: state, includeStudio: includeStudio)
+      } else {
         try await bootstrap(slug: slug, includeStudio: includeStudio)
-        return
       }
-      guard let state else { return }
-      try await catchUp(slug: slug, from: state, includeStudio: includeStudio)
     } catch {
       if case APIError.unauthorized = error {
         wipeAll()
         return
       }
       NSLog("[PhotoSyncEngine] Sync failed for %@: %@", slug, error.localizedDescription)
+      return
     }
+    refreshWidgetSnapshot(slug: slug)
+  }
+
+  private func refreshWidgetSnapshot(slug: String) {
+    guard AfilmoryBuildConfiguration.appGroupIdentifier != nil,
+          AfilmorySessionStore.shared.current().state.session?.activeWorkspace?.slug == slug,
+          let photos = try? repository.publishedPhotos(for: slug)
+    else { return }
+    Task { await WidgetSnapshotWriter.shared.update(slug: slug, photos: photos) }
   }
 
   private func catchUp(slug: String, from state: PhotoReplicaState, includeStudio: Bool) async throws {

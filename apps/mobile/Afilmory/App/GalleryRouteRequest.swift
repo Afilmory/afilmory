@@ -57,6 +57,12 @@ enum AfilmoryDeepLink: Equatable, Sendable {
             let photoID = pathComponents[1].trimmingToNil
       else { return nil }
       return .explore(tenantRoute(slug: tenantSlug, photoID: photoID))
+    case "photo":
+      guard pathComponents.count == 3,
+            let slug = pathComponents[1].trimmingToNil,
+            let photoID = pathComponents[2].trimmingToNil
+      else { return nil }
+      return .explore(tenantRoute(slug: slug, photoID: photoID))
     case "map":
       return pathComponents.count == 1 ? .map : nil
     case "explore":

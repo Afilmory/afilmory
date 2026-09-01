@@ -12,6 +12,7 @@
 		8AF800F517A9D7C64EAE699A /* AfilmoryLocal.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3983EB8B2EFD494138D3C9C5 /* AfilmoryLocal.icon */; };
 		AF274338BBFF344A7BAEBFE9 /* Afilmory.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2B40A13E3BF517C4D52948AA /* Afilmory.icon */; };
 		C1A991BD5A56277D4221B474 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 13DF510201D12CE06D3CE37B /* SDWebImage */; };
+		C363A8EC4AC4B02E9EF816AF /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B790B374D13B20C390F53E /* WidgetSnapshot.swift */; };
 		ECF656AA24646E37091A813F /* AfilmoryShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7D17294B38A9991D586FCEA0 /* AfilmoryShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		EF187F8AE4575B5B50FBC76A /* AfilmoryWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A3E83850A95108CE09366C23 /* AfilmoryWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -60,6 +61,7 @@
 		2B40A13E3BF517C4D52948AA /* Afilmory.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Afilmory.icon; sourceTree = "<group>"; };
 		3983EB8B2EFD494138D3C9C5 /* AfilmoryLocal.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AfilmoryLocal.icon; sourceTree = "<group>"; };
 		7D17294B38A9991D586FCEA0 /* AfilmoryShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AfilmoryShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		93B790B374D13B20C390F53E /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
 		A3E83850A95108CE09366C23 /* AfilmoryWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AfilmoryWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5ADC356FDCD915A2B141CB0 /* AfilmoryTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AfilmoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7C24D2808A5C15D8643768F /* Afilmory.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Afilmory.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -150,10 +152,27 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6F0AADD47B0E75021D267508 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				93B790B374D13B20C390F53E /* WidgetSnapshot.swift */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		75721C460ECAD410BBA1BC86 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				6F0AADD47B0E75021D267508 /* Widgets */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
 		A3AF475FD4E25C2AC4658B92 = {
 			isa = PBXGroup;
 			children = (
 				2241A14B486857EDFAA4D436 /* Afilmory */,
+				D0539BCC111E5D10BFA9A46E /* Afilmory */,
 				F7E1D90B31803524C6BD87AC /* icons */,
 				CC890C61115C8862C1BE9EB2 /* images */,
 				363C0633498AD7FB6A29DB76 /* targets/share */,
@@ -181,6 +200,14 @@
 			);
 			name = images;
 			path = assets/images;
+			sourceTree = "<group>";
+		};
+		D0539BCC111E5D10BFA9A46E /* Afilmory */ = {
+			isa = PBXGroup;
+			children = (
+				75721C460ECAD410BBA1BC86 /* Core */,
+			);
+			path = Afilmory;
 			sourceTree = "<group>";
 		};
 		F7E1D90B31803524C6BD87AC /* icons */ = {
@@ -389,6 +416,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C363A8EC4AC4B02E9EF816AF /* WidgetSnapshot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,6 +583,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = $accent;
+				CODE_SIGN_ENTITLEMENTS = targets/widgets/AfilmoryWidgets.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = targets/widgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;

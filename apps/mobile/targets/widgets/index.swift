@@ -6,6 +6,7 @@ import WidgetKit
 struct AfilmoryWidgets: WidgetBundle {
   var body: some Widget {
     UploadActivityWidget()
+    DailyPhotoWidget()
   }
 }
 
