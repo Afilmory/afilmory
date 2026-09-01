@@ -21,7 +21,7 @@ final class DailyPhotoPickerTests: XCTestCase {
     XCTAssertEqual(first, second)
     XCTAssertEqual(
       first.map(\.photoId),
-      ["photo-7", "photo-14", "photo-13", "photo-8", "photo-15", "photo-18", "photo-5"]
+      ["photo-13", "photo-16", "photo-19", "photo-18", "photo-10", "photo-3", "photo-4"]
     )
   }
 
@@ -48,6 +48,33 @@ final class DailyPhotoPickerTests: XCTestCase {
       photoIds: photoIds, slug: "someone-else", startingAt: reference, calendar: calendar
     )
     XCTAssertNotEqual(a.map(\.photoId), b.map(\.photoId))
+  }
+
+  func testAppendingPhotosOnlyChangesDaysTheNewPhotoWins() {
+    let before = DailyPhotoPicker.pick(
+      photoIds: photoIds, slug: "innei", startingAt: reference, calendar: calendar
+    )
+    let after = DailyPhotoPicker.pick(
+      photoIds: photoIds + ["photo-21"], slug: "innei", startingAt: reference, calendar: calendar
+    )
+    XCTAssertEqual(before.map(\.day), after.map(\.day))
+    for (old, new) in zip(before, after) where old.photoId != new.photoId {
+      XCTAssertEqual(new.photoId, "photo-21")
+    }
+    XCTAssertEqual(
+      after.map(\.photoId),
+      ["photo-13", "photo-21", "photo-19", "photo-18", "photo-10", "photo-3", "photo-4"]
+    )
+  }
+
+  func testReorderingPhotosDoesNotChangePicks() {
+    let ordered = DailyPhotoPicker.pick(
+      photoIds: photoIds, slug: "innei", startingAt: reference, calendar: calendar
+    )
+    let reversed = DailyPhotoPicker.pick(
+      photoIds: photoIds.reversed(), slug: "innei", startingAt: reference, calendar: calendar
+    )
+    XCTAssertEqual(ordered, reversed)
   }
 
   func testFewerPhotosThanDaysStillFillsEveryDay() {

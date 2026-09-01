@@ -1,4 +1,6 @@
 import Foundation
+import ImageIO
+import UniformTypeIdentifiers
 import WidgetKit
 
 actor WidgetSnapshotWriter {
@@ -28,8 +30,10 @@ actor WidgetSnapshotWriter {
         if !FileManager.default.fileExists(atPath: fileURL.path) {
           guard let source = URL(string: photo.thumbnailUrl) else { continue }
           let (data, response) = try await URLSession.shared.data(from: source)
-          guard ((response as? HTTPURLResponse)?.statusCode ?? 200) < 400 else { continue }
-          try data.write(to: fileURL, options: .atomic)
+          guard ((response as? HTTPURLResponse)?.statusCode ?? 200) < 400,
+                let downsampled = Self.downsampledJPEG(from: data)
+          else { continue }
+          try downsampled.write(to: fileURL, options: .atomic)
         }
         entries.append(
           WidgetSnapshot.Entry(
@@ -52,6 +56,23 @@ actor WidgetSnapshotWriter {
     } catch {
       NSLog("[WidgetSnapshotWriter] Failed to update snapshot: %@", error.localizedDescription)
     }
+  }
+
+  private static func downsampledJPEG(from data: Data, maxPixelSize: Int = 800) -> Data? {
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+          let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+          ] as CFDictionary)
+    else { return nil }
+    let output = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(
+      output, UTType.jpeg.identifier as CFString, 1, nil
+    ) else { return nil }
+    CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: 0.85] as CFDictionary)
+    guard CGImageDestinationFinalize(destination) else { return nil }
+    return output as Data
   }
 
   private func prune(directory: URL, keeping fileNames: Set<String>) {

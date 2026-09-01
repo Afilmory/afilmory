@@ -3,7 +3,7 @@ import WidgetKit
 
 struct DailyPhotoEntry: TimelineEntry {
   let date: Date
-  let image: UIImage?
+  let imageURL: URL?
   let gallerySlug: String?
   let photoId: String?
 
@@ -13,7 +13,7 @@ struct DailyPhotoEntry: TimelineEntry {
   }
 
   static func empty(date: Date = Date()) -> DailyPhotoEntry {
-    DailyPhotoEntry(date: date, image: nil, gallerySlug: nil, photoId: nil)
+    DailyPhotoEntry(date: date, imageURL: nil, gallerySlug: nil, photoId: nil)
   }
 }
 
@@ -30,12 +30,10 @@ enum DailyPhotoStore {
       .sorted { $0.date < $1.date }
       .compactMap { entry in
         let fileURL = directory.appendingPathComponent(entry.imageFileName, isDirectory: false)
-        guard let imageData = try? Data(contentsOf: fileURL),
-              let image = UIImage(data: imageData)
-        else { return nil }
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
         return DailyPhotoEntry(
           date: entry.date,
-          image: image,
+          imageURL: fileURL,
           gallerySlug: entry.gallerySlug,
           photoId: entry.photoId
         )
@@ -59,7 +57,7 @@ struct DailyPhotoProvider: TimelineProvider {
     if let current = stored.last(where: { $0.date <= now }) {
       entries.insert(DailyPhotoEntry(
         date: now,
-        image: current.image,
+        imageURL: current.imageURL,
         gallerySlug: current.gallerySlug,
         photoId: current.photoId
       ), at: 0)
@@ -77,7 +75,7 @@ struct DailyPhotoWidgetView: View {
 
   var body: some View {
     Group {
-      if let image = entry.image {
+      if let imageURL = entry.imageURL, let image = UIImage(contentsOfFile: imageURL.path) {
         photo(image)
       } else {
         DailyPhotoPlaceholderView()
