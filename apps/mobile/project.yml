@@ -178,6 +178,8 @@ targets:
     sources:
       - path: targets/widgets
         type: syncedFolder
+      - path: Afilmory/Core/Widgets/WidgetSnapshot.swift
+        group: Afilmory/Core/Widgets
     info:
       path: targets/widgets/Info.plist
       properties:
@@ -198,6 +200,7 @@ targets:
         Debug:
           PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.local.widgets
         Release:
+          CODE_SIGN_ENTITLEMENTS: targets/widgets/AfilmoryWidgets.entitlements
           PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.widgets
 
   AfilmoryTests:
