@@ -444,7 +444,6 @@ final class ExploreDirectoryController: UIViewController {
 
   func offerNotificationPermissionAfterSubscription() {
     guard !didOfferNotificationPermissionThisSession else { return }
-    didOfferNotificationPermissionThisSession = true
     notificationPermissionTask?.cancel()
     notificationPermissionTask = Task { @MainActor [weak self] in
       guard let self else { return }
@@ -452,14 +451,15 @@ final class ExploreDirectoryController: UIViewController {
       guard !Task.isCancelled else { return }
       setNotificationPermissionState(state)
       guard state == .notDetermined else { return }
-      presentNotificationPermissionPrompt()
+      didOfferNotificationPermissionThisSession = presentNotificationPermissionPrompt()
     }
   }
 
-  private func presentNotificationPermissionPrompt() {
+  @discardableResult
+  private func presentNotificationPermissionPrompt() -> Bool {
     guard notificationPermissionState == .notDetermined,
-          presentedViewController == nil
-    else { return }
+          let presenter = notificationPromptPresenter
+    else { return false }
 
     let alert = UIAlertController(
       title: String(localized: "Stay up to date"),
@@ -480,7 +480,17 @@ final class ExploreDirectoryController: UIViewController {
     }
     alert.addAction(enableAction)
     alert.preferredAction = enableAction
-    present(alert, animated: true)
+    presenter.present(alert, animated: true)
+    return true
+  }
+
+  private var notificationPromptPresenter: UIViewController? {
+    var presenter: UIViewController = navigationController?.topViewController ?? self
+    guard presenter.viewIfLoaded?.window != nil else { return nil }
+    while let presented = presenter.presentedViewController {
+      presenter = presented
+    }
+    return presenter is UIAlertController ? nil : presenter
   }
 
   private func requestNotificationAuthorization() {

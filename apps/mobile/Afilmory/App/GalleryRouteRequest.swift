@@ -94,7 +94,7 @@ enum AfilmoryDeepLink: Equatable, Sendable {
 
   private static func tenantRoute(slug: String, photoID: String?) -> GalleryRouteRequest {
     GalleryRouteRequest(
-      requestId: photoID.map { "route:\(slug)/photos/\($0)" } ?? "route:\(slug)",
+      requestId: UUID().uuidString,
       slug: slug,
       title: slug,
       photoID: photoID

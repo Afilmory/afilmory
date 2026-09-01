@@ -6,16 +6,32 @@ import WidgetKit
 actor WidgetSnapshotWriter {
   static let shared = WidgetSnapshotWriter()
 
-  private let minimumInterval: TimeInterval = 3600
+  private let minimumInterval: TimeInterval
   private var lastRun: Date?
 
-  func update(slug: String, photos: [GalleryPhoto], now: Date = Date()) async {
+  init(minimumInterval: TimeInterval = 3600, lastRun: Date? = nil) {
+    self.minimumInterval = minimumInterval
+    self.lastRun = lastRun
+  }
+
+  func shouldRun(at now: Date) -> Bool {
+    guard let lastRun else { return true }
+    return now.timeIntervalSince(lastRun) >= minimumInterval
+  }
+
+  func update(
+    slug: String,
+    repository: PhotoReplicaRepository,
+    now: Date = Date()
+  ) async {
     guard let appGroupIdentifier = AfilmoryBuildConfiguration.appGroupIdentifier,
           let directory = WidgetSnapshotContract.directoryURL(appGroupIdentifier: appGroupIdentifier),
           let snapshotURL = WidgetSnapshotContract.snapshotURL(appGroupIdentifier: appGroupIdentifier)
     else { return }
-    if let lastRun, now.timeIntervalSince(lastRun) < minimumInterval { return }
+    guard shouldRun(at: now) else { return }
+    lastRun = now
 
+    guard let photos = try? repository.publishedPhotos(for: slug) else { return }
     let picks = DailyPhotoPicker.pick(photoIds: photos.map(\.id), slug: slug, startingAt: now)
     guard !picks.isEmpty else { return }
     let photosById = Dictionary(photos.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -51,7 +67,6 @@ actor WidgetSnapshotWriter {
       encoder.dateEncodingStrategy = .iso8601
       try encoder.encode(WidgetSnapshot(entries: entries)).write(to: snapshotURL, options: .atomic)
       prune(directory: directory, keeping: Set(entries.map(\.imageFileName)))
-      lastRun = now
       WidgetCenter.shared.reloadAllTimelines()
     } catch {
       NSLog("[WidgetSnapshotWriter] Failed to update snapshot: %@", error.localizedDescription)

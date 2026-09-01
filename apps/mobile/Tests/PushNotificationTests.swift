@@ -96,25 +96,48 @@ final class PushNotificationTests: XCTestCase {
 
   func testTenantHomepageOpensItsGalleryInExplore() throws {
     let url = try XCTUnwrap(URL(string: "https://innei.afilmory.art/"))
+    let route = try XCTUnwrap(Self.galleryRoute(AfilmoryDeepLink.parse(url, customScheme: "afilmory-local")))
 
-    XCTAssertEqual(
-      AfilmoryDeepLink.parse(url, customScheme: "afilmory-local"),
-      .explore(GalleryRouteRequest(requestId: "route:innei", slug: "innei", title: "innei"))
-    )
+    XCTAssertEqual(route.slug, "innei")
+    XCTAssertEqual(route.title, "innei")
+    XCTAssertNil(route.photoID)
   }
 
   func testTenantPhotoPermalinkFocusesThatPhoto() throws {
     let url = try XCTUnwrap(URL(string: "https://innei.afilmory.art/photos/DSC_7132"))
+    let route = try XCTUnwrap(Self.galleryRoute(AfilmoryDeepLink.parse(url, customScheme: "afilmory-local")))
 
-    XCTAssertEqual(
-      AfilmoryDeepLink.parse(url, customScheme: "afilmory-local"),
-      .explore(GalleryRouteRequest(
-        requestId: "route:innei/photos/DSC_7132",
-        slug: "innei",
-        title: "innei",
-        photoID: "DSC_7132"
-      ))
+    XCTAssertEqual(route.slug, "innei")
+    XCTAssertEqual(route.photoID, "DSC_7132")
+  }
+
+  func testWidgetPhotoLinkGetsAFreshRequestIdEveryTap() throws {
+    let url = try XCTUnwrap(URL(string: "afilmory-local://photo/innei/DSC_7132"))
+    let first = try XCTUnwrap(Self.galleryRoute(AfilmoryDeepLink.parse(url, customScheme: "afilmory-local")))
+    let second = try XCTUnwrap(Self.galleryRoute(AfilmoryDeepLink.parse(url, customScheme: "afilmory-local")))
+
+    XCTAssertEqual(first.slug, "innei")
+    XCTAssertEqual(first.photoID, "DSC_7132")
+    XCTAssertNotEqual(first.requestId, second.requestId)
+  }
+
+  func testNotificationRouteKeepsItsEventIdForDeduplication() throws {
+    let url = try XCTUnwrap(
+      galleryNotificationDeepLink(
+        userInfo: ["route": "gallery", "gallerySlug": "innei", "eventId": "event-9"],
+        scheme: "afilmory-local"
+      )
     )
+    let first = try XCTUnwrap(Self.galleryRoute(AfilmoryDeepLink.parse(url, customScheme: "afilmory-local")))
+    let second = try XCTUnwrap(Self.galleryRoute(AfilmoryDeepLink.parse(url, customScheme: "afilmory-local")))
+
+    XCTAssertEqual(first.requestId, "event-9")
+    XCTAssertEqual(first.requestId, second.requestId)
+  }
+
+  private static func galleryRoute(_ link: AfilmoryDeepLink?) -> GalleryRouteRequest? {
+    guard case .explore(let route) = link else { return nil }
+    return route
   }
 
   func testMarketingHostKeepsItsOwnRoutes() throws {

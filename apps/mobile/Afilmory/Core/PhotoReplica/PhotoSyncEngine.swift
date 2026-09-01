@@ -117,10 +117,10 @@ final class PhotoSyncEngine {
 
   private func refreshWidgetSnapshot(slug: String) {
     guard AfilmoryBuildConfiguration.appGroupIdentifier != nil,
-          AfilmorySessionStore.shared.current().state.session?.activeWorkspace?.slug == slug,
-          let photos = try? repository.publishedPhotos(for: slug)
+          AfilmorySessionStore.shared.current().state.session?.activeWorkspace?.slug == slug
     else { return }
-    Task { await WidgetSnapshotWriter.shared.update(slug: slug, photos: photos) }
+    let repository = repository
+    Task.detached { await WidgetSnapshotWriter.shared.update(slug: slug, repository: repository) }
   }
 
   private func catchUp(slug: String, from state: PhotoReplicaState, includeStudio: Bool) async throws {
