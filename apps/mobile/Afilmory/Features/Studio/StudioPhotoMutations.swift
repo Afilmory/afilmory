@@ -38,17 +38,20 @@ enum StudioPhotoMutations {
     )
   }
 
-  static func applyTags(_ tags: [String], assetIds: [String]) async throws -> [PhotoChange] {
-    var changes: [PhotoChange] = []
+  @MainActor
+  static func applyTags(
+    _ tags: [String],
+    assetIds: [String],
+    onCommitted: (PhotoChange) -> Void
+  ) async throws {
     for id in assetIds {
       let response: StudioTagResponse = try await AfilmoryAPI.shared.request(
         try tagsEndpoint(assetId: id, tags: tags)
       )
       if let change = response.change {
-        changes.append(change)
+        onCommitted(change)
       }
     }
-    return changes
   }
 
   static func delete(assetIds: [String], fromStorage: Bool) async throws -> [PhotoChange] {

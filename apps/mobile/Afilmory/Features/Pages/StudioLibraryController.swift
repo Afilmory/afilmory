@@ -296,7 +296,7 @@ final class StudioLibraryController: UIViewController {
     updateNavigation()
     Task { [weak self] in
       do {
-        for change in try await StudioPhotoMutations.applyTags(tags, assetIds: ids) {
+        try await StudioPhotoMutations.applyTags(tags, assetIds: ids) { change in
           PhotoFeedStore.shared.applyCommitted(change)
         }
         self?.leaveSelection()

@@ -96,8 +96,10 @@ extension PhotoDetailViewController {
   private func applyTags(_ tags: [String], assetId: String) {
     Task { @MainActor [weak self] in
       do {
-        let changes = try await StudioPhotoMutations.applyTags(tags, assetIds: [assetId])
-        self?.commit(changes)
+        try await StudioPhotoMutations.applyTags(tags, assetIds: [assetId]) { change in
+          PhotoFeedStore.shared.applyCommitted(change)
+        }
+        self?.resync()
         self?.showConfirmation(String(localized: "Tags updated"))
       } catch {
         self?.showAlert(
@@ -163,9 +165,12 @@ extension PhotoDetailViewController {
     for change in changes {
       PhotoFeedStore.shared.applyCommitted(change)
     }
-    if let gallerySlug {
-      PhotoSyncEngine.shared.ensureSynced(slug: gallerySlug, includeStudio: true)
-    }
+    resync()
+  }
+
+  private func resync() {
+    guard let gallerySlug else { return }
+    PhotoSyncEngine.shared.ensureSynced(slug: gallerySlug, includeStudio: true)
   }
 
   private func resolveAssetId(photoId: String) -> String? {
