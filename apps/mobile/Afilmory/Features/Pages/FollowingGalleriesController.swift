@@ -3,7 +3,7 @@ import UIKit
 final class FollowingGalleriesController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegate {
   var onBrowseExploreHandler: () -> Void
   private let onRequestSignIn: () -> Void
-  private let onOpenGallery: (String, String, String?) -> Void
+  private let onOpenGallery: (GalleryHeaderModel, String?) -> Void
   private let layout = UICollectionViewFlowLayout()
   private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
   private let refreshControl = UIRefreshControl()
@@ -12,7 +12,7 @@ final class FollowingGalleriesController: UIViewController, UICollectionViewData
 
   init(
     onRequestSignIn: @escaping () -> Void,
-    onOpenGallery: @escaping (String, String, String?) -> Void,
+    onOpenGallery: @escaping (GalleryHeaderModel, String?) -> Void,
     onBrowseExplore: @escaping () -> Void
   ) {
     self.onRequestSignIn = onRequestSignIn
@@ -127,7 +127,7 @@ final class FollowingGalleriesController: UIViewController, UICollectionViewData
         self?.unsubscribe(item)
       },
       onPhotoTap: { [weak self] photoID in
-        self?.onOpenGallery(item.gallery.slug, item.gallery.name, photoID)
+        self?.onOpenGallery(GalleryHeaderModel(subscription: item), photoID)
       }
     )
     return cell
@@ -136,7 +136,7 @@ final class FollowingGalleriesController: UIViewController, UICollectionViewData
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     collectionView.deselectItem(at: indexPath, animated: true)
     let item = items[indexPath.item]
-    onOpenGallery(item.gallery.slug, item.gallery.name, nil)
+    onOpenGallery(GalleryHeaderModel(subscription: item), nil)
   }
 
   func collectionView(

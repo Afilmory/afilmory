@@ -5,8 +5,54 @@ final class GallerySubscriptionStore {
   static let shared = GallerySubscriptionStore()
 
   private(set) var subscriptions: [GallerySubscriptionItem] = []
+  private var pendingSubscribedTenantIds: Set<String> = []
 
   var hasSubscriptions: Bool { !subscriptions.isEmpty }
+
+  func isSubscribed(tenantId: String) -> Bool {
+    pendingSubscribedTenantIds.contains(tenantId)
+      || subscriptions.contains { $0.tenantId == tenantId }
+  }
+
+  func subscribe(tenantId: String) async throws {
+    guard !isSubscribed(tenantId: tenantId) else { return }
+    pendingSubscribedTenantIds.insert(tenantId)
+    do {
+      let response: GallerySubscriptionMutationResponse = try await AfilmoryAPI.shared.request(
+        GallerySubscriptionAPI.subscribe(tenantId: tenantId)
+      )
+      if !response.subscribed {
+        pendingSubscribedTenantIds.remove(tenantId)
+      }
+    } catch {
+      pendingSubscribedTenantIds.remove(tenantId)
+      throw error
+    }
+  }
+
+  func unsubscribe(tenantId: String) async throws {
+    let removed = subscriptions.filter { $0.tenantId == tenantId }
+    let wasPending = pendingSubscribedTenantIds.contains(tenantId)
+    pendingSubscribedTenantIds.remove(tenantId)
+    subscriptions.removeAll { $0.tenantId == tenantId }
+    func rollback() {
+      subscriptions.append(contentsOf: removed)
+      if wasPending {
+        pendingSubscribedTenantIds.insert(tenantId)
+      }
+    }
+    do {
+      let response: GallerySubscriptionMutationResponse = try await AfilmoryAPI.shared.request(
+        GallerySubscriptionAPI.unsubscribe(tenantId: tenantId)
+      )
+      if response.subscribed {
+        rollback()
+      }
+    } catch {
+      rollback()
+      throw error
+    }
+  }
 
   func cachedHasSubscriptions(userId: String) -> Bool? {
     let defaults = UserDefaults.standard
@@ -24,6 +70,7 @@ final class GallerySubscriptionStore {
         GallerySubscriptionAPI.list()
       )
       subscriptions = response.subscriptions
+      pendingSubscribedTenantIds.removeAll()
       UserDefaults.standard.set(hasSubscriptions, forKey: Self.cacheKey(userId: userId))
     } catch {
       if isAuthorizationFailure(error) {

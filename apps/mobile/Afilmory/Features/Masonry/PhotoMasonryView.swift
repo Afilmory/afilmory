@@ -130,6 +130,17 @@ final class PhotoMasonryView: UIView {
     didSet { updateQueryHeader(oldValue: oldValue) }
   }
 
+  var headerView: UIView? {
+    didSet {
+      guard oldValue !== headerView else { return }
+      oldValue?.removeFromSuperview()
+      if let headerView {
+        collectionView.addSubview(headerView)
+      }
+      refreshHeaderViewHeight()
+    }
+  }
+
   var livePhotoAccessibilityLabel = "Live Photo" {
     didSet {
       for case let cell as PhotoCell in collectionView.visibleCells {
@@ -185,6 +196,7 @@ final class PhotoMasonryView: UIView {
   private var dateIdleTimer: Timer?
   private var lastUserScrollAt: CFTimeInterval = 0
   private var queryHeaderHeight: CGFloat = 0
+  private var headerViewHeight: CGFloat = 0
   private var showsFilterSummary = false
 
   override init(frame: CGRect) {
@@ -245,6 +257,7 @@ final class PhotoMasonryView: UIView {
     collectionView.frame = bounds
     overlayView.frame = bounds
     layoutQueryHeader()
+    refreshHeaderViewHeight()
     applyInitialColumnCountIfNeeded()
     if widthChanged {
       applyPreferredItemWidth(for: bounds.width)
@@ -658,7 +671,42 @@ final class PhotoMasonryView: UIView {
       updateInsets()
     }
     layoutQueryHeader()
+    layoutHeaderView()
     updateDateButton()
+  }
+
+  func refreshHeaderViewHeight() {
+    let height: CGFloat
+    if let headerView, bounds.width > 0 {
+      height = ceil(
+        headerView.systemLayoutSizeFitting(
+          CGSize(width: bounds.width, height: 0),
+          withHorizontalFittingPriority: .required,
+          verticalFittingPriority: .fittingSizeLevel
+        ).height
+      )
+    } else {
+      height = 0
+    }
+    if height != headerViewHeight {
+      headerViewHeight = height
+      updateInsets()
+    }
+    layoutHeaderView()
+  }
+
+  private func layoutHeaderView() {
+    guard let headerView else { return }
+    guard headerViewHeight > 0 else {
+      headerView.frame = .zero
+      return
+    }
+    headerView.frame = CGRect(
+      x: 0,
+      y: -queryHeaderHeight - headerViewHeight,
+      width: bounds.width,
+      height: headerViewHeight
+    )
   }
 
   private func layoutQueryHeader() {
@@ -845,7 +893,7 @@ final class PhotoMasonryView: UIView {
     // behind the chrome instead of reserving room for it.
     let wasPinnedToTop = collectionView.contentOffset.y <= -collectionView.adjustedContentInset.top + 1
     collectionView.contentInset = UIEdgeInsets(
-      top: extraTopInset + queryHeaderHeight,
+      top: extraTopInset + queryHeaderHeight + headerViewHeight,
       left: 0,
       bottom: extraBottomInset,
       right: 0

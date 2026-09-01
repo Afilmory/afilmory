@@ -53,25 +53,30 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate, UISearc
 
   init(onRequestSignIn: @escaping () -> Void) {
     self.onRequestSignIn = onRequestSignIn
-    var openGallery: ((String, String, String?) -> Void)!
+    var openGallery: ((GalleryHeaderModel, String?) -> Void)!
     directory = ExploreDirectoryController(
       onRequestSignIn: onRequestSignIn,
-      onOpenGallery: { slug, title, photoID in openGallery?(slug, title, photoID) },
+      onOpenGallery: { header, photoID in openGallery?(header, photoID) },
       onSubscriptionsChanged: {}
     )
     following = FollowingGalleriesController(
       onRequestSignIn: onRequestSignIn,
-      onOpenGallery: { slug, title, photoID in openGallery?(slug, title, photoID) },
+      onOpenGallery: { header, photoID in openGallery?(header, photoID) },
       onBrowseExplore: {}
     )
     timeline = GalleryTimelineController(
-      onOpenGallery: { slug, title, photoID in openGallery?(slug, title, photoID) },
+      onOpenGallery: { header, photoID in openGallery?(header, photoID) },
       onBrowseExplore: {}
     )
     super.init(nibName: nil, bundle: nil)
     title = String(localized: "Explore")
-    openGallery = { [weak self] slug, title, photoID in
-      self?.pushGallery(slug: slug, title: title, focusPhotoID: photoID)
+    openGallery = { [weak self] header, photoID in
+      self?.pushGallery(
+        slug: header.slug,
+        title: header.name,
+        header: header,
+        focusPhotoID: photoID
+      )
     }
     directory.onSubscriptionsChanged = { [weak self] in
       self?.refreshSubscriptionSurfaces()
@@ -92,7 +97,7 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate, UISearc
   func openGallery(_ route: GalleryRouteRequest) {
     guard lastGalleryRouteRequestID != route.requestId else { return }
     lastGalleryRouteRequestID = route.requestId
-    pushGallery(slug: route.slug, title: route.title, focusPhotoID: route.photoID)
+    pushGallery(slug: route.slug, title: route.title, header: nil, focusPhotoID: route.photoID)
   }
 
   func selectExploreSegment() {
@@ -396,11 +401,17 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate, UISearc
     }
   }
 
-  private func pushGallery(slug: String, title: String, focusPhotoID: String?) {
+  private func pushGallery(
+    slug: String,
+    title: String,
+    header: GalleryHeaderModel?,
+    focusPhotoID: String?
+  ) {
     navigationController?.pushViewController(
       GalleryDetailController(
         slug: slug,
         title: title,
+        header: header,
         onRequestSignIn: onRequestSignIn,
         focusPhotoID: focusPhotoID
       ),

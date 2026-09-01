@@ -55,7 +55,7 @@ func resolvedGalleryTopOffsetAfterHeaderTransition(
 
 final class ExploreDirectoryController: UIViewController {
   private let onRequestSignIn: () -> Void
-  private let onOpenGallery: (String, String, String?) -> Void
+  private let onOpenGallery: (GalleryHeaderModel, String?) -> Void
   var onSubscriptionsChanged: () -> Void
   private let notificationPermissions = GalleryNotificationPermissionCoordinator()
   private let galleryDirectoryStore = GalleryDirectoryStore()
@@ -77,11 +77,10 @@ final class ExploreDirectoryController: UIViewController {
   private var searchDebounceTask: Task<Void, Never>?
   private var activeQuery = ""
   private var previousLayoutWidth: CGFloat = 0
-  private var lastGalleryRouteRequestID: String?
 
   init(
     onRequestSignIn: @escaping () -> Void,
-    onOpenGallery: @escaping (String, String, String?) -> Void,
+    onOpenGallery: @escaping (GalleryHeaderModel, String?) -> Void,
     onSubscriptionsChanged: @escaping () -> Void
   ) {
     self.onRequestSignIn = onRequestSignIn
@@ -93,20 +92,6 @@ final class ExploreDirectoryController: UIViewController {
   @available(*, unavailable)
   required init?(coder: NSCoder) {
     fatalError("init(coder:) is not supported")
-  }
-
-  func openGallery(_ route: GalleryRouteRequest) {
-    guard lastGalleryRouteRequestID != route.requestId else { return }
-    lastGalleryRouteRequestID = route.requestId
-    navigationController?.pushViewController(
-      GalleryDetailController(
-        slug: route.slug,
-        title: route.title,
-        onRequestSignIn: onRequestSignIn,
-        focusPhotoID: route.photoID
-      ),
-      animated: viewIfLoaded?.window != nil
-    )
   }
 
   func clearSearchQuery() {
@@ -679,7 +664,7 @@ extension ExploreDirectoryController: UICollectionViewDataSource, UICollectionVi
     collectionView.deselectItem(at: indexPath, animated: true)
     guard galleries.indices.contains(indexPath.item) else { return }
     let gallery = galleries[indexPath.item]
-    onOpenGallery(gallery.slug, gallery.name, nil)
+    onOpenGallery(GalleryHeaderModel(featured: gallery), nil)
   }
 }
 

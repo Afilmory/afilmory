@@ -1,28 +1,39 @@
+import SafariServices
 import SwiftUI
 import UIKit
 
 final class GalleryDetailController: UIViewController {
   private let onRequestSignIn: () -> Void
   private let slug: String
+  private let header: GalleryHeaderModel?
   private var focusPhotoID: String?
   private var didPresentFocusedPhoto = false
   private let masonryView: PhotoMasonryView
   private var feed: PhotoFeed!
   private var observation: PhotoFeedObservationToken?
+  private var headerHost: UIHostingController<GalleryHeaderView>?
+  private var pendingSubscriptionTarget: Bool?
+  private var subscriptionTask: Task<Void, Never>?
 
   init(
     slug: String,
     title: String,
+    header: GalleryHeaderModel? = nil,
     onRequestSignIn: @escaping () -> Void,
     focusPhotoID: String? = nil
   ) {
     self.slug = slug
+    self.header = header
     self.onRequestSignIn = onRequestSignIn
     self.focusPhotoID = focusPhotoID
     masonryView = PhotoMasonryView(frame: .zero)
     super.init(nibName: nil, bundle: nil)
     self.title = title
     configureMasonry()
+  }
+
+  deinit {
+    subscriptionTask?.cancel()
   }
 
   @available(*, unavailable)
@@ -37,6 +48,7 @@ final class GalleryDetailController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
+    installHeaderIfNeeded()
     feed = PhotoFeedStore.shared.feed(for: .manifest(slug))
     observation = feed.observe { [weak self] in
       self?.render()
@@ -63,6 +75,106 @@ final class GalleryDetailController: UIViewController {
     masonryView.onNativeContextMenuAction = { [weak self] action, photoId in
       self?.performContextAction(action, photoId: photoId)
     }
+  }
+
+  private func installHeaderIfNeeded() {
+    guard let header else { return }
+    let host = UIHostingController(rootView: makeHeaderView(header))
+    host.view.backgroundColor = .clear
+    host.sizingOptions = .intrinsicContentSize
+    addChild(host)
+    masonryView.headerView = host.view
+    host.didMove(toParent: self)
+    headerHost = host
+    registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (controller: Self, _) in
+      controller.masonryView.refreshHeaderViewHeight()
+    }
+    loadSubscriptionsIfNeeded()
+  }
+
+  private func makeHeaderView(_ model: GalleryHeaderModel) -> GalleryHeaderView {
+    GalleryHeaderView(
+      model: model,
+      subscriptionState: resolveGallerySubscriptionButtonState(
+        isOwnGallery: isOwnGallery,
+        isSubscribed: GallerySubscriptionStore.shared.isSubscribed(tenantId: model.tenantId),
+        pendingTarget: pendingSubscriptionTarget
+      ),
+      onToggleSubscription: { [weak self] in self?.toggleSubscription() },
+      onOpenDomain: { [weak self] domain in self?.openDomain(domain) }
+    )
+  }
+
+  private func refreshHeader() {
+    guard let header, let headerHost else { return }
+    headerHost.rootView = makeHeaderView(header)
+    masonryView.refreshHeaderViewHeight()
+  }
+
+  private var isOwnGallery: Bool {
+    guard case .signedIn(let session) = AfilmorySessionStore.shared.current().state else {
+      return false
+    }
+    return session.activeWorkspace?.slug == slug
+  }
+
+  private func loadSubscriptionsIfNeeded() {
+    guard case .signedIn(let session) = AfilmorySessionStore.shared.current().state,
+          !isOwnGallery
+    else { return }
+    Task { @MainActor [weak self] in
+      await GallerySubscriptionStore.shared.load(userId: session.user.id, force: false)
+      self?.refreshHeader()
+    }
+  }
+
+  private func toggleSubscription() {
+    guard let header, pendingSubscriptionTarget == nil, !isOwnGallery else { return }
+    guard case .signedIn = AfilmorySessionStore.shared.current().state else {
+      onRequestSignIn()
+      return
+    }
+    let target = !GallerySubscriptionStore.shared.isSubscribed(tenantId: header.tenantId)
+    pendingSubscriptionTarget = target
+    refreshHeader()
+    subscriptionTask = Task { @MainActor [weak self] in
+      guard let self else { return }
+      var failure: Error?
+      do {
+        if target {
+          try await GallerySubscriptionStore.shared.subscribe(tenantId: header.tenantId)
+        } else {
+          try await GallerySubscriptionStore.shared.unsubscribe(tenantId: header.tenantId)
+        }
+      } catch {
+        failure = error
+      }
+      pendingSubscriptionTarget = nil
+      refreshHeader()
+      guard let failure, !Task.isCancelled else { return }
+      if case APIError.unauthorized = failure {
+        AfilmorySessionStore.shared.refreshSession()
+        onRequestSignIn()
+      } else {
+        presentSubscriptionError(failure)
+      }
+    }
+  }
+
+  private func presentSubscriptionError(_ error: Error) {
+    guard presentedViewController == nil else { return }
+    let alert = UIAlertController(
+      title: String(localized: "Couldn’t update subscription"),
+      message: error.localizedDescription,
+      preferredStyle: .alert
+    )
+    alert.addAction(UIAlertAction(title: String(localized: "Done"), style: .default))
+    present(alert, animated: true)
+  }
+
+  private func openDomain(_ domain: String) {
+    guard let url = URL(string: "https://\(domain)") else { return }
+    present(SFSafariViewController(url: url), animated: true)
   }
 
   private func render() {
