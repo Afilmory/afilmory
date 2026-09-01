@@ -1,7 +1,7 @@
 import UIKit
 
 final class PhotoDetailToolbar: UIToolbar {
-  var onShare: (() -> Void)?
+  var actionsMenuProvider: (() -> [UIMenuElement])?
   var onInfo: (() -> Void)?
   var onComments: (() -> Void)?
   var onReactions: (() -> Void)?
@@ -46,7 +46,11 @@ final class PhotoDetailToolbar: UIToolbar {
     standardAppearance = appearance
     scrollEdgeAppearance = appearance
 
-    shareItem.primaryAction = UIAction { [weak self] _ in self?.onShare?() }
+    shareItem.menu = UIMenu(children: [
+      UIDeferredMenuElement.uncached { [weak self] completion in
+        completion(self?.actionsMenuProvider?() ?? [])
+      },
+    ])
     infoItem.primaryAction = UIAction { [weak self] _ in self?.onInfo?() }
     commentsItem.primaryAction = UIAction { [weak self] _ in self?.onComments?() }
     reactionsItem.primaryAction = UIAction { [weak self] _ in self?.onReactions?() }
