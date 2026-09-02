@@ -4,7 +4,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   var onNativeScreenTraitsChange: ((Bool, Bool) -> Void)?
   var onNativeTransitionClose: (() -> Void)?
   var onNativeCommentsRequest: ((String, Int) -> Void)?
-  var onNativeActionsRequest: ((String, Int) -> [UIMenuElement])?
+  var onNativeOwnerActionsRequest: ((String, Int) -> [UIMenuElement])?
   var onNativeIndexChange: ((String, Int) -> Void)?
   var onNativeReactionRequest: ((String, Int, String, Int) -> Void)?
 
@@ -662,10 +662,12 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   private func configureChrome() {
     navigationBar.onRequestClose = { [weak self] in self?.requestClose() }
 
-    toolbar.actionsMenuProvider = { [weak self] in
+    navigationBar.ownerActionsProvider = { [weak self] in
       guard let self, photos.indices.contains(currentIndex) else { return [] }
-      return onNativeActionsRequest?(photos[currentIndex].id, currentIndex) ?? []
+      return onNativeOwnerActionsRequest?(photos[currentIndex].id, currentIndex) ?? []
     }
+
+    toolbar.onShare = { [weak self] in self?.shareCurrentPhoto() }
     toolbar.onInfo = { [weak self] in self?.toggleInfo() }
     toolbar.onComments = { [weak self] in self?.requestComments() }
     toolbar.onReactions = { [weak self] in self?.toggleReactionRail() }
@@ -904,8 +906,24 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     onNativeReactionRequest?(photo.id, currentIndex, reaction, count)
   }
 
-  var shareBarButtonItem: UIBarButtonItem {
-    toolbar.shareBarButtonItem
+  func setOwnerActionsEnabled(_ enabled: Bool) {
+    navigationBar.setOwnerActionsEnabled(enabled)
+  }
+
+  private func shareCurrentPhoto() {
+    guard photos.indices.contains(currentIndex),
+          let presenter = nearestViewController
+    else { return }
+
+    let photo = photos[currentIndex]
+    PhotoShareActivity.present(
+      photoId: photo.id,
+      gallerySlug: gallerySlug,
+      originalUrl: photo.originalUrl,
+      placeholderImage: viewer.currentTransitionImage(),
+      from: presenter,
+      barButtonItem: toolbar.shareBarButtonItem
+    )
   }
 }
 

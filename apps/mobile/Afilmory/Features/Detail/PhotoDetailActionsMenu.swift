@@ -1,23 +1,16 @@
 import UIKit
 
 extension PhotoDetailViewController {
-  func actionMenuElements(photoId: String, index: Int) -> [UIMenuElement] {
-    let shared = UIMenu(title: "", options: .displayInline, children: [
-      UIAction(
-        title: String(localized: "Share link"),
-        image: UIImage(systemName: "link")
-      ) { [weak self] _ in
-        self?.shareLink(photoId: photoId)
-      },
-      UIAction(
-        title: String(localized: "Save to Photos"),
-        image: UIImage(systemName: "square.and.arrow.down")
-      ) { [weak self] _ in
-        self?.saveToPhotos(index: index)
-      },
-    ])
-    guard ownsGallery else { return [shared] }
-    let owned = UIMenu(title: "", options: .displayInline, children: [
+  var ownsGallery: Bool {
+    guard case .signedIn(let session) = AfilmorySessionStore.shared.current().state,
+          let gallerySlug,
+          session.activeWorkspace?.slug == gallerySlug
+    else { return false }
+    return true
+  }
+
+  func ownerActionMenuElements(photoId: String, index: Int) -> [UIMenuElement] {
+    [
       UIAction(
         title: String(localized: "Edit tags"),
         image: UIImage(systemName: "tag")
@@ -31,46 +24,7 @@ extension PhotoDetailViewController {
       ) { [weak self] _ in
         self?.confirmDelete(photoId: photoId)
       },
-    ])
-    return [shared, owned]
-  }
-
-  private var ownsGallery: Bool {
-    guard case .signedIn(let session) = AfilmorySessionStore.shared.current().state,
-          let gallerySlug,
-          session.activeWorkspace?.slug == gallerySlug
-    else { return false }
-    return true
-  }
-
-  private func shareLink(photoId: String) {
-    PhotoShareActivity.present(
-      photoId: photoId,
-      gallerySlug: gallerySlug,
-      from: self,
-      barButtonItem: detailView.shareBarButtonItem
-    )
-  }
-
-  private func saveToPhotos(index: Int) {
-    guard photos.indices.contains(index) else { return }
-    let photo = photos[index]
-    Task { @MainActor [weak self] in
-      do {
-        try await PhotoLibrarySaver.save(
-          originalUrl: photo.originalUrl,
-          livePhotoVideoUrl: photo.video?.livePhotoVideoURL
-        )
-        self?.showConfirmation(String(localized: "Saved to Photos"))
-      } catch PhotoLibrarySaveError.authorizationDenied {
-        self?.showAuthorizationAlert()
-      } catch {
-        self?.showAlert(
-          title: String(localized: "Unable to save photo"),
-          message: error.localizedDescription
-        )
-      }
-    }
+    ]
   }
 
   private func editTags(index: Int) {
@@ -194,20 +148,6 @@ extension PhotoDetailViewController {
       try? await Task.sleep(for: .seconds(1.2))
       alert?.dismiss(animated: true)
     }
-  }
-
-  private func showAuthorizationAlert() {
-    let alert = UIAlertController(
-      title: String(localized: "Photo access needed"),
-      message: PhotoLibrarySaveError.authorizationDenied.errorDescription,
-      preferredStyle: .alert
-    )
-    alert.addAction(UIAlertAction(title: String(localized: "Cancel"), style: .cancel))
-    alert.addAction(UIAlertAction(title: String(localized: "Settings"), style: .default) { _ in
-      guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-      UIApplication.shared.open(url)
-    })
-    present(alert, animated: true)
   }
 
   private func showAlert(title: String, message: String) {

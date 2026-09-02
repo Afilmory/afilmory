@@ -2,9 +2,11 @@ import UIKit
 
 final class PhotoDetailNavigationBar: UINavigationBar {
   var onRequestClose: (() -> Void)?
+  var ownerActionsProvider: (() -> [UIMenuElement])?
 
   private let item = UINavigationItem()
   private let backButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .plain, target: nil, action: nil)
+  private let moreButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), style: .plain, target: nil, action: nil)
   private let titleCapsule = PhotoDetailTitleCapsule()
 
   override init(frame: CGRect) {
@@ -23,6 +25,13 @@ final class PhotoDetailNavigationBar: UINavigationBar {
 
     backButtonItem.accessibilityIdentifier = "photo-detail-back"
     backButtonItem.primaryAction = UIAction { [weak self] _ in self?.onRequestClose?() }
+    moreButtonItem.accessibilityIdentifier = "photo-detail-more"
+    moreButtonItem.accessibilityLabel = String(localized: "More")
+    moreButtonItem.menu = UIMenu(children: [
+      UIDeferredMenuElement.uncached { [weak self] completion in
+        completion(self?.ownerActionsProvider?() ?? [])
+      },
+    ])
     item.leftBarButtonItem = backButtonItem
     item.titleView = titleCapsule
     setItems([item], animated: false)
@@ -36,6 +45,10 @@ final class PhotoDetailNavigationBar: UINavigationBar {
   func setTitle(_ title: String, subtitle: String) {
     titleCapsule.setTitle(title, subtitle: subtitle)
     item.titleView = titleCapsule
+  }
+
+  func setOwnerActionsEnabled(_ enabled: Bool) {
+    item.rightBarButtonItem = enabled ? moreButtonItem : nil
   }
 
   func setBackAccessibilityLabel(_ label: String) {

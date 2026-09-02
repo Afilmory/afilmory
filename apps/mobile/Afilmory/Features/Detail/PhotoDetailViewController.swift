@@ -137,7 +137,8 @@ final class PhotoDetailViewController: UIViewController {
     detailView.onNativeIndexChange = { [weak self] photoId, index in
       self?.loadSocial(photoId: photoId, index: index)
     }
-    detailView.onNativeActionsRequest = { [weak self] in self?.actionMenuElements(photoId: $0, index: $1) ?? [] }
+    detailView.setOwnerActionsEnabled(ownsGallery)
+    detailView.onNativeOwnerActionsRequest = { [weak self] in self?.ownerActionMenuElements(photoId: $0, index: $1) ?? [] }
     detailView.onNativeCommentsRequest = { [weak self] photoId, index in
       self?.presentComments(photoId: photoId, index: index)
     }

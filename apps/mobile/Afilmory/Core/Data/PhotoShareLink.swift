@@ -19,12 +19,18 @@ enum PhotoShareActivity {
   static func present(
     photoId: String,
     gallerySlug: String?,
+    originalUrl: String? = nil,
+    placeholderImage: UIImage? = nil,
     from presenter: UIViewController,
     sourceView: UIView? = nil,
     barButtonItem: UIBarButtonItem? = nil
   ) {
     guard let url = PhotoShareLink.url(photoId: photoId, gallerySlug: gallerySlug) else { return }
-    let controller = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    var items: [Any] = [url]
+    if let originalUrl, let original = URL(string: originalUrl) {
+      items.insert(PhotoOriginalActivityItem(url: original, placeholder: placeholderImage ?? UIImage()), at: 0)
+    }
+    let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
     if let barButtonItem {
       controller.popoverPresentationController?.barButtonItem = barButtonItem
     } else if let sourceView {
@@ -32,5 +38,20 @@ enum PhotoShareActivity {
       controller.popoverPresentationController?.sourceRect = sourceView.bounds
     }
     presenter.present(controller, animated: true)
+  }
+}
+
+// The placeholder is what makes the sheet offer Save Image before the original
+// has been fetched; `item` runs on the provider's own operation thread.
+private final class PhotoOriginalActivityItem: UIActivityItemProvider, @unchecked Sendable {
+  private let url: URL
+
+  init(url: URL, placeholder: UIImage) {
+    self.url = url
+    super.init(placeholderItem: placeholder)
+  }
+
+  override var item: Any {
+    (try? Data(contentsOf: url)).flatMap(UIImage.init(data:)) ?? placeholderItem ?? url
   }
 }
