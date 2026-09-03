@@ -38,7 +38,11 @@ const SearchPhotosSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
   sort: z.enum(['asc', 'desc']).optional(),
-  limit: z.number().int().positive().max(100).optional(),
+  // Fix #268: 100 was a hard browsing cap that made galleries with >100
+  // photos appear truncated even when quotas allowed more. Raise to a
+  // defensible page-size ceiling; callers needing more should paginate via
+  // offset.
+  limit: z.number().int().positive().max(5000).optional(),
   offset: z.number().int().nonnegative().optional(),
 })
 

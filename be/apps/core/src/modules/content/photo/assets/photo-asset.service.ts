@@ -388,7 +388,7 @@ export class PhotoAssetService {
 
       const pendingPhotoPlans = photoPlans.filter(plan => !existingPhotoKeySet.has(plan.storageKey))
       await this.billingPlanService.ensurePhotoProcessingAllowance(tenant.tenant.id, pendingPhotoPlans.length)
-      const libraryLimit = planQuota.libraryItemLimit
+      const libraryLimit = this.resolveLibraryItemLimit(planQuota.libraryItemLimit, storageConfig)
       await this.ensurePhotoLibraryCapacity(tenant.tenant.id, db, pendingPhotoPlans.length, libraryLimit)
       throwIfAborted()
 
@@ -1491,6 +1491,18 @@ export class PhotoAssetService {
       return null
     }
     return value * 1024 * 1024
+  }
+
+  private resolveLibraryItemLimit(planLimit: number | null, storageConfig: StorageConfig): number | null {
+    // For BYO providers (S3/B2/GitHub etc.) the 100-image hard limit reported in
+    // https://github.com/Afilmory/afilmory/issues/268 must not apply. Managed
+    // storage is the only mode where a count quota makes sense alongside the
+    // byte-capacity quota; BYO tenancy owns its own storage so we treat the
+    // count dimension as unlimited and let storage-bytes be the guardrail.
+    if (storageConfig.provider !== 'managed') {
+      return null
+    }
+    return planLimit
   }
 
   private async ensurePhotoLibraryCapacity(
