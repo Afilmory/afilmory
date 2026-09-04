@@ -1,3 +1,4 @@
+import type { Feature } from 'geojson'
 import * as React from 'react'
 import { lazy } from 'react'
 import type { MapRef } from 'react-map-gl/maplibre'
@@ -59,7 +60,7 @@ export const MapLibreMapComponent: React.FC<BaseMapProps> = ({
 
       const feature = event.features?.[0]
       if (feature) {
-        handlers.onGeoJsonClick(feature as GeoJSON.Feature)
+        handlers.onGeoJsonClick(feature as Feature)
       }
     },
     [handlers],

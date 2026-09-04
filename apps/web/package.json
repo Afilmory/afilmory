@@ -93,6 +93,7 @@
     "@tailwindcss/postcss": "catalog:",
     "@tailwindcss/typography": "catalog:",
     "@tailwindcss/vite": "4.3.1",
+    "@types/geojson": "catalog:",
     "@types/node": "25.9.3",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

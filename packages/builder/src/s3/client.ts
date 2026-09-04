@@ -309,10 +309,10 @@ function toAmzDate(date: Date): string {
   return `${yyyy}${MM}${dd}T${hh}${mm}${ss}Z`
 }
 
-function hashHex(value: crypto.BinaryLike): string {
+function hashHex(value: string | NodeJS.ArrayBufferView): string {
   return crypto.createHash('sha256').update(value).digest('hex')
 }
 
-function hmac(key: crypto.BinaryLike, value: crypto.BinaryLike): Buffer {
+function hmac(key: string | NodeJS.ArrayBufferView, value: string | NodeJS.ArrayBufferView): Buffer {
   return crypto.createHmac('sha256', key).update(value).digest()
 }
