@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { LinearBorderPanel } from '~/components/common/LinearBorderPanel'
 import { MainPageLayout } from '~/components/layouts/MainPageLayout'
@@ -11,6 +12,7 @@ import { AllCommentsList } from './AllCommentsList'
 import { CommentsFilters } from './CommentsFilters'
 
 export function CommentsManagement() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
 
   const [photoIdFilter, setPhotoIdFilter] = useState('')
@@ -35,8 +37,8 @@ export function CommentsManagement() {
 
   return (
     <MainPageLayout
-      title="评论管理"
-      description="查看和管理照片评论"
+      title={t('comments.page.title')}
+      description={t('comments.page.description')}
       actions={<RefreshButton onClick={handleRefresh} />}
     >
       <div className="space-y-6">
@@ -50,7 +52,7 @@ export function CommentsManagement() {
 
         <LinearBorderPanel className="bg-background-tertiary">
           <div className="p-6">
-            <h2 className="mb-4 text-base font-semibold text-text">所有评论</h2>
+            <h2 className="mb-4 text-base font-semibold text-text">{t('comments.page.allComments')}</h2>
             <AllCommentsList filters={filters} />
           </div>
         </LinearBorderPanel>
@@ -60,6 +62,7 @@ export function CommentsManagement() {
 }
 
 function RefreshButton({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation()
   return (
     <button
       type="button"
@@ -67,7 +70,7 @@ function RefreshButton({ onClick }: { onClick: () => void }) {
       className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium text-text-secondary transition-all duration-200 hover:bg-fill/50 hover:text-text"
     >
       <RefreshCw className="h-4 w-4" />
-      <span>刷新</span>
+      <span>{t('comments.page.refresh')}</span>
     </button>
   )
 }

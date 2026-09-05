@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { useCommentsQuery } from '../hooks'
 import type { CommentResponseItem, UserViewModel } from '../types'
@@ -9,6 +10,7 @@ interface CommentListProps {
 }
 
 export function CommentList({ photoId }: CommentListProps) {
+  const { t } = useTranslation()
   const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } = useCommentsQuery(photoId)
 
   if (isLoading) {
@@ -22,7 +24,7 @@ export function CommentList({ photoId }: CommentListProps) {
   if (isError) {
     return (
       <div className="rounded-lg border border-red/20 bg-red/5 p-4 text-sm text-red">
-        加载评论失败: {error?.message || '未知错误'}
+        {t('comments.error.loadFailed', { message: error?.message || t('comments.error.unknown') })}
       </div>
     )
   }
@@ -30,7 +32,7 @@ export function CommentList({ photoId }: CommentListProps) {
   if (!data?.pages[0]?.comments.length) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-text-tertiary">
-        <p className="text-sm">暂无评论</p>
+        <p className="text-sm">{t('comments.empty')}</p>
       </div>
     )
   }
@@ -53,7 +55,9 @@ export function CommentList({ photoId }: CommentListProps) {
         const parentComment = comment.parentId ? allRelations[comment.parentId] : undefined
         const parentUser = parentComment ? allUsers[parentComment.userId] : undefined
 
-        if (!user) return null
+        if (!user) {
+          return null
+        }
 
         return (
           <CommentItem
@@ -79,10 +83,10 @@ export function CommentList({ photoId }: CommentListProps) {
             {isFetchingNextPage ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>加载中...</span>
+                <span>{t('comments.list.loading')}</span>
               </>
             ) : (
-              <span>加载更多</span>
+              <span>{t('comments.list.loadMore')}</span>
             )}
           </button>
         </div>

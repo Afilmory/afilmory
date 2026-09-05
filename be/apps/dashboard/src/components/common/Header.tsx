@@ -5,6 +5,7 @@ import { NavLink, useNavigate } from 'react-router'
 import { useAuthUserValue } from '~/atoms/auth'
 import { useTenantPlanQuery } from '~/modules/billing'
 
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 
@@ -51,25 +52,28 @@ export function Header() {
         </nav>
 
         {/* Right side - User Menu */}
-        {user && (
-          <div className="border-fill-tertiary/50 ml-2 sm:ml-auto flex items-center gap-3 border-l pl-2 sm:pl-4">
-            <WorkspaceSwitcher />
-            <div className="hidden md:block">
-              <PlanBadge
-                label={planLabel}
-                isLoading={planQuery.isLoading}
-                onClick={() => navigate('/plan')}
-                labelKey="header.plan.badge"
+        <div className="ml-2 flex items-center gap-2 sm:ml-auto sm:gap-3 sm:border-l sm:border-fill-tertiary/50 sm:pl-4">
+          <LanguageSwitcher />
+          {user && (
+            <>
+              <WorkspaceSwitcher />
+              <div className="hidden md:block">
+                <PlanBadge
+                  label={planLabel}
+                  isLoading={planQuery.isLoading}
+                  onClick={() => navigate('/plan')}
+                  labelKey="header.plan.badge"
+                />
+              </div>
+              <UserMenu
+                user={user}
+                planLabel={planLabel}
+                planLabelKey="header.plan.badge"
+                planLoading={planQuery.isLoading}
               />
-            </div>
-            <UserMenu
-              user={user}
-              planLabel={planLabel}
-              planLabelKey="header.plan.badge"
-              planLoading={planQuery.isLoading}
-            />
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </header>
   )
