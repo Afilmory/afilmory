@@ -39,24 +39,65 @@ final class NotificationService: UNNotificationServiceExtension {
       return
     }
 
-    download(avatarURL) { [weak self] avatarData in
+    var remaining = (avatarURL != nil ? 1 : 0) + (imageURL != nil ? 1 : 0)
+    if remaining == 0 {
+      applyCommunication(to: content, identity: identity, avatarData: nil)
+      return
+    }
+
+    var avatarData: Data?
+
+    let completeOne = { [weak self] in
       guard let self else { return }
-      self.download(imageURL) { imageData in
+      self.lock.lock()
+      remaining -= 1
+      let done = remaining == 0
+      let avatar = avatarData
+      let finished = self.didFinish
+      self.lock.unlock()
+      guard done, !finished else { return }
+      self.applyCommunication(to: content, identity: identity, avatarData: avatar)
+    }
+
+    if let imageURL {
+      download(imageURL) { [weak self] imageData in
+        guard let self else {
+          completeOne()
+          return
+        }
         if let imageData,
            let attachment = try? GalleryPushImageAttachment.makeAttachment(from: imageData)
         {
+          self.lock.lock()
           content.attachments = [attachment]
+          self.lock.unlock()
           Self.log.info(
             "attached id=\(attachment.identifier, privacy: .public) type=\(attachment.type, privacy: .public) path=\(attachment.url.lastPathComponent, privacy: .public)"
           )
         }
-        self.applyCommunication(to: content, identity: identity, avatarData: avatarData)
+        completeOne()
+      }
+    }
+
+    if let avatarURL {
+      download(avatarURL) { [weak self] data in
+        guard let self else {
+          completeOne()
+          return
+        }
+        self.lock.lock()
+        avatarData = data
+        self.lock.unlock()
+        completeOne()
       }
     }
   }
 
   override func serviceExtensionTimeWillExpire() {
-    downloadTasks.forEach { $0.cancel() }
+    lock.lock()
+    let tasks = downloadTasks
+    lock.unlock()
+    tasks.forEach { $0.cancel() }
     finish(with: bestAttemptContent)
   }
 
@@ -83,11 +124,7 @@ final class NotificationService: UNNotificationServiceExtension {
     }
   }
 
-  private func download(_ url: URL?, completion: @escaping (Data?) -> Void) {
-    guard let url else {
-      completion(nil)
-      return
-    }
+  private func download(_ url: URL, completion: @escaping (Data?) -> Void) {
     let task = Self.session.dataTask(with: url) { [weak self] data, response, _ in
       guard let self else { return }
       self.lock.lock()
@@ -103,7 +140,9 @@ final class NotificationService: UNNotificationServiceExtension {
       }
       completion(data)
     }
+    lock.lock()
     downloadTasks.append(task)
+    lock.unlock()
     task.resume()
   }
 
