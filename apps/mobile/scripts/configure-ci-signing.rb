@@ -11,6 +11,7 @@ profiles = {
   'Afilmory' => ENV.fetch('IOS_APP_PROFILE_NAME'),
   'AfilmoryShare' => ENV.fetch('IOS_SHARE_PROFILE_NAME'),
   'AfilmoryWidgets' => ENV.fetch('IOS_WIDGETS_PROFILE_NAME'),
+  'AfilmoryNotification' => ENV.fetch('IOS_NOTIFICATION_PROFILE_NAME'),
 }
 
 project = Xcodeproj::Project.open(project_path)

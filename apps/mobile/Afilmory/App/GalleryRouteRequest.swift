@@ -113,7 +113,8 @@ enum AfilmoryDeepLink: Equatable, Sendable {
     return GalleryRouteRequest(
       requestId: query["event"]?.trimmingToNil ?? "route:\(slug)",
       slug: slug,
-      title: query["name"]?.trimmingToNil ?? slug
+      title: query["name"]?.trimmingToNil ?? slug,
+      photoID: query["photo"]?.trimmingToNil
     )
   }
 }
@@ -129,11 +130,16 @@ func galleryNotificationDeepLink(
 
   let galleryName = (userInfo["galleryName"] as? String)?.trimmingToNil ?? slug
   let eventId = (userInfo["eventId"] as? String)?.trimmingToNil ?? UUID().uuidString
+  let photoId = (userInfo["photoId"] as? String)?.trimmingToNil
   guard var components = URLComponents(string: "\(scheme):///explore") else { return nil }
-  components.queryItems = [
+  var queryItems = [
     URLQueryItem(name: "gallery", value: slug),
     URLQueryItem(name: "name", value: galleryName),
     URLQueryItem(name: "event", value: eventId),
   ]
+  if let photoId {
+    queryItems.append(URLQueryItem(name: "photo", value: photoId))
+  }
+  components.queryItems = queryItems
   return components.url
 }

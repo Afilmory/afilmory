@@ -24,7 +24,14 @@ Run `pnpm --filter @afilmory/mobile native:test` for the Swift behavior suite.
 ### Apple Developer portal ([developer.apple.com](https://developer.apple.com/account))
 
 1. **Identifiers → +** — register App ID `app.afilmory` (explicit) and enable
-   **Sign in with Apple** and **Push Notifications**.
+   **Sign in with Apple**, **Push Notifications**, and **Communication
+   Notifications**. Also register `app.afilmory.notification` for the
+   Notification Service Extension and enable **Communication Notifications** on
+   it (Developer portal / Xcode; the public App Store Connect capability enum
+   does not include this type). Create an App Store distribution profile for
+   that App ID and store it as `IOS_NOTIFICATION_APPSTORE_PROFILE`. CI automatic
+   signing (`-allowProvisioningUpdates`) should attach the capability when the
+   entitlement is present.
 2. **Certificates** — create an **Apple Distribution** certificate. Easiest via Xcode:
    Settings → Accounts → team → Manage Certificates → + → Apple Distribution.
    Then export it from Keychain Access as `.p12` with a password.
@@ -83,6 +90,7 @@ submitting a build:
 | `ASC_KEY_ID` | API key ID |
 | `ASC_ISSUER_ID` | API key issuer ID |
 | `ASC_API_KEY_P8` | raw contents of the `.p8` file |
+| `IOS_NOTIFICATION_APPSTORE_PROFILE` | base64 of the `app.afilmory.notification` App Store profile |
 
 ### First submission only
 

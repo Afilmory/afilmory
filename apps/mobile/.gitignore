@@ -38,3 +38,6 @@ yarn-error.*
 /ios
 /android
 /Afilmory/Resources/Locales/
+
+# APNs sandbox verification derived data
+.derived-apns-sandbox/

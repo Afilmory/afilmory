@@ -1,0 +1,18 @@
+AFILMORY_APP_VARIANT = production
+AFILMORY_API_ENVIRONMENT = local
+AFILMORY_DISPLAY_NAME = Afilmory
+AFILMORY_URL_SCHEME = afilmory
+AFILMORY_APP_GROUP_IDENTIFIER = group.app.afilmory
+
+BUNDLE_ID_Afilmory = app.afilmory
+BUNDLE_ID_AfilmoryNotification = app.afilmory.notification
+BUNDLE_ID_AfilmoryShare = app.afilmory.share
+BUNDLE_ID_AfilmoryWidgets = app.afilmory.widgets
+BUNDLE_ID_AfilmoryTests = app.afilmory.tests
+PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_$(TARGET_NAME))
+
+ENTITLEMENTS_Afilmory = Afilmory/Afilmory.entitlements
+ENTITLEMENTS_AfilmoryNotification = targets/notification/AfilmoryNotification.entitlements
+ENTITLEMENTS_AfilmoryShare = targets/share/AfilmoryShare.entitlements
+ENTITLEMENTS_AfilmoryWidgets = targets/widgets/AfilmoryWidgets.entitlements
+CODE_SIGN_ENTITLEMENTS = $(ENTITLEMENTS_$(TARGET_NAME))

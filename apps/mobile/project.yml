@@ -54,6 +54,8 @@ targets:
         embed: true
       - target: AfilmoryWidgets
         embed: true
+      - target: AfilmoryNotification
+        embed: true
     info:
       path: Afilmory/Info.plist
       properties:
@@ -87,6 +89,8 @@ targets:
               NSIncludesSubdomains: true
         NSPhotoLibraryAddUsageDescription: Allow Afilmory to save photos to your library.
         NSPhotoLibraryUsageDescription: Allow Afilmory Studio to select photos for your gallery.
+        NSUserActivityTypes:
+          - INSendMessageIntent
         NSSupportsLiveActivities: true
         UIBackgroundModes:
           - remote-notification
@@ -202,6 +206,42 @@ targets:
         Release:
           CODE_SIGN_ENTITLEMENTS: targets/widgets/AfilmoryWidgets.entitlements
           PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.widgets
+
+  AfilmoryNotification:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: targets/notification
+        type: syncedFolder
+      - path: Afilmory/Core/Push/GalleryPushImageAttachment.swift
+        group: Afilmory/Core/Push
+      - path: Afilmory/Core/Push/GalleryPushCommunication.swift
+        group: Afilmory/Core/Push
+    dependencies:
+      - sdk: Intents.framework
+    info:
+      path: targets/notification/Info.plist
+      properties:
+        CFBundleDisplayName: Afilmory
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.service
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).NotificationService"
+    settings:
+      base:
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.4"
+        PRODUCT_MODULE_NAME: AfilmoryNotification
+        PRODUCT_NAME: AfilmoryNotification
+        SKIP_INSTALL: YES
+      configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.local.notification
+        Release:
+          CODE_SIGN_ENTITLEMENTS: targets/notification/AfilmoryNotification.entitlements
+          PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.notification
 
   AfilmoryTests:
     type: bundle.unit-test

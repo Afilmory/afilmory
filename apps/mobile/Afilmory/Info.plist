@@ -77,6 +77,10 @@
 	<string>Allow Afilmory Studio to select photos for your gallery.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

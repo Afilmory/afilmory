@@ -28,6 +28,7 @@ import { quotaExceeded } from '@core/modules/platform/billing/quota/billing-quot
 import { BILLING_USAGE_EVENT } from '@core/modules/platform/billing/usage/billing-usage.constants'
 import { BillingUsageService } from '@core/modules/platform/billing/usage/billing-usage.service'
 import { ManagedStorageService } from '@core/modules/platform/managed-storage/managed-storage.service'
+import { selectGalleryPushPreview } from '@core/modules/platform/push-notifications/gallery-push.payload'
 import { GalleryPushQueue } from '@core/modules/platform/push-notifications/gallery-push.queue'
 import { requireTenantContext } from '@core/modules/platform/tenant/tenant.context'
 import { createLogger } from '@tsuki-hono/common'
@@ -597,9 +598,20 @@ export class PhotoAssetService {
             uploadSource: 'manual-upload',
           },
         })
-        await this.galleryPushQueue.enqueueGalleryPublished(tenant.tenant.id, processedItems.length).catch((error) => {
-          this.logger.error('Failed to queue gallery update notifications', error)
-        })
+        await this.galleryPushQueue
+          .enqueueGalleryPublished(
+            tenant.tenant.id,
+            processedItems.length,
+            selectGalleryPushPreview(
+              processedItems.map(item => ({
+                photoId: item.photoId,
+                thumbnailUrl: item.manifest?.data?.thumbnailUrl,
+              })),
+            ),
+          )
+          .catch((error) => {
+            this.logger.error('Failed to queue gallery update notifications', error)
+          })
       }
 
       shouldRollbackUploads = false

@@ -8,18 +8,22 @@ import { injectable } from 'tsyringe'
 import { APNsProvider } from './apns.provider'
 import { alternateAPNsEnvironment } from './apns.utils'
 import { galleryPushBody } from './gallery-push.copy'
+import type { GalleryPushPreview } from './gallery-push.payload'
 import { PushDeviceService } from './push-device.service'
 
 const QUEUE_NAME = 'gallery-push-notifications'
 const TASK_NAME = 'send-gallery-update'
 
 interface GalleryPushTaskPayload {
+  avatarUrl?: string
   deliveryId: string
   deviceId: string
   eventId: string
   galleryName: string
   gallerySlug: string
+  imageUrl?: string
   photoCount: number
+  photoId?: string
   targetTenantId: string
 }
 
@@ -62,7 +66,11 @@ export class GalleryPushQueue {
     await this.workerRedis.quit()
   }
 
-  async enqueueGalleryPublished(targetTenantId: string, photoCount: number): Promise<void> {
+  async enqueueGalleryPublished(
+    targetTenantId: string,
+    photoCount: number,
+    preview?: GalleryPushPreview | null,
+  ): Promise<void> {
     if (!this.apnsProvider.isConfigured() || photoCount <= 0) {
       return
     }
@@ -80,12 +88,15 @@ export class GalleryPushQueue {
           id: deliveryId,
           name: TASK_NAME,
           payload: {
+            avatarUrl: recipients.gallery!.avatarUrl,
             deliveryId,
             deviceId,
             eventId,
             galleryName: recipients.gallery!.name,
             gallerySlug: recipients.gallery!.slug,
+            imageUrl: preview?.imageUrl,
             photoCount,
+            photoId: preview?.photoId,
             targetTenantId,
           },
         })
@@ -111,13 +122,16 @@ export class GalleryPushQueue {
     }
 
     const notification = {
+      avatarUrl: payload.avatarUrl,
+      body: galleryPushBody(device.locale, payload.photoCount),
       deliveryId: payload.deliveryId,
       eventId: payload.eventId,
       galleryName: payload.galleryName,
       gallerySlug: payload.gallerySlug,
+      imageUrl: payload.imageUrl,
       photoCount: payload.photoCount,
+      photoId: payload.photoId,
       title: payload.galleryName,
-      body: galleryPushBody(device.locale, payload.photoCount),
     }
     let result = await this.apnsProvider.send(device.deviceToken, device.environment, notification)
 

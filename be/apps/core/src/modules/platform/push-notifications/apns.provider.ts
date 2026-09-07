@@ -9,6 +9,8 @@ import { createLogger } from '@tsuki-hono/common'
 import { injectable } from 'tsyringe'
 
 import { classifyAPNsResponse, createAPNsProviderToken } from './apns.utils'
+import type { GalleryPushNotification } from './gallery-push.payload'
+import { buildGalleryPushAPNsPayload } from './gallery-push.payload'
 import type { APNsEnvironment } from './push-device.service'
 
 const APNS_ORIGINS: Record<APNsEnvironment, string> = {
@@ -26,14 +28,8 @@ interface APNsProviderConfiguration {
   teamId: string
 }
 
-export interface GalleryPushPayload {
+export interface GalleryPushPayload extends GalleryPushNotification {
   deliveryId: string
-  eventId: string
-  galleryName: string
-  gallerySlug: string
-  photoCount: number
-  body: string
-  title: string
 }
 
 export interface APNsSendResult {
@@ -101,21 +97,7 @@ export class APNsProvider {
     notification: GalleryPushPayload,
   ): Promise<APNsSendResult> {
     const configuration = this.configuration!
-    const payload = JSON.stringify({
-      aps: {
-        'alert': {
-          body: notification.body,
-          title: notification.title,
-        },
-        'sound': 'default',
-        'thread-id': `gallery:${notification.gallerySlug}`,
-      },
-      eventId: notification.eventId,
-      galleryName: notification.galleryName,
-      gallerySlug: notification.gallerySlug,
-      photoCount: notification.photoCount,
-      route: 'gallery',
-    })
+    const payload = JSON.stringify(buildGalleryPushAPNsPayload(notification))
 
     try {
       const session = this.sessionFor(environment)

@@ -10,6 +10,7 @@ set -euo pipefail
 : "${APP_PROFILE_BASE64:?APP_PROFILE_BASE64 is required}"
 : "${SHARE_PROFILE_BASE64:?SHARE_PROFILE_BASE64 is required}"
 : "${WIDGETS_PROFILE_BASE64:?WIDGETS_PROFILE_BASE64 is required}"
+: "${NOTIFICATION_PROFILE_BASE64:?NOTIFICATION_PROFILE_BASE64 is required}"
 
 keychain_path="$RUNNER_TEMP/ci.keychain-db"
 keychain_password="$(uuidgen)"
@@ -112,3 +113,4 @@ install_profile() {
 install_profile "$APP_PROFILE_BASE64" 'app.afilmory' 'IOS_APP' 'group.app.afilmory'
 install_profile "$SHARE_PROFILE_BASE64" 'app.afilmory.share' 'IOS_SHARE' 'group.app.afilmory'
 install_profile "$WIDGETS_PROFILE_BASE64" 'app.afilmory.widgets' 'IOS_WIDGETS'
+install_profile "$NOTIFICATION_PROFILE_BASE64" 'app.afilmory.notification' 'IOS_NOTIFICATION'

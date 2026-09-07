@@ -60,7 +60,7 @@ Everything app-side lives under a single `Afilmory/` root (the old `NativeApp` +
 - `Afilmory/DesignSystem/` — `AdaptiveGlass`, `NativeControls`, `LiquidGlassSegmentedControl`, shared UIKit extensions, and `Transition/` (photo transition animators).
 - `Afilmory/Resources/` — String Catalogs, asset catalogs.
 - `Tests/` — the `AfilmoryTests` unit-test bundle (plus `Tests/Fixtures/`).
-- `targets/share/` and `targets/widgets/` — separate app-extension targets. They do **not** see app-target code; the share extension re-declares its own `group.app.afilmory` constant and its own String Catalog.
+- `targets/share/`, `targets/widgets/`, and `targets/notification/` — separate app-extension targets. They do **not** see app-target code; the share extension re-declares its own `group.app.afilmory` constant and its own String Catalog. The notification service compiles `Afilmory/Core/Push/GalleryPushImageAttachment.swift` into its own module.
 
 ## Runtime architecture
 

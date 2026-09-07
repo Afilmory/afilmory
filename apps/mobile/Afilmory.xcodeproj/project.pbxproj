@@ -8,11 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		0036AB47AA345AEDC151E854 /* google-g.png in Resources */ = {isa = PBXBuildFile; fileRef = 25B5393D7A1A38FF74141B1C /* google-g.png */; };
+		1C5D38C777EAB742DA92A47E /* GalleryPushImageAttachment.swift in Sources */ = {isa = PBXBuildFile; fileRef = F79DDD6CE6213A680D3B3093 /* GalleryPushImageAttachment.swift */; };
+		5E204357F276F92B477326DF /* GalleryPushCommunication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAD9D0EF35936D19B1691E1 /* GalleryPushCommunication.swift */; };
 		76D823DDC359CAF2BDCEEA32 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 6AF472CC061F0A538031C03B /* GRDB */; };
 		8AF800F517A9D7C64EAE699A /* AfilmoryLocal.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3983EB8B2EFD494138D3C9C5 /* AfilmoryLocal.icon */; };
 		AF274338BBFF344A7BAEBFE9 /* Afilmory.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2B40A13E3BF517C4D52948AA /* Afilmory.icon */; };
 		C1A991BD5A56277D4221B474 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 13DF510201D12CE06D3CE37B /* SDWebImage */; };
 		C363A8EC4AC4B02E9EF816AF /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B790B374D13B20C390F53E /* WidgetSnapshot.swift */; };
+		D69FA277A4EB1BA671FCF76B /* Intents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D205E83D76679EEFDEAFCF79 /* Intents.framework */; };
+		E94E60AB2D0A3A2A0A1A8362 /* AfilmoryNotification.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A900A86121037AFE9773DBDF /* AfilmoryNotification.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		ECF656AA24646E37091A813F /* AfilmoryShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7D17294B38A9991D586FCEA0 /* AfilmoryShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		EF187F8AE4575B5B50FBC76A /* AfilmoryWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A3E83850A95108CE09366C23 /* AfilmoryWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -32,6 +36,13 @@
 			remoteGlobalIDString = 49FCC468078AAEFC1B5AA196;
 			remoteInfo = Afilmory;
 		};
+		5A70247A07DC7CF31D5CA23A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E3FF1388E7806E07493CD991 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8C8591ADA4B3ACD6020325F9;
+			remoteInfo = AfilmoryNotification;
+		};
 		705AD7B2843D3DE13373B4EE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E3FF1388E7806E07493CD991 /* Project object */;
@@ -50,6 +61,7 @@
 			files = (
 				ECF656AA24646E37091A813F /* AfilmoryShare.appex in Embed Foundation Extensions */,
 				EF187F8AE4575B5B50FBC76A /* AfilmoryWidgets.appex in Embed Foundation Extensions */,
+				E94E60AB2D0A3A2A0A1A8362 /* AfilmoryNotification.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -57,17 +69,28 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0BAD9D0EF35936D19B1691E1 /* GalleryPushCommunication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryPushCommunication.swift; sourceTree = "<group>"; };
 		25B5393D7A1A38FF74141B1C /* google-g.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "google-g.png"; sourceTree = "<group>"; };
 		2B40A13E3BF517C4D52948AA /* Afilmory.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Afilmory.icon; sourceTree = "<group>"; };
 		3983EB8B2EFD494138D3C9C5 /* AfilmoryLocal.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AfilmoryLocal.icon; sourceTree = "<group>"; };
 		7D17294B38A9991D586FCEA0 /* AfilmoryShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AfilmoryShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		93B790B374D13B20C390F53E /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
 		A3E83850A95108CE09366C23 /* AfilmoryWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AfilmoryWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A900A86121037AFE9773DBDF /* AfilmoryNotification.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AfilmoryNotification.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		D205E83D76679EEFDEAFCF79 /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
 		E5ADC356FDCD915A2B141CB0 /* AfilmoryTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AfilmoryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7C24D2808A5C15D8643768F /* Afilmory.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Afilmory.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F79DDD6CE6213A680D3B3093 /* GalleryPushImageAttachment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryPushImageAttachment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		12283EAD29279421E3B5938D /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8C8591ADA4B3ACD6020325F9 /* AfilmoryNotification */;
+		};
 		BBB023149912B5D758089AD3 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -137,9 +160,29 @@
 			path = targets/widgets;
 			sourceTree = "<group>";
 		};
+		BECBC75D21472EF02A7ECB14 /* targets/notification */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				12283EAD29279421E3B5938D /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = targets/notification;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		34BA265DC83CD4D7FBE42094 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D69FA277A4EB1BA671FCF76B /* Intents.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C917EBF8F91D5CBCE842C420 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -152,6 +195,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0E12E619DF00F0AACBD7B062 /* Push */ = {
+			isa = PBXGroup;
+			children = (
+				0BAD9D0EF35936D19B1691E1 /* GalleryPushCommunication.swift */,
+				F79DDD6CE6213A680D3B3093 /* GalleryPushImageAttachment.swift */,
+			);
+			path = Push;
+			sourceTree = "<group>";
+		};
 		6F0AADD47B0E75021D267508 /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
@@ -163,6 +215,7 @@
 		75721C460ECAD410BBA1BC86 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				0E12E619DF00F0AACBD7B062 /* Push */,
 				6F0AADD47B0E75021D267508 /* Widgets */,
 			);
 			path = Core;
@@ -171,13 +224,15 @@
 		A3AF475FD4E25C2AC4658B92 = {
 			isa = PBXGroup;
 			children = (
-				2241A14B486857EDFAA4D436 /* Afilmory */,
 				D0539BCC111E5D10BFA9A46E /* Afilmory */,
+				2241A14B486857EDFAA4D436 /* Afilmory */,
 				F7E1D90B31803524C6BD87AC /* icons */,
 				CC890C61115C8862C1BE9EB2 /* images */,
+				BECBC75D21472EF02A7ECB14 /* targets/notification */,
 				363C0633498AD7FB6A29DB76 /* targets/share */,
 				87E41E18BDAE2D40961A3359 /* targets/widgets */,
 				575F7F6CF19B796A338D29A5 /* Tests */,
+				CC2504C5C860BC194E664ACD /* Frameworks */,
 				B0A5F813E326BDDE0F59B032 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -186,11 +241,20 @@
 			isa = PBXGroup;
 			children = (
 				E7C24D2808A5C15D8643768F /* Afilmory.app */,
+				A900A86121037AFE9773DBDF /* AfilmoryNotification.appex */,
 				7D17294B38A9991D586FCEA0 /* AfilmoryShare.appex */,
 				E5ADC356FDCD915A2B141CB0 /* AfilmoryTests.xctest */,
 				A3E83850A95108CE09366C23 /* AfilmoryWidgets.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CC2504C5C860BC194E664ACD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D205E83D76679EEFDEAFCF79 /* Intents.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		CC890C61115C8862C1BE9EB2 /* images */ = {
@@ -280,6 +344,7 @@
 			dependencies = (
 				ABD3C7E27F0F01CC57B0CA1F /* PBXTargetDependency */,
 				704E52E79B0FB771488F8088 /* PBXTargetDependency */,
+				EF80FDCFFE8F24A6DD6A49AA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2241A14B486857EDFAA4D436 /* Afilmory */,
@@ -292,6 +357,28 @@
 			productName = Afilmory;
 			productReference = E7C24D2808A5C15D8643768F /* Afilmory.app */;
 			productType = "com.apple.product-type.application";
+		};
+		8C8591ADA4B3ACD6020325F9 /* AfilmoryNotification */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F6953E112FA58DA690DBB733 /* Build configuration list for PBXNativeTarget "AfilmoryNotification" */;
+			buildPhases = (
+				5DF63A30C60096E22609E5B2 /* Sources */,
+				BE1F05CA99B65FCF49BA2BE5 /* Resources */,
+				34BA265DC83CD4D7FBE42094 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				BECBC75D21472EF02A7ECB14 /* targets/notification */,
+			);
+			name = AfilmoryNotification;
+			packageProductDependencies = (
+			);
+			productName = AfilmoryNotification;
+			productReference = A900A86121037AFE9773DBDF /* AfilmoryNotification.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		EED569562E5B8E4DD3F3C7F1 /* AfilmoryWidgets */ = {
 			isa = PBXNativeTarget;
@@ -332,6 +419,9 @@
 					49FCC468078AAEFC1B5AA196 = {
 						DevelopmentTeam = KAMM5N88X3;
 					};
+					8C8591ADA4B3ACD6020325F9 = {
+						DevelopmentTeam = KAMM5N88X3;
+					};
 					EED569562E5B8E4DD3F3C7F1 = {
 						DevelopmentTeam = KAMM5N88X3;
 					};
@@ -356,6 +446,7 @@
 			projectRoot = "";
 			targets = (
 				49FCC468078AAEFC1B5AA196 /* Afilmory */,
+				8C8591ADA4B3ACD6020325F9 /* AfilmoryNotification */,
 				355117DF7EBA74FB8E2A3F01 /* AfilmoryShare */,
 				418883D2F6760B61427AFE0B /* AfilmoryTests */,
 				EED569562E5B8E4DD3F3C7F1 /* AfilmoryWidgets */,
@@ -395,6 +486,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BE1F05CA99B65FCF49BA2BE5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -402,6 +500,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5DF63A30C60096E22609E5B2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5E204357F276F92B477326DF /* GalleryPushCommunication.swift in Sources */,
+				1C5D38C777EAB742DA92A47E /* GalleryPushImageAttachment.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -445,9 +552,36 @@
 			target = 355117DF7EBA74FB8E2A3F01 /* AfilmoryShare */;
 			targetProxy = 10F636B930F4BE69904B4BE3 /* PBXContainerItemProxy */;
 		};
+		EF80FDCFFE8F24A6DD6A49AA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8C8591ADA4B3ACD6020325F9 /* AfilmoryNotification */;
+			targetProxy = 5A70247A07DC7CF31D5CA23A /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		0955F03199FE1274ED3A82AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = targets/notification/AfilmoryNotification.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = targets/notification/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4;
+				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.notification;
+				PRODUCT_MODULE_NAME = AfilmoryNotification;
+				PRODUCT_NAME = AfilmoryNotification;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		257B8361321DF15339A535B2 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -509,6 +643,27 @@
 			};
 			name = Release;
 		};
+		313782784C8A0898255949FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = targets/notification/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.4;
+				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.notification;
+				PRODUCT_MODULE_NAME = AfilmoryNotification;
+				PRODUCT_NAME = AfilmoryNotification;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		3A909547F2A3F2E07C58FF03 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -521,7 +676,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.share;
 				PRODUCT_MODULE_NAME = AfilmoryShare;
 				PRODUCT_NAME = AfilmoryShare;
@@ -569,7 +724,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local;
 				PRODUCT_MODULE_NAME = Afilmory;
 				PRODUCT_NAME = Afilmory;
@@ -592,7 +747,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.widgets;
 				PRODUCT_MODULE_NAME = AfilmoryWidgets;
 				PRODUCT_NAME = AfilmoryWidgets;
@@ -614,7 +769,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.share;
 				PRODUCT_MODULE_NAME = AfilmoryShare;
 				PRODUCT_NAME = AfilmoryShare;
@@ -636,7 +791,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.widgets;
 				PRODUCT_MODULE_NAME = AfilmoryWidgets;
 				PRODUCT_NAME = AfilmoryWidgets;
@@ -665,7 +820,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory;
 				PRODUCT_MODULE_NAME = Afilmory;
 				PRODUCT_NAME = Afilmory;
@@ -797,6 +952,15 @@
 			buildConfigurations = (
 				A68A51A62CF86FBA9B8C1F78 /* Debug */,
 				3A909547F2A3F2E07C58FF03 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F6953E112FA58DA690DBB733 /* Build configuration list for PBXNativeTarget "AfilmoryNotification" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				313782784C8A0898255949FF /* Debug */,
+				0955F03199FE1274ED3A82AD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
