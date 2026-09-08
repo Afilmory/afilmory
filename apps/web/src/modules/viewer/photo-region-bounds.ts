@@ -39,13 +39,13 @@ export function getPhotoRegionBounds(
 }
 
 export function getRenderablePhotoRegions(
-  regions: PhotoRegion[],
+  regions: PhotoRegion[] | undefined,
   photoWidth?: number,
   photoHeight?: number,
   orientation?: number,
   regionInfo?: ExiftoolXmpRegionInfo,
 ) {
-  return regions
+  return (regions ?? [])
     .map((region, index) => getRegionWithExifArea(region, regionInfo?.RegionList?.[index]))
     .filter(region => getPhotoRegionBounds(region, photoWidth, photoHeight, orientation) !== null)
 }
