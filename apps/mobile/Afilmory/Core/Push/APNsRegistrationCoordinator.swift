@@ -54,6 +54,14 @@ final class APNsRegistrationCoordinator {
     guard AfilmoryBuildConfiguration.supportsPushNotifications else { return }
     guard !started else { return }
     started = true
+    UNUserNotificationCenter.current().setNotificationCategories([
+      UNNotificationCategory(
+        identifier: GalleryPushCommunication.categoryIdentifier,
+        actions: [],
+        intentIdentifiers: ["INSendMessageIntent"],
+        options: []
+      ),
+    ])
     sessionObservation = AfilmorySessionStore.shared.observe { [weak self] state in
       Task { @MainActor in
         self?.handleSessionState(state)

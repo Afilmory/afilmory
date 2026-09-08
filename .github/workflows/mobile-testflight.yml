@@ -42,6 +42,7 @@ jobs:
           APP_PROFILE_BASE64: ${{ secrets.IOS_APPSTORE_PROFILE }}
           SHARE_PROFILE_BASE64: ${{ secrets.IOS_SHARE_APPSTORE_PROFILE }}
           WIDGETS_PROFILE_BASE64: ${{ secrets.IOS_WIDGETS_APPSTORE_PROFILE }}
+          NOTIFICATION_PROFILE_BASE64: ${{ secrets.IOS_NOTIFICATION_APPSTORE_PROFILE }}
         run: bash scripts/import-ci-signing-assets.sh
 
       - name: Configure manual signing
@@ -113,6 +114,7 @@ jobs:
               <key>app.afilmory</key><string>$IOS_APP_PROFILE_NAME</string>
               <key>app.afilmory.share</key><string>$IOS_SHARE_PROFILE_NAME</string>
               <key>app.afilmory.widgets</key><string>$IOS_WIDGETS_PROFILE_NAME</string>
+              <key>app.afilmory.notification</key><string>$IOS_NOTIFICATION_PROFILE_NAME</string>
             </dict>
             <key>manageAppVersionAndBuildNumber</key><true/>
           </dict>
@@ -131,7 +133,7 @@ jobs:
         run: |
           security delete-keychain "$RUNNER_TEMP/ci.keychain-db" || true
           rm -f "$RUNNER_TEMP/dist.p12" "$RUNNER_TEMP"/AuthKey_*.p8
-          for profile_uuid in "$IOS_APP_PROFILE_UUID" "$IOS_SHARE_PROFILE_UUID" "$IOS_WIDGETS_PROFILE_UUID"; do
+          for profile_uuid in "$IOS_APP_PROFILE_UUID" "$IOS_SHARE_PROFILE_UUID" "$IOS_WIDGETS_PROFILE_UUID" "$IOS_NOTIFICATION_PROFILE_UUID"; do
             if [[ "$profile_uuid" =~ ^[0-9A-Fa-f-]{36}$ ]]; then
               rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/$profile_uuid.mobileprovision"
               rm -f "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$profile_uuid.mobileprovision"

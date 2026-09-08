@@ -14,6 +14,7 @@ import { BillingPlanService } from '@core/modules/platform/billing/plan/billing-
 import { quotaExceeded } from '@core/modules/platform/billing/quota/billing-quota.error'
 import { BILLING_USAGE_EVENT } from '@core/modules/platform/billing/usage/billing-usage.constants'
 import { BillingUsageService } from '@core/modules/platform/billing/usage/billing-usage.service'
+import { selectGalleryPushPreview } from '@core/modules/platform/push-notifications/gallery-push.payload'
 import { GalleryPushQueue } from '@core/modules/platform/push-notifications/gallery-push.queue'
 import { requireTenantContext } from '@core/modules/platform/tenant/tenant.context'
 import { createLogger } from '@tsuki-hono/common'
@@ -206,11 +207,22 @@ export class DataSyncService {
       if (mutated) {
         await this.manifestSyncService.recordAppliedActions(tenant.tenant.id, actions)
       }
-      const insertedCount = actions.filter(action => action.type === 'insert' && action.applied).length
-      if (insertedCount > 0) {
-        await this.galleryPushQueue.enqueueGalleryPublished(tenant.tenant.id, insertedCount).catch((error) => {
-          this.logger.error('Failed to queue gallery update notifications', error)
-        })
+      const inserted = actions.filter(action => action.type === 'insert' && action.applied)
+      if (inserted.length > 0) {
+        await this.galleryPushQueue
+          .enqueueGalleryPublished(
+            tenant.tenant.id,
+            inserted.length,
+            selectGalleryPushPreview(
+              inserted.map(action => ({
+                photoId: action.photoId,
+                thumbnailUrl: action.manifestAfter?.thumbnailUrl,
+              })),
+            ),
+          )
+          .catch((error) => {
+            this.logger.error('Failed to queue gallery update notifications', error)
+          })
       }
     }
 

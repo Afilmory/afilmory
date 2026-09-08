@@ -10,6 +10,7 @@ set -euo pipefail
 : "${APP_PROFILE_BASE64:?APP_PROFILE_BASE64 is required}"
 : "${SHARE_PROFILE_BASE64:?SHARE_PROFILE_BASE64 is required}"
 : "${WIDGETS_PROFILE_BASE64:?WIDGETS_PROFILE_BASE64 is required}"
+: "${NOTIFICATION_PROFILE_BASE64:?NOTIFICATION_PROFILE_BASE64 is required}"
 
 keychain_path="$RUNNER_TEMP/ci.keychain-db"
 keychain_password="$(uuidgen)"
@@ -46,6 +47,7 @@ install_profile() {
   local expected_bundle_id="$2"
   local output_prefix="$3"
   local required_app_group="${4:-}"
+  local require_communication="${5:-false}"
   local source_path="$RUNNER_TEMP/${output_prefix}.mobileprovision"
   local plist_path="$RUNNER_TEMP/${output_prefix}.plist"
 
@@ -99,6 +101,17 @@ install_profile() {
       exit 1
     fi
   fi
+  if [[ "$require_communication" == 'true' ]]; then
+    local communication
+    communication="$(
+      /usr/libexec/PlistBuddy -c 'Print :Entitlements:com.apple.developer.usernotifications.communication' "$plist_path" 2>/dev/null \
+        || true
+    )"
+    if [[ "$communication" != 'true' ]]; then
+      echo "Provisioning profile for $expected_bundle_id does not include Communication Notifications." >&2
+      exit 1
+    fi
+  fi
 
   cp "$source_path" "$legacy_profiles_directory/$profile_uuid.mobileprovision"
   cp "$source_path" "$xcode_profiles_directory/$profile_uuid.mobileprovision"
@@ -109,6 +122,7 @@ install_profile() {
   printf 'Installed App Store profile %s for %s (%s).\n' "$profile_name" "$expected_bundle_id" "$profile_uuid"
 }
 
-install_profile "$APP_PROFILE_BASE64" 'app.afilmory' 'IOS_APP' 'group.app.afilmory'
+install_profile "$APP_PROFILE_BASE64" 'app.afilmory' 'IOS_APP' 'group.app.afilmory' true
 install_profile "$SHARE_PROFILE_BASE64" 'app.afilmory.share' 'IOS_SHARE' 'group.app.afilmory'
 install_profile "$WIDGETS_PROFILE_BASE64" 'app.afilmory.widgets' 'IOS_WIDGETS'
+install_profile "$NOTIFICATION_PROFILE_BASE64" 'app.afilmory.notification' 'IOS_NOTIFICATION' '' true

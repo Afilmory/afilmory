@@ -1,4 +1,6 @@
 import Foundation
+import Intents
+import UIKit
 import XCTest
 
 @testable import Afilmory
@@ -29,6 +31,117 @@ final class PushNotificationTests: XCTestCase {
     XCTAssertEqual(query["gallery"], "street-photo")
     XCTAssertEqual(query["name"], "Street Photo")
     XCTAssertEqual(query["event"], "event-123")
+    XCTAssertNil(query["photo"])
+  }
+
+  func testGalleryNotificationDeepLinkFocusesThePreviewPhoto() throws {
+    let url = try XCTUnwrap(
+      galleryNotificationDeepLink(
+        userInfo: [
+          "route": "gallery",
+          "gallerySlug": "street-photo",
+          "galleryName": "Street Photo",
+          "eventId": "event-123",
+          "photoId": "DSC_7132",
+          "imageUrl": "https://cdn.example/t.jpg",
+        ],
+        scheme: "afilmory-local"
+      )
+    )
+    let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
+    let query = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).compactMap { item in
+      item.value.map { (item.name, $0) }
+    })
+
+    XCTAssertEqual(query["photo"], "DSC_7132")
+    XCTAssertEqual(
+      AfilmoryDeepLink.parse(url, customScheme: "afilmory-local"),
+      .explore(
+        GalleryRouteRequest(
+          requestId: "event-123",
+          slug: "street-photo",
+          title: "Street Photo",
+          photoID: "DSC_7132"
+        )
+      )
+    )
+  }
+
+  func testGalleryPushImageURLRequiresHttps() {
+    XCTAssertEqual(
+      GalleryPushImageAttachment.remoteImageURL(from: ["imageUrl": "https://cdn.example/t.jpg"])?.absoluteString,
+      "https://cdn.example/t.jpg"
+    )
+    XCTAssertNil(GalleryPushImageAttachment.remoteImageURL(from: ["imageUrl": "http://cdn.example/t.jpg"]))
+    XCTAssertNil(GalleryPushImageAttachment.remoteImageURL(from: ["imageUrl": "/thumbnails/t.jpg"]))
+    XCTAssertNil(GalleryPushImageAttachment.remoteImageURL(from: [:]))
+    XCTAssertNil(
+      GalleryPushImageAttachment.remoteImageURL(from: ["avatarUrl": "https://cdn.example/me.jpg"])
+    )
+  }
+
+  func testGalleryPushAvatarURLRequiresHttps() {
+    XCTAssertEqual(
+      GalleryPushImageAttachment.remoteAvatarURL(from: ["avatarUrl": "https://cdn.example/me.jpg"])?.absoluteString,
+      "https://cdn.example/me.jpg"
+    )
+    XCTAssertNil(GalleryPushImageAttachment.remoteAvatarURL(from: ["avatarUrl": "http://cdn.example/me.jpg"]))
+    XCTAssertNil(
+      GalleryPushImageAttachment.remoteAvatarURL(from: ["imageUrl": "https://cdn.example/t.jpg"])
+    )
+  }
+
+  func testGalleryPushImageAttachmentWritesAJpegPreview() throws {
+    let jpeg = try XCTUnwrap(
+      UIGraphicsImageRenderer(size: CGSize(width: 2, height: 2)).image { _ in }.jpegData(compressionQuality: 0.9)
+    )
+    let attachment = try GalleryPushImageAttachment.makeAttachment(from: jpeg)
+    XCTAssertEqual(attachment.identifier, "photo")
+    XCTAssertTrue(FileManager.default.fileExists(atPath: attachment.url.path))
+  }
+
+  func testGalleryPushCommunicationReadsGalleryIdentity() {
+    XCTAssertEqual(
+      GalleryPushCommunication.galleryIdentity(
+        from: ["gallerySlug": "street-photo", "galleryName": "Street Photo"]
+      )?.slug,
+      "street-photo"
+    )
+    XCTAssertEqual(
+      GalleryPushCommunication.galleryIdentity(
+        from: ["gallerySlug": "street-photo", "galleryName": "Street Photo"]
+      )?.name,
+      "Street Photo"
+    )
+    XCTAssertEqual(
+      GalleryPushCommunication.galleryIdentity(from: ["gallerySlug": "street-photo"])?.name,
+      "street-photo"
+    )
+    XCTAssertNil(GalleryPushCommunication.galleryIdentity(from: [:]))
+  }
+
+  func testGalleryPushCommunicationIntentUsesTheGalleryAsSender() throws {
+    let jpeg = try XCTUnwrap(
+      UIGraphicsImageRenderer(size: CGSize(width: 2, height: 2)).image { _ in }.jpegData(compressionQuality: 0.9)
+    )
+    let intent = GalleryPushCommunication.makeSendMessageIntent(
+      galleryName: "Street Photo",
+      gallerySlug: "street-photo",
+      body: "Just published a new photo.",
+      avatarData: jpeg
+    )
+
+    XCTAssertEqual(intent.sender?.displayName, "Street Photo")
+    XCTAssertEqual(intent.sender?.customIdentifier, "street-photo")
+    XCTAssertEqual(intent.conversationIdentifier, "street-photo")
+    XCTAssertEqual(intent.serviceName, "Afilmory")
+    XCTAssertEqual(intent.content, "Just published a new photo.")
+    XCTAssertNotNil(intent.sender?.image)
+  }
+
+  func testGalleryPushImageAttachmentRejectsEmptyAndOversizedData() {
+    XCTAssertThrowsError(try GalleryPushImageAttachment.makeAttachment(from: Data()))
+    XCTAssertThrowsError(try GalleryPushImageAttachment.makeAttachment(from: Data(count: 5 * 1024 * 1024 + 1)))
   }
 
   func testUnrelatedNotificationDoesNotProduceADeepLink() {

@@ -1,4 +1,4 @@
-import { apnsDevices, gallerySubscriptions, tenants } from '@afilmory/db'
+import { apnsDevices, authUsers, gallerySubscriptions, tenantMemberships, tenants } from '@afilmory/db'
 import { DbAccessor } from '@core/database/database.provider'
 import { and, eq } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
@@ -58,7 +58,7 @@ export class PushDeviceService {
   }
 
   async listGalleryRecipientDeviceIds(targetTenantId: string): Promise<{
-    gallery: { name: string, slug: string } | null
+    gallery: { avatarUrl?: string, name: string, slug: string } | null
     deviceIds: string[]
   }> {
     const db = this.dbAccessor.get()
@@ -67,6 +67,7 @@ export class PushDeviceService {
         deviceId: apnsDevices.id,
         galleryName: tenants.name,
         gallerySlug: tenants.slug,
+        ownerImage: authUsers.image,
       })
       .from(gallerySubscriptions)
       .innerJoin(
@@ -74,6 +75,15 @@ export class PushDeviceService {
         and(eq(apnsDevices.userId, gallerySubscriptions.subscriberUserId), eq(apnsDevices.enabled, true)),
       )
       .innerJoin(tenants, eq(tenants.id, gallerySubscriptions.targetTenantId))
+      .leftJoin(
+        tenantMemberships,
+        and(
+          eq(tenantMemberships.tenantId, tenants.id),
+          eq(tenantMemberships.role, 'owner'),
+          eq(tenantMemberships.status, 'active'),
+        ),
+      )
+      .leftJoin(authUsers, eq(authUsers.id, tenantMemberships.userId))
       .where(
         and(
           eq(gallerySubscriptions.targetTenantId, targetTenantId),
@@ -83,8 +93,15 @@ export class PushDeviceService {
       )
 
     const first = rows[0]
+    const avatarUrl = first?.ownerImage?.trim() || undefined
     return {
-      gallery: first ? { name: first.galleryName, slug: first.gallerySlug } : null,
+      gallery: first
+        ? {
+            ...(avatarUrl ? { avatarUrl } : {}),
+            name: first.galleryName,
+            slug: first.gallerySlug,
+          }
+        : null,
       deviceIds: rows.map(row => row.deviceId),
     }
   }
