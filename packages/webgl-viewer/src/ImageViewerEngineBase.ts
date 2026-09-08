@@ -1,3 +1,10 @@
+import type { ViewportScaleInput } from './double-click-zoom'
+import {
+  computeFillScale,
+  computeFitScale,
+  resolveDoubleClickZoomStages,
+  resolveNextDoubleClickScale,
+} from './double-click-zoom'
 import type { LoadingState } from './enum'
 import type { ImageViewerOptions, ImageViewportState } from './interface'
 
@@ -110,8 +117,6 @@ export abstract class ImageViewerEngineBase {
   protected lastTouchDistance = 0
 
   protected lastDoubleClickTime = 0
-
-  protected isOriginalSize = false
 
   protected lastTouchTime = 0
 
@@ -298,20 +303,28 @@ export abstract class ImageViewerEngineBase {
   }
 
   protected fitImageToScreen() {
-    const scaleX = this.canvasWidth / this.imageWidth
-    const scaleY = this.canvasHeight / this.imageHeight
-    const fitToScreenScale = Math.min(scaleX, scaleY)
+    const fitToScreenScale = this.getFitToScreenScale()
 
     this.scale = fitToScreenScale * this.config.initialScale
     this.translateX = 0
     this.translateY = 0
-    this.isOriginalSize = false
   }
 
   protected getFitToScreenScale(): number {
-    const scaleX = this.canvasWidth / this.imageWidth
-    const scaleY = this.canvasHeight / this.imageHeight
-    return Math.min(scaleX, scaleY)
+    return computeFitScale(this.getViewportScaleInput())
+  }
+
+  protected getFillToScreenScale(): number {
+    return computeFillScale(this.getViewportScaleInput())
+  }
+
+  protected getViewportScaleInput(): ViewportScaleInput {
+    return {
+      canvasWidth: this.canvasWidth,
+      canvasHeight: this.canvasHeight,
+      imageWidth: this.imageWidth,
+      imageHeight: this.imageHeight,
+    }
   }
 
   protected constrainImagePosition() {
@@ -647,37 +660,30 @@ export abstract class ImageViewerEngineBase {
   protected performDoubleClickAction(x: number, y: number) {
     this.isAnimating = false
 
-    if (this.config.doubleClick.mode === 'toggle') {
-      const fitToScreenScale = this.getFitToScreenScale()
-      const absoluteMinScale = fitToScreenScale * this.config.minScale
-      const originalSizeScale = 1
-      const userMaxScale = fitToScreenScale * this.config.maxScale
-      const effectiveMaxScale = Math.max(userMaxScale, originalSizeScale)
-
-      if (this.isOriginalSize) {
-        const targetScale = Math.max(absoluteMinScale, Math.min(effectiveMaxScale, fitToScreenScale))
-        const zoomX = (x - this.canvasWidth / 2 - this.translateX) / this.scale
-        const zoomY = (y - this.canvasHeight / 2 - this.translateY) / this.scale
-        const targetTranslateX = x - this.canvasWidth / 2 - zoomX * targetScale
-        const targetTranslateY = y - this.canvasHeight / 2 - zoomY * targetScale
-
-        this.startAnimation(targetScale, targetTranslateX, targetTranslateY, this.config.doubleClick.animationTime)
-        this.isOriginalSize = false
-      }
-      else {
-        const targetScale = Math.max(absoluteMinScale, Math.min(effectiveMaxScale, originalSizeScale))
-        const zoomX = (x - this.canvasWidth / 2 - this.translateX) / this.scale
-        const zoomY = (y - this.canvasHeight / 2 - this.translateY) / this.scale
-        const targetTranslateX = x - this.canvasWidth / 2 - zoomX * targetScale
-        const targetTranslateY = y - this.canvasHeight / 2 - zoomY * targetScale
-
-        this.startAnimation(targetScale, targetTranslateX, targetTranslateY, this.config.doubleClick.animationTime)
-        this.isOriginalSize = true
-      }
-    }
-    else {
+    if (this.config.doubleClick.mode !== 'toggle') {
       this.zoomAt(x, y, this.config.doubleClick.step, true)
+      return
     }
+
+    const fitToScreenScale = this.getFitToScreenScale()
+    const absoluteMinScale = fitToScreenScale * this.config.minScale
+    const userMaxScale = fitToScreenScale * this.config.maxScale
+    const effectiveMaxScale = Math.max(userMaxScale, 1)
+    const originalSizeScale = Math.max(absoluteMinScale, Math.min(effectiveMaxScale, 1))
+
+    const stages = resolveDoubleClickZoomStages({
+      fitScale: fitToScreenScale,
+      fillScale: this.getFillToScreenScale(),
+      originalScale: originalSizeScale,
+    })
+    const targetScale = resolveNextDoubleClickScale(this.scale, stages)
+
+    const zoomX = (x - this.canvasWidth / 2 - this.translateX) / this.scale
+    const zoomY = (y - this.canvasHeight / 2 - this.translateY) / this.scale
+    const targetTranslateX = x - this.canvasWidth / 2 - zoomX * targetScale
+    const targetTranslateY = y - this.canvasHeight / 2 - zoomY * targetScale
+
+    this.startAnimation(targetScale, targetTranslateX, targetTranslateY, this.config.doubleClick.animationTime)
   }
 
   public zoomAt(x: number, y: number, scaleFactor: number, animated = false) {

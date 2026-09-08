@@ -12,6 +12,8 @@
   "main": "./src/index.ts",
   "scripts": {
     "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -37,6 +39,7 @@
     "react": "^19.2.7",
     "tsdown": "0.22.2",
     "unplugin-dts": "1.0.2",
-    "vite": "8.0.16"
+    "vite": "8.0.16",
+    "vitest": "4.1.9"
   }
 }

@@ -9,7 +9,7 @@ interface ContainedImageFrameProps {
 
 export const ContainedImageFrame = ({ width, height, className, children }: ContainedImageFrameProps) => {
   const stageRef = useRef<HTMLDivElement>(null)
-  const [imageFrame, setImageFrame] = useState<{ width: number; height: number } | null>(null)
+  const [imageFrame, setImageFrame] = useState<{ width: number, height: number } | null>(null)
 
   const updateImageFrame = useCallback(() => {
     const stage = stageRef.current
@@ -34,7 +34,8 @@ export const ContainedImageFrame = ({ width, height, className, children }: Cont
     if (containerAspectRatio > imageAspectRatio) {
       nextHeight = containerHeight
       nextWidth = containerHeight * imageAspectRatio
-    } else {
+    }
+    else {
       nextWidth = containerWidth
       nextHeight = containerWidth / imageAspectRatio
     }
