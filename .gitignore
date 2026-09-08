@@ -82,4 +82,3 @@ scripts/generate-app-store-composites.mjs
 .asc/
 tmp-asc/
 acceptance-report/
-metadata/
