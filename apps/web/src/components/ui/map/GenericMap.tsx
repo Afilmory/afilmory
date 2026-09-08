@@ -1,3 +1,4 @@
+import type { Feature } from 'geojson'
 import * as React from 'react'
 
 import { getInitialViewStateForMarkers } from '~/lib/map-utils'
@@ -12,7 +13,7 @@ interface GenericMapProps extends Omit<BaseMapProps, 'handlers'> {
   /** Callback when marker is clicked */
   onMarkerClick?: (marker: PhotoMarker) => void
   /** Callback when GeoJSON feature is clicked */
-  onGeoJsonClick?: (feature: GeoJSON.Feature) => void
+  onGeoJsonClick?: (feature: Feature) => void
   /** Callback for geolocation */
   onGeolocate?: (longitude: number, latitude: number) => void
 }

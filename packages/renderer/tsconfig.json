@@ -17,7 +17,6 @@
     "noImplicitAny": false,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "skipDefaultLibCheck": true,

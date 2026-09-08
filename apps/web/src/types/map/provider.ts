@@ -1,3 +1,4 @@
+import type { Feature, FeatureCollection } from 'geojson'
 import type { ReactNode } from 'react'
 
 import type { MapBounds, MapViewState, PhotoMarker } from './index'
@@ -21,7 +22,7 @@ export interface MapProvider {
  */
 export interface MapHandlers {
   onMarkerClick?: (marker: PhotoMarker) => void
-  onGeoJsonClick?: (feature: GeoJSON.Feature) => void
+  onGeoJsonClick?: (feature: Feature) => void
   onGeolocate?: (longitude: number, latitude: number) => void
   onPopupClose?: () => void
 }
@@ -34,7 +35,7 @@ export interface BaseMapProps {
   initialViewState?: MapViewState
   markers?: PhotoMarker[]
   selectedMarkerId?: string | null
-  geoJsonData?: GeoJSON.FeatureCollection
+  geoJsonData?: FeatureCollection
   className?: string
   style?: React.CSSProperties
   theme?: 'light' | 'dark'
