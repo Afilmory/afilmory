@@ -36,13 +36,17 @@ export class BillingOverviewService {
       ])
 
     const storageUsage = providerKey ? await this.managedStorage.getUsageTotals(providerKey, tenantId) : null
+    const isManagedStorage = storageUsage !== null
 
     const dimensions = summarizeQuotas({
       customDomains: { limit: quota.customDomainLimit, used: customDomains },
-      libraryItems: { limit: quota.libraryItemLimit, used: libraryItems },
+      // Fix #268: BYO storage owns its bytes; do not surface a 100-image
+      // hard cap that was baked into the managed/hosted path. For managed
+      // mode the count quota remains meaningful alongside the byte quota.
+      libraryItems: { limit: isManagedStorage ? quota.libraryItemLimit : null, used: libraryItems },
       monthlyProcess: { limit: quota.monthlyAssetProcessLimit, used: monthlyUsed },
       storage: { limit: storageQuota.totalBytes, used: storageUsage?.totalBytes ?? 0 },
-    }).filter(dimension => dimension.reason !== 'storage' || storageUsage !== null)
+    }).filter(dimension => dimension.reason !== 'storage' || isManagedStorage)
 
     return {
       applicationPlan: { id: plan.planId, name: plan.name },

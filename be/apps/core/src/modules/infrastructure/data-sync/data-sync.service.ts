@@ -100,12 +100,12 @@ export class DataSyncService {
     const runStartedAt = new Date()
     const planQuota = await this.billingPlanService.getQuotaForTenant(tenant.tenant.id)
     const effectiveMaxObjectMb = planQuota.maxSyncObjectSizeMb
+    const { builderConfig, storageConfig } = await this.resolveBuilderConfigForTenant(tenant.tenant.id, options)
     const syncLimits = {
       maxObjectBytes: this.convertMbToBytes(effectiveMaxObjectMb),
       maxObjectSizeMb: effectiveMaxObjectMb,
-      libraryLimit: planQuota.libraryItemLimit,
+      libraryLimit: this.resolveLibraryItemLimit(planQuota.libraryItemLimit, storageConfig),
     }
-    const { builderConfig, storageConfig } = await this.resolveBuilderConfigForTenant(tenant.tenant.id, options)
     const context = await this.prepareSyncContext(tenant.tenant.id, builderConfig, storageConfig)
     this.ensureLibraryCapacityLimit({
       current: context.records.length,
@@ -1405,6 +1405,17 @@ export class DataSyncService {
       return null
     }
     return value * 1024 * 1024
+  }
+
+  private resolveLibraryItemLimit(planLimit: number | null, storageConfig: StorageConfig): number | null {
+    // Fix https://github.com/Afilmory/afilmory/issues/268
+    // BYO storage (S3/B2/GitHub) should not be capped by a 100-image hard
+    // limit. Managed plan's byte-capacity is the real ceiling; count quota is
+    // only meaningful for the hosted/managed mode.
+    if ((storageConfig as { provider?: string }).provider !== 'managed') {
+      return null
+    }
+    return planLimit
   }
 
   private ensureLibraryCapacityLimit(payload: { current: number, incoming: number, limit: number | null }): void {

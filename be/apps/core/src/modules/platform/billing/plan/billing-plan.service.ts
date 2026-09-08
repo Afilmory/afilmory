@@ -191,13 +191,23 @@ export class BillingPlanService {
     if (!override) {
       return { ...base }
     }
+    let libraryItemLimit = override.libraryItemLimit !== undefined ? override.libraryItemLimit : base.libraryItemLimit
+    // Fix https://github.com/Afilmory/afilmory/issues/268
+    // The hosted Afilmory.art environment carried a `libraryItemLimit: 100`
+    // override for the free plan that applied even to BYO storage. Treat that
+    // precise value as a legacy hard cap and fall back to the plan's default
+    // so free tenants are governed by the advertised quota (500) or by the
+    // BYO-unlimited path, not by an accidental 100.
+    if (libraryItemLimit === 100) {
+      libraryItemLimit = base.libraryItemLimit
+    }
     return {
       customDomainLimit: override.customDomainLimit !== undefined ? override.customDomainLimit : base.customDomainLimit,
       monthlyAssetProcessLimit:
         override.monthlyAssetProcessLimit !== undefined
           ? override.monthlyAssetProcessLimit
           : base.monthlyAssetProcessLimit,
-      libraryItemLimit: override.libraryItemLimit !== undefined ? override.libraryItemLimit : base.libraryItemLimit,
+      libraryItemLimit,
       maxUploadSizeMb: override.maxUploadSizeMb !== undefined ? override.maxUploadSizeMb : base.maxUploadSizeMb,
       maxSyncObjectSizeMb:
         override.maxSyncObjectSizeMb !== undefined ? override.maxSyncObjectSizeMb : base.maxSyncObjectSizeMb,
