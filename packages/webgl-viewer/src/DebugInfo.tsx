@@ -71,7 +71,7 @@ const CollapsibleSection: React.FC<{
 /**
  * 状态指示器组件
  */
-const StatusIndicator: React.FC<{ color: string; label: string }> = ({ color, label }) => (
+const StatusIndicator: React.FC<{ color: string, label: string }> = ({ color, label }) => (
   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
     <span
       style={{
@@ -134,20 +134,29 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
 
   // 获取内存压力颜色
   const getMemoryPressureColor = (pressure: number) => {
-    if (pressure < 50) return '#4ade80'
-    if (pressure < 80) return '#fbbf24'
+    if (pressure < 50) {
+      return '#4ade80'
+    }
+    if (pressure < 80) {
+      return '#fbbf24'
+    }
     return '#f87171'
   }
 
   // 新增：瓦片系统调试信息类型辅助
   function renderTileSystem(tileSystem?: any) {
-    if (!tileSystem) return null
+    if (!tileSystem) {
+      return null
+    }
     return (
       <CollapsibleSection title="Tile System" defaultExpanded={false}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span>Cache Size:</span>
           <span>
-            {tileSystem.cacheSize} / {tileSystem.cacheLimit}
+            {tileSystem.cacheSize}
+            {' '}
+            /
+            {tileSystem.cacheLimit}
           </span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -173,19 +182,27 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
         {/* 可选：显示部分 key 信息，避免过长 */}
         <div style={{ fontSize: '10px', marginTop: 4, opacity: 0.7 }}>
           <div>
-            Cache Keys: {tileSystem.cacheKeys?.slice(0, 3).join(', ')}
+            Cache Keys:
+            {' '}
+            {tileSystem.cacheKeys?.slice(0, 3).join(', ')}
             {tileSystem.cacheKeys?.length > 3 ? ' ...' : ''}
           </div>
           <div>
-            Visible Keys: {tileSystem.visibleKeys?.slice(0, 3).join(', ')}
+            Visible Keys:
+            {' '}
+            {tileSystem.visibleKeys?.slice(0, 3).join(', ')}
             {tileSystem.visibleKeys?.length > 3 ? ' ...' : ''}
           </div>
           <div>
-            Loading Keys: {tileSystem.loadingKeys?.slice(0, 3).join(', ')}
+            Loading Keys:
+            {' '}
+            {tileSystem.loadingKeys?.slice(0, 3).join(', ')}
             {tileSystem.loadingKeys?.length > 3 ? ' ...' : ''}
           </div>
           <div>
-            Pending Keys: {tileSystem.pendingKeys?.slice(0, 3).join(', ')}
+            Pending Keys:
+            {' '}
+            {tileSystem.pendingKeys?.slice(0, 3).join(', ')}
             {tileSystem.pendingKeys?.length > 3 ? ' ...' : ''}
           </div>
         </div>
@@ -193,7 +210,9 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
     )
   }
 
-  if (!debugInfo) return null
+  if (!debugInfo) {
+    return null
+  }
 
   const currentOutlineEnabled = outlineEnabled !== undefined ? outlineEnabled : (debugInfo.tileOutlinesEnabled ?? false)
 
@@ -229,7 +248,11 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
           borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
-        <span style={{ fontWeight: 'bold', fontSize: '12px' }}>WebGL Debug</span>
+        <span style={{ fontWeight: 'bold', fontSize: '12px' }}>
+          {debugInfo.renderer === 'webgpu' ? 'WebGPU' : 'WebGL'}
+          {' '}
+          Debug
+        </span>
         <button
           type="button"
           style={{
@@ -243,8 +266,8 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
             opacity: 0.7,
           }}
           onClick={() => setCollapsed(!collapsed)}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.7')}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}
         >
           {collapsed ? '📈' : '📉'}
         </button>
@@ -283,7 +306,10 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>LOD:</span>
               <span>
-                {debugInfo.currentLOD} / {debugInfo.lodLevels - 1}
+                {debugInfo.currentLOD}
+                {' '}
+                /
+                {debugInfo.lodLevels - 1}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -308,7 +334,12 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Position:</span>
               <span>
-                ({debugInfo.translateX.toFixed(0)}, {debugInfo.translateY.toFixed(0)})
+                (
+                {debugInfo.translateX.toFixed(0)}
+                ,
+                {' '}
+                {debugInfo.translateY.toFixed(0)}
+                )
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -326,13 +357,17 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Canvas:</span>
               <span>
-                {debugInfo.canvasSize.width}×{debugInfo.canvasSize.height}
+                {debugInfo.canvasSize.width}
+                ×
+                {debugInfo.canvasSize.height}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Image:</span>
               <span>
-                {debugInfo.imageSize.width}×{debugInfo.imageSize.height}
+                {debugInfo.imageSize.width}
+                ×
+                {debugInfo.imageSize.height}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -349,15 +384,27 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
           <CollapsibleSection title="Memory">
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Textures:</span>
-              <span>{debugInfo.memory.textures.toFixed(1)} MB</span>
+              <span>
+                {debugInfo.memory.textures.toFixed(1)}
+                {' '}
+                MB
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Estimated:</span>
-              <span>{debugInfo.memory.estimated.toFixed(1)} MB</span>
+              <span>
+                {debugInfo.memory.estimated.toFixed(1)}
+                {' '}
+                MB
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Budget:</span>
-              <span>{debugInfo.memory.budget.toFixed(1)} MB</span>
+              <span>
+                {debugInfo.memory.budget.toFixed(1)}
+                {' '}
+                MB
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Pressure:</span>
@@ -369,7 +416,10 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Active LODs:</span>
               <span>
-                {debugInfo.memory.activeLODs} / {debugInfo.memory.maxConcurrentLODs}
+                {debugInfo.memory.activeLODs}
+                {' '}
+                /
+                {debugInfo.memory.maxConcurrentLODs}
               </span>
             </div>
           </CollapsibleSection>
@@ -382,7 +432,16 @@ const DebugInfoComponent = ({ ref, outlineEnabled, onToggleOutline }: DebugInfoP
       {collapsed && (
         <div style={{ fontSize: '10px', opacity: 0.8 }}>
           <div>
-            Scale: {debugInfo.scale.toFixed(2)} | LOD: {debugInfo.currentLOD} |{' '}
+            Scale:
+            {' '}
+            {debugInfo.scale.toFixed(2)}
+            {' '}
+            | LOD:
+            {' '}
+            {debugInfo.currentLOD}
+            {' '}
+            |
+            {' '}
             <StatusIndicator color={getQualityColor(debugInfo.quality)} label={debugInfo.quality} />
           </div>
         </div>

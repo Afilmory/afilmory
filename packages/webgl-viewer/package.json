@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.2.0",
   "packageManager": "pnpm@11.1.2",
-  "description": "Afilmory WebGL Viewer",
+  "description": "Afilmory GPU Image Viewer",
   "author": "Innei",
   "license": "MIT",
   "exports": {
@@ -17,14 +17,6 @@
   "peerDependencies": {
     "react": ">=19.0.0"
   },
-  "devDependencies": {
-    "@types/react": "catalog:",
-    "nbump": "2.1.8",
-    "react": "^19.2.7",
-    "tsdown": "0.22.2",
-    "unplugin-dts": "1.0.2",
-    "vite": "8.0.16"
-  },
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",
@@ -34,5 +26,17 @@
         "import": "./dist/index.js"
       }
     }
+  },
+  "dependencies": {
+    "fast-xml-parser": "5.9.0"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@webgpu/types": "^0.1.72",
+    "nbump": "2.1.8",
+    "react": "^19.2.7",
+    "tsdown": "0.22.2",
+    "unplugin-dts": "1.0.2",
+    "vite": "8.0.16"
   }
 }

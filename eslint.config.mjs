@@ -17,6 +17,7 @@ const rootIgnores = globalIgnores([
   'apps/mobile/.expo/**',
   'apps/mobile/expo-env.d.ts',
   'apps/mobile/Tests/Fixtures/**',
+  'scripts/webgpu-hdr-spike/**',
 ])
 
 const hyobanConfig = await defineConfig(

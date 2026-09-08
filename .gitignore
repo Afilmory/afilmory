@@ -82,3 +82,6 @@ scripts/generate-app-store-composites.mjs
 .asc/
 tmp-asc/
 acceptance-report/
+/metadata/
+apps/mobile/metadata/
+apps/mobile/fastlane/metadata/

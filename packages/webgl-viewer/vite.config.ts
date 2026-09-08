@@ -6,7 +6,7 @@ export default defineConfig({
     minify: true,
     lib: {
       entry: './src/index.ts',
-      name: 'WebGLImageViewer',
+      name: 'ImageViewer',
       fileName: () => `index.js`,
       formats: ['es'],
     },

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 
 import { getPhotoRegionIcon, getPhotoRegionId } from '~/modules/viewer/photo-region-display'
 
+import { ExifSection } from './ExifSection'
+
 interface PhotoRegionsSectionProps {
   activeRegionId?: string | null
   regions: PhotoRegion[]
@@ -18,9 +20,8 @@ export const PhotoRegionsSection = ({ activeRegionId, regions, onActiveRegionCha
   }
 
   return (
-    <section className="mt-3 mb-3" aria-label={t('photo.regions.title')}>
-      <h4 className="mb-2 text-sm font-medium text-white/80">{t('photo.regions.title')}</h4>
-      <ul className="space-y-1">
+    <ExifSection title={t('photo.regions.title')} ariaLabel={t('photo.regions.title')}>
+      <ul className="flex flex-col gap-1">
         {regions.map((region, index) => {
           const regionId = getPhotoRegionId(region, index)
           const isActive = activeRegionId === regionId
@@ -66,6 +67,6 @@ export const PhotoRegionsSection = ({ activeRegionId, regions, onActiveRegionCha
           )
         })}
       </ul>
-    </section>
+    </ExifSection>
   )
 }

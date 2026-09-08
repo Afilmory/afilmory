@@ -6,7 +6,7 @@ export const HDRBadge: FC = () => {
     <div
       className={clsxm(
         'absolute z-20 flex items-center space-x-1 rounded-xl bg-black/50 px-1 py-1 text-xs text-white',
-        import.meta.env.DEV ? 'top-24 right-4' : 'top-20 lg:top-8 left-4',
+        import.meta.env.DEV ? 'top-16 right-4' : 'top-12 lg:top-4 left-4',
       )}
     >
       <i className="i-mingcute-sun-line size-4" />

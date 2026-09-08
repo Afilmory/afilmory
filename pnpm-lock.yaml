@@ -652,9 +652,6 @@ importers:
       react-use-measure:
         specifier: 2.1.7
         version: 2.1.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      react-zoom-pan-pinch:
-        specifier: 4.0.3
-        version: 4.0.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       sonner:
         specifier: 2.0.7
         version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -1552,10 +1549,17 @@ importers:
         version: 0.22.2(oxc-resolver@11.24.2)(tsx@4.22.4)(typescript@6.0.3)
 
   packages/webgl-viewer:
+    dependencies:
+      fast-xml-parser:
+        specifier: 5.9.0
+        version: 5.9.0
     devDependencies:
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.17
+      '@webgpu/types':
+        specifier: ^0.1.72
+        version: 0.1.72
       nbump:
         specifier: 2.1.8
         version: 2.1.8(conventional-commits-filter@5.0.0)(magicast@0.5.3)
@@ -6524,6 +6528,9 @@ packages:
   '@vue/shared@3.5.38':
     resolution: {integrity: sha512-FTW0AFZNaK5/mOqvGBwVfUlNLU38TiQn4+DQgIFUnrBBJQ1crMJ82yeGQLV5jyKFsO8yRukpbuP7x+nRbH6aug==}
 
+  '@webgpu/types@0.1.72':
+    resolution: {integrity: sha512-0cF7RFM2edNoiIS1ODJp0/Gzv4/xSXhwoR0YCza+OWpJWtn4wmo9DvK91aLlH9+uUnwIriP7ZiC3WitmyhuzBw==}
+
   '@xobotyi/scrollbar-width@1.9.5':
     resolution: {integrity: sha512-N8tkAACJx2ww8vFMneJmaAgmjAG1tnVBZJRLRcx061tmsLRZHSEZSLuGWnwPtunsSLvSqXQ2wfp7Mgqg1I+2dQ==}
 
@@ -10828,13 +10835,6 @@ packages:
 
   react-use@17.6.1:
     resolution: {integrity: sha512-uibb3pgzV4LFsYPHyXYGu7dD2+pyk/ZJlPH+AizBR3zolqPWyCleKcWWbUQaKSKfydwgnQ3ymGm1Ab3/saGHCA==}
-    peerDependencies:
-      react: '*'
-      react-dom: '*'
-
-  react-zoom-pan-pinch@4.0.3:
-    resolution: {integrity: sha512-N2Hi6L78fFmhRra+ORpFSW7WST5x6kxpOPplIvtB0b7b+U2anpo1z1wLgaWRPS2kUSqcraRG+JgBCIlDJnqqAg==}
-    engines: {node: '>=8', npm: '>=5'}
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -17581,6 +17581,8 @@ snapshots:
 
   '@vue/shared@3.5.38': {}
 
+  '@webgpu/types@0.1.72': {}
+
   '@xobotyi/scrollbar-width@1.9.5': {}
 
   a-sync-waterfall@1.0.1: {}
@@ -22665,11 +22667,6 @@ snapshots:
       throttle-debounce: 3.0.1
       ts-easing: 0.2.0
       tslib: 2.8.1
-
-  react-zoom-pan-pinch@4.0.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
-    dependencies:
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
 
   react@19.2.7: {}
 

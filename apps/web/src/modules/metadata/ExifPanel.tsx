@@ -2,7 +2,7 @@ import '~/modules/viewer/PhotoViewer.css'
 
 import type { PhotoManifestItem, PickedExif } from '@afilmory/builder'
 import { MotionButtonBase, ScrollArea } from '@afilmory/ui'
-import { Spring } from '@afilmory/utils'
+import { clsxm, Spring } from '@afilmory/utils'
 import { isNil } from 'es-toolkit/compat'
 import { useAtomValue } from 'jotai'
 import { m } from 'motion/react'
@@ -22,11 +22,14 @@ import {
 import { convertExifGPSToDecimal } from '~/lib/map-utils'
 import { getRenderablePhotoRegions } from '~/modules/viewer/photo-region-bounds'
 
+import { ExifRowGroup, ExifSection } from './ExifSection'
 import { formatExifData, Row } from './formatExifData'
 import { HistogramChart } from './HistogramChart'
 import { MiniMap } from './MiniMap'
 import { PhotoRegionsSection } from './PhotoRegionsSection'
 import { RawExifViewer } from './RawExifViewer'
+
+const captureChipClassName = 'border-accent/20 bg-accent/10 flex h-6 items-center gap-2 rounded-md border px-2'
 
 interface ExifPanelBaseProps {
   currentPhoto: PhotoManifestItem
@@ -164,11 +167,9 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
 
   return (
     <ScrollArea mask rootClassName={rootClassName} viewportClassName={viewportClassName}>
-      <div className={`space-y-${isMobile ? '3' : '4'}`}>
-        {/* 基本信息和标签 - 合并到一个 section */}
-        <div>
-          <h4 className="mb-2 text-sm font-medium text-white/80">{t('exif.basic.info')}</h4>
-          <div className="space-y-1 text-sm">
+      <div className={clsxm('flex flex-col', isMobile ? 'gap-3' : 'gap-4')}>
+        <ExifSection title={t('exif.basic.info')}>
+          <ExifRowGroup>
             <Row label={t('exif.filename')} value={currentPhoto.title} ellipsis={true} />
             <Row label={t('exif.format')} value={currentPhoto.format} />
             <Row label={t('exif.dimensions')} value={`${currentPhoto.width} × ${currentPhoto.height}`} />
@@ -180,101 +181,92 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
             {formattedExifData?.rating && formattedExifData.rating > 0 ? (
               <Row label={t('exif.rating')} value={'★'.repeat(formattedExifData.rating)} />
             ) : null}
-
             {formattedExifData?.dateTime && <Row label={t('exif.capture.time')} value={formattedExifData.dateTime} />}
-
             {formattedExifData?.zone && <Row label={t('exif.time.zone')} value={formattedExifData.zone} />}
             {formattedExifData?.artist && <Row label={t('exif.artist')} value={formattedExifData.artist} />}
             {formattedExifData?.copyright && <Row label={t('exif.copyright')} value={formattedExifData.copyright} />}
-
             {formattedExifData?.software && <Row label={t('exif.software')} value={formattedExifData.software} />}
-          </div>
+          </ExifRowGroup>
+        </ExifSection>
 
-          {formattedExifData
-            && (formattedExifData.shutterSpeed
-              || formattedExifData.iso
-              || formattedExifData.aperture
-              || formattedExifData.exposureBias
-              || formattedExifData.focalLength35mm) && (
-            <div>
-              <h4 className="my-2 text-sm font-medium text-white/80">{t('exif.capture.parameters')}</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {formattedExifData.focalLength35mm && (
-                  <div className="border-accent/20 bg-accent/10 flex h-6 items-center gap-2 rounded-md border px-2">
-                    <StreamlineImageAccessoriesLensesPhotosCameraShutterPicturePhotographyPicturesPhotoLens className="text-sm text-white/70" />
-                    <span className="text-xs">
-                      {formattedExifData.focalLength35mm}
-                      mm
-                    </span>
-                  </div>
-                )}
+        {formattedExifData
+          && (formattedExifData.shutterSpeed
+            || formattedExifData.iso
+            || formattedExifData.aperture
+            || formattedExifData.exposureBias
+            || formattedExifData.focalLength35mm) && (
+          <ExifSection title={t('exif.capture.parameters')}>
+            <div className="grid grid-cols-2 gap-2">
+              {formattedExifData.focalLength35mm && (
+                <div className={captureChipClassName}>
+                  <StreamlineImageAccessoriesLensesPhotosCameraShutterPicturePhotographyPicturesPhotoLens className="text-sm text-white/70" />
+                  <span className="text-xs">
+                    {formattedExifData.focalLength35mm}
+                    mm
+                  </span>
+                </div>
+              )}
 
-                {formattedExifData.aperture && (
-                  <div className="border-accent/20 bg-accent/10 flex h-6 items-center gap-2 rounded-md border px-2">
-                    <TablerAperture className="text-sm text-white/70" />
-                    <span className="text-xs">{formattedExifData.aperture}</span>
-                  </div>
-                )}
+              {formattedExifData.aperture && (
+                <div className={captureChipClassName}>
+                  <TablerAperture className="text-sm text-white/70" />
+                  <span className="text-xs">{formattedExifData.aperture}</span>
+                </div>
+              )}
 
-                {formattedExifData.shutterSpeed && (
-                  <div className="border-accent/20 bg-accent/10 flex h-6 items-center gap-2 rounded-md border px-2">
-                    <MaterialSymbolsShutterSpeed className="text-sm text-white/70" />
-                    <span className="text-xs">{formattedExifData.shutterSpeed}</span>
-                  </div>
-                )}
+              {formattedExifData.shutterSpeed && (
+                <div className={captureChipClassName}>
+                  <MaterialSymbolsShutterSpeed className="text-sm text-white/70" />
+                  <span className="text-xs">{formattedExifData.shutterSpeed}</span>
+                </div>
+              )}
 
-                {formattedExifData.iso && (
-                  <div className="border-accent/20 bg-accent/10 flex h-6 items-center gap-2 rounded-md border px-2">
-                    <CarbonIsoOutline className="text-sm text-white/70" />
-                    <span className="text-xs">
-                      ISO
-                      {formattedExifData.iso}
-                    </span>
-                  </div>
-                )}
+              {formattedExifData.iso && (
+                <div className={captureChipClassName}>
+                  <CarbonIsoOutline className="text-sm text-white/70" />
+                  <span className="text-xs">
+                    ISO
+                    {formattedExifData.iso}
+                  </span>
+                </div>
+              )}
 
-                {formattedExifData.exposureBias && (
-                  <div className="border-accent/20 bg-accent/10 flex h-6 items-center gap-2 rounded-md border px-2">
-                    <MaterialSymbolsExposure className="text-sm text-white/70" />
-                    <span className="text-xs">{formattedExifData.exposureBias}</span>
-                  </div>
-                )}
-              </div>
+              {formattedExifData.exposureBias && (
+                <div className={captureChipClassName}>
+                  <MaterialSymbolsExposure className="text-sm text-white/70" />
+                  <span className="text-xs">{formattedExifData.exposureBias}</span>
+                </div>
+              )}
             </div>
-          )}
+          </ExifSection>
+        )}
 
-          <PhotoRegionsSection
-            regions={regions}
-            activeRegionId={activeRegionId}
-            onActiveRegionChange={onActiveRegionChange}
-          />
+        <PhotoRegionsSection
+          regions={regions}
+          activeRegionId={activeRegionId}
+          onActiveRegionChange={onActiveRegionChange}
+        />
 
-          {/* 标签信息 - 移到基本信息 section 内 */}
-          {currentPhoto.tags && currentPhoto.tags.length > 0 && (
-            <div className="mt-3 mb-3">
-              <h4 className="mb-2 text-sm font-medium text-white/80">{t('exif.tags')}</h4>
-              <div className="flex flex-wrap gap-1.5">
-                {currentPhoto.tags.map(tag => (
-                  <MotionButtonBase
-                    type="button"
-                    onClick={() => handleTagClick(tag)}
-                    key={tag}
-                    className="glassmorphic-btn border-accent/20 bg-accent/10 inline-flex cursor-pointer items-center rounded-full border px-2 py-1 text-xs text-white/90 backdrop-blur-sm"
-                  >
-                    {tag}
-                  </MotionButtonBase>
-                ))}
-              </div>
+        {currentPhoto.tags && currentPhoto.tags.length > 0 && (
+          <ExifSection title={t('exif.tags')}>
+            <div className="flex flex-wrap gap-1.5">
+              {currentPhoto.tags.map(tag => (
+                <MotionButtonBase
+                  type="button"
+                  onClick={() => handleTagClick(tag)}
+                  key={tag}
+                  className="glassmorphic-btn border-accent/20 bg-accent/10 inline-flex cursor-pointer items-center rounded-full border px-2 py-1 text-xs text-white/90 backdrop-blur-sm"
+                >
+                  {tag}
+                </MotionButtonBase>
+              ))}
             </div>
-          )}
-        </div>
+          </ExifSection>
+        )}
 
-        {/* 影调分析和直方图 */}
         {currentPhoto.toneAnalysis && (
-          <div>
-            <h4 className="mb-2 text-sm font-medium text-white/80">{t('exif.tone.analysis.title')}</h4>
-            <div>
-              {/* 影调信息 */}
+          <ExifSection title={t('exif.tone.analysis.title')}>
+            <ExifRowGroup>
               <Row
                 label={t('exif.tone.type')}
                 value={(() => {
@@ -287,7 +279,7 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
                   return toneTypeMap[currentPhoto.toneAnalysis!.toneType] || currentPhoto.toneAnalysis!.toneType
                 })()}
               />
-              <div className="mt-1 mb-3 grid grid-cols-2 gap-x-2 gap-y-1 text-sm">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 <Row label={t('exif.brightness.title')} value={`${currentPhoto.toneAnalysis.brightness}%`} />
                 <Row label={t('exif.contrast.title')} value={`${currentPhoto.toneAnalysis.contrast}%`} />
                 <Row
@@ -299,28 +291,26 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
                   value={`${Math.round(currentPhoto.toneAnalysis.highlightRatio * 100)}%`}
                 />
               </div>
+            </ExifRowGroup>
+          </ExifSection>
+        )}
 
-              {/* 直方图 */}
-              <div className="mb-3">
-                <div className="mb-2 text-xs font-medium text-white/70">{t('exif.histogram')}</div>
-                <HistogramChart thumbnailUrl={currentPhoto.thumbnailUrl} />
-              </div>
-            </div>
-          </div>
+        {currentPhoto.toneAnalysis && (
+          <ExifSection title={t('exif.histogram')}>
+            <HistogramChart thumbnailUrl={currentPhoto.thumbnailUrl} />
+          </ExifSection>
         )}
 
         {formattedExifData && (
           <Fragment>
             {(formattedExifData.camera || formattedExifData.lens) && (
-              <div>
-                <h4 className="my-2 text-sm font-medium text-white/80">{t('exif.device.info')}</h4>
-                <div className="space-y-1 text-sm">
+              <ExifSection title={t('exif.device.info')}>
+                <ExifRowGroup>
                   {formattedExifData.camera && <Row label={t('exif.camera')} value={formattedExifData.camera} />}
                   {formattedExifData.lens && <Row label={t('exif.lens')} value={formattedExifData.lens} />}
                   {formattedExifData.lensMake && !formattedExifData.lens?.includes(formattedExifData.lensMake) && (
                     <Row label={t('exif.lensmake')} value={formattedExifData.lensMake} />
                   )}
-
                   {formattedExifData.focalLength && (
                     <Row label={t('exif.focal.length.actual')} value={`${formattedExifData.focalLength}mm`} />
                   )}
@@ -330,20 +320,18 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
                   {formattedExifData.maxAperture && (
                     <Row label={t('exif.max.aperture')} value={`f/${formattedExifData.maxAperture}`} />
                   )}
-                </div>
-              </div>
+                </ExifRowGroup>
+              </ExifSection>
             )}
 
-            {/* 新增：拍摄模式信息 */}
             {(formattedExifData.exposureMode
               || formattedExifData.exposureProgram
               || formattedExifData.meteringMode
               || formattedExifData.whiteBalance
               || formattedExifData.lightSource
               || formattedExifData.flash) && (
-              <div>
-                <h4 className="my-2 text-sm font-medium text-white/80">{t('exif.capture.mode')}</h4>
-                <div className="space-y-1 text-sm">
+              <ExifSection title={t('exif.capture.mode')}>
+                <ExifRowGroup>
                   {!isNil(formattedExifData.exposureProgram) && (
                     <Row label={t('exif.exposureprogram.title')} value={formattedExifData.exposureProgram} />
                   )}
@@ -365,13 +353,6 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
                   {!isNil(formattedExifData.wbShiftGM) && (
                     <Row label={t('exif.white.balance.shift.gm')} value={formattedExifData.wbShiftGM} />
                   )}
-                  {/* {!isNil(formattedExifData.whiteBalanceFineTune) && (
-                    <Row
-                      label={t('exif.white.balance.fine.tune')}
-                      value={formattedExifData.whiteBalanceFineTune}
-                    />
-                  )} */}
-
                   {!isNil(formattedExifData.flash) && (
                     <Row label={t('exif.flash.title')} value={formattedExifData.flash} />
                   )}
@@ -384,14 +365,13 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
                   {!isNil(formattedExifData.flashMeteringMode) && (
                     <Row label={t('exif.flash.metering.mode')} value={formattedExifData.flashMeteringMode} />
                   )}
-                </div>
-              </div>
+                </ExifRowGroup>
+              </ExifSection>
             )}
 
             {formattedExifData.fujiRecipe && (
-              <div>
-                <h4 className="my-2 text-sm font-medium text-white/80">{t('exif.fuji.film.simulation')}</h4>
-                <div className="space-y-1 text-sm">
+              <ExifSection title={t('exif.fuji.film.simulation')}>
+                <ExifRowGroup>
                   {formattedExifData.fujiRecipe.FilmMode && (
                     <Row label={t('exif.film.mode')} value={formattedExifData.fujiRecipe.FilmMode} />
                   )}
@@ -431,68 +411,57 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
                       value={formattedExifData.fujiRecipe.WhiteBalanceFineTune}
                     />
                   )}
-                  {(!isNil(formattedExifData.fujiRecipe.GrainEffectRoughness)
-                    || !isNil(formattedExifData.fujiRecipe.GrainEffectSize)) && (
-                    <Fragment>
-                      {formattedExifData.fujiRecipe.GrainEffectRoughness && (
-                        <Row
-                          label={t('exif.grain.effect.intensity')}
-                          value={formattedExifData.fujiRecipe.GrainEffectRoughness}
-                        />
-                      )}
-                      {!isNil(formattedExifData.fujiRecipe.GrainEffectSize) && (
-                        <Row label={t('exif.grain.effect.size')} value={formattedExifData.fujiRecipe.GrainEffectSize} />
-                      )}
-                    </Fragment>
+                  {formattedExifData.fujiRecipe.GrainEffectRoughness && (
+                    <Row
+                      label={t('exif.grain.effect.intensity')}
+                      value={formattedExifData.fujiRecipe.GrainEffectRoughness}
+                    />
                   )}
-                </div>
-              </div>
+                  {!isNil(formattedExifData.fujiRecipe.GrainEffectSize) && (
+                    <Row label={t('exif.grain.effect.size')} value={formattedExifData.fujiRecipe.GrainEffectSize} />
+                  )}
+                </ExifRowGroup>
+              </ExifSection>
             )}
+
             {formattedExifData.gps && (
-              <div>
-                <h4 className="my-2 text-sm font-medium text-white/80">{t('exif.gps.location.info')}</h4>
-                <div className="space-y-1 text-sm">
+              <ExifSection title={t('exif.gps.location.info')} className="gap-3">
+                <ExifRowGroup>
                   <Row label={t('exif.gps.latitude')} value={formattedExifData.gps.latitude} />
                   <Row label={t('exif.gps.longitude')} value={formattedExifData.gps.longitude} />
                   {formattedExifData.gps.altitude && (
                     <Row label={t('exif.gps.altitude')} value={`${formattedExifData.gps.altitude}m`} />
                   )}
+                </ExifRowGroup>
 
-                  {/* 反向地理编码位置信息 */}
-                  {currentPhoto.location && (
-                    <div className="mt-3 space-y-1">
-                      {(currentPhoto.location.city || currentPhoto.location.country) && (
-                        <Row
-                          label={t('exif.gps.city')}
-                          value={[currentPhoto.location.city, currentPhoto.location.country].filter(Boolean).join(', ')}
-                        />
-                      )}
-                      {currentPhoto.location.locationName && (
-                        <Row label={t('exif.gps.address')} value={currentPhoto.location.locationName} ellipsis={true} />
-                      )}
-                    </div>
-                  )}
+                {currentPhoto.location && (
+                  <ExifRowGroup>
+                    {(currentPhoto.location.city || currentPhoto.location.country) && (
+                      <Row
+                        label={t('exif.gps.city')}
+                        value={[currentPhoto.location.city, currentPhoto.location.country].filter(Boolean).join(', ')}
+                      />
+                    )}
+                    {currentPhoto.location.locationName && (
+                      <Row label={t('exif.gps.address')} value={currentPhoto.location.locationName} ellipsis={true} />
+                    )}
+                  </ExifRowGroup>
+                )}
 
-                  {/* Maplibre MiniMap */}
-                  {decimalLatitude !== null && decimalLongitude !== null && (
-                    <div className="mt-3">
-                      <MiniMap latitude={decimalLatitude} longitude={decimalLongitude} photoId={currentPhoto.id} />
-                    </div>
-                  )}
-                </div>
-              </div>
+                {decimalLatitude !== null && decimalLongitude !== null && (
+                  <MiniMap latitude={decimalLatitude} longitude={decimalLongitude} photoId={currentPhoto.id} />
+                )}
+              </ExifSection>
             )}
 
-            {/* 新增：技术参数 */}
             {(formattedExifData.brightnessValue
               || formattedExifData.shutterSpeedValue
               || formattedExifData.apertureValue
               || formattedExifData.sensingMethod
               || formattedExifData.focalPlaneXResolution
               || formattedExifData.focalPlaneYResolution) && (
-              <div>
-                <h4 className="my-2 text-sm font-medium text-white/80">{t('exif.technical.parameters')}</h4>
-                <div className="space-y-1 text-sm">
+              <ExifSection title={t('exif.technical.parameters')}>
+                <ExifRowGroup>
                   {formattedExifData.brightnessValue && (
                     <Row label={t('exif.brightness.value')} value={formattedExifData.brightnessValue} />
                   )}
@@ -505,15 +474,14 @@ export const ExifPanelContent: FC<ExifPanelContentProps> = ({
                   {formattedExifData.sensingMethod && (
                     <Row label={t('exif.sensing.method.type')} value={formattedExifData.sensingMethod} />
                   )}
-
                   {(formattedExifData.focalPlaneXResolution || formattedExifData.focalPlaneYResolution) && (
                     <Row
                       label={t('exif.focal.plane.resolution')}
                       value={`${formattedExifData.focalPlaneXResolution || t('exif.not.available')} × ${formattedExifData.focalPlaneYResolution || t('exif.not.available')}`}
                     />
                   )}
-                </div>
-              </div>
+                </ExifRowGroup>
+              </ExifSection>
             )}
           </Fragment>
         )}

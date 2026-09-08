@@ -1,0 +1,524 @@
+{
+  "environment": "Apple M4 Max, 128GB, Chrome 152 headed, Metal hardware adapter, HDR display, DPR2, 2400x1856 drawable",
+  "runs": {
+    "dom": {
+      "decodeMs": 17.600000023841858,
+      "decodedDimensions": [
+        12288,
+        16384
+      ],
+      "dpr": 2,
+      "errors": [],
+      "firstSetupMs": 17.600000023841858,
+      "frameCpuMs": {
+        "max": 0.20000001788139343,
+        "n": 810,
+        "p50": 0,
+        "p95": 0.09999999403953552,
+        "p99": 0.10000002384185792
+      },
+      "hdrDisplay": true,
+      "height": 16384,
+      "mode": "dom",
+      "over25ms": 18,
+      "over50ms": 7,
+      "phases": {
+        "pan": {
+          "max": 33.399999999999636,
+          "n": 292,
+          "p50": 16.699999999999818,
+          "p95": 17.600000000000364,
+          "p99": 33.30000000000109
+        },
+        "return": {
+          "max": 51,
+          "n": 298,
+          "p50": 16.69999999999891,
+          "p95": 17.5,
+          "p99": 17.700000000000728
+        },
+        "zoom": {
+          "max": 300,
+          "n": 220,
+          "p50": 16.699999999999818,
+          "p95": 17.700000000000273,
+          "p99": 267.4
+        }
+      },
+      "pixels": 201326592,
+      "rafMs": {
+        "max": 300,
+        "n": 810,
+        "p50": 16.69999999999891,
+        "p95": 17.600000000000364,
+        "p99": 33.399999999999636
+      },
+      "source": "resampled real Ultra HDR base + gain map",
+      "texturePeakBytes": 0,
+      "textureUploadCallMs": {
+        "max": 0,
+        "n": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0
+      },
+      "tileMissObservations": 0,
+      "tileWorkerMs": {
+        "max": 0,
+        "n": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0
+      },
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+      "viewport": {
+        "css": [
+          1200,
+          928
+        ],
+        "physical": [
+          2400,
+          1856
+        ]
+      },
+      "visibility": "visible",
+      "visibilityAtEnd": "visible",
+      "width": 12288
+    },
+    "native": {
+      "adapter": {
+        "architecture": "metal-3",
+        "description": "",
+        "device": "",
+        "isFallbackAdapter": false,
+        "maxTextureDimension2D": 16384,
+        "vendor": "apple"
+      },
+      "canvasConfig": {
+        "colorSpace": "display-p3",
+        "format": "rgba16float",
+        "toneMapping": {
+          "mode": "extended"
+        }
+      },
+      "decodeMs": 3.0999999940395355,
+      "decodedDimensions": [
+        12288,
+        16384
+      ],
+      "dpr": 2,
+      "errors": [],
+      "firstSetupMs": 480.300000011921,
+      "frameCpuMs": {
+        "max": 0.5,
+        "n": 899,
+        "p50": 0.09999999403953552,
+        "p95": 0.19999998807907104,
+        "p99": 0.20000001788139343
+      },
+      "hdrDisplay": true,
+      "hdrReadback": {
+        "channelsAboveOne": 0,
+        "maxEncodedChannel": 1,
+        "sampleSize": [
+          256,
+          256
+        ]
+      },
+      "height": 16384,
+      "initialUploadAndGainDecodeMs": 473.7000000178814,
+      "mode": "native",
+      "over25ms": 0,
+      "over50ms": 0,
+      "phases": {
+        "pan": {
+          "max": 17.800000000000182,
+          "n": 300,
+          "p50": 16.699999999999818,
+          "p95": 17.600000000000364,
+          "p99": 17.700000000000728
+        },
+        "return": {
+          "max": 17.80000000000109,
+          "n": 300,
+          "p50": 16.69999999999891,
+          "p95": 17.5,
+          "p99": 17.700000000000728
+        },
+        "zoom": {
+          "max": 17.799999999999727,
+          "n": 299,
+          "p50": 16.699999999999818,
+          "p95": 17.59999999999991,
+          "p99": 17.700000000000045
+        }
+      },
+      "pixels": 201326592,
+      "rafMs": {
+        "max": 17.80000000000109,
+        "n": 899,
+        "p50": 16.699999999999818,
+        "p95": 17.59999999999991,
+        "p99": 17.700000000000728
+      },
+      "source": "resampled real Ultra HDR base + gain map",
+      "texturePeakBytes": 1610612736,
+      "textureUploadCallMs": {
+        "max": 308,
+        "n": 1,
+        "p50": 308,
+        "p95": 308,
+        "p99": 308
+      },
+      "tileMissObservations": 0,
+      "tileWorkerMs": {
+        "max": 0,
+        "n": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0
+      },
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+      "viewport": {
+        "css": [
+          1200,
+          928
+        ],
+        "physical": [
+          2400,
+          1856
+        ]
+      },
+      "visibility": "visible",
+      "visibilityAtEnd": "visible",
+      "width": 12288
+    },
+    "gain": {
+      "adapter": {
+        "architecture": "metal-3",
+        "description": "",
+        "device": "",
+        "isFallbackAdapter": false,
+        "maxTextureDimension2D": 16384,
+        "vendor": "apple"
+      },
+      "canvasConfig": {
+        "colorSpace": "display-p3",
+        "format": "rgba16float",
+        "toneMapping": {
+          "mode": "extended"
+        }
+      },
+      "decodeMs": 9.700000017881392,
+      "decodedDimensions": [
+        12288,
+        16384
+      ],
+      "dpr": 2,
+      "errors": [],
+      "firstSetupMs": 471.09999999403954,
+      "frameCpuMs": {
+        "max": 0.5999999940395355,
+        "n": 899,
+        "p50": 0.09999999403953552,
+        "p95": 0.20000001788139343,
+        "p99": 0.20000001788139343
+      },
+      "gainDecodeMs": 10.599999994039536,
+      "hdrDisplay": true,
+      "hdrReadback": {
+        "channelsAboveOne": 10166,
+        "maxEncodedChannel": 2.00390625,
+        "sampleSize": [
+          256,
+          256
+        ]
+      },
+      "height": 16384,
+      "initialUploadAndGainDecodeMs": 458.699999988079,
+      "mode": "gain",
+      "over25ms": 0,
+      "over50ms": 0,
+      "phases": {
+        "pan": {
+          "max": 17.700000000000728,
+          "n": 300,
+          "p50": 16.699999999999818,
+          "p95": 17.5,
+          "p99": 17.699999999999818
+        },
+        "return": {
+          "max": 17.700000000000728,
+          "n": 300,
+          "p50": 16.69999999999891,
+          "p95": 17.600000000000364,
+          "p99": 17.700000000000728
+        },
+        "zoom": {
+          "max": 17.800000000000182,
+          "n": 299,
+          "p50": 16.699999999999818,
+          "p95": 17.5,
+          "p99": 17.700000000000045
+        }
+      },
+      "pixels": 201326592,
+      "rafMs": {
+        "max": 17.800000000000182,
+        "n": 899,
+        "p50": 16.699999999999818,
+        "p95": 17.5,
+        "p99": 17.700000000000045
+      },
+      "source": "resampled real Ultra HDR base + gain map",
+      "texturePeakBytes": 855638016,
+      "textureUploadCallMs": {
+        "max": 309,
+        "n": 2,
+        "p50": 309,
+        "p95": 309,
+        "p99": 309
+      },
+      "tileMissObservations": 0,
+      "tileWorkerMs": {
+        "max": 0,
+        "n": 0,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0
+      },
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+      "viewport": {
+        "css": [
+          1200,
+          928
+        ],
+        "physical": [
+          2400,
+          1856
+        ]
+      },
+      "visibility": "visible",
+      "visibilityAtEnd": "visible",
+      "width": 12288
+    },
+    "tiles": {
+      "adapter": {
+        "architecture": "metal-3",
+        "description": "",
+        "device": "",
+        "isFallbackAdapter": false,
+        "maxTextureDimension2D": 16384,
+        "vendor": "apple"
+      },
+      "canvasConfig": {
+        "colorSpace": "display-p3",
+        "format": "rgba16float",
+        "toneMapping": {
+          "mode": "extended"
+        }
+      },
+      "decodeMs": 5.0999999940395355,
+      "decodedDimensions": [
+        768,
+        1024
+      ],
+      "dpr": 2,
+      "errors": [],
+      "firstSetupMs": 14.199999988079073,
+      "frameCpuMs": {
+        "max": 0.4000000059604645,
+        "n": 899,
+        "p50": 0.09999999403953552,
+        "p95": 0.20000001788139343,
+        "p99": 0.29999998211860657
+      },
+      "hdrDisplay": true,
+      "hdrReadback": {
+        "channelsAboveOne": 10170,
+        "maxEncodedChannel": 1.9609375,
+        "sampleSize": [
+          256,
+          256
+        ]
+      },
+      "height": 16384,
+      "initialUploadAndGainDecodeMs": 6.9000000059604645,
+      "mode": "tiles",
+      "over25ms": 0,
+      "over50ms": 0,
+      "phases": {
+        "pan": {
+          "max": 17.700000000000728,
+          "n": 300,
+          "p50": 16.699999999999818,
+          "p95": 17.599999999999454,
+          "p99": 17.699999999999818
+        },
+        "return": {
+          "max": 17.700000000000728,
+          "n": 300,
+          "p50": 16.700000000000728,
+          "p95": 17.600000000000364,
+          "p99": 17.700000000000728
+        },
+        "zoom": {
+          "max": 17.80000000000001,
+          "n": 299,
+          "p50": 16.699999999999818,
+          "p95": 17.59999999999991,
+          "p99": 17.700000000000045
+        }
+      },
+      "pixels": 201326592,
+      "rafMs": {
+        "max": 17.80000000000001,
+        "n": 899,
+        "p50": 16.699999999999818,
+        "p95": 17.600000000000364,
+        "p99": 17.700000000000728
+      },
+      "source": "resampled real Ultra HDR base + gain map",
+      "texturePeakBytes": 132579328,
+      "textureUploadCallMs": {
+        "max": 1.4000000059604645,
+        "n": 344,
+        "p50": 0.09999999403953552,
+        "p95": 0.30000001192092896,
+        "p99": 0.4000000059604645
+      },
+      "tileHDRReadbacks": [
+        {
+          "channelsAboveOne": 0,
+          "maxEncodedChannel": 0.38427734375,
+          "sampleSize": [
+            256,
+            256
+          ]
+        },
+        {
+          "channelsAboveOne": 0,
+          "maxEncodedChannel": 0.450927734375,
+          "sampleSize": [
+            256,
+            256
+          ]
+        },
+        {
+          "channelsAboveOne": 0,
+          "maxEncodedChannel": 0.60546875,
+          "sampleSize": [
+            256,
+            256
+          ]
+        },
+        {
+          "channelsAboveOne": 0,
+          "maxEncodedChannel": 0.70458984375,
+          "sampleSize": [
+            256,
+            256
+          ]
+        },
+        {
+          "channelsAboveOne": 2369,
+          "maxEncodedChannel": 2.0078125,
+          "sampleSize": [
+            256,
+            256
+          ]
+        },
+        {
+          "channelsAboveOne": 21085,
+          "maxEncodedChannel": 2.005859375,
+          "sampleSize": [
+            256,
+            256
+          ]
+        },
+        {
+          "channelsAboveOne": 1263,
+          "maxEncodedChannel": 1.9580078125,
+          "sampleSize": [
+            256,
+            256
+          ]
+        },
+        {
+          "channelsAboveOne": 15923,
+          "maxEncodedChannel": 1.9609375,
+          "sampleSize": [
+            256,
+            256
+          ]
+        }
+      ],
+      "tileMissObservations": 642,
+      "tileWorkerMs": {
+        "max": 8.300000011920929,
+        "n": 171,
+        "p50": 3.100000023841858,
+        "p95": 4.800000011920929,
+        "p99": 5.200000017881393
+      },
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+      "viewport": {
+        "css": [
+          1200,
+          928
+        ],
+        "physical": [
+          2400,
+          1856
+        ]
+      },
+      "visibility": "visible",
+      "visibilityAtEnd": "visible",
+      "width": 12288,
+      "workerDecodeMs": 307.7999999821186
+    }
+  },
+  "trace": {
+    "dom": {
+      "trajectoryMs": 15035.08,
+      "chromeDroppedFrameEvents": {
+        "True": 38,
+        "False": 22
+      },
+      "RasterTask": {
+        "count": 4436,
+        "maxDurationMs": 222.808,
+        "sumDurationMs": 242.09099999999998
+      },
+      "GpuImageDecodeCache::DecodeImage": {
+        "count": 3,
+        "maxDurationMs": 260.14,
+        "sumDurationMs": 705.655
+      },
+      "Display::FrameDisplayed": {
+        "count": 827,
+        "maxDurationMs": 0.0,
+        "sumDurationMs": 0.0
+      }
+    },
+    "tiles": {
+      "trajectoryMs": 15012.75,
+      "chromeDroppedFrameEvents": {},
+      "RasterTask": {
+        "count": 8,
+        "maxDurationMs": 0.057,
+        "sumDurationMs": 0.229
+      },
+      "GpuImageDecodeCache::DecodeImage": {
+        "count": 0,
+        "maxDurationMs": 0,
+        "sumDurationMs": 0
+      },
+      "Display::FrameDisplayed": {
+        "count": 901,
+        "maxDurationMs": 0.0,
+        "sumDurationMs": 0.0
+      }
+    }
+  }
+}

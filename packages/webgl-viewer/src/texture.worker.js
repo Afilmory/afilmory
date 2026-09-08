@@ -20,25 +20,26 @@ const WORKER_SIMPLE_LOD_LEVELS = [
  */
 self.onmessage = async (e) => {
   const { type, payload } = e.data
-  console.info('[Worker] Received message:', type, payload)
 
   switch (type) {
     case 'load-image': {
       const { url } = payload
       try {
-        console.info('[Worker] Fetching image:', url)
         const response = await fetch(url, { mode: 'cors' })
+        if (!response.ok) {
+          throw new Error(`Image fetch failed: ${response.status}`)
+        }
         const blob = await response.blob()
         originalImage = await createImageBitmap(blob)
 
-        console.info('[Worker] Image decoded, posting init-done')
         self.postMessage({ type: 'init-done' })
 
         // Create initial LOD texture
         const lodLevel = 1 // Initial LOD level
         const lodConfig = WORKER_SIMPLE_LOD_LEVELS[lodLevel]
-        const finalWidth = Math.max(1, Math.round(originalImage.width * lodConfig.scale))
-        const finalHeight = Math.max(1, Math.round(originalImage.height * lodConfig.scale))
+        const overviewScale = Math.min(lodConfig.scale, 2048 / Math.max(originalImage.width, originalImage.height))
+        const finalWidth = Math.max(1, Math.round(originalImage.width * overviewScale))
+        const finalHeight = Math.max(1, Math.round(originalImage.height * overviewScale))
 
         const initialLODBitmap = await createImageBitmap(originalImage, {
           resizeWidth: finalWidth,
@@ -46,7 +47,6 @@ self.onmessage = async (e) => {
           resizeQuality: 'medium',
         })
 
-        console.info('[Worker] Initial LOD created, posting image-loaded')
         self.postMessage(
           {
             type: 'image-loaded',
@@ -59,7 +59,8 @@ self.onmessage = async (e) => {
           },
           [initialLODBitmap],
         )
-      } catch (error) {
+      }
+      catch (error) {
         console.error('[Worker] Error loading image:', error)
         self.postMessage({ type: 'load-error', payload: { error } })
       }
@@ -118,7 +119,8 @@ self.onmessage = async (e) => {
 
         const imageBitmap = canvas.transferToImageBitmap()
         self.postMessage({ type: 'tile-created', payload: { key, imageBitmap, lodLevel } }, [imageBitmap])
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Error creating tile in worker:', error)
         self.postMessage({ type: 'tile-error', payload: { key, error } })
       }
