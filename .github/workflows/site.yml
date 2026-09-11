@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      PUBLIC_API_URL: https://api.afilmory.art
+      PUBLIC_API_URL: https://api.afilmory.art/api
       AFILMORY_SITE_STRICT: '1'
       CLOUDFLARE_ACCOUNT_ID: 4d01e7a919eff82eb04333f27cb9da3b
     steps:
