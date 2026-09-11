@@ -304,11 +304,12 @@ export const formatExifData = (exif: PickedExif | null) => {
   // 评分
   const rating = exif.Rating
 
-  const GPSAltitudeIsAboveSeaLevel = exif.GPSAltitudeRef === 0
-
   // GPS 信息
+  // GPSAltitude 是 exiftool 的 composite 标签，正负号已经按 GPSAltitudeRef 处理好，
+  // 直接用即可。再从 GPSAltitudeRef 反推符号会让海平面以上的照片全部显示为负值，
+  // 且该字段在不同入库时期分别是数字与字符串，无法用单一比较判断。
   const gpsInfo = {
-    altitude: exif.GPSAltitude ? `${GPSAltitudeIsAboveSeaLevel ? '' : '-'}${exif.GPSAltitude}` : null,
+    altitude: typeof exif.GPSAltitude === 'number' ? String(exif.GPSAltitude) : null,
     latitude: exif.GPSLatitude ? `${exif.GPSLatitude}° ${exif.GPSLatitudeRef}` : null,
     longitude: exif.GPSLongitude ? `${exif.GPSLongitude}° ${exif.GPSLongitudeRef}` : null,
   }

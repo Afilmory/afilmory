@@ -209,10 +209,19 @@ export interface PickedExif {
   SensingMethod: Tags['SensingMethod']
   FocalPlaneXResolution: Tags['FocalPlaneXResolution']
   FocalPlaneYResolution: Tags['FocalPlaneYResolution']
+  /**
+   * exiftool 的 composite 标签：正负号已按 GPSAltitudeRef 应用，直接使用即可。
+   * 该标签缺失时（部分相机不写入 GPSAltitudeRef）这里是无符号的幅值，方向不可恢复。
+   */
   GPSAltitude: Tags['GPSAltitude']
   GPSLatitude: Tags['GPSLatitude']
   GPSLongitude: Tags['GPSLongitude']
-  GPSAltitudeRef: Tags['GPSAltitudeRef']
+  /**
+   * manifest 中存在两种形态：经 v9→v10 迁移的条目是数字 `0 | 1`，迁移之后新入库的
+   * 照片是 exiftool 的字符串 `'Above Sea Level' | 'Below Sea Level'`。不要用它反推
+   * GPSAltitude 的正负号——符号已经在 GPSAltitude 里了。
+   */
+  GPSAltitudeRef: Tags['GPSAltitudeRef'] | 'Above Sea Level' | 'Below Sea Level'
   GPSLatitudeRef: Tags['GPSLatitudeRef']
   GPSLongitudeRef: Tags['GPSLongitudeRef']
 

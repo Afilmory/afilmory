@@ -228,12 +228,16 @@ const convertGPSToDecimal = (
   const latitudeRef = getExifValue<string>(exif, 'GPSLatitudeRef')
   const longitudeRef = getExifValue<string>(exif, 'GPSLongitudeRef')
   const altitudeRaw = getExifValue<number | string>(exif, 'GPSAltitude')
-  const altitudeRef = getExifValue<string>(exif, 'GPSAltitudeRef')
+  // GPSAltitude is exiftool's composite tag and already carries the sign applied
+  // from GPSAltitudeRef, so derive the direction from the value. The reference tag
+  // is stored as a number for entries that went through the v9→v10 manifest
+  // migration and as a string for everything ingested since, so matching it against
+  // one shape mislabels the other (and double-negates below-sea-level entries).
   const altitudeNumber = parseNumber(altitudeRaw)
   const altitudeValue =
     altitudeNumber !== null
-      ? altitudeRef === 'Below Sea Level'
-        ? t(exifKeys.altitude.below, { value: altitudeNumber })
+      ? altitudeNumber < 0
+        ? t(exifKeys.altitude.below, { value: Math.abs(altitudeNumber) })
         : t(exifKeys.altitude.above, { value: altitudeNumber })
       : null
 

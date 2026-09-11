@@ -57,15 +57,16 @@ export function convertExifGPSToDecimal(exif: PickedExif | null): {
     let altitude: number | undefined
     let altitudeRef: 'Above Sea Level' | 'Below Sea Level' | undefined
 
-    if (exif.GPSAltitude && typeof exif.GPSAltitude === 'number') {
+    if (typeof exif.GPSAltitude === 'number') {
+      // GPSAltitude is exiftool's *composite* tag: it has already applied
+      // GPSAltitudeRef to the raw value, so the sign is authoritative. Derive the
+      // label from the value rather than re-applying the reference — the reference
+      // is stored as a number `0 | 1` for entries that went through the v9→v10
+      // manifest migration and as exiftool's `'Above/Below Sea Level'` string for
+      // everything ingested since, so re-applying it double-negates below-sea-level
+      // photos under either shape.
       altitude = exif.GPSAltitude
-      // 0 (above sea level), 1 (below sea level)
-      altitudeRef = exif.GPSAltitudeRef === 1 ? 'Below Sea Level' : 'Above Sea Level'
-
-      // Apply altitude reference
-      if (altitudeRef === 'Below Sea Level') {
-        altitude = -altitude
-      }
+      altitudeRef = altitude < 0 ? 'Below Sea Level' : 'Above Sea Level'
     }
 
     // Validate coordinates using the validation function
