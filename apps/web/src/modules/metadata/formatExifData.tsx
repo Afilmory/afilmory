@@ -304,11 +304,9 @@ export const formatExifData = (exif: PickedExif | null) => {
   // 评分
   const rating = exif.Rating
 
-  const GPSAltitudeIsAboveSeaLevel = exif.GPSAltitudeRef === 0
-
   // GPS 信息
   const gpsInfo = {
-    altitude: exif.GPSAltitude ? `${GPSAltitudeIsAboveSeaLevel ? '' : '-'}${exif.GPSAltitude}` : null,
+    altitude: typeof exif.GPSAltitude === 'number' ? String(exif.GPSAltitude) : null,
     latitude: exif.GPSLatitude ? `${exif.GPSLatitude}° ${exif.GPSLatitudeRef}` : null,
     longitude: exif.GPSLongitude ? `${exif.GPSLongitude}° ${exif.GPSLongitudeRef}` : null,
   }
