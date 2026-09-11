@@ -6,7 +6,7 @@ Afilmory 官网落地页（Astro + React 岛屿）。
 
 ```bash
 # 在 monorepo 根目录
-export PUBLIC_API_URL=https://api.afilmory.art   # 按现网 API 主机调整
+export PUBLIC_API_URL=https://api.afilmory.art/api   # API 基础地址须包含 /api 前缀
 pnpm site:dev
 ```
 
@@ -19,7 +19,7 @@ pnpm site:dev
 pnpm site:build
 
 # 生产 / CI（缺 PUBLIC_API_URL 直接失败）
-AFILMORY_SITE_STRICT=1 PUBLIC_API_URL=https://api.afilmory.art pnpm site:build
+AFILMORY_SITE_STRICT=1 PUBLIC_API_URL=https://api.afilmory.art/api pnpm site:build
 ```
 
 产物：`apps/site/dist/`
