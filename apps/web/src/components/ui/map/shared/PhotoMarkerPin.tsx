@@ -204,8 +204,7 @@ const PhotoMarkerCardContent = ({
             <div className="flex items-center gap-2">
               <i className="i-mingcute-mountain-2-line text-sm" />
               <span className="font-mono">
-                <span>{marker.altitudeRef === 'Below Sea Level' ? '-' : ''}</span>
-                <span>{Math.abs(marker.altitude).toFixed(1)}</span>
+                <span>{marker.altitude.toFixed(1)}</span>
                 <span>m</span>
               </span>
             </div>

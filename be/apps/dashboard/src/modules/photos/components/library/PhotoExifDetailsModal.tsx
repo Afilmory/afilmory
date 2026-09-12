@@ -228,12 +228,11 @@ const convertGPSToDecimal = (
   const latitudeRef = getExifValue<string>(exif, 'GPSLatitudeRef')
   const longitudeRef = getExifValue<string>(exif, 'GPSLongitudeRef')
   const altitudeRaw = getExifValue<number | string>(exif, 'GPSAltitude')
-  const altitudeRef = getExifValue<string>(exif, 'GPSAltitudeRef')
   const altitudeNumber = parseNumber(altitudeRaw)
   const altitudeValue =
     altitudeNumber !== null
-      ? altitudeRef === 'Below Sea Level'
-        ? t(exifKeys.altitude.below, { value: altitudeNumber })
+      ? altitudeNumber < 0
+        ? t(exifKeys.altitude.below, { value: Math.abs(altitudeNumber) })
         : t(exifKeys.altitude.above, { value: altitudeNumber })
       : null
 

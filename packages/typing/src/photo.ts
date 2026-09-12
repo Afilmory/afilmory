@@ -212,7 +212,7 @@ export interface PickedExif {
   GPSAltitude: Tags['GPSAltitude']
   GPSLatitude: Tags['GPSLatitude']
   GPSLongitude: Tags['GPSLongitude']
-  GPSAltitudeRef: Tags['GPSAltitudeRef']
+  GPSAltitudeRef: Tags['GPSAltitudeRef'] | 'Above Sea Level' | 'Below Sea Level'
   GPSLatitudeRef: Tags['GPSLatitudeRef']
   GPSLongitudeRef: Tags['GPSLongitudeRef']
 
