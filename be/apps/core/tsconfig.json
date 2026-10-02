@@ -7,7 +7,6 @@
     "jsxImportSource": "hono/jsx",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {

@@ -1,5 +1,6 @@
 // Styles
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { FeatureCollection } from 'geojson'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { MapRef } from 'react-map-gl/maplibre'
@@ -30,7 +31,7 @@ export interface PureMaplibreProps {
   }
   markers?: PhotoMarker[]
   selectedMarkerId?: string | null
-  geoJsonData?: GeoJSON.FeatureCollection
+  geoJsonData?: FeatureCollection
   onMarkerClick?: (marker: PhotoMarker) => void
   onGeoJsonClick?: React.ComponentProps<typeof Map>['onClick']
   onGeolocate?: (longitude: number, latitude: number) => void

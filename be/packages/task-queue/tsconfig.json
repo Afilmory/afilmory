@@ -5,14 +5,13 @@
     "target": "es2022",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "baseUrl": "./src",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@afilmory/task-queue": ["./index.ts"],
-      "@afilmory/task-queue/*": ["./*"],
-      "~": ["./"],
-      "~/*": ["./*"]
+      "@afilmory/task-queue": ["./src/index.ts"],
+      "@afilmory/task-queue/*": ["./src/*"],
+      "~": ["./src"],
+      "~/*": ["./src/*"]
     },
     "resolveJsonModule": true,
     "types": ["node"],

@@ -5,7 +5,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {

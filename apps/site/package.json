@@ -18,6 +18,7 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.10",
     "@tailwindcss/vite": "4.3.1",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
