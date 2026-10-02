@@ -1,5 +1,6 @@
 import { Loader2, MessageSquare } from 'lucide-react'
 import { memo, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useAllCommentsQuery } from '../hooks'
 import type { CommentResponseItem, CommentStatus, UserViewModel } from '../types'
@@ -32,7 +33,7 @@ interface PhotoGroup {
 // Sub-components
 // ============================================================================
 
-const LoadingState = memo(function LoadingState() {
+const LoadingState = memo(() => {
   return (
     <div className="flex items-center justify-center py-12">
       <Loader2 className="h-5 w-5 animate-spin text-text-tertiary" />
@@ -40,35 +41,43 @@ const LoadingState = memo(function LoadingState() {
   )
 })
 
-const ErrorState = memo(function ErrorState({ message }: { message: string }) {
-  return <div className="rounded-lg border border-red/20 bg-red/5 p-4 text-sm text-red">加载评论失败: {message}</div>
-})
-
-const EmptyState = memo(function EmptyState() {
+const ErrorState = memo(({ message }: { message: string }) => {
+  const { t } = useTranslation()
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12 text-text-tertiary">
-      <MessageSquare className="h-8 w-8 opacity-50" />
-      <p className="text-sm">暂无评论</p>
+    <div className="rounded-lg border border-red/20 bg-red/5 p-4 text-sm text-red">
+      {t('comments.error.loadFailed', { message })}
     </div>
   )
 })
 
-const PhotoGroupHeader = memo(function PhotoGroupHeader({ photoId }: { photoId: string }) {
+const EmptyState = memo(() => {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-12 text-text-tertiary">
+      <MessageSquare className="h-8 w-8 opacity-50" />
+      <p className="text-sm">{t('comments.empty')}</p>
+    </div>
+  )
+})
+
+const PhotoGroupHeader = memo(({ photoId }: { photoId: string }) => {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center gap-2 px-1 py-2">
-      <span className="text-xs font-medium text-text-tertiary">照片</span>
+      <span className="text-xs font-medium text-text-tertiary">{t('comments.photo.label')}</span>
       <code className="rounded bg-fill px-2 py-0.5 font-mono text-xs text-text-secondary">{photoId}</code>
     </div>
   )
 })
 
-const LoadMoreButton = memo(function LoadMoreButton({
+const LoadMoreButton = memo(({
   isLoading,
   onClick,
 }: {
   isLoading: boolean
   onClick: () => void
-}) {
+}) => {
+  const { t } = useTranslation()
   return (
     <div className="flex justify-center pt-4">
       <button
@@ -80,10 +89,10 @@ const LoadMoreButton = memo(function LoadMoreButton({
         {isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>加载中...</span>
+            <span>{t('comments.list.loading')}</span>
           </>
         ) : (
-          <span>加载更多</span>
+          <span>{t('comments.list.loadMore')}</span>
         )}
       </button>
     </div>
@@ -94,13 +103,15 @@ const LoadMoreButton = memo(function LoadMoreButton({
 // Main Component
 // ============================================================================
 
-export const AllCommentsList = memo(function AllCommentsList({ filters }: AllCommentsListProps) {
-  const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useAllCommentsQuery(filters)
+export const AllCommentsList = memo(({ filters }: AllCommentsListProps) => {
+  const { data, isLoading, isError, error, hasNextPage, fetchNextPage, isFetchingNextPage }
+    = useAllCommentsQuery(filters)
 
   // Group comments by photoId for better organization
   const groupedComments = useMemo(() => {
-    if (!data?.pages[0]?.comments.length) return []
+    if (!data?.pages[0]?.comments.length) {
+      return []
+    }
 
     const allComments: CommentResponseItem[] = []
     const allRelations: Record<string, CommentResponseItem> = {}
@@ -117,7 +128,9 @@ export const AllCommentsList = memo(function AllCommentsList({ filters }: AllCom
 
     for (const comment of allComments) {
       const user = allUsers[comment.userId]
-      if (!user) continue
+      if (!user) {
+        continue
+      }
 
       const parentComment = comment.parentId ? allRelations[comment.parentId] : undefined
       const parentUser = parentComment ? allUsers[parentComment.userId] : undefined
@@ -139,13 +152,20 @@ export const AllCommentsList = memo(function AllCommentsList({ filters }: AllCom
     return result
   }, [data])
 
-  if (isLoading) return <LoadingState />
-  if (isError) return <ErrorState message={error?.message || '未知错误'} />
-  if (groupedComments.length === 0) return <EmptyState />
+  const { t } = useTranslation()
+  if (isLoading) {
+    return <LoadingState />
+  }
+  if (isError) {
+    return <ErrorState message={error?.message || t('comments.error.unknown')} />
+  }
+  if (groupedComments.length === 0) {
+    return <EmptyState />
+  }
 
   // If filtering by specific photoId, show flat list
   if (filters?.photoId) {
-    const flatComments = groupedComments.flatMap((g) => g.comments)
+    const flatComments = groupedComments.flatMap(g => g.comments)
     return (
       <div className="space-y-2">
         {flatComments.map(({ comment, user, parentComment, parentUser }) => (
@@ -167,7 +187,7 @@ export const AllCommentsList = memo(function AllCommentsList({ filters }: AllCom
   // Otherwise show grouped by photo
   return (
     <div className="space-y-4">
-      {groupedComments.map((group) => (
+      {groupedComments.map(group => (
         <div key={group.photoId} className="space-y-2">
           <PhotoGroupHeader photoId={group.photoId} />
           <div className="space-y-2">

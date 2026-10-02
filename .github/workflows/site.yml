@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.repository == 'Afilmory/afilmory'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -21,13 +22,13 @@ jobs:
       AFILMORY_SITE_STRICT: '1'
       CLOUDFLARE_ACCOUNT_ID: 4d01e7a919eff82eb04333f27cb9da3b
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
       - name: Install site dependencies
