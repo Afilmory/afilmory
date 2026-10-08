@@ -3,6 +3,7 @@ export type { ImageViewerProps } from './ImageViewer'
 export { ImageViewer } from './ImageViewer'
 export type {
   AlignmentAnimationConfig,
+  AppleGainMapSource,
   DebugInfo,
   DoubleClickConfig,
   ImageViewerOptions,

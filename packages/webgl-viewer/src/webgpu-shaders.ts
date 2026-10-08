@@ -45,6 +45,13 @@ fn encode(v: vec3f) -> vec3f {
     return vec4f(0, 1, 1, 1);
   }
   if (draw.viewport.z == 0) { return vec4f(b.rgb * b.a, b.a); }
+  if (image.gainMin.w > 0) {
+    // Apple's gain plane uses the inverse Rec.709 transfer, independently of
+    // the Display P3 base image's sRGB transfer.
+    let gainLinear = select(g / 4.5, pow((g + 0.099) / 1.099, vec3f(1.0 / 0.45)), g >= vec3f(0.081));
+    let hdr = linearize(b.rgb) * (1 + (image.gainMin.w - 1) * gainLinear);
+    return vec4f(encode(hdr) * b.a, b.a);
+  }
   let recovered = pow(clamp(g, vec3f(0), vec3f(1)), image.gamma.rgb);
   let boost = mix(image.gainMin.rgb, image.gainMax.rgb, recovered);
   let linearBase = image.toGain * linearize(b.rgb);

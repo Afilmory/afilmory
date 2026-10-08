@@ -44,7 +44,7 @@ final class ShareUploadModel: ObservableObject {
     var seen = Set<String>()
     let values = tags + Self.parseTags(draft)
     return values.compactMap { value in
-      let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+      let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !normalized.isEmpty, seen.insert(normalized).inserted else { return nil }
       return normalized
     }.prefix(32).map { $0 }
@@ -201,7 +201,7 @@ final class ShareUploadModel: ObservableObject {
 
   private static func parseTags(_ value: String) -> [String] {
     value.split(separator: ",").compactMap { part in
-      let normalized = part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+      let normalized = part.trimmingCharacters(in: .whitespacesAndNewlines)
       return normalized.isEmpty ? nil : normalized
     }
   }

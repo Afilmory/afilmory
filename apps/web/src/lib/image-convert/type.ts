@@ -1,7 +1,10 @@
+import type { AppleGainMapSource } from '@afilmory/webgl-viewer'
+
 import type { LoadingCallbacks } from '../image-loader-manager'
 
 // 转换结果接口
 export interface ConversionResult {
+  gainMap?: AppleGainMapSource
   url: string
   convertedSize: number
   format: string

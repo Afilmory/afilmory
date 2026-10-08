@@ -13,6 +13,7 @@
     "build": "pnpm --filter @afilmory/ssr build",
     "build:demo": "sh scripts/prepare-demo-data.sh && pnpm --filter web build",
     "build:manifest": "pnpm --filter @afilmory/builder cli",
+    "build:manifest:fetch": "node scripts/fetch-prebuilt-manifest.mjs",
     "build:update-remote-repo": "sh scripts/build-update-remote-repo.sh",
     "build:variant-report": "pnpm --filter @afilmory/builder cluster",
     "create:doc": "tsx scripts/create-doc.ts",

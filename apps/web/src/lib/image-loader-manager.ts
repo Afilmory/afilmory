@@ -1,3 +1,4 @@
+import type { AppleGainMapSource } from '@afilmory/webgl-viewer'
 import { fileTypeFromBlob } from 'file-type'
 
 import { i18nAtom } from '~/i18n'
@@ -27,6 +28,7 @@ export interface LoadingCallbacks {
 }
 
 export interface ImageLoadResult {
+  gainMap?: AppleGainMapSource
   blobSrc: string
   convertedUrl?: string
 }
@@ -48,8 +50,8 @@ const regularImageCache: LRUCache<string, ImageCacheResult> = new LRUCache<strin
   (value, key, reason) => {
     try {
       URL.revokeObjectURL(value.blobSrc)
-      console.info(`Regular image cache: Revoked blob URL - ${reason}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.warn(`Failed to revoke regular image blob URL (${reason}):`, error)
     }
   },
@@ -95,9 +97,9 @@ export class ImageLoaderManager {
         return false
       }
 
-      console.info(`Valid image detected: ${fileType.ext} (${fileType.mime})`)
       return true
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to detect file type:', error)
       return false
     }
@@ -137,14 +139,16 @@ export class ImageLoaderManager {
                 callbacks,
               )
               resolve(result)
-            } catch (error) {
+            }
+            catch (error) {
               onLoadingStateUpdate?.({
                 isVisible: false,
               })
               onError?.()
               reject(error)
             }
-          } else {
+          }
+          else {
             onLoadingStateUpdate?.({
               isVisible: false,
             })
@@ -202,7 +206,6 @@ export class ImageLoaderManager {
           // Pattern matching on VideoSource
           if (videoSource.type === 'motion-photo') {
             // Motion Photo: 从图片中提取嵌入视频
-            console.info('Processing Motion Photo embedded video...')
             onLoadingStateUpdate?.({
               isVisible: true,
               conversionMessage: i18n.t('video.motion-photo.extracting'),
@@ -217,8 +220,6 @@ export class ImageLoaderManager {
             if (extractedVideoUrl) {
               videoElement.src = extractedVideoUrl
               videoElement.load()
-
-              console.info('Motion Photo video extracted successfully')
 
               onLoadingStateUpdate?.({
                 isVisible: false,
@@ -237,23 +238,28 @@ export class ImageLoaderManager {
               })
 
               resolve(result)
-            } else {
+            }
+            else {
               throw new Error('Failed to extract Motion Photo video')
             }
-          } else if (videoSource.type === 'live-photo') {
+          }
+          else if (videoSource.type === 'live-photo') {
             // Live Photo: 处理独立视频文件
             if (needsVideoConversion(videoSource.videoUrl)) {
               const result = await this.convertVideo(videoSource.videoUrl, videoElement, callbacks)
               resolve(result)
-            } else {
+            }
+            else {
               const result = await this.loadDirectVideo(videoSource.videoUrl, videoElement)
               resolve(result)
             }
-          } else {
+          }
+          else {
             // type === 'none'
             throw new Error('No video source provided')
           }
-        } catch (error) {
+        }
+        catch (error) {
           console.error('Failed to process video:', error)
           onLoadingStateUpdate?.({
             isVisible: false,
@@ -280,9 +286,6 @@ export class ImageLoaderManager {
 
       if (conversionResult) {
         // 需要转换的格式
-        console.info(
-          `Image converted: ${(blob.size / 1024).toFixed(1)}KB → ${(conversionResult.convertedSize / 1024).toFixed(1)}KB`,
-        )
 
         // Hide loading indicator
         onLoadingStateUpdate?.({
@@ -292,19 +295,22 @@ export class ImageLoaderManager {
         return {
           blobSrc: conversionResult.url,
           convertedUrl: conversionResult.url,
+          gainMap: conversionResult.gainMap,
         }
-      } else {
+      }
+      else {
         // 不需要转换的普通图片
         return this.processRegularImage(blob, originalUrl, callbacks)
       }
-    } catch (conversionError) {
+    }
+    catch (conversionError) {
       console.error('Image conversion failed:', conversionError)
 
       // 转换失败时，尝试按普通图片处理
       try {
-        console.info('Falling back to regular image processing')
         return this.processRegularImage(blob, originalUrl, callbacks)
-      } catch (fallbackError) {
+      }
+      catch (fallbackError) {
         console.error('Fallback to regular image processing also failed:', fallbackError)
 
         // Hide loading indicator on error
@@ -331,8 +337,6 @@ export class ImageLoaderManager {
     // 检查缓存
     const cachedResult = regularImageCache.get(cacheKey)
     if (cachedResult) {
-      console.info('Using cached regular image result', cachedResult)
-
       // Hide loading indicator
       onLoadingStateUpdate?.({
         isVisible: false,
@@ -354,7 +358,6 @@ export class ImageLoaderManager {
 
     // 缓存结果
     regularImageCache.set(cacheKey, result)
-    console.info(`Regular image processed and cached: ${(blob.size / 1024).toFixed(1)}KB, URL: ${originalUrl}`)
 
     // Hide loading indicator
     onLoadingStateUpdate?.({
@@ -380,8 +383,6 @@ export class ImageLoaderManager {
       loadingProgress: 0,
     })
 
-    console.info('Converting MOV video to MP4...')
-
     const i18n = jotaiStore.get(i18nAtom)
 
     const result = await convertMovToMp4(livePhotoVideoUrl, (progress) => {
@@ -393,8 +394,7 @@ export class ImageLoaderManager {
         '编码器', // 备用关键词
       ]
       const isCodecInfo = codecKeywords.some((keyword: string) =>
-        progress.message.toLowerCase().includes(keyword.toLowerCase()),
-      )
+        progress.message.toLowerCase().includes(keyword.toLowerCase()))
 
       onLoadingStateUpdate?.({
         isVisible: true,
@@ -411,10 +411,6 @@ export class ImageLoaderManager {
       videoElement.src = result.videoUrl
       videoElement.load()
 
-      console.info(
-        `Video conversion completed. Size: ${result.convertedSize ? Math.round(result.convertedSize / 1024) : 'unknown'}KB`,
-      )
-
       onLoadingStateUpdate?.({
         isVisible: false,
       })
@@ -429,7 +425,8 @@ export class ImageLoaderManager {
 
         videoElement.addEventListener('canplaythrough', handleVideoCanPlay)
       })
-    } else {
+    }
+    else {
       console.error('Video conversion failed:', result.error)
       onLoadingStateUpdate?.({
         isVisible: false,

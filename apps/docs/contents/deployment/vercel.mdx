@@ -133,6 +133,28 @@ plugins: [
 
 This stores thumbnails and manifest in a separate repo, avoiding full rebuilds on Vercel.
 
+### Prebuilt Manifest for Large Galleries
+
+Decoding a few hundred HEIC/JPEG originals inside the build container can exceed the memory limit of free CI tiers — the build gets killed with no error line, usually right after a `task N/M` log entry (see #288).
+
+If your gallery is large, split the work: run the heavy `build:manifest` on GitHub Actions or your own machine (the repo sync plugin commits the manifest and thumbnails back to your storage repo), and let Vercel only fetch the finished manifest and build the SSR app.
+
+1. Set the Build Command to:
+
+   ```
+   pnpm -w run build:manifest:fetch && pnpm -w run build
+   ```
+
+2. Point the fetch script at your manifest with either environment variable:
+
+   ```
+   PREBUILT_MANIFEST_URL=https://your-host/photos-manifest.json
+   # or, for a GitHub storage repo:
+   GALLERY_REPO=owner/repo
+   ```
+
+The script resolves the repo root from its own location, so it works with Root Directory set to `apps/ssr`.
+
 ### Build Caching
 
 Vercel automatically caches:

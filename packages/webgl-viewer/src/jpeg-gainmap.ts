@@ -4,6 +4,7 @@ export type RGB = [number, number, number]
 export type Matrix3 = [number, number, number, number, number, number, number, number, number]
 
 export interface GainMapMetadata {
+  appleHeadroom?: number
   min: RGB
   max: RGB
   gamma: RGB

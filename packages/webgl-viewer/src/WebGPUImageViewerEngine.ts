@@ -1,7 +1,7 @@
 /// <reference types="@webgpu/types" />
 import { LoadingState } from './enum'
 import { ImageViewerEngineBase } from './ImageViewerEngineBase'
-import type { DebugInfo, ImageViewerOptions } from './interface'
+import type { AppleGainMapSource, DebugInfo, ImageViewerOptions } from './interface'
 import type { GainMapMetadata, Matrix3 } from './jpeg-gainmap'
 import { IMAGE_SHADER } from './webgpu-shaders'
 import type { BitmapPlane, ImagePixels, Rect, TextureWorkerMessage, TilePixels, TileRequest } from './webgpu-tiles'
@@ -137,7 +137,7 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
     this.initializeViewport()
   }
 
-  async loadImage(url: string, preknownWidth?: number, preknownHeight?: number) {
+  async loadImage(url: string, preknownWidth?: number, preknownHeight?: number, gainMapSource?: AppleGainMapSource) {
     this.originalImageSrc = url
     this.onLoadingStateChange?.(true, LoadingState.IMAGE_LOADING, 'unknown')
     await this.initialized
@@ -178,7 +178,7 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
         this.uploads.push(data.tile)
         this.scheduleUploads()
       }
-      this.worker.postMessage({ type: 'load', url })
+      this.worker.postMessage({ type: 'load', url, gainMapSource })
     })
   }
 
@@ -187,6 +187,7 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
     const identity: Matrix3 = [1, 0, 0, 0, 1, 0, 0, 0, 1]
     if (image.metadata) {
       floats.set(image.metadata.min, 0)
+      floats[3] = image.metadata.appleHeadroom ?? 0
       floats.set(image.metadata.max, 4)
       floats.set(
         image.metadata.gamma.map(v => 1 / v),

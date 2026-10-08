@@ -145,7 +145,7 @@ struct UploadReviewSheetView: View {
     // Comma separated so one keyboard trip can add several tags, matching the
     // dashboard's tag field.
     for part in draft.split(separator: ",") {
-      let normalized = part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+      let normalized = part.trimmingCharacters(in: .whitespacesAndNewlines)
       if !normalized.isEmpty, !tags.contains(normalized) {
         tags.append(normalized)
       }

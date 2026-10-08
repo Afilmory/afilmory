@@ -23,7 +23,7 @@
 
 ---
 
-**Afilmory** (/əˈfɪlməri/, "uh-FIL-muh-ree") is a comprehensive photo gallery solution that combines **Auto Focus (AF)**, **Aperture** (light control), **Film** (vintage medium), and **Memory** (captured moments). Built with React + TypeScript, it offers automatic photo synchronization from multiple storage sources, high-performance WebGL rendering, and professional EXIF metadata display.
+**Afilmory** (/əˈfɪlməri/, "uh-FIL-muh-ree") is a comprehensive photo gallery solution that combines **Auto Focus (AF)**, **Aperture** (light control), **Film** (vintage medium), and **Memory** (captured moments). Built with React + TypeScript, it offers automatic photo synchronization from multiple storage sources, a GPU-accelerated image viewer (WebGPU first, WebGL fallback) with HDR gain-map support, professional EXIF metadata display, and a native iOS companion app.
 
 ## 🚀 Quick Start
 
@@ -86,31 +86,34 @@ See Afilmory in action:
 
 ### Core Capabilities
 
-- 🖼️ **High-Performance WebGL Renderer** - Custom WebGL image viewer with smooth zoom, pan, and gesture support
+- 🖼️ **WebGPU Image Viewer** - Custom GPU viewer that renders through WebGPU by default and falls back to WebGL when `navigator.gpu` is unavailable; smooth zoom, pan, pinch, and double-tap cycling between fit, fill, and 100%
+- 🧩 **Tiled Rendering** - Large photos are decoded off the main thread in a worker and streamed to the GPU as tiles
 - 📱 **Responsive Masonry Layout** - Powered by Masonic, adapts seamlessly to any screen size
-- 🎨 **Modern UI/UX** - Built with Tailwind CSS and Radix UI for accessibility and aesthetics
+- 🎨 **Modern UI/UX** - Tailwind CSS 4 with the Apple UIKit color palette, glass materials, and spring motion
 - ⚡ **Incremental Sync** - Smart change detection processes only new or modified photos
-- 🌐 **Internationalization** - Multi-language support with i18next
-- 🔗 **Social Sharing** - OpenGraph metadata for rich social media previews
+- 🌐 **Internationalization** - English, 简体中文, 繁體中文 (HK/TW), 日本語, and 한국어
+- 🔗 **Social Sharing** - Dynamic OpenGraph images and SEO metadata for rich previews
+- 📲 **Native iOS App** - Swift/UIKit client for browsing galleries, with push notifications
 
 ### Image Processing
 
-- 🔄 **Format Support** - Automatic conversion of HEIC/HEIF and TIFF formats
+- 🔄 **Format Support** - Automatic conversion of HEIC/HEIF, TIFF, and BMP
 - 🖼️ **Smart Thumbnails** - Multi-size thumbnail generation for optimized loading
-- 📊 **Complete EXIF Display** - Camera model, focal length, aperture, ISO, and more
-- 🌈 **Blurhash Placeholders** - Elegant progressive loading experience
-- 📱 **Live Photos** - Detection and display of iPhone Live Photos
-- ☀️ **HDR Images** - Full HDR image support
+- 📊 **Complete EXIF Display** - Camera, lens, focal length, aperture, ISO, GPS, and more (via ExifTool)
+- 🌈 **ThumbHash Placeholders** - Compact placeholders for a smooth progressive loading experience
+- 📱 **Live Photos** - Detection and playback of iPhone Live Photos
+- ☀️ **HDR Gain Maps** - Renders JPEG gain-map HDR (including Apple HDR photos) on HDR-capable displays
 - 🎛️ **Fujifilm Recipes** - Display Fujifilm film simulation settings
 
 ### Advanced Features
 
-- 🗂️ **Multi-Storage Support** - S3-compatible storage, GitHub, Eagle, and local file system
+- 🗂️ **Multi-Storage Support** - S3-compatible storage, Backblaze B2, GitHub, Eagle, and local file system
 - 🏷️ **File System Tags** - Auto-generated tags based on directory structure
-- ⚡ **Concurrent Processing** - Multi-process/multi-thread support for fast builds
+- ⚡ **Concurrent Processing** - Worker-thread and cluster modes for fast builds
+- 🔌 **Builder Plugins** - Lifecycle hooks for thumbnail storage, reverse geocoding, repo sync, and custom logic
 - 🗺️ **Interactive Map** - Geographic visualization with GPS coordinates using MapLibre
-- 🔍 **Fullscreen Viewer** - Immersive image viewing with gesture controls
-- 📷 **Share & Embed** - Share images to social media or embed in your website
+- 💬 **Comments & Reactions** - Visitor engagement in backend-powered galleries
+- 📷 **Share & Embed** - Share images to social media or embed them via the SDK
 
 ## 🏗️ Architecture
 
@@ -119,63 +122,91 @@ See Afilmory in action:
 ```
 afilmory/
 ├── apps/
-│   ├── web/              # React SPA (Vite + React Router 7)
-│   ├── ssr/              # Next.js SSR wrapper for SEO/OG
-│   ├── docs/             # Documentation site (VitePress)
-├── be/                   # Backend services (Hono-based)
+│   ├── web/              # Gallery SPA (Vite + React 19 + React Router 7)
+│   ├── ssr/              # Next.js host: serves the SPA, injects manifest, OG/SEO
+│   ├── mobile/           # Native iOS app (Swift / UIKit, XcodeGen)
+│   ├── site/             # Marketing site (Astro)
+│   ├── docs/             # Documentation site (Vite + MDX)
+│   └── promo/            # Promo videos (Remotion)
+├── be/                   # Backend services
 │   ├── apps/
-│   │   ├── core/         # Core API server
-│   │   ├── dashboard/    # Admin dashboard backend
-│   │   └── oauth-gateway/# OAuth authentication gateway
+│   │   ├── core/         # Core API server (Hono + @tsuki-hono)
+│   │   ├── dashboard/    # Admin dashboard SPA
+│   │   └── oauth-gateway/# Standalone OAuth broker
 │   └── packages/
-│       ├── framework/    # Hono enterprise framework
-│       ├── db/           # Database schemas (Drizzle ORM)
+│       ├── db/           # Database schemas & migrations (Drizzle ORM)
 │       ├── redis/        # Redis client
-│       └── websocket/    # WebSocket gateway
+│       ├── task-queue/   # Job queue
+│       └── utils/        # Shared backend utilities
 ├── packages/
-│   ├── builder/          # Photo processing pipeline
-│   ├── webgl-viewer/     # WebGL image viewer component
+│   ├── builder/          # Photo processing pipeline CLI
+│   ├── webgl-viewer/     # GPU image viewer (WebGPU + WebGL fallback)
+│   ├── viewer-motion/    # Framework-agnostic viewer motion primitives
+│   ├── renderer/         # OG image renderer (Satori + resvg)
+│   ├── data/             # PhotoLoader + bundled manifest
+│   ├── typing/           # Shared photo/manifest types
+│   ├── sdk/              # Public SDK + share embed script
 │   ├── ui/               # Shared UI components
 │   ├── hooks/            # React hooks library
-│   ├── sdk/              # API client SDK
-│   ├── utils/            # Utility functions
-│   └── data/             # Shared data types
-└── plugins/              # Builder plugins
+│   └── utils/            # Utility functions
+└── plugins/              # ESLint / Vite tooling plugins
 ```
 
 ### Frontend Stack
 
-- **React 19** - Latest React with Compiler
-- **TypeScript** - Full type safety
-- **Vite** - Lightning-fast build tool
-- **React Router 7** - Modern routing
-- **Tailwind CSS** - Utility-first CSS framework
-- **Radix UI** - Accessible component primitives
+- **React 19** - With the React Compiler
+- **TypeScript 6** - Full type safety
+- **Vite 8** - Lightning-fast build tool
+- **React Router 7** - File-based routing
+- **Tailwind CSS 4** - Utility-first CSS with the Apple UIKit color palette
+- **Radix UI / Headless UI** - Accessible component primitives
+- **Motion** - Spring-based animations
 - **Jotai** - Atomic state management
 - **TanStack Query** - Data fetching and caching
+- **MapLibre GL** - Interactive maps
 - **i18next** - Internationalization
+
+### Image Viewer
+
+- **WebGPU** - Primary renderer, with worker-side texture decoding and tiled uploads
+- **WebGL** - Automatic fallback for browsers without WebGPU
+- **HDR Gain Maps** - JPEG gain-map parsing and HDR compositing on `dynamic-range: high` displays
+
+### SSR Host
+
+- **Next.js 16** - Serves the SPA, injects the manifest, and renders dynamic OG images and SEO metadata
 
 ### Backend Stack
 
 - **Hono** - Ultra-fast web framework
+- **@tsuki-hono** - NestJS-style modules, controllers, and decorators on top of Hono, with `tsyringe` DI
 - **Drizzle ORM** - Type-safe database toolkit
 - **PostgreSQL** - Primary database
-- **Redis** - Caching and pub/sub
-- **WebSocket** - Real-time communication
+- **Redis** - Caching and task queue
+- **Better Auth** - Authentication
+- **Server-Sent Events** - Real-time updates
+- **Satori + resvg** - OG image rendering
+
+### Mobile
+
+- **Swift 6 / UIKit** - Native iOS 18+ app, with Liquid Glass on newer iOS versions
+- **XcodeGen** - `project.yml` as the project source of truth
 
 ### Build Pipeline
 
 - **Node.js** - Server-side runtime
 - **Sharp** - High-performance image processing
+- **ExifTool** - Metadata extraction (via `exiftool-vendored`)
+- **ThumbHash** - Placeholder generation
 - **AWS SDK** - S3 storage operations
-- **Worker Threads/Cluster** - Parallel processing
-- **EXIF-Reader** - Metadata extraction
+- **Worker Threads / Cluster** - Parallel processing
 
 ### Storage Adapters
 
 Designed with adapter pattern for flexibility:
 
-- **S3-Compatible** - AWS S3, MinIO, Backblaze B2, Alibaba Cloud OSS
+- **S3-Compatible** - AWS S3, MinIO, RustFS, Alibaba Cloud OSS, and more
+- **Backblaze B2** - Native B2 API provider
 - **GitHub** - Use GitHub repository as storage
 - **Eagle** - Import from Eagle app library
 - **Local File System** - For development and testing
@@ -184,9 +215,9 @@ Designed with adapter pattern for flexibility:
 
 ### Prerequisites
 
-- Node.js 18+
-- pnpm 10+
-- TypeScript 5.9+
+- Node.js (current LTS)
+- pnpm 11+
+- Xcode 16+ (only for the iOS app)
 
 ### Project Setup
 
@@ -211,11 +242,16 @@ pnpm dev                    # Start web + SSR
 pnpm dev:be                 # Start backend services
 pnpm --filter web dev       # Web app only
 pnpm --filter @afilmory/ssr dev  # SSR only
+pnpm --filter @afilmory/dashboard dev  # Admin dashboard
+pnpm dev:mobile             # Build and run the iOS app in Simulator
+pnpm site:dev               # Marketing site
 
 # Build
 pnpm build                  # Build production web app
 pnpm build:manifest         # Generate photo manifest (incremental)
 pnpm build:manifest -- --force  # Full rebuild
+pnpm build:manifest -- --force-manifest    # Regenerate manifest only
+pnpm build:manifest -- --force-thumbnails  # Regenerate thumbnails only
 
 # Documentation
 pnpm docs:dev               # Start docs dev server
@@ -283,7 +319,7 @@ export default defineBuilderConfig(() => ({
 Implement the `StorageProvider` interface:
 
 ```typescript
-import { StorageProvider } from '@afilmory/builder'
+import type { StorageProvider, StorageObject } from '@afilmory/builder'
 
 class MyStorageProvider implements StorageProvider {
   async getFile(key: string): Promise<Buffer | null> {
@@ -300,21 +336,27 @@ class MyStorageProvider implements StorageProvider {
 
 ### Custom Builder Plugin
 
-Create a plugin for the build pipeline:
+Create a plugin that hooks into the build lifecycle:
 
 ```typescript
-import { BuilderPlugin } from '@afilmory/builder'
+import type { BuilderPlugin } from '@afilmory/builder'
 
-export const myPlugin = (): BuilderPlugin => ({
-  name: 'my-plugin',
-  async onBeforeBuild(context) {
-    // Pre-build hook
-  },
-  async onAfterBuild(context) {
-    // Post-build hook
-  },
-})
+export default function myPlugin(): BuilderPlugin {
+  return {
+    name: 'my-plugin',
+    hooks: {
+      beforeBuild: async ({ logger }) => {
+        logger.main.info('Starting build')
+      },
+      afterSaveManifest: async ({ payload }) => {
+        // payload.manifest, payload.cameras, payload.lenses
+      },
+    },
+  }
+}
 ```
+
+Register it in `builder.config.ts` under `plugins`.
 
 ## 📚 Documentation
 
@@ -327,14 +369,14 @@ export const myPlugin = (): BuilderPlugin => ({
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
+We welcome contributions! See [AGENTS.md](./AGENTS.md) for architecture notes and [DESIGN.md](./DESIGN.md) for the web design system.
 
 ### Development Workflow
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests and linting (`pnpm test && pnpm lint`)
+4. Run linting and type checks (`pnpm lint && pnpm type-check`)
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request

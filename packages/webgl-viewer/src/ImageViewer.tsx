@@ -10,11 +10,12 @@ import {
   defaultWheelConfig,
 } from './constants'
 import DebugInfoComponent from './DebugInfo'
-import type { DebugInfo, ImageViewerOptions, ImageViewerRef, ImageViewportState } from './interface'
+import type { AppleGainMapSource, DebugInfo, ImageViewerOptions, ImageViewerRef, ImageViewportState } from './interface'
 import { WebGLImageViewerEngine } from './WebGLImageViewerEngine'
 import { WebGPUImageViewerEngine } from './WebGPUImageViewerEngine'
 
 export interface ImageViewerProps extends ImageViewerOptions {
+  gainMapSource?: AppleGainMapSource
   alt?: string
   onLoad?: () => void
   onError?: (error: Error) => void
@@ -25,6 +26,7 @@ export interface ImageViewerProps extends ImageViewerOptions {
 export const ImageViewer = ({
   ref,
   src,
+  gainMapSource,
   className = '',
   alt = '',
   onLoad,
@@ -226,8 +228,12 @@ export const ImageViewer = ({
           : new WebGLImageViewerEngine(canvasRef.current, config, debugEnabled ? setDebugInfoRef : undefined)
       viewerRef.current = engine
       setTileOutlineEnabled(engine.isTileOutlineEnabled())
-      void engine
-        .loadImage(new URL(src, document.baseURI).href, width, height)
+      const url = new URL(src, document.baseURI).href
+      void (
+        engine instanceof WebGPUImageViewerEngine
+          ? engine.loadImage(url, width, height, gainMapSource)
+          : engine.loadImage(url, width, height)
+      )
         .then(() => {
           if (disposed || failed || !engine) {
             return
@@ -257,6 +263,7 @@ export const ImageViewer = ({
   }, [
     renderer,
     src,
+    gainMapSource,
     width,
     height,
     initialScale,

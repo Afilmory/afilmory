@@ -2,10 +2,17 @@ import XCTest
 @testable import Afilmory
 
 final class UploadTagPathTests: XCTestCase {
-  func testParseNormalizesAndDeduplicatesTags() {
+  func testParsePreservesCaseAndDeduplicatesExactTags() {
     XCTAssertEqual(
-      UploadTagPath.parse(" Travel, night sky,TRAVEL,  夜景  ,"),
-      ["travel", "night sky", "夜景"]
+      UploadTagPath.parse(" Travel, night sky,TRAVEL, travel, Travel,  夜景  ,"),
+      ["Travel", "night sky", "TRAVEL", "travel", "夜景"]
+    )
+  }
+
+  func testParsedTagsKeepDistinctDirectoryCasing() {
+    XCTAssertEqual(
+      UploadTagPath.directory(from: UploadTagPath.parse(" Travel, travel, Night Sky, Travel ")),
+      "Travel/travel/Night-Sky"
     )
   }
 

@@ -51,7 +51,7 @@ enum ShareUploadContextStore {
     guard var snapshot = load() else { return }
     var seen = Set<String>()
     snapshot.suggestedTags = values.compactMap { value in
-      let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+      let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !normalized.isEmpty, seen.insert(normalized).inserted else { return nil }
       return normalized
     }.prefix(64).map { $0 }

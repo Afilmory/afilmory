@@ -6,6 +6,7 @@ import type { LoadingCallbacks } from '~/lib/image-loader-manager'
 import { jotaiStore } from '~/lib/jotai'
 import { LRUCache } from '~/lib/lru-cache'
 
+import { convertHeicWithWebCodecs } from '../heic-webcodecs'
 import type { ConversionResult, ImageConverterStrategy } from '../type'
 
 // HEIC 转换策略
@@ -22,7 +23,8 @@ export class HeicConverterStrategy implements ImageConverterStrategy {
     try {
       // 只需检查浏览器是否支持，格式检测已由 file-type 完成
       return !isBrowserSupportHeic()
-    } catch (error) {
+    }
+    catch (error) {
       console.error('HEIC browser support detection failed:', error)
       return false
     }
@@ -48,13 +50,9 @@ export class HeicConverterStrategy implements ImageConverterStrategy {
 
       const result = await convertHeicImage(blob, originalUrl)
 
-      return {
-        url: result.url,
-        convertedSize: result.convertedSize,
-        format: result.format,
-        originalSize: result.originalSize,
-      }
-    } catch (error) {
+      return result
+    }
+    catch (error) {
       console.error('HEIC conversion failed:', error)
       throw new Error(`HEIC conversion failed: ${error}`)
     }
@@ -72,8 +70,11 @@ const heicCache: LRUCache<string, ConversionResult> = new LRUCache<string, Conve
   (value, key, reason) => {
     try {
       URL.revokeObjectURL(value.url)
-      console.info(`HEIC cache: Revoked blob URL - ${reason}`)
-    } catch (error) {
+      if (value.gainMap) {
+        URL.revokeObjectURL(value.gainMap.url)
+      }
+    }
+    catch (error) {
       console.warn(`Failed to revoke HEIC blob URL (${reason}):`, error)
     }
   },
@@ -95,7 +96,8 @@ function generateCacheKey(src: string, options: HeicConversionOptions): string {
 export async function detectHeicFormat(file: File | Blob): Promise<boolean> {
   try {
     return await isHeic(file as File)
-  } catch (error) {
+  }
+  catch (error) {
     console.warn('Failed to detect HEIC format:', error)
     return false
   }
@@ -125,7 +127,6 @@ export async function convertHeicImage(
   // 检查缓存
   const cachedResult = heicCache.get(cacheKey)
   if (cachedResult) {
-    console.info('Using cached HEIC conversion result', cachedResult)
     return cachedResult
   }
 
@@ -137,17 +138,20 @@ export async function convertHeicImage(
     }
 
     // 转换图片
-    const convertedBlob = await heicTo({
-      blob: file,
-      type: format,
-      quality,
+    const converted = await convertHeicWithWebCodecs(file, format, quality).catch(async (error) => {
+      console.warn('HEIC WebCodecs unavailable; using libheif', error)
+      return { blob: await heicTo({ blob: file, type: format, quality }), gainMap: undefined }
     })
+    const convertedBlob = converted.blob
 
     // 创建 URL
     const url = URL.createObjectURL(convertedBlob)
 
     const result: ConversionResult = {
       url,
+      gainMap: converted.gainMap
+        ? { url: URL.createObjectURL(converted.gainMap.blob), headroom: converted.gainMap.headroom }
+        : undefined,
       originalSize: file.size,
       convertedSize: convertedBlob.size,
       format,
@@ -155,12 +159,10 @@ export async function convertHeicImage(
 
     // 缓存结果
     heicCache.set(cacheKey, result)
-    console.info(
-      `HEIC conversion completed and cached: ${(file.size / 1024).toFixed(1)}KB → ${(convertedBlob.size / 1024).toFixed(1)}KB`,
-    )
 
     return result
-  } catch (error) {
+  }
+  catch (error) {
     console.error('HEIC conversion failed:', error)
     throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
@@ -172,7 +174,8 @@ export async function convertHeicImage(
 export function revokeConvertedUrl(url: string): void {
   try {
     URL.revokeObjectURL(url)
-  } catch (error) {
+  }
+  catch (error) {
     console.warn('Failed to revoke URL:', error)
   }
 }

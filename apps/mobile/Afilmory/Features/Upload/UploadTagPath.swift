@@ -4,7 +4,7 @@ enum UploadTagPath {
   static func parse(_ value: String) -> [String] {
     var seen = Set<String>()
     return value.split(separator: ",").compactMap { part in
-      let tag = part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+      let tag = part.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !tag.isEmpty, seen.insert(tag).inserted else { return nil }
       return tag
     }.prefix(32).map { $0 }

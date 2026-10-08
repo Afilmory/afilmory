@@ -466,7 +466,7 @@ final class StudioLibraryController: UIViewController {
     for item in feed.studioPhotos {
       guard case .array(let tags) = item.asset.manifest.data["tags"] else { continue }
       for tag in tags.compactMap(\.string) {
-        let normalized = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalized = tag.trimmingCharacters(in: .whitespacesAndNewlines)
         if !normalized.isEmpty, seen.insert(normalized).inserted {
           values.append(normalized)
         }

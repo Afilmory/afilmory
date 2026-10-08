@@ -1,5 +1,10 @@
 import type { LoadingState } from './enum'
 
+export interface AppleGainMapSource {
+  url: string
+  headroom: number
+}
+
 export interface WheelConfig {
   step: number
   wheelDisabled?: boolean

@@ -30,6 +30,8 @@ i18n
     returnNull: false,
   })
 
+export { i18n }
+
 export const i18nAtom = atom(i18n)
 
 export const getI18n = () => jotaiStore.get(i18nAtom)

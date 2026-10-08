@@ -1,4 +1,5 @@
 import type { PhotoRegion } from '@afilmory/builder'
+import type { AppleGainMapSource } from '@afilmory/webgl-viewer'
 
 import type { ImageLoaderManager } from '~/lib/image-loader-manager'
 
@@ -67,6 +68,7 @@ export interface LivePhotoBadgeProps {
 }
 
 export interface ProgressiveImageState {
+  gainMap?: AppleGainMapSource
   blobSrc: string | null
   highResLoaded: boolean
   error: boolean

@@ -224,8 +224,8 @@
 		A3AF475FD4E25C2AC4658B92 = {
 			isa = PBXGroup;
 			children = (
-				D0539BCC111E5D10BFA9A46E /* Afilmory */,
 				2241A14B486857EDFAA4D436 /* Afilmory */,
+				D0539BCC111E5D10BFA9A46E /* Afilmory */,
 				F7E1D90B31803524C6BD87AC /* icons */,
 				CC890C61115C8862C1BE9EB2 /* images */,
 				BECBC75D21472EF02A7ECB14 /* targets/notification */,
@@ -446,10 +446,10 @@
 			projectRoot = "";
 			targets = (
 				49FCC468078AAEFC1B5AA196 /* Afilmory */,
-				8C8591ADA4B3ACD6020325F9 /* AfilmoryNotification */,
 				355117DF7EBA74FB8E2A3F01 /* AfilmoryShare */,
-				418883D2F6760B61427AFE0B /* AfilmoryTests */,
 				EED569562E5B8E4DD3F3C7F1 /* AfilmoryWidgets */,
+				8C8591ADA4B3ACD6020325F9 /* AfilmoryNotification */,
+				418883D2F6760B61427AFE0B /* AfilmoryTests */,
 			);
 		};
 /* End PBXProject section */
@@ -572,7 +572,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.notification;
 				PRODUCT_MODULE_NAME = AfilmoryNotification;
 				PRODUCT_NAME = AfilmoryNotification;
@@ -654,7 +654,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.notification;
 				PRODUCT_MODULE_NAME = AfilmoryNotification;
 				PRODUCT_NAME = AfilmoryNotification;
@@ -676,7 +676,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.share;
 				PRODUCT_MODULE_NAME = AfilmoryShare;
 				PRODUCT_NAME = AfilmoryShare;
@@ -724,7 +724,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local;
 				PRODUCT_MODULE_NAME = Afilmory;
 				PRODUCT_NAME = Afilmory;
@@ -747,7 +747,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.widgets;
 				PRODUCT_MODULE_NAME = AfilmoryWidgets;
 				PRODUCT_NAME = AfilmoryWidgets;
@@ -769,7 +769,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.share;
 				PRODUCT_MODULE_NAME = AfilmoryShare;
 				PRODUCT_NAME = AfilmoryShare;
@@ -791,7 +791,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.widgets;
 				PRODUCT_MODULE_NAME = AfilmoryWidgets;
 				PRODUCT_NAME = AfilmoryWidgets;
@@ -820,7 +820,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory;
 				PRODUCT_MODULE_NAME = Afilmory;
 				PRODUCT_NAME = Afilmory;

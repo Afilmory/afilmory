@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import type { GainMapMetadata } from './jpeg-gainmap'
 import { extractJPEGGainMap } from './jpeg-gainmap'
 import type {
   BitmapPlane,
@@ -119,16 +120,51 @@ self.onmessage = async ({ data: request }: MessageEvent<TextureWorkerRequest>) =
         warning = `HDR gain map could not be decoded: ${String(error)}`
       }
     }
+    let metadata: GainMapMetadata | null = extracted?.metadata ?? null
+    if (request.gainMapSource) {
+      try {
+        const { url, headroom } = request.gainMapSource
+        if (!Number.isFinite(headroom) || headroom <= 1 || headroom > 64) {
+          throw new Error('Invalid Apple HDR headroom')
+        }
+        const response = await fetch(url)
+        if (!response.ok) {
+          throw new Error(`Gain map fetch failed: ${response.status}`)
+        }
+        gain?.close()
+        gain = await createImageBitmap(await response.blob())
+        if (Math.abs(gain.width / gain.height - base.width / base.height) > 0.01) {
+          throw new Error('Gain map aspect ratio does not match photo')
+        }
+        metadata = {
+          min: [0, 0, 0],
+          max: [0, 0, 0],
+          gamma: [1, 1, 1],
+          offsetBase: [0, 0, 0],
+          offsetAlternate: [0, 0, 0],
+          capacityMin: 0,
+          capacityMax: Math.log2(headroom),
+          useBaseColorSpace: true,
+          appleHeadroom: headroom,
+        }
+      }
+      catch (error) {
+        gain?.close()
+        gain = undefined
+        metadata = null
+        warning = `HEIC gain map could not be decoded: ${String(error)}`
+      }
+    }
     const level = Math.max(0, Math.ceil(Math.log2(Math.max(base.width, base.height) / OVERVIEW_SIZE)))
     const pixels = await tilePixels({ key: 'overview', level, rect: [0, 0, base.width, base.height] })
     const image: ImagePixels = {
       ...pixels,
       width: base.width,
       height: base.height,
-      metadata: extracted?.metadata ?? null,
+      metadata,
       toGainSpace: extracted?.toGainSpace,
       toDisplayP3: extracted?.toDisplayP3,
-      wideGamut: extracted?.wideGamut ?? false,
+      wideGamut: Boolean(request.gainMapSource) || (extracted?.wideGamut ?? false),
       warning,
     }
     post({ type: 'ready', image }, [image.base.bitmap, ...(image.gain ? [image.gain.bitmap] : [])])

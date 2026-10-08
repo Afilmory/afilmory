@@ -108,6 +108,7 @@ export const ProgressiveImage = ({
     setState.setHighResLoaded,
     setState.setError,
     setState.setIsHighResImageRendered,
+    setState.setGainMap,
   )
 
   const { onTransformed } = useScaleIndicator(onZoomChange, setState.setCurrentScale, setState.setShowScaleIndicator)
@@ -387,6 +388,7 @@ export const ProgressiveImage = ({
           >
             <ImageViewer
               src={blobSrc}
+              gainMapSource={state.gainMap}
               alt={alt}
               onLoad={() => setState.setIsHighResImageRendered(true)}
               onHDRChange={setRenderedHDR}
