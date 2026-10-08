@@ -33,7 +33,7 @@ export class FeaturedGalleriesService {
     const visibilityConditions = [
       eq(tenants.banned, false),
       eq(tenants.status, 'active'),
-      notInArray(tenants.slug, RESERVED_TENANT_SLUGS),
+      notInArray(tenants.slug, [...RESERVED_TENANT_SLUGS]),
       blockedTenantIds.length > 0 ? notInArray(tenants.id, blockedTenantIds) : undefined,
     ]
     const escapedQuery = query?.replaceAll(DIRECTORY_LIKE_META_PATTERN, '\\$&')

@@ -45,3 +45,11 @@ jobs:
       - name: Type check
         run: |
           pnpm type-check
+      - name: Test core
+        run: pnpm test
+        working-directory: ./be/apps/core
+        env:
+          # Placeholders so @afilmory/env validation passes; the unit tests do not connect to Postgres or Redis.
+          DATABASE_URL: postgres://afilmory:afilmory@127.0.0.1:5432/afilmory
+          REDIS_URL: redis://127.0.0.1:6379
+          CONFIG_ENCRYPTION_KEY: ci-placeholder-key

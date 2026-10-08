@@ -8,6 +8,5 @@ import { MailService } from './mail.service'
 @Module({
   imports: [SystemSettingModule],
   providers: [MailService, CommentNotificationListener, ContentReportNotificationListener],
-  exports: [MailService],
 })
 export class MailModule {}
