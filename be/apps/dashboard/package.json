@@ -51,7 +51,7 @@
     "immer": "11.1.8",
     "jotai": "2.20.1",
     "lucide-react": "1.18.0",
-    "motion": "12.38.0",
+    "motion": "14.0.0",
     "nanoid": "5.1.16",
     "ofetch": "1.5.1",
     "radix-ui": "1.6.0",

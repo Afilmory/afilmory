@@ -13,6 +13,6 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "motion": "12.38.0"
+    "motion": "14.0.0"
   }
 }

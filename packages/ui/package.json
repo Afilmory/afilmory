@@ -28,7 +28,7 @@
     "@radix-ui/react-tooltip": "1.2.10",
     "clsx": "^2.1.1",
     "jotai": "^2.20.1",
-    "motion": "12.38.0",
+    "motion": "14.0.0",
     "react-intersection-observer": "10.0.3",
     "sonner": "2.0.7",
     "tailwind-merge": "^3.6.0",
