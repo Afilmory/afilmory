@@ -26,6 +26,12 @@ export function computeRevisionETag(revision: number): string {
   return revisionETag(revision)
 }
 
+/**
+ * Largest page `searchPhotos()` returns, and the page size used when a query omits `limit`.
+ * Callers page through larger result sets with `offset` and the returned `total`.
+ */
+export const MANIFEST_SEARCH_MAX_LIMIT = 100
+
 export interface AfilmorySearchQuery {
   tags?: string[]
   tagMode?: 'union' | 'intersection'
@@ -231,7 +237,7 @@ export class ManifestService {
 
     const total = photos.length
     const offset = query.offset ?? 0
-    const limit = query.limit ?? total
+    const limit = query.limit ?? MANIFEST_SEARCH_MAX_LIMIT
     return { data: photos.slice(offset, offset + limit), total }
   }
 
