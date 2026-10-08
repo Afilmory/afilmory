@@ -22,8 +22,9 @@ import {
 import { convertExifGPSToDecimal } from '~/lib/map-utils'
 import { getRenderablePhotoRegions } from '~/modules/viewer/photo-region-bounds'
 
+import { Row } from './ExifRow'
 import { ExifRowGroup, ExifSection } from './ExifSection'
-import { formatExifData, Row } from './formatExifData'
+import { formatExifData } from './formatExifData'
 import { HistogramChart } from './HistogramChart'
 import { MiniMap } from './MiniMap'
 import { PhotoRegionsSection } from './PhotoRegionsSection'

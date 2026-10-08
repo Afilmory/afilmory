@@ -20,6 +20,7 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 // 兼容任意 cwd：按脚本自身位置定位仓库根
@@ -65,7 +66,8 @@ async function fetchManifest() {
 
       console.log(`[fetch-manifest] 来源 ${host(url)}，共 ${json.data.length} 张`)
       return json
-    } catch (e) {
+    }
+    catch (e) {
       errors.push(`${host(url)} → ${e.message}`)
     }
   }

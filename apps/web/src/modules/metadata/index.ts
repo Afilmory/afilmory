@@ -1,4 +1,5 @@
 export * from './ExifPanel'
+export * from './ExifRow'
 export * from './formatExifData'
 export * from './HistogramChart'
 export * from './MiniMap'
