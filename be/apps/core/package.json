@@ -16,7 +16,9 @@
     "dev:reset-superadmin-password": "vite-node src/index.ts --reset-superadmin-password",
     "manifest:migrate": "vite-node src/index.ts manifest:migrate",
     "seed:dev": "vite-node src/index.ts --seed-dev",
-    "test:global-identity-migration": "vite-node scripts/global-identity-migration-verification.ts"
+    "test": "vitest run",
+    "test:global-identity-migration": "vite-node scripts/global-identity-migration-verification.ts",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@afilmory/be-utils": "workspace:*",

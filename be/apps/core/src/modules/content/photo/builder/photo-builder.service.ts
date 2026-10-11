@@ -1,3 +1,5 @@
+import type { Buffer } from 'node:buffer'
+
 import type {
   BuilderConfig,
   BuilderOptions,
@@ -29,6 +31,9 @@ const DEFAULT_PROCESSOR_OPTIONS: PhotoProcessorOptions = {
   isForceMode: false,
   isForceManifest: false,
   isForceThumbnails: false,
+  // Core has never enabled XMP extraction; these were previously left undefined (falsy).
+  xmpKeywordsEnabled: false,
+  xmpRegionsEnabled: false,
 }
 
 export type ProcessPhotoOptions = {
@@ -112,7 +117,7 @@ export class PhotoBuilderService {
     builder: AfilmoryBuilder,
     processorOptions: PhotoProcessorOptions,
     builderConfig?: BuilderConfig,
-  ): { runState: ReturnType<AfilmoryBuilder['createPluginRunState']>; builderOptions: BuilderOptions } {
+  ): { runState: ReturnType<AfilmoryBuilder['createPluginRunState']>, builderOptions: BuilderOptions } {
     const config = builderConfig ?? builder.getConfig()
 
     const builderOptions: BuilderOptions = {

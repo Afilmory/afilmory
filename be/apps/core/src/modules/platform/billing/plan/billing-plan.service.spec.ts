@@ -24,9 +24,9 @@ describe('billingPlanService custom domain allowance', () => {
 
     const request = service.ensureCustomDomainAllowance('tenant-free', 0)
 
-    await expect(request).rejects.toMatchObject<Partial<BizException>>({
+    await expect(request).rejects.toMatchObject({
       code: ErrorCode.BILLING_PLAN_QUOTA_EXCEEDED,
-    })
+    } satisfies Partial<BizException>)
     await expect(request).rejects.toThrow('升级至 Pro')
   })
 

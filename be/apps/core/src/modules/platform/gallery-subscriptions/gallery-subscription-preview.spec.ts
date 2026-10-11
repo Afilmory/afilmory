@@ -7,6 +7,8 @@ const base = {
   title: '',
   dateTaken: '',
   tags: [],
+  keywords: [],
+  regions: [],
   description: '',
   originalUrl: 'https://img.test/o.jpg',
   format: 'jpg',

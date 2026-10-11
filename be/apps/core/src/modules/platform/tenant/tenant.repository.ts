@@ -3,6 +3,7 @@ import { RESERVED_TENANT_SLUGS } from '@afilmory/utils'
 import { DbAccessor } from '@core/database/database.provider'
 import { BizException, ErrorCode } from '@core/errors'
 import type { BillingPlanId } from '@core/modules/platform/billing/plan/billing-plan.types'
+import type { SQL } from 'drizzle-orm'
 import { and, asc, count, desc, eq, ilike, isNotNull, notInArray, or } from 'drizzle-orm'
 import { injectable } from 'tsyringe'
 
@@ -84,7 +85,7 @@ export class TenantRepository {
     const { page, limit, search, status, sortBy = 'createdAt', sortDir = 'desc' } = options
 
     // `demo` is the App Review workspace, so root admins still need to manage its plan.
-    const conditions = [
+    const conditions: Array<SQL | undefined> = [
       notInArray(
         tenants.slug,
         RESERVED_TENANT_SLUGS.filter(slug => slug !== 'demo'),

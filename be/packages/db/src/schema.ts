@@ -1,6 +1,6 @@
 import type { PhotoManifestItem } from '@afilmory/builder'
 import type { ManifestVersion } from '@afilmory/builder/manifest/version.js'
-import { CURRENT_MANIFEST_VERSION } from '@afilmory/builder/manifest/version.ts'
+import { CURRENT_MANIFEST_VERSION } from '@afilmory/builder/manifest/version.js'
 import { relations, sql } from 'drizzle-orm'
 import {
   bigint,
