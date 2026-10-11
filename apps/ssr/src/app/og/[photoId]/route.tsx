@@ -1,4 +1,5 @@
 import { hostname } from 'node:os'
+import process from 'node:process'
 
 import type { NextRequest } from 'next/server'
 
@@ -12,11 +13,11 @@ function getDefaultCoreApiBase(): string {
   return `http://${host}:3000`
 }
 
-const CORE_API_BASE =
-  process.env.CORE_API_URL ??
-  process.env.NEXT_PUBLIC_CORE_API_URL ??
-  process.env.API_BASE_URL ??
-  getDefaultCoreApiBase()
+const CORE_API_BASE
+  = process.env.CORE_API_URL
+    ?? process.env.NEXT_PUBLIC_CORE_API_URL
+    ?? process.env.API_BASE_URL
+    ?? getDefaultCoreApiBase()
 
 const FORWARDED_HEADER_KEYS = ['cookie', 'authorization', 'x-forwarded-host', 'x-forwarded-proto', 'host']
 
@@ -70,7 +71,8 @@ export const GET = async (request: NextRequest, { params }: { params: Promise<{ 
     response = await fetch(targetUrl, {
       headers: buildForwardHeaders(request),
     })
-  } catch {
+  }
+  catch {
     // The core API is not deployed next to the SSR app (e.g. Vercel-only
     // deployments), so /og has nothing to proxy to. Serve the thumbnail
     // instead of bubbling a 500 into every og:image meta tag. #248
