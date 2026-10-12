@@ -7,9 +7,15 @@
     "./renderer": "./src/og.renderer.tsx",
     "./template": "./src/og.template.tsx"
   },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",
     "hono": "4.12.34",
-    "satori": "catalog:"
+    "satori": "catalog:",
+    "sharp": "0.35.1",
+    "vitest": "4.1.9"
   }
 }

@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 
 import type { PhotoManifestItem } from '@afilmory/builder'
 import type { ExifInfo, HomepageOgTemplateProps, PhotoDimensions } from '@afilmory/og-renderer'
-import { renderHomepageOgImage, renderOgImage } from '@afilmory/og-renderer'
+import { OG_IMAGE_MIME_TYPE, renderHomepageOgImage, renderOgImage } from '@afilmory/og-renderer'
 import { BizException, ErrorCode } from '@core/errors'
 import { SiteSettingService } from '@core/modules/configuration/site-setting/site-setting.service'
 import type { OnModuleDestroy } from '@tsuki-hono/common'
@@ -78,7 +78,7 @@ export class OgService implements OnModuleDestroy {
     const tags = (photo.tags ?? []).slice(0, 3)
     const thumbnailSrc = await this.resolveThumbnailSrc(context, photo)
 
-    const png = await renderOgImage({
+    const image = await renderOgImage({
       template: {
         photoTitle: photo.title || photo.id || 'Untitled Photo',
         siteName: siteConfig.name || siteConfig.title || 'Photo Gallery',
@@ -92,12 +92,12 @@ export class OgService implements OnModuleDestroy {
       fonts: await this.getFontConfig(),
     })
     const headers = new Headers({
-      'content-type': 'image/png',
+      'content-type': OG_IMAGE_MIME_TYPE,
       'cache-control': CACHE_CONTROL,
       'cloudflare-cdn-cache-control': CACHE_CONTROL,
     })
 
-    const body = this.toArrayBuffer(png)
+    const body = this.toArrayBuffer(image)
 
     return new Response(body, { status: 200, headers })
   }
@@ -146,18 +146,18 @@ export class OgService implements OnModuleDestroy {
       featuredPhotos: featuredPhotos.length > 0 ? featuredPhotos : null,
     }
 
-    const png = await renderHomepageOgImage({
+    const image = await renderHomepageOgImage({
       template: templateProps,
       fonts: await this.getFontConfig(),
     })
 
     const headers = new Headers({
-      'content-type': 'image/png',
+      'content-type': OG_IMAGE_MIME_TYPE,
       'cache-control': CACHE_CONTROL,
       'cloudflare-cdn-cache-control': CACHE_CONTROL,
     })
 
-    const body = this.toArrayBuffer(png)
+    const body = this.toArrayBuffer(image)
 
     return new Response(body, { status: 200, headers })
   }

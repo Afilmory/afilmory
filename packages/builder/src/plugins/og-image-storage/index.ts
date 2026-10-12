@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { ExifInfo } from '@afilmory/og-renderer'
-import { renderOgImage } from '@afilmory/og-renderer'
+import { OG_IMAGE_FILE_EXTENSION, OG_IMAGE_MIME_TYPE, renderOgImage } from '@afilmory/og-renderer'
 import type { PhotoManifestItem } from '@afilmory/typing'
 import type { SatoriOptions } from 'satori'
 
@@ -25,7 +25,7 @@ const ogAssetsDir = path.join(repoRoot, 'be/apps/core/src/modules/content/og/ass
 const PLUGIN_NAME = 'afilmory:og-image'
 const RUN_STATE_KEY = 'state'
 const DEFAULT_DIRECTORY = '.afilmory/og-images'
-const DEFAULT_CONTENT_TYPE = 'image/png'
+const DEFAULT_CONTENT_TYPE = OG_IMAGE_MIME_TYPE
 const DEFAULT_SITE_NAME = 'Photo Gallery'
 const DEFAULT_ACCENT_COLOR = '#007bff'
 
@@ -413,7 +413,7 @@ export default function ogImagePlugin(options: OgImagePluginOptions = {}): Build
 
         const shouldRender = type !== 'skipped' || payload.options.isForceMode || payload.options.isForceManifest
 
-        const remoteKey = joinSegments(resolved.remotePrefix, `${item.id}.png`)
+        const remoteKey = joinSegments(resolved.remotePrefix, `${item.id}.${OG_IMAGE_FILE_EXTENSION}`)
 
         if (!shouldRender) {
           try {
@@ -432,7 +432,7 @@ export default function ogImagePlugin(options: OgImagePluginOptions = {}): Build
         const formattedDate = formatDate(item.exif?.DateTimeOriginal ?? item.lastModified)
 
         try {
-          const png = await renderOgImage({
+          const image = await renderOgImage({
             template: {
               photoTitle: item.title || item.id || 'Untitled Photo',
               siteName: state.siteMeta.siteName || DEFAULT_SITE_NAME,
@@ -453,7 +453,7 @@ export default function ogImagePlugin(options: OgImagePluginOptions = {}): Build
             payload.options.isForceManifest
           ) {
             try {
-              await storageManager.uploadFile(remoteKey, Buffer.from(png), {
+              await storageManager.uploadFile(remoteKey, Buffer.from(image), {
                 contentType: resolved.contentType,
               })
               stateForUpload.uploaded.add(remoteKey)

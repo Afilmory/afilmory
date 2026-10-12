@@ -1,4 +1,4 @@
-const OG_IMAGE_PATTERN = /^https?:\/\/{{ patternHost }}\/+og-image.*\.png$/i
+const OG_IMAGE_PATTERN = /^https?:\/\/{{ patternHost }}\/+og-image.*\.(?:png|jpe?g)$/i
 
 const normalizeSlug = (slug: string) => {
     try {
@@ -10,7 +10,7 @@ const normalizeSlug = (slug: string) => {
 
 const buildOgImageUrl = (slug: string) => {
     const encodedOnce = normalizeSlug(slug)
-    return `{{ ogBase }}/${encodedOnce}.png`
+    return `{{ ogBase }}/${encodedOnce}.jpg`
 }
 
 const isHtmlResponse = (response: Response) => {

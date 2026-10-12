@@ -73,14 +73,14 @@ vendor: {
 - Loads site branding from `config.json` (or provided path) and falls back to simple defaults.
 - Reuses the generated thumbnail (buffer or URL) as the image source, avoiding extra reads of the original file.
 - Injects light EXIF/context (title, date, focal length, aperture, ISO, shutter speed, camera) into the card.
-- Renders the card with `@afilmory/og-renderer` (Satori + resvg) using bundled fonts, then uploads the PNG to storage.
+- Renders the card with `@afilmory/og-renderer` (Satori + resvg + sharp) using bundled fonts, then uploads the JPEG to storage.
 - Caches uploads and public URLs within a single run so repeated work is skipped.
 
 ## Configuration
 - `enable` (boolean): turn the plugin on/off. Defaults to `true`.
 - `directory` (string): remote path prefix. Defaults to `.afilmory/og-images`.
 - `storageConfig` (storage config): optional override; otherwise uses the builder's current storage.
-- `contentType` (string): MIME type for uploads. Defaults to `image/png`.
+- `contentType` (string): MIME type for uploads. Defaults to `image/jpeg`.
 - `siteName` / `accentColor` (strings): optional overrides for branding.
 - `siteConfigPath` (string): path to a site config JSON; defaults to `config.json` at the repo root (relative paths are resolved from the repo root).
 - `vendor` (object): optional vendor automation. Current vendor types:

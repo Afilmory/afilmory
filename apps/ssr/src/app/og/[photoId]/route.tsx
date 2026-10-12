@@ -44,7 +44,7 @@ function buildForwardHeaders(request: NextRequest): Headers {
     headers.set('x-forwarded-proto', request.nextUrl.protocol.replace(':', ''))
   }
 
-  headers.set('accept', 'image/png,image/*;q=0.9,*/*;q=0.8')
+  headers.set('accept', 'image/jpeg,image/*;q=0.9,*/*;q=0.8')
   return headers
 }
 
