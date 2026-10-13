@@ -33,8 +33,17 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
     engine = next(dist.glob('engine.*'))
     if engine.name != 'engine.js':
         engine.rename(dist / 'engine.js')
-    for fixture in (ROOT / 'packages/webgl-viewer/src/fixtures').glob('gainmap-*.avif'):
-        shutil.copyfile(fixture, dist / fixture.name)
+    legacy = tmp / 'jpeg-legacy.ts'
+    legacy.write_bytes(subprocess.check_output(['git', 'show', '1a045b1:packages/webgl-viewer/src/jpeg-gainmap.ts'], cwd=ROOT))
+    legacy_config = {'resolve': {'alias': {'./jpeg-gainmap': str(legacy), 'fast-xml-parser': str(ROOT / 'packages/webgl-viewer/node_modules/fast-xml-parser/src/fxp.js')}}, 'build': {'outDir': str(dist), 'emptyOutDir': False, 'lib': {'entry': str(entry), 'formats': ['es'], 'fileName': 'engine-old'}}}
+    config.write_text('export default ' + json.dumps(legacy_config))
+    subprocess.run([NODE, str(ROOT / 'node_modules/vite/bin/vite.js'), 'build', '--config', str(config)], cwd=ROOT, check=True)
+    old_engine = next(dist.glob('engine-old.*'))
+    if old_engine.name != 'engine-old.js':
+        old_engine.rename(dist / 'engine-old.js')
+    for fixture in (ROOT / 'packages/webgl-viewer/src/fixtures').iterdir():
+        if fixture.suffix in ('.avif', '.jpg'):
+            shutil.copyfile(fixture, dist / fixture.name)
     (dist / 'index.html').write_text('<!doctype html><link rel="icon" href="data:,"><title>AVIF engine verification</title>')
     class Quiet(http.server.SimpleHTTPRequestHandler):
         def log_message(self, *_args):

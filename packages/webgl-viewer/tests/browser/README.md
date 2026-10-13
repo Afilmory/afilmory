@@ -26,5 +26,27 @@ accounting for browser bitmap quantization, gain-map interpolation, and half-flo
 PQ reference quantization. They also require output above 1 in HDR, base-only SDR
 output, one image request, alpha=1, and no viewer/GPU errors.
 
+Transform cases use independently indexed reference pixels for rotations and
+mirrors. Clean aperture crops both libavif image planes before reconstruction,
+so lower-resolution gain-map interpolation clamps at the crop boundary. Fixtures
+include asymmetric color patterns and vertical ramps; no-op mirror checks are
+insufficient. `generate-transforms.ts` mutates only BMFF properties/metadata.
+
+libavif 1.4.1 rejects ICC reconstruction. The real LittleCMS sRGB ICC cases use
+the known equivalent sRGB nclx-only source as reference, both with alternate and
+base working primaries. This validates that profile, not arbitrary ICC color
+spaces. The JPEG test builds the pre-refactor decoder from Git commit `1a045b1`
+and requires its actual rendered pixels to match the current decoder exactly,
+in both HDR and SDR. Keep that commit reachable when running this developer test.
+
+The harness also simulates extended-canvas rejection, both runtime dynamic-range
+transitions, and gain-plane decode failure. Ordinary AVIF stays silent; unsupported
+tmap metadata and failed gain decoding produce one warning and no HDR state.
+The unsupported fixture happens to decode as base-only in tested Chromium; native
+fallback behavior on other browsers must not be promised to be SDR.
+
 These checks establish computed HDR values and SDR gating, not display nits,
-OS tone mapping, or Safari/iPhone correctness.
+OS tone mapping, Safari/iPhone correctness, or end-to-end 10/12-bit precision.
+The AVIF files are 10-bit, but browser ImageBitmap/texture conversion and the
+gain-map rgba8 texture may quantize. The tolerance is per-pixel peak plus an
+absolute term, not a claim of <2% error in every small RGB component.
