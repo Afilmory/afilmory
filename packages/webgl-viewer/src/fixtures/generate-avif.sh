@@ -12,6 +12,13 @@ for primary in 1 12 9; do
     --ignore-profile -d 10 -y 444 -q 90 --qgain-map 90 --downscaling 2
 done
 avifenc --ignore-exif --ignore-xmp --ignore-icc --cicp 1/13/6 "$tmp/base.png" sdr.avif
+magick -size 32x24 xc:'#704030' -fill '#306080' -draw 'rectangle 16,0 31,23' -depth 16 "$tmp/color-base.png"
+magick -size 32x24 xc:'#d08060' -fill '#70b0e0' -draw 'rectangle 16,0 31,23' -depth 16 "$tmp/color-hdr.png"
+for primary in 1 12 9; do
+  avifgainmaputil combine "$tmp/color-base.png" "$tmp/color-hdr.png" "gainmap-color-$primary.avif" \
+    --cicp-base "$primary/13/6" --cicp-alternate 9/16/9 \
+    --ignore-profile -d 10 -y 444 -q 90 --qgain-map 90 --downscaling 2
+done
 magick "$tmp/base.png" -strip sdr.jpg
 python3 - <<'PY'
 from pathlib import Path
