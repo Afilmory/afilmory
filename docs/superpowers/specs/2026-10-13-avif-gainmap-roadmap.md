@@ -24,6 +24,35 @@ Rec.2020/PQ f16 output to avoid its clipped linear output. ICC uses an equivalen
 known sRGB reference because libavif cannot reconstruct ICC. Reports are generated
 at `.local/avif-verification/engine-readback.json`; GPU values are not screen nits.
 
+## Product integration is a separate acceptance layer
+
+Read-only inspection of this branch identifies three integration gaps; the viewer
+changes do not claim complete Builder, thumbnail or metadata-panel AVIF support:
+
+- `packages/builder/src/photo/gainmap-detector.ts` only inspects EXIF
+  `ContainerDirectory`. `image-pipeline.ts` also checks `MPImageType` and
+  `UniformResourceName` when assigning manifest `isHDR`. There is no structural
+  AVIF tmap/item-reference detection here. Some files may be recognized through
+  their extracted EXIF fields, but those heuristics do not establish detection for
+  AVIF files without those fields or distinguish unsupported gain-map layouts.
+- `packages/builder/src/image/thumbnail.ts` sends the original buffer through
+  Sharp, auto-rotation, resize and JPEG encoding. It does not explicitly select
+  the AVIF SDR base or define gain-map tone mapping and output color policy.
+  ThumbHash uses that generated thumbnail. Current output depends on the pinned
+  Sharp/libvips decoder; this is a missing policy/validation guarantee, not proof
+  that existing thumbnails are wrong.
+- `apps/web/src/modules/metadata/formatExifData.tsx` translates EXIF `ColorSpace`,
+  and `ExifPanel.tsx` displays it as color space. The selected EXIF schema does
+  not normalize AVIF nclx/ICC colorimetry. An EXIF `Uncalibrated` value alone does
+  not mean the AVIF lacks nclx/ICC or that the renderer ignores its color profile.
+  The panel currently cannot explain that distinction.
+
+The displayed HDR badge is already driven by the viewer's `onHDRChange` callback
+in `ProgressiveImage.tsx`, not solely by manifest `isHDR`. Future Builder metadata
+must preserve this distinction between an HDR-capable file and HDR output actually
+enabled on the current renderer/display. The present Engine tests bypass Builder
+and the full application; they are not product-integration acceptance tests.
+
 ## Prioritized follow-up plan
 
 Each item needs its own reviewable change, fixtures, warnings and fallback tests.
@@ -32,6 +61,9 @@ interoperability evidence exist.
 
 | Priority | Work and benefit | Dependency / acceptance | Until then |
 | --- | --- | --- | --- |
+| P1 | Builder AVIF gain-map detection and manifest semantics | Add bounded structural tmap/item-reference inspection or a shared environment-neutral inspector; define file gain-map presence separately from supported reconstruction/current display. Build public fixtures with and without legacy EXIF hints, ordinary AVIF, malformed and unsupported layouts; verify manifest migration/cache invalidation and full-app runtime HDR badge behavior. Preserve JPEG detection regression | Keep existing EXIF heuristics; do not claim `isHDR` reliably describes every AVIF or gate actual rendering on that flag |
+| P1 | Explicit SDR thumbnail/ThumbHash policy | Pin/test Sharp/libvips behavior and choose SDR-primary extraction or defined tone mapping; normalize/profile JPEG output intentionally. Compare thumbnails against SDR reference for nclx/ICC, rotation/crop and saturated colors, verify full-app thumbnail→SDR viewer transition and ThumbHash consistency. Include cache regeneration/versioning and clear failure diagnostics | Existing generic Sharp JPEG pipeline remains; no AVIF-specific SDR guarantee from the worker tests |
+| P2 | Consistent color metadata explanation | Normalize nclx primaries/transfer/matrix/range and ICC provenance into typed Builder metadata; define ICC/nclx precedence separately from the preserved source EXIF field. UI/i18n tests for EXIF `Uncalibrated` with valid P3/BT.2020 nclx or ICC, missing/contradictory fields and unsupported profiles; do not infer HDR from primaries or EXIF alone | Preserve raw EXIF information; do not relabel `Uncalibrated` as rendering failure or silently invent sRGB |
 | P1 | Real-world encoding corpus and precision: full/limited YUV 4:2:0 and 4:4:4, 8/10/12-bit, varied gain ratios; unequal multi-extents and idat; ICC+nclx and no ICC | Public/reproducible fixtures; compare decoded planes and final HDR/SDR pixels against libavif/LittleCMS; measure quantization, gradients, dark small components and saturated colors separately. Verify no claimed bit depth without measured preserved levels | Keep current browser path and document measured error; reject unsupported recipes |
 | P1 | Safari/iOS and physical HDR/SDR displays | Same numerical tests where WebGPU permits; test orientation/CORS/ICC; measure HDR highlights and SDR white with OS/display settings recorded, preferably a meter; test monitor changes | No physical-nits or cross-browser promise; existing browser/viewer failure path |
 | P1 | Broader matrix ICC and ICC-only AVIF | LittleCMS independent color reference for P3/Adobe RGB/custom TRCs; AV1 sequence-header parser for YUV when nclx absent; verify ICC precedence and D50 adaptation exactly once | ICC-only, LUT and cicp-tag profiles remain explicitly unsupported |
