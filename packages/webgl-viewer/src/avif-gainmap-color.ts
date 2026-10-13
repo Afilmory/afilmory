@@ -1,5 +1,5 @@
-import type { Matrix3 } from './jpeg-gainmap'
-import { inverseMatrix, multiplyMatrices } from './jpeg-gainmap'
+import type { Matrix3 } from './gainmap-color'
+import { inverseMatrix, multiplyMatrices } from './gainmap-color'
 
 // CICP primaries, D65 XYZ, column-major. Do not mix these with ICC D50 colorants.
 const primaries: Record<number, Matrix3> = {
