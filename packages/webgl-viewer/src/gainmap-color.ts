@@ -150,12 +150,20 @@ function validateTRC(tag: Uint8Array) {
   const p = Array.from({ length: counts[kind] }, (_, i) => view.getInt32(12 + i * 4) / 65536)
   const [g, a, b, c, d, e, f] = p
   if (g <= 0 || g > 128 || (kind > 0 && a <= 0)
-    || (kind >= 3 && (c < 0 || d < 0 || d > 1 || a * d + b < -1e-5))) {
+    || (kind >= 3 && (c < 0 || d < 0 || d > 1 || a * d + b < 0))) {
     throw new UnsupportedICCProfile('Unsupported ICC parametric curve domain')
   }
   // Reject discontinuous/nonmonotonic curves. The browser performs the actual TRC decoding.
-  if (kind >= 3 && Math.abs((a * d + b) ** g + (e ?? 0) - (c * d + (f ?? 0))) > 0.002) {
-    throw new UnsupportedICCProfile('Discontinuous ICC tone curve')
+  if (kind >= 3) {
+    const junction = (a * d + b) ** g + (e ?? 0)
+    const low = c * d + (f ?? 0)
+    const high = (a + b) ** g + (e ?? 0)
+    if (![junction, low, high].every(Number.isFinite) || Math.abs(junction - low) > 0.002) {
+      throw new UnsupportedICCProfile('Discontinuous or nonfinite ICC tone curve')
+    }
+  }
+  else if (kind > 0 && !Number.isFinite(Math.max(0, a + b) ** g + (c ?? 0))) {
+    throw new UnsupportedICCProfile('Nonfinite ICC tone curve')
   }
 }
 
@@ -175,6 +183,11 @@ export function readICCMatrixProfile(icc: Uint8Array): Matrix3 {
   }
   if ([...tags.keys()].some(name => /^(?:A2B|B2A|D2B|B2D)[0-3]$/.test(name))) {
     throw new UnsupportedICCProfile('ICC LUT profiles cannot use the matrix gain-map path')
+  }
+  // ICC v4.4 can identify HDR through CICP. Browser interpretation of that
+  // encoding must not silently enter this SDR matrix/TRC reconstruction path.
+  if (tags.has('cicp')) {
+    throw new UnsupportedICCProfile('ICC CICP profiles require separate SDR/HDR validation')
   }
   for (const name of ['rTRC', 'gTRC', 'bTRC']) {
     const tag = tags.get(name)

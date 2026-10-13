@@ -98,6 +98,38 @@ it('rejects LUT profiles even if matrix tags are present', () => {
   assert.throws(() => readICCMatrixProfile(syntheticICC(SRGB_TO_XYZ, [['A2B0', new Uint8Array(8)]])), UnsupportedICCProfile)
 })
 
+it('rejects ICC CICP profiles rather than assuming an SDR base from matrix tags', () => {
+  for (const transfer of [13, 16, 18]) {
+    const cicp = new Uint8Array(12)
+    cicp.set(encoder.encode('cicp'))
+    cicp.set([9, transfer, 0, 1], 8)
+    assert.throws(() => readICCMatrixProfile(syntheticICC(SRGB_TO_XYZ, [['cicp', cicp]])), UnsupportedICCProfile)
+  }
+})
+
+it('rejects fractional powers of negative junction values and overflowing endpoints', () => {
+  function withCurve(parameters: number[]) {
+    const profile = syntheticICC()
+    const tag = new Uint8Array(32)
+    tag.set(encoder.encode('para'))
+    const view = new DataView(tag.buffer)
+    view.setUint16(8, 3)
+    for (const [i, value] of parameters.entries()) {
+      view.setInt32(12 + i * 4, Math.round(value * 65536))
+    }
+    const result = new Uint8Array(profile.length + tag.length)
+    result.set(profile)
+    result.set(tag, profile.length)
+    const header = new DataView(result.buffer)
+    header.setUint32(0, result.length)
+    header.setUint32(136 + 12, profile.length)
+    header.setUint32(140 + 12, tag.length)
+    return result
+  }
+  assert.throws(() => readICCMatrixProfile(withCurve([2.4, 0.5, -1 / 65536, 1, 1 / 65536])), /domain/)
+  assert.throws(() => readICCMatrixProfile(withCurve([128, 32767, 0, 1, 0])), /nonfinite/)
+})
+
 it('rejects truncated headers, table bounds, duplicate tags and singular matrices', () => {
   for (const length of [0, 100, 131, 200]) {
     assert.throws(() => readICCMatrixProfile(syntheticICC().subarray(0, length)))
