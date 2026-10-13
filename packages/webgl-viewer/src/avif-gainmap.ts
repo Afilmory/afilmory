@@ -1,6 +1,7 @@
 import type { Box } from './avif-bmff'
 import { box, boxes, bytes, full, join, one, Reader, text, uint } from './avif-bmff'
-import { gainMapColorTransforms } from './avif-gainmap-color'
+import { avifColorTransforms, readAVIFColor, UnsupportedAVIFColor, UnsupportedICCProfile } from './avif-gainmap-icc'
+import { UnsupportedAVIFTransform, validateGainMapTransforms } from './avif-gainmap-transform'
 import type { GainMapMetadata, RGB } from './jpeg-gainmap'
 
 // ISO BMFF demux/remux only: compressed AV1 payloads are never transcoded.
@@ -21,7 +22,7 @@ export function inspectAVIFGainMap(buffer: ArrayBuffer): AVIFGainMapResult {
     return image ? { status: 'supported', image } : { status: 'none' }
   }
   catch (error) {
-    return { status: error instanceof UnsupportedAVIFGainMap ? 'unsupported' : 'invalid', reason: String(error) }
+    return { status: error instanceof UnsupportedAVIFGainMap || error instanceof UnsupportedAVIFColor || error instanceof UnsupportedICCProfile || error instanceof UnsupportedAVIFTransform ? 'unsupported' : 'invalid', reason: String(error) }
   }
 }
 function metadata(data: Uint8Array): GainMapMetadata {
@@ -47,7 +48,7 @@ function metadata(data: Uint8Array): GainMapMetadata {
   }
   const capacityMin = fraction()
   const capacityMax = fraction()
-  if (capacityMin < 0 || capacityMax <= capacityMin || capacityMax > 16) {
+  if (capacityMin !== 0 || capacityMax <= capacityMin || capacityMax > 16) {
     unsupported('Unsupported HDR-to-SDR or headroom range')
   }
   // Each channel array must have separate storage.
@@ -278,24 +279,25 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
     if (!result) {
       throw new Error('Missing AVIF properties')
     }
-    const unknown = result.find(p => !['ispe', 'pixi', 'av1C', 'colr', 'clli', 'mdcv'].includes(p.type)
+    const unknown = result.find(p => !['ispe', 'pixi', 'av1C', 'colr', 'clli', 'mdcv', 'clap', 'irot', 'imir'].includes(p.type)
       && (p.essential || ['irot', 'imir', 'clap', 'lsel', 'a1op'].includes(p.type)))
     if (unknown) {
       unsupported(`Unsupported AVIF property: ${unknown.type}`)
     }
     return result
   }
-  const cicp = (id: number) => {
-    const r = new Reader(one(props(id), 'colr').data)
-    if (r.text(4) !== 'nclx') {
-      unsupported('ICC AVIF requires separate validation')
-    }
-    return [r.uint(2), r.uint(2), r.uint(2), r.uint(1)]
+  validateGainMapTransforms(props(baseId), props(gainId), props(tone))
+  const color = (id: number) => readAVIFColor(props(id).filter(p => p.type === 'colr').map(p => p.data))
+  const baseProfile = color(baseId)
+  const alternateProfile = color(tone)
+  const baseColor = baseProfile.cicp
+  const gainProfile = color(gainId)
+  const gainColor = gainProfile.cicp
+  avifColorTransforms(baseProfile)
+  if (gainProfile.icc) {
+    unsupported('ICC gain samples are not supported')
   }
-  const baseColor = cicp(baseId)
-  const alternateColor = cicp(tone)
-  const gainColor = cicp(gainId)
-  if (!gainMapColorTransforms(baseColor[0]) || ![1, 6, 13, 14, 15].includes(baseColor[1])) {
+  if (!baseProfile.icc && ![1, 6, 13, 14, 15].includes(baseColor[1])) {
     unsupported('Unsupported SDR base color space or transfer function')
   }
   if (![0, 1, 5, 6, 9].includes(baseColor[2]) || ![0, 128].includes(baseColor[3])) {
@@ -309,7 +311,7 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
     throw new Error('Missing tmap payload')
   }
   const parameters = metadata(toneData)
-  const transforms = gainMapColorTransforms(parameters.useBaseColorSpace ? baseColor[0] : alternateColor[0])
+  const transforms = avifColorTransforms(parameters.useBaseColorSpace ? baseProfile : alternateProfile)
   if (!transforms) {
     unsupported('Unsupported gain-map working primaries')
   }
@@ -319,7 +321,7 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
       throw new Error('Missing AV1 payload')
     }
     const selected = props(id)
-      .filter(p => ['ispe', 'pixi', 'av1C', 'colr'].includes(p.type))
+      .filter(p => ['ispe', 'pixi', 'av1C', 'colr', 'clap', 'irot', 'imir'].includes(p.type))
       .map(p =>
         isGain && p.type === 'colr'
           ? box('colr', text('nclx'), uint(1, 2), uint(13, 2), uint(6, 2), bytes(128))

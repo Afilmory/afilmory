@@ -98,6 +98,7 @@ it('rejects unsupported metadata versions, reserved flags, and zero denominators
   assert.equal(inspectAVIFGainMap(mutateMetadata(2, 1)).status, 'unsupported')
   assert.equal(inspectAVIFGainMap(mutateMetadata(5, 1)).status, 'invalid')
   assert.equal(inspectAVIFGainMap(mutateMetadata(13, 0)).status, 'invalid')
+  assert.equal(inspectAVIFGainMap(mutateMetadata(9, 1)).status, 'unsupported') // nonzero base headroom
   assert.equal(inspectAVIFGainMap(mutate('pitm', 5, 2)).status, 'unsupported')
 })
 
