@@ -1508,6 +1508,9 @@ importers:
       tsdown:
         specifier: 0.22.2
         version: 0.22.2(oxc-resolver@11.24.2)(tsx@4.23.13)(typescript@6.0.3)
+      vitest:
+        specifier: 4.1.9
+        version: 4.1.9(@opentelemetry/api@1.9.1)(@types/node@26.4.1)(@vitest/coverage-v8@4.1.9)(vite@8.2.2(@types/node@26.4.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.1))
 
   packages/data:
     dependencies:

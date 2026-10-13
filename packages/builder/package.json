@@ -14,6 +14,8 @@
     "bump": "nbump",
     "cli": "tsx src/cli.ts",
     "cluster": "tsx src/cluster/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -37,7 +39,8 @@
   },
   "devDependencies": {
     "@afilmory/utils": "workspace:*",
-    "tsdown": "0.22.2"
+    "tsdown": "0.22.2",
+    "vitest": "4.1.9"
   },
   "publishConfig": {
     "access": "public",
