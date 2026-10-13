@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 
 import { it } from 'vitest'
 
@@ -57,6 +58,16 @@ function colr(type: string, data: Uint8Array) {
 }
 
 const nclx = colr('nclx', new Uint8Array([0, 12, 0, 13, 0, 6, 128]))
+
+it('reads a real LittleCMS sRGB matrix/TRC profile with D50-adapted primaries', () => {
+  const profile = readFileSync(new URL('./fixtures/srgb-matrix.icc', import.meta.url))
+  const matrix = readICCMatrixProfile(profile)
+  // LittleCMS uses ICC's rounded D50 (Z=0.8249); published sRGB matrices
+  // often use chromaticity-derived D50 (Z≈0.8252). This is not D65 data.
+  for (let i = 0; i < 9; i++) {
+    assert.ok(Math.abs(matrix[i] - SRGB_TO_XYZ[i]) < 0.0004)
+  }
+})
 
 it('keeps D50 ICC and D65 CICP conversion equivalent for the same RGB primaries', () => {
   for (const [space, primary] of [[SRGB_TO_XYZ, 1], [P3_TO_XYZ, 12]] as const) {
