@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { ExifInfo } from '@afilmory/og-renderer'
-import { renderOgImage } from '@afilmory/og-renderer'
+import { OG_IMAGE_FILE_EXTENSION, OG_IMAGE_MIME_TYPE, renderOgImage } from '@afilmory/og-renderer'
 import type { PhotoManifestItem } from '@afilmory/typing'
 import type { SatoriOptions } from 'satori'
 
@@ -25,7 +25,7 @@ const ogAssetsDir = path.join(repoRoot, 'be/apps/core/src/modules/content/og/ass
 const PLUGIN_NAME = 'afilmory:og-image'
 const RUN_STATE_KEY = 'state'
 const DEFAULT_DIRECTORY = '.afilmory/og-images'
-const DEFAULT_CONTENT_TYPE = 'image/png'
+const DEFAULT_CONTENT_TYPE = OG_IMAGE_MIME_TYPE
 const DEFAULT_SITE_NAME = 'Photo Gallery'
 const DEFAULT_ACCENT_COLOR = '#007bff'
 
@@ -63,12 +63,47 @@ interface PluginRunState {
   urlCache: Map<string, string>
   fonts?: SatoriOptions['fonts'] | null
   siteMeta?: SiteMeta
+  /**
+   * Ids whose card in the existing manifest was written by a previous format.
+   * Those photos are re-rendered instead of reusing a key that was never
+   * written. Tracked per photo so a partially migrated library converges
+   * without re-rendering the cards that are already current.
+   */
+  legacyFormatPhotoIds?: Set<string>
 }
 
 function normalizeDirectory(directory: string | undefined): string {
   const value = directory?.trim() || DEFAULT_DIRECTORY
   const normalized = value.replaceAll('\\', '/').replaceAll(/^\/+|\/+$/g, '')
   return normalized || DEFAULT_DIRECTORY
+}
+
+/**
+ * Decide whether an `ogImageUrl` recorded in an existing manifest was produced
+ * by a different (older) rendering format.
+ *
+ * Comparing extensions rather than hardcoding "png" keeps this working for any
+ * future format change: whatever the current extension is, anything else is
+ * stale. Photos whose cards predate the current format must be re-rendered,
+ * because the skipped path would otherwise hand out a URL for a key that was
+ * never uploaded.
+ */
+function isLegacyOgImageUrl(ogImageUrl: string | null | undefined, currentExtension: string): boolean {
+  if (!ogImageUrl) {
+    return false
+  }
+
+  const pathname = ogImageUrl.split(/[?#]/, 1)[0] ?? ''
+  const lastSegment = pathname.slice(pathname.lastIndexOf('/') + 1)
+  const dotIndex = lastSegment.lastIndexOf('.')
+
+  // No extension at all: nothing to compare, treat as current to avoid
+  // re-rendering the whole library on the first run after an upgrade.
+  if (dotIndex <= 0) {
+    return false
+  }
+
+  return lastSegment.slice(dotIndex + 1).toLowerCase() !== currentExtension.toLowerCase()
 }
 
 function trimSlashes(value: string | undefined | null): string | null {
@@ -380,6 +415,36 @@ export default function ogImagePlugin(options: OgImagePluginOptions = {}): Build
           externalStorageManager = new StorageManager(uploadableConfig)
         }
       },
+      /**
+       * Detect a format migration before any photo work begins.
+       *
+       * The existing manifest records the `ogImageUrl` of every card from the
+       * previous run. Photos whose card points at a different extension than the
+       * one this build writes must be re-rendered, because the skipped path only
+       * derives a URL and would otherwise hand out a key that was never uploaded.
+       */
+      afterManifestLoad: ({ payload, runShared, logger }) => {
+        if (!resolved || !resolved.enabled) {
+          return
+        }
+
+        const state = getOrCreateRunState(runShared)
+        const staleIds = new Set<string>()
+
+        for (const entry of payload.manifest.data ?? []) {
+          if (entry.id && isLegacyOgImageUrl(entry.ogImageUrl, OG_IMAGE_FILE_EXTENSION)) {
+            staleIds.add(entry.id)
+          }
+        }
+
+        state.legacyFormatPhotoIds = staleIds
+
+        if (staleIds.size > 0) {
+          logger.main.info(
+            `OG image plugin: ${staleIds.size} existing card(s) use a previous format; they will be re-rendered as .${OG_IMAGE_FILE_EXTENSION}.`,
+          )
+        }
+      },
       afterPhotoProcess: async ({ builder, payload, runShared, logger }) => {
         if (!resolved || !resolved.enabled) {
           return
@@ -411,9 +476,15 @@ export default function ogImagePlugin(options: OgImagePluginOptions = {}): Build
           return
         }
 
-        const shouldRender = type !== 'skipped' || payload.options.isForceMode || payload.options.isForceManifest
+        const staleLegacyCard = state.legacyFormatPhotoIds?.has(item.id) === true
 
-        const remoteKey = joinSegments(resolved.remotePrefix, `${item.id}.png`)
+        const shouldRender
+          = type !== 'skipped'
+            || payload.options.isForceMode
+            || payload.options.isForceManifest
+            || staleLegacyCard
+
+        const remoteKey = joinSegments(resolved.remotePrefix, `${item.id}.${OG_IMAGE_FILE_EXTENSION}`)
 
         if (!shouldRender) {
           try {
@@ -432,7 +503,7 @@ export default function ogImagePlugin(options: OgImagePluginOptions = {}): Build
         const formattedDate = formatDate(item.exif?.DateTimeOriginal ?? item.lastModified)
 
         try {
-          const png = await renderOgImage({
+          const image = await renderOgImage({
             template: {
               photoTitle: item.title || item.id || 'Untitled Photo',
               siteName: state.siteMeta.siteName || DEFAULT_SITE_NAME,
@@ -453,7 +524,7 @@ export default function ogImagePlugin(options: OgImagePluginOptions = {}): Build
             payload.options.isForceManifest
           ) {
             try {
-              await storageManager.uploadFile(remoteKey, Buffer.from(png), {
+              await storageManager.uploadFile(remoteKey, Buffer.from(image), {
                 contentType: resolved.contentType,
               })
               stateForUpload.uploaded.add(remoteKey)
