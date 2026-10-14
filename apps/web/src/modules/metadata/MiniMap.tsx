@@ -6,6 +6,7 @@ import Map from 'react-map-gl/maplibre'
 import { Link } from 'react-router'
 
 import { getMapStyle } from '~/lib/map/style'
+import { mapLibreWorkerUrl } from '~/lib/map/worker'
 
 interface MiniMapProps {
   latitude: number
@@ -38,6 +39,7 @@ export const MiniMap = ({ latitude, longitude, photoId }: MiniMapProps) => {
         zoom={15}
         style={{ width: '100%', height: '100%' }}
         mapStyle={getMapStyle()}
+        workerUrl={mapLibreWorkerUrl}
         attributionControl={false}
         onLoad={handleMapLoad}
         interactive={false}
