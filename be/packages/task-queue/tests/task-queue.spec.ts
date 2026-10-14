@@ -218,13 +218,13 @@ describe('taskQueue', () => {
   it('logs polling failures without terminating the loop', async () => {
     const pollError = new Error('driver failure')
     const driver: TaskQueueDriver = {
-      enqueue: vi.fn().mockResolvedValue(),
-      reschedule: vi.fn().mockResolvedValue(),
+      enqueue: vi.fn().mockResolvedValue(undefined),
+      reschedule: vi.fn().mockResolvedValue(undefined),
       poll: vi.fn().mockRejectedValue(pollError),
-      acknowledge: vi.fn().mockResolvedValue(),
-      fail: vi.fn().mockResolvedValue(),
+      acknowledge: vi.fn().mockResolvedValue(undefined),
+      fail: vi.fn().mockResolvedValue(undefined),
       stats: vi.fn().mockResolvedValue({ queued: 0, inFlight: 0, scheduled: 0 }),
-      shutdown: vi.fn().mockResolvedValue(),
+      shutdown: vi.fn().mockResolvedValue(undefined),
     }
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -239,12 +239,12 @@ describe('taskQueue', () => {
 
   it('handles abort-aware drivers gracefully', async () => {
     class AbortDriver implements TaskQueueDriver {
-      enqueue = vi.fn().mockResolvedValue()
-      reschedule = vi.fn().mockResolvedValue()
-      acknowledge = vi.fn().mockResolvedValue()
-      fail = vi.fn().mockResolvedValue()
+      enqueue = vi.fn().mockResolvedValue(undefined)
+      reschedule = vi.fn().mockResolvedValue(undefined)
+      acknowledge = vi.fn().mockResolvedValue(undefined)
+      fail = vi.fn().mockResolvedValue(undefined)
       stats = vi.fn().mockResolvedValue({ queued: 0, inFlight: 0, scheduled: 0 })
-      shutdown = vi.fn().mockResolvedValue()
+      shutdown = vi.fn().mockResolvedValue(undefined)
       poll = vi.fn(
         ({ signal }: { signal: AbortSignal }) =>
           new Promise((_resolve, reject) => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { TaskProcessor } from '../src/task-processor.decorator'
 import { TaskQueue } from '../src/task-queue'
 
-describe('TaskProcessor decorator', () => {
+describe('taskProcessor decorator', () => {
   it('auto-registers handlers on the default queue property', async () => {
     class DemoWorker {
       public queue: TaskQueue
@@ -11,7 +11,6 @@ describe('TaskProcessor decorator', () => {
 
       constructor() {
         this.queue = new TaskQueue({
-          start: false,
           name: 'demo',
         })
       }
@@ -23,14 +22,14 @@ describe('TaskProcessor decorator', () => {
     }
 
     const worker = new DemoWorker()
-    await worker.onModuleInit?.()
+    await (worker as { onModuleInit?: () => Promise<void> }).onModuleInit?.()
     await worker.queue.start({ pollIntervalMs: 1 })
 
     await expect(worker.queue.enqueue({ name: 'demo-task', payload: 'ping' })).resolves.toMatchObject({
       name: 'demo-task',
     })
 
-    await new Promise((resolve) => setTimeout(resolve, 10))
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     expect(worker.calls).toHaveLength(1)
     expect(worker.calls[0]?.payload).toBe('ping')
@@ -44,8 +43,8 @@ describe('TaskProcessor decorator', () => {
       public secondaryQueue: TaskQueue
 
       constructor() {
-        this.primaryQueue = new TaskQueue({ start: false, name: 'primary' })
-        this.secondaryQueue = new TaskQueue({ start: false, name: 'secondary' })
+        this.primaryQueue = new TaskQueue({ name: 'primary' })
+        this.secondaryQueue = new TaskQueue({ name: 'secondary' })
       }
 
       @TaskProcessor('primary-task', { queueProperty: 'primaryQueue' })
@@ -60,7 +59,7 @@ describe('TaskProcessor decorator', () => {
     }
 
     const worker = new MultiQueueWorker()
-    await worker.onModuleInit?.()
+    await (worker as { onModuleInit?: () => Promise<void> }).onModuleInit?.()
 
     await expect(worker.primaryQueue.enqueue({ name: 'primary-task', payload: null })).resolves.toMatchObject({
       name: 'primary-task',

@@ -10,16 +10,16 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@remotion/cli": "4.0.529",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "remotion": "4.0.529"
+    "@remotion/cli": "4.0.535",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.535"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.6.5",
     "@types/react": "catalog:",
-    "playwright": "1.63.0",
-    "tsx": "^4.22.4",
+    "playwright": "1.64.0",
+    "tsx": "^4.23.15",
     "typescript": "catalog:"
   }
 }

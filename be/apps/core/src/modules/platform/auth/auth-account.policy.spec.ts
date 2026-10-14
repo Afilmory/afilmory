@@ -17,11 +17,10 @@ describe('explicit OAuth account linking', () => {
           clientId: 'test-client',
           clientSecret: 'test-secret',
           getUserInfo: async () => ({
-            data: {},
+            data: { id: providerAccountId } as any,
             user: {
               email: 'alternate@example.com',
               emailVerified: true,
-              id: providerAccountId,
               name: 'Alternate Identity',
             },
           }),

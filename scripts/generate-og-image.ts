@@ -1,6 +1,9 @@
+import { Buffer } from 'node:buffer'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import process from 'node:process'
 
+import type { Sharp } from 'sharp'
 import sharp from 'sharp'
 
 import { buildTimePhotoLoader } from './photo-loader.js'
@@ -16,10 +19,8 @@ async function getLatestPhotos(count = 4) {
       return 0
     }
 
-    const aDate =
-      (a.exif.DateTimeOriginal as unknown as string) || a.lastModified
-    const bDate =
-      (b.exif.DateTimeOriginal as unknown as string) || b.lastModified
+    const aDate = (a.exif.DateTimeOriginal as unknown as string) || a.lastModified
+    const bDate = (b.exif.DateTimeOriginal as unknown as string) || b.lastModified
     return bDate.localeCompare(aDate)
   })
 
@@ -33,28 +34,22 @@ async function downloadAndProcessThumbnail(thumbnailUrl: string, size = 150) {
     if (thumbnailUrl.startsWith('/')) {
       const localPath = join(process.cwd(), 'public', thumbnailUrl)
       if (existsSync(localPath)) {
-        return await sharp(localPath)
-          .resize(size, size, { fit: 'cover' })
-          .png()
-          .toBuffer()
+        return await sharp(localPath).resize(size, size, { fit: 'cover' }).png().toBuffer()
       }
     }
 
     // 如果是 URL，需要下载（这里先返回 null，后面可以添加网络下载功能）
     console.warn(`Cannot download thumbnail from URL: ${thumbnailUrl}`)
     return null
-  } catch (error) {
+  }
+  catch (error) {
     console.warn(`Failed to process thumbnail: ${thumbnailUrl}`, error)
     return null
   }
 }
 
 // 创建带特效的照片（旋转、阴影、边框）
-async function createPhotoWithEffects(
-  imageBuffer: Buffer,
-  size: number,
-  rotation: number,
-) {
+async function createPhotoWithEffects(imageBuffer: Buffer, size: number, rotation: number) {
   try {
     // 计算旋转后需要的画布大小
     const diagonal = Math.ceil(size * Math.sqrt(2))
@@ -122,7 +117,8 @@ async function createPhotoWithEffects(
       .rotate(rotation, { background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toBuffer()
-  } catch (error) {
+  }
+  catch (error) {
     console.warn('Failed to create photo with effects:', error)
     // 如果特效失败，返回简单的边框版本（适配黑色主题）
     return await sharp(imageBuffer)
@@ -149,15 +145,7 @@ interface OGImageOptions {
 }
 
 export async function generateOGImage(options: OGImageOptions) {
-  const {
-    title,
-    description,
-    width = 1200,
-    height = 630,
-    outputPath,
-    includePhotos = true,
-    photoCount = 4,
-  } = options
+  const { title, description, width = 1200, height = 630, outputPath, includePhotos = true, photoCount = 4 } = options
 
   // 确保输出目录存在
   const outputDir = join(process.cwd(), 'public')
@@ -166,7 +154,7 @@ export async function generateOGImage(options: OGImageOptions) {
   }
 
   try {
-    let finalImage: sharp.Sharp
+    let finalImage: Sharp
 
     if (includePhotos) {
       // 获取最新照片
@@ -206,9 +194,7 @@ export async function generateOGImage(options: OGImageOptions) {
         </svg>
       `
 
-      const gradientBuffer = await sharp(Buffer.from(gradientSvg))
-        .png()
-        .toBuffer()
+      const gradientBuffer = await sharp(Buffer.from(gradientSvg)).png().toBuffer()
 
       // 创建文字层 - 使用 SVG 路径绘制 Helvetica 风格字体
       const wrappedTitle = wrapSVGText(title, width - 120, {
@@ -270,10 +256,7 @@ export async function generateOGImage(options: OGImageOptions) {
       const length = Math.min(latestPhotos.length, photoCount)
       for (let i = length - 1; i >= 0; i--) {
         const photo = latestPhotos[i]
-        const thumbnailBuffer = await downloadAndProcessThumbnail(
-          photo.thumbnailUrl,
-          photoSize,
-        )
+        const thumbnailBuffer = await downloadAndProcessThumbnail(photo.thumbnailUrl, photoSize)
 
         if (thumbnailBuffer) {
           const rotation = rotations[i] || 0
@@ -282,11 +265,7 @@ export async function generateOGImage(options: OGImageOptions) {
           const y = baseY + offset.y
 
           // 创建带阴影和边框的照片
-          const photoWithEffects = await createPhotoWithEffects(
-            thumbnailBuffer,
-            photoSize,
-            rotation,
-          )
+          const photoWithEffects = await createPhotoWithEffects(thumbnailBuffer, photoSize, rotation)
 
           composite.push({
             input: photoWithEffects,
@@ -294,15 +273,14 @@ export async function generateOGImage(options: OGImageOptions) {
             left: x,
           })
 
-          console.info(
-            `📷 Added photo: ${photo.title} at position (${x}, ${y}) with rotation ${rotation}°`,
-          )
+          console.info(`📷 Added photo: ${photo.title} at position (${x}, ${y}) with rotation ${rotation}°`)
         }
       }
 
       // 合成最终图像
       finalImage = canvas.composite(composite)
-    } else {
+    }
+    else {
       // 不包含照片的简单版本 - 黑色主题，使用 SVG 路径绘制字体
       const simpleWrappedTitle = wrapSVGText(title, width - 120, {
         fontSize: 72,
@@ -320,16 +298,11 @@ export async function generateOGImage(options: OGImageOptions) {
         letterSpacing: 3,
       })
 
-      const simpleDescriptionSVG = renderSVGText(
-        simpleWrappedDescription,
-        60,
-        256,
-        {
-          fontSize: 32,
-          color: 'rgba(255,255,255,0.9)',
-          letterSpacing: 1.5,
-        },
-      )
+      const simpleDescriptionSVG = renderSVGText(simpleWrappedDescription, 60, 256, {
+        fontSize: 32,
+        color: 'rgba(255,255,255,0.9)',
+        letterSpacing: 1.5,
+      })
 
       const simpleFooterSVG = renderSVGText(simpleFooterText, 60, 526, {
         fontSize: 24,
@@ -380,7 +353,8 @@ export async function generateOGImage(options: OGImageOptions) {
 
     console.info(`✅ OG image generated: ${fullOutputPath}`)
     return fullOutputPath
-  } catch (error) {
+  }
+  catch (error) {
     console.error('❌ Error generating OG image:', error)
     throw error
   }

@@ -215,7 +215,7 @@ export class AuthProvider implements OnModuleInit {
           session: authSessions,
           account: authAccounts,
           verification: authVerifications,
-          subscription: creemSubscriptions,
+          creem_subscription: creemSubscriptions,
         },
       }),
       socialProviders: socialProviders as BetterAuthOptions['socialProviders'],

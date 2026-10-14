@@ -9,6 +9,7 @@ import Map from 'react-map-gl/maplibre'
 
 import { siteConfig } from '~/config'
 import { getMapStyle } from '~/lib/map/style'
+import { mapLibreWorkerUrl } from '~/lib/map/worker'
 import { calculateMapBounds } from '~/lib/map-utils'
 import type { PhotoMarker } from '~/types/map'
 
@@ -230,6 +231,7 @@ export const Maplibre = ({
         {...viewState}
         style={{ width: '100%', height: '100%' }}
         mapStyle={getMapStyle()}
+        workerUrl={mapLibreWorkerUrl}
         projection={projection}
         attributionControl={false}
         interactiveLayerIds={geoJsonData ? ['data'] : undefined}

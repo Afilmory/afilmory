@@ -13,7 +13,7 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
-    "dotenv": "17.4.2",
-    "zod": "^4.4.3"
+    "dotenv": "18.0.7",
+    "zod": "^4.6.7"
   }
 }

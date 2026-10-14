@@ -16,17 +16,17 @@
     "test:watch": "vitest"
   },
   "peerDependencies": {
-    "ioredis": "^5.8.0"
+    "ioredis": "^6.0.0"
   },
   "dependencies": {
-    "@tsuki-hono/common": "0.0.3",
-    "@tsuki-hono/core": "0.0.3",
+    "@tsuki-hono/common": "0.0.6",
+    "@tsuki-hono/core": "0.0.6",
     "tsyringe": "^4.10.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3",
-    "@vitest/coverage-v8": "4.1.9",
-    "ioredis": "^5.11.1",
-    "vitest": "4.1.9"
+    "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "5.0.4",
+    "ioredis": "^6.0.0",
+    "vitest": "5.0.4"
   }
 }

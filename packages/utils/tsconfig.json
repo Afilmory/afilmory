@@ -7,6 +7,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "types": ["node"],
     "allowJs": false,
     "strict": true,
     "noImplicitAny": false,
@@ -17,5 +18,5 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
   },
-  "include": []
+  "include": ["src/**/*"]
 }

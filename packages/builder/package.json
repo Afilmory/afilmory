@@ -22,22 +22,22 @@
     "@resvg/resvg-js": "2.6.2",
     "@vingle/bmp-js": "^0.2.5",
     "blurhash": "2.0.5",
-    "c12": "4.0.0-beta.5",
+    "c12": "4.0.0-rc.2",
     "consola": "3.4.2",
     "dotenv-expand": "catalog:",
-    "execa": "9.6.1",
-    "exiftool-vendored": "36.0.0",
-    "fast-xml-parser": "5.9.0",
+    "execa": "10.1.1",
+    "exiftool-vendored": "39.0.1",
+    "fast-xml-parser": "5.11.2",
     "heic-convert": "2.1.0",
-    "heic-to": "1.5.2",
+    "heic-to": "1.6.6",
     "nunjucks": "3.2.4",
     "satori": "catalog:",
-    "sharp": "0.35.1",
+    "sharp": "0.35.5",
     "thumbhash": "0.1.1"
   },
   "devDependencies": {
     "@afilmory/utils": "workspace:*",
-    "tsdown": "0.22.2"
+    "tsdown": "0.23.1"
   },
   "publishConfig": {
     "access": "public",

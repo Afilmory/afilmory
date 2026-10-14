@@ -3,6 +3,7 @@
     "incremental": true,
     "ignoreDeprecations": "6.0",
     "target": "es2022",
+    "jsx": "preserve",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "module": "ESNext",

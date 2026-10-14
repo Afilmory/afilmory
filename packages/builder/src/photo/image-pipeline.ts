@@ -1,18 +1,20 @@
+import type { Buffer } from 'node:buffer'
 import crypto from 'node:crypto'
 import path from 'node:path'
 
 import type { PhotoManifestItem, ProcessPhotoResult } from '@afilmory/typing'
 import { compressUint8Array } from '@afilmory/utils'
+import type { Sharp } from 'sharp'
 import sharp from 'sharp'
 
 import type { BuilderOptions } from '../builder/builder.js'
+import { extractXmpMetadataFromExif } from '../image/exif.js'
 import {
   convertBmpToJpegSharpInstance,
   getImageMetadataWithSharp,
   isBitmap,
   preprocessImageBuffer,
 } from '../image/processor.js'
-import { extractXmpMetadataFromExif } from '../image/exif.js'
 import type { PluginRunState } from '../plugins/manager.js'
 import { THUMBNAIL_PLUGIN_DATA_KEY } from '../plugins/thumbnail-storage/shared.js'
 import type { S3ObjectLike } from '../types/s3.js'
@@ -32,9 +34,9 @@ const EMPTY_XMP_METADATA = {
 }
 
 export interface ProcessedImageData {
-  sharpInstance: sharp.Sharp
+  sharpInstance: Sharp
   imageBuffer: Buffer
-  metadata: { width: number; height: number }
+  metadata: { width: number, height: number }
 }
 
 export interface PhotoProcessingContext {
@@ -52,7 +54,7 @@ export interface PhotoProcessingContext {
  */
 export async function preprocessImage(
   photoKey: string,
-): Promise<{ rawBuffer: Buffer; processedBuffer: Buffer } | null> {
+): Promise<{ rawBuffer: Buffer, processedBuffer: Buffer } | null> {
   const loggers = getGlobalLoggers()
   const { storageManager, prefetchedBuffers } = getPhotoExecutionContext()
 
@@ -68,7 +70,8 @@ export async function preprocessImage(
     let imageBuffer: Buffer
     try {
       imageBuffer = await preprocessImageBuffer(rawImageBuffer, photoKey)
-    } catch (error) {
+    }
+    catch (error) {
       loggers.image.error(`预处理图片失败：${photoKey}`, error)
       return null
     }
@@ -77,7 +80,8 @@ export async function preprocessImage(
       rawBuffer: rawImageBuffer,
       processedBuffer: imageBuffer,
     }
-  } catch (error) {
+  }
+  catch (error) {
     loggers.image.error(`图片预处理失败：${photoKey}`, error)
     return null
   }
@@ -104,7 +108,8 @@ export async function processImageWithSharp(imageBuffer: Buffer, photoKey: strin
         sharpInstance = await convertBmpToJpegSharpInstance(imageBuffer)
         // Update the image buffer to reflect the new JPEG data from the Sharp instance.
         processedBuffer = await sharpInstance.toBuffer()
-      } catch (error) {
+      }
+      catch (error) {
         loggers.image.error(`转换 BMP 失败：${photoKey}`, error)
         return null
       }
@@ -122,7 +127,8 @@ export async function processImageWithSharp(imageBuffer: Buffer, photoKey: strin
       imageBuffer: processedBuffer,
       metadata,
     }
-  } catch (error) {
+  }
+  catch (error) {
     loggers.image.error(`Sharp 处理失败：${photoKey}`, error)
     return null
   }
@@ -166,11 +172,15 @@ export async function executePhotoProcessingPipeline(
   try {
     // 1. 预处理图片
     const imageData = await preprocessImage(photoKey)
-    if (!imageData) return null
+    if (!imageData) {
+      return null
+    }
 
     // 2. 处理图片并创建 Sharp 实例
     const processedData = await processImageWithSharp(imageData.processedBuffer, photoKey)
-    if (!processedData) return null
+    if (!processedData) {
+      return null
+    }
 
     const { sharpInstance, imageBuffer, metadata } = processedData
     const contentDigest = crypto.createHash('sha256').update(imageBuffer).digest('hex')
@@ -187,25 +197,22 @@ export async function executePhotoProcessingPipeline(
 
     // 4. 处理 EXIF 数据
     const exifData = await processExifData(imageBuffer, imageData.rawBuffer, photoKey, existingItem, options)
-    const exiftoolXmpMetadata = options.xmpKeywordsEnabled || options.xmpRegionsEnabled
-      ? extractXmpMetadataFromExif(exifData)
-      : EMPTY_XMP_METADATA
-    const xmpKeywords = options.xmpKeywordsEnabled
-      ? exiftoolXmpMetadata.keywords
-      : []
-    const xmpRegions = options.xmpRegionsEnabled
-      ? exiftoolXmpMetadata.regions
-      : []
+    const exiftoolXmpMetadata
+      = options.xmpKeywordsEnabled || options.xmpRegionsEnabled
+        ? extractXmpMetadataFromExif(exifData)
+        : EMPTY_XMP_METADATA
+    const xmpKeywords = options.xmpKeywordsEnabled ? exiftoolXmpMetadata.keywords : []
+    const xmpRegions = options.xmpRegionsEnabled ? exiftoolXmpMetadata.regions : []
 
     // 5. 检测 HDR GainMap（Ultra HDR 图片）
     const hasGainMap = detectGainMap({
-      exifData: exifData as Record<string, unknown> | null,
+      exifData: exifData as unknown as Record<string, unknown> | null,
     })
 
     // 6. 检测 Motion Photo（从图片中提取嵌入视频的元数据）
     const motionPhotoMetadata = detectMotionPhoto({
       rawImageBuffer: imageData.rawBuffer,
-      exifData: exifData as Record<string, unknown> | null,
+      exifData: exifData as unknown as Record<string, unknown> | null,
     })
 
     // 7. 处理 Live Photo（独立的视频文件）
@@ -253,28 +260,29 @@ export async function executePhotoProcessingPipeline(
       video:
         motionPhotoMetadata?.isMotionPhoto && motionPhotoMetadata.motionPhotoOffset !== undefined
           ? {
-            type: 'motion-photo',
-            offset: motionPhotoMetadata.motionPhotoOffset,
-            size: motionPhotoMetadata.motionPhotoVideoSize,
-            presentationTimestamp: motionPhotoMetadata.presentationTimestampUs,
-          }
+              type: 'motion-photo',
+              offset: motionPhotoMetadata.motionPhotoOffset,
+              size: motionPhotoMetadata.motionPhotoVideoSize,
+              presentationTimestamp: motionPhotoMetadata.presentationTimestampUs,
+            }
           : livePhotoResult.isLivePhoto
             ? {
-              type: 'live-photo',
-              videoUrl: livePhotoResult.livePhotoVideoUrl!,
-              s3Key: livePhotoResult.livePhotoVideoS3Key!,
-            }
+                type: 'live-photo',
+                videoUrl: livePhotoResult.livePhotoVideoUrl!,
+                s3Key: livePhotoResult.livePhotoVideoS3Key!,
+              }
             : undefined,
       // HDR 相关字段
       isHDR:
-        exifData?.MPImageType === 'Gain Map Image' ||
-        exifData?.UniformResourceName === 'urn:iso:std:iso:ts:21496:-1' ||
-        hasGainMap,
+        exifData?.MPImageType === 'Gain Map Image'
+        || exifData?.UniformResourceName === 'urn:iso:std:iso:ts:21496:-1'
+        || hasGainMap,
     }
 
     loggers.image.success(`✅ 处理完成：${photoKey}`)
     return photoItem
-  } catch (error) {
+  }
+  catch (error) {
     loggers.image.error(`❌ 处理管道失败：${photoKey}`, error)
     return null
   }
@@ -304,7 +312,7 @@ function mergeUniqueTags(...groups: string[][]): string[] {
  */
 export async function processPhotoWithPipeline(
   context: PhotoProcessingContext,
-  runtime: { runState: PluginRunState; builderOptions: BuilderOptions },
+  runtime: { runState: PluginRunState, builderOptions: BuilderOptions },
 ): Promise<{
   item: PhotoManifestItem | null
   type: 'new' | 'processed' | 'skipped' | 'failed'
@@ -343,7 +351,8 @@ export async function processPhotoWithPipeline(
   const isNewPhoto = !existingItem
   if (isNewPhoto) {
     loggers.image.info(`🆕 新照片：${photoKey}`)
-  } else {
+  }
+  else {
     loggers.image.info(`🔄 更新照片 (${reason})：${photoKey}`)
   }
 
@@ -355,7 +364,8 @@ export async function processPhotoWithPipeline(
     if (!processedItem) {
       resultType = 'failed'
     }
-  } catch (error) {
+  }
+  catch (error) {
     await builder.emitPluginEvent(runtime.runState, 'photoProcessError', {
       options: runtime.builderOptions,
       context,

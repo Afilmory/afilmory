@@ -241,10 +241,7 @@ export class AuthController {
     try {
       const auth = await this.auth.getAuth()
       const result = await auth.api.generateOneTimeToken({ headers: context.req.raw.headers })
-      return this.redirectNativeOAuth(
-        context,
-        buildNativeOAuthCallbackUrl(target, { code: result.token }),
-      )
+      return this.redirectNativeOAuth(context, buildNativeOAuthCallbackUrl(target, { code: result.token }))
     }
     catch (error) {
       logger.warn('[AuthController] Native OAuth session exchange could not be prepared.', error)
@@ -271,10 +268,7 @@ export class AuthController {
       })
     }
 
-    return this.redirectNativeOAuth(
-      context,
-      buildNativeOAuthCallbackUrl(target, readNativeOAuthError(requestUrl)),
-    )
+    return this.redirectNativeOAuth(context, buildNativeOAuthCallbackUrl(target, readNativeOAuthError(requestUrl)))
   }
 
   @AllowPlaceholderTenant()
@@ -368,11 +362,24 @@ export class AuthController {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '至少需要保留一个已绑定的 OAuth Provider' })
     }
 
+    const requestedAccountId = body?.accountId?.trim()
+    const targetAccount = linkedProviderAccounts.find((account) => {
+      if (account.providerId !== providerId) {
+        return false
+      }
+      if (!requestedAccountId) {
+        return true
+      }
+      return account.accountId === requestedAccountId || account.id === requestedAccountId
+    })
+    if (!targetAccount) {
+      throw new BizException(ErrorCode.COMMON_BAD_REQUEST, { message: '未找到要解绑的 OAuth 账号' })
+    }
+
     const result = await auth.api.unlinkAccount({
       headers,
       body: {
-        providerId,
-        accountId: body?.accountId?.trim() || undefined,
+        accountId: targetAccount.id,
       },
       use: [freshSessionMiddleware],
       asResponse: true,

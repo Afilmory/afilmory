@@ -166,7 +166,7 @@ export class PhotoUploadParser {
 
           const buffer = Buffer.concat(chunks)
           files.push({
-            filename: info.filename,
+            filename: info.filename ?? '',
             buffer,
             contentType: info.mimeType || undefined,
             directory,

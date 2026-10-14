@@ -10,16 +10,16 @@
     "type-check": "astro check && tsc --noEmit"
   },
   "dependencies": {
-    "@astrojs/react": "^6.0.4",
-    "astro": "^7.2.4",
+    "@astrojs/react": "^7.0.1",
+    "astro": "^7.3.8",
     "clsx": "2.1.1",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "tailwind-merge": "^3.3.1"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
-    "@tailwindcss/vite": "4.3.1",
+    "@tailwindcss/vite": "4.3.3",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "tailwindcss": "catalog:",

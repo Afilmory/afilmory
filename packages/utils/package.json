@@ -10,9 +10,9 @@
   "dependencies": {
     "@afilmory/typing": "workspace:*",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
-    "motion": "14.0.0"
+    "motion": "14.2.0"
   }
 }
