@@ -8,16 +8,16 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@afilmory/env": ["packages/env/src"],
-      "@afilmory/env/*": ["packages/env/src/*"],
-      "@afilmory/db": ["packages/db/src"],
-      "@afilmory/db/*": ["packages/db/src/*"],
-      "@afilmory/framework": ["packages/framework/src"],
-      "@afilmory/framework/*": ["packages/framework/src/*"],
-      "@afilmory/task-queue": ["packages/task-queue/src"],
-      "@afilmory/task-queue/*": ["packages/task-queue/src/*"],
-      "@afilmory/websocket": ["packages/websocket/src"],
-      "@afilmory/websocket/*": ["packages/websocket/src/*"]
+      "@afilmory/env": ["./packages/env/src"],
+      "@afilmory/env/*": ["./packages/env/src/*"],
+      "@afilmory/db": ["./packages/db/src"],
+      "@afilmory/db/*": ["./packages/db/src/*"],
+      "@afilmory/framework": ["./packages/framework/src"],
+      "@afilmory/framework/*": ["./packages/framework/src/*"],
+      "@afilmory/task-queue": ["./packages/task-queue/src"],
+      "@afilmory/task-queue/*": ["./packages/task-queue/src/*"],
+      "@afilmory/websocket": ["./packages/websocket/src"],
+      "@afilmory/websocket/*": ["./packages/websocket/src/*"]
     },
     "allowJs": true,
     "strict": true,
@@ -29,5 +29,16 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true
-  }
+  },
+  "references": [
+    { "path": "./apps/core" },
+    { "path": "./apps/dashboard" },
+    { "path": "./apps/oauth-gateway" },
+    { "path": "./packages/db" },
+    { "path": "./packages/env" },
+    { "path": "./packages/redis" },
+    { "path": "./packages/task-queue" },
+    { "path": "./packages/utils" }
+  ],
+  "files": []
 }

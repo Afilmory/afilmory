@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",
-    "hono": "4.12.34",
+    "hono": "4.13.13",
     "satori": "catalog:"
   }
 }

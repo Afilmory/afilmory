@@ -32,8 +32,8 @@ declare global {
 
   export type ComponentType<P = object> = {
     className?: string
-  } & PropsWithChildren &
-    P
+  } & PropsWithChildren
+  & P
 }
 
 declare module 'react' {

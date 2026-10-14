@@ -8,6 +8,6 @@
     "./*": "./src/*"
   },
   "dependencies": {
-    "exiftool-vendored": "36.0.0"
+    "exiftool-vendored": "39.0.1"
   }
 }

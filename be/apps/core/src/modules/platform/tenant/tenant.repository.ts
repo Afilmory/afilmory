@@ -101,7 +101,10 @@ export class TenantRepository {
 
     if (search) {
       const searchLike = `%${search}%`
-      conditions.push(or(ilike(tenants.name, searchLike), ilike(tenants.slug, searchLike)))
+      const searchClause = or(ilike(tenants.name, searchLike), ilike(tenants.slug, searchLike))
+      if (searchClause) {
+        conditions.push(searchClause)
+      }
     }
 
     const where = and(...conditions)

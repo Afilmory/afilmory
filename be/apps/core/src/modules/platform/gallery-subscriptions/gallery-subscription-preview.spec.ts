@@ -19,6 +19,8 @@ const base = {
   lastModified: '',
   size: 1,
   exif: null,
+  keywords: [],
+  regions: [],
   toneAnalysis: null,
   location: null,
 }

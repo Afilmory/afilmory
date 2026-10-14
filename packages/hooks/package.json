@@ -11,13 +11,13 @@
     "react": "^19.1.1"
   },
   "dependencies": {
-    "jotai": "^2.20.1",
+    "jotai": "^3.0.1",
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

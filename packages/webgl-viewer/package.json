@@ -30,16 +30,16 @@
     }
   },
   "dependencies": {
-    "fast-xml-parser": "5.9.0"
+    "fast-xml-parser": "5.11.2"
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "@webgpu/types": "^0.1.72",
+    "@webgpu/types": "^0.1.74",
     "nbump": "2.1.8",
-    "react": "^19.2.7",
-    "tsdown": "0.22.2",
-    "unplugin-dts": "1.0.2",
-    "vite": "8.0.16",
-    "vitest": "4.1.9"
+    "react": "^19.3.0",
+    "tsdown": "0.23.1",
+    "unplugin-dts": "1.1.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.4"
   }
 }

@@ -17,13 +17,13 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "^0.45.4",
     "nodejs-snowflake": "^2.0.1",
-    "pg": "^8.21.0",
-    "pg-native": "3.8.0",
-    "zod": "^4.4.3"
+    "pg": "^8.23.1",
+    "pg-native": "3.9.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "drizzle-kit": "0.31.10"
+    "drizzle-kit": "0.31.11"
   }
 }

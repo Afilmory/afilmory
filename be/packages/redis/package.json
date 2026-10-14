@@ -12,6 +12,6 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
-    "ioredis": "^5.11.1"
+    "ioredis": "^6.0.0"
   }
 }

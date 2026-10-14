@@ -23,14 +23,14 @@
   },
   "dependencies": {
     "@use-gesture/react": "^10.3.1",
-    "motion": "14.0.0"
+    "motion": "14.2.0"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "tsdown": "0.22.2"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tsdown": "0.23.1"
   },
   "publishConfig": {
     "access": "public",
