@@ -1,90 +1,74 @@
 # AVIF gain maps in the tiled WebGPU viewer
 
-## Problem and architecture
+## Architecture
 
-JPEG gain maps already reach the tiled WebGPU renderer, but an AVIF containing a
-tone-map derived item currently loses that information. Fetch one original file;
-extract its two compressed AV1 items in the texture worker; remux each into a
-standalone AVIF Blob; decode through createImageBitmap; reuse existing GPU tiles,
-matrices and reconstruction. No encoder, WASM decoder, extra network asset, build
-manifest field, feature flag, or native-image viewer is introduced.
+A static AVIF containing an ISO tone-map derived item can use the same tiled HDR renderer as JPEG gain maps.
+The texture Worker fetches one original, resolves its base/gain AV1 items, remuxes each into an in-memory AVIF Blob, and reuses the existing GPU textures, transforms and reconstruction.
+There is no AV1 re-encoding, bundled software decoder, extra image request, manifest field or feature flag.
+The format reference is [AVIF 1.2.0](https://aomediacodec.github.io/av1-avif/v1.2.0.html), particularly tone-map items and item properties.
 
-Reference: AVIF 1.2.0 §4.2.2, §6, §9
-<https://aomediacodec.github.io/av1-avif/v1.2.0.html>.
+`avif-bmff.ts` supplies bounded container primitives; `avif-gainmap.ts` owns item resolution, metadata and capability decisions.
+Color and geometry policies live in `avif-gainmap-icc.ts`, `avif-gainmap-color.ts` and `avif-gainmap-transform.ts`.
+`gainmap-color.ts` shares ICC matrix utilities with JPEG while retaining JPEG's existing accepted-profile policy.
+The Worker consumes a discriminated supported/none/unsupported/invalid result.
+New layouts or color spaces should extend those policies instead of adding shader format branches.
 
-## Boundaries and extension points
+The browser color-manages the SDR base through ImageBitmap.
+Colored 8-bit and all 10/12-bit gain items use native ImageDecoder YUV samples, explicit full-range BT.601 conversion and centered 4:2:0 interpolation in `avif-gainmap-decode.ts`.
+Their fractional RGB values remain float16 through bitmaps and GPU textures because gain values are data, not display colors.
+Monochrome 8-bit gain retains the bitmap/rgba8 path.
+Base conversion remains browser-dependent; storage depth does not imply end-to-end precision.
 
-`avif-bmff.ts` provides bounds-checked container primitives. `avif-gainmap.ts`
-owns item references, properties, metadata and capability decisions.
-`avif-gainmap-color.ts` maps supported CICP primaries to D65 linear matrices.
-`gainmap-color.ts` shares bounded matrix/TRC ICC inspection and D50 colorants
-with JPEG; `avif-gainmap-icc.ts` handles AVIF color-property precedence.
-`avif-gainmap-transform.ts` validates aligned clean aperture/rotation/mirror
-properties while retaining native browser decoding of both planes.
-The worker consumes a discriminated result: supported, none, unsupported, invalid.
-Supporting another layout should extend item resolution; another color space
-should extend color policy, without changing shader or worker message types.
+## Supported input policy
 
-Supported: static SDR-primary AV1 items; sRGB, Display P3, BT.2020 primaries;
-SDR transfer characteristics 1/6/13/14/15 normalized by browser color management;
-full/limited-range base matrices 0/1/5/6/9; one- or three-channel tmap metadata;
-file or idat extents. Gain samples currently require full-range BT.601 (including
-the unspecified matrix used by libavif). Gain reconstruction uses either base or
-alternate primaries according to metadata. GPU base textures are Display P3, so
-the input matrix always starts in Display P3, regardless of source primaries.
+Recommended input is a static SDR-primary AVIF with a 10-bit full-range 4:4:4 Display P3 base (`nclx` 12/13/6), and an 8-bit full-range 4:4:4 BT.601 gain map with half the base width and height.
+Bake orientation/crop into pixels for the simplest interoperable export.
+The gain-map metadata must describe the actual image; do not impose a fixed HDR boost on every photograph.
 
-Unknown nonessential descriptive properties are ignored. Unknown essential
-properties, grid/layered images, sequences, ICC-only color, auxiliary alpha/depth,
-fractional/misaligned or output-level transforms, HDR-primary reconstruction, and unsupported color
-recipes deliberately return unsupported. The parser does not claim full AVIF
-conformance. Numerical budgets limit compressed input to 128 MiB, decoded planes
-to 100 MP, container boxes to 4096 per level, and items/extents to 256. Selected
-payload copies together cannot exceed input length. These are viewer policies,
-not limits imposed by the AVIF standard.
+The parser accepts sRGB, Display P3 and BT.2020 primaries, SDR transfer identifiers 1/6/13/14/15, base matrix identifiers 0/1/5/6/9 and full/limited base range.
+Gain samples require full-range BT.601, including the unspecified matrix emitted by libavif which is explicitly pinned during remuxing.
+Native gain decoding accepts I420/I444 at 8/10/12 bits; explicitly sited gain chroma is unsupported.
+One- and three-channel tmap parameters, file/idat extents, and base/alternate gain working spaces are supported.
+Container parsing does not certify every permitted encoding combination.
 
-Both planes may carry integer-pixel `clap`, then `irot`, then `imir`. Their
-normalized crop and orientation must match, including when the gain map is lower
-resolution. Browser decoding applies preserved properties once. Other orders,
-repeated properties and transforms on the tmap output are conservatively rejected.
-Malformed/reserved values return invalid. This supports a common subset, not all
-valid HEIF transformation chains.
+Aligned integer-pixel `clap`, then `irot`, then `imir` are supported on both planes.
+The normalized crop region and orientation must match, including lower-resolution gain maps.
+The browser applies preserved transforms once; the native gain path applies the frame's reported rotation/flip once after sample extraction.
+Fractional, mismatched, repeated, differently ordered or tmap-output transforms are rejected.
 
-One matrix/TRC RGB ICC v2/v4 (`prof`/`rICC`) can coexist with one explicit nclx.
-ICC defines RGB colorimetry; nclx supplies YUV matrix/range. Browser color
-management applies the TRC; the shader operates in linear RGB. ICC colorants
-remain D50 and are not adapted a second time. Matrix/TRC acceptance is broader
-than browser validation: real LittleCMS sRGB is tested; other matrix profiles
-need a larger interoperability corpus. ICC-only files, LUT profiles, gain-plane
-ICC, profiles containing the ICC `cicp` HDR/SDR tag, duplicates and malformed
-curves are not accepted. JPEG's pre-existing profile policy remains unchanged.
+One matrix/TRC RGB ICC v2/v4 profile can coexist with explicit nclx.
+ICC controls RGB colorimetry and browser TRC decoding; nclx supplies YUV matrix/range.
+ICC colorants already use PCS D50 and must not receive a second chromatic adaptation.
+Real LittleCMS sRGB profiles have browser coverage; other matrix profiles have narrower parser coverage.
+ICC-only, LUT profiles, gain-plane ICC and ICC profiles carrying `cicp` are unsupported.
 
-## Failure behavior
+Grid/layered images, sequences, auxiliary alpha/depth, HDR-primary reconstruction and unknown essential properties are unsupported.
+Unknown nonessential descriptive properties are ignored.
+This is a bounded viewer adapter, not a general AVIF decoder or conformance checker.
+Input is limited to 128 MiB, each image to 100 MP, container boxes to 4096 per level, and items/extents to 256.
+Selected payload copies cannot exceed input length.
+Native gain samples plus the float16 conversion buffer have a separate 128 MiB budget; GPU texture accounting includes 8 bytes per float16 gain texel.
+These are application limits, not AVIF limits or total process-memory guarantees.
 
-No gain map is normal and silent. Unsupported capabilities and malformed gain-map
-containers produce one existing worker warning and decode the original through
-the browser, with no reconstructed-HDR metadata. This fallback may use a native
-browser tone-map implementation; it must not be described as guaranteed SDR.
-Failure to decode a remuxed base retries the original. Failure to decode a gain
-plane retains the decoded base and clears HDR metadata. If the browser cannot
-decode either base, the existing image error path applies. Warnings stay in the
-existing diagnostics channel, with no new untranslated UI strings.
+## Fallback and correctness boundaries
 
-## Validation and remaining scope
+Ordinary AVIF without a gain map is silent.
+Unsupported or invalid gain-map input produces one existing diagnostic warning and attempts original-file browser decoding without custom HDR metadata.
+Failure to decode an extracted base also retries the original.
+Gain decoding failure, unavailable precision APIs or a conversion budget violation retains the extracted SDR base and clears custom HDR state.
+If browser decoding also fails, the existing image error path applies.
+Original-file fallback is not guaranteed SDR because native browsers may interpret gain maps themselves.
+Warnings do not add untranslated product UI.
 
-Public synthetic fixtures cover three primaries, half-resolution gain maps and
-ordinary AVIF. Unit tests cover lossless remuxing, color matrix inversion,
-container corruption/truncation and unsupported capabilities. Scoped package
-Vitest, TypeScript and ESLint checks are required. Browser validation must decode
-both remuxed planes, request only the original, and exercise the complete Engine
-render path. `packages/webgl-viewer/tests/browser/run.py` compares float GPU
-readback with libavif reconstruction; its README records the reference limits.
-It covers SDR gating, runtime capability changes, unavailable extended canvas,
-transforms, ICC, warning/fallback behavior and exact old/new JPEG ICC pixels.
+The renderer retains its existing full-alternate reconstruction and extended-canvas tone mapping; adaptive display-headroom weighting is separate work.
+Browser base YUV-to-RGB conversion has known precision/interpolation limitations, especially 12-bit 4:2:0 edges.
+Do not rewrite the shared shader merely to match libavif's YUV gain resizing policy.
+Safari's shared external-image color-upload discrepancy is separately tracked; Chromium/Edge numerical validation does not establish Safari/iPhone or physical-display correctness.
+Builder HDR discovery, color metadata UI and HDR thumbnail generation are separate integration work.
 
-This reuses existing full-alternate reconstruction and browser extended-range
-canvas tone mapping; adaptive display-headroom weighting is a separate renderer
-change. True HDR luminance and Safari/iPhone behavior require device validation.
+## Acceptance and contribution scope
 
-Implementation acceptance and future priorities are recorded in
-`2026-10-13-avif-gainmap-roadmap.md`; parsed capability is not a claim that every
-encoding variant or physical display has been tested.
+Keep implementation, focused package unit tests, small public fixtures with provenance, and reproducible browser/reference tooling in Git.
+Keep raw reports, screenshots, generated corpora and chronological investigation notes local; concise validation evidence belongs in the PR/release description.
+The [browser acceptance guide](../../../packages/webgl-viewer/tests/browser/README.md) defines hard correctness checks, explicit base-fidelity limitations and optional strict native comparisons.
+Future work is base conversion fidelity, real transformed/high-depth camera samples and numerical tile-seam coverage, followed by additional formats based on actual inputs.

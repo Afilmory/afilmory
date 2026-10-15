@@ -1,143 +1,76 @@
-# End-to-end AVIF rendering check
+# AVIF viewer acceptance
 
-`AVIF_DIAGNOSTICS=1` enables the [stage-by-stage controls](../../../../docs/superpowers/specs/2026-10-15-avif-stage-diagnosis.md):
-exact native YUV comparison, pre-upload bitmap readback, independently derived
-color matrices, uploaded-sample formula checks, matched sampling and a separate
-model of native scaling/intermediate depths. It writes a `-diagnostics.json`
-report and retains the original numerical gate. It requires native ImageDecoder
-and float16 P3 canvas readback. Chromium/Edge are verified; Safari remains tracked separately.
-
-**Latest AVIF fix:** colored 8-bit gain items now share the native YUV/float16
-path. Independent matched-sampling checks pass for all 80 AVIF and 80 JPEG
-scenarios; native reconstruction still differs for 12 AVIF and 38 JPEG cases.
-The full Chromium/Edge suites each have 140 scenarios and 26 native differences (including
-two sRGB/ICC cases with newly passing independent sampled-plane controls).
-All generated AVIF gains now have a separate 0.0003 normalized-sample gate,
-not just 10/12-bit gains. Missing native APIs warn and use the SDR base for
-colored 8-bit gains too. See the [fix and limits](../../../../docs/superpowers/specs/2026-10-15-avif-eight-bit-gain-precision.md).
-Historical counts below describe earlier revisions.
-
-The independent JPEG/AVIF comparison is available with `JPEG_BASELINE=1` using
-the same command below. It additionally requires libultrahdr 2.0.2, libjpeg-turbo
-3.2.0 and a C++ compiler. It generates 40 paired recipes (8-bit P3, mono/RGB gain,
-4:2:0/4:4:4, 1x/2x/4x gain scaling, color/ramp/constant controls), runs 160 HDR/SDR
-scenarios plus four legacy JPEG checks, and writes separate
-`engine-readback-<browser>-jpeg-baseline.json` reports. It does not run the large
-resource tests. Native-library, matched-sampling and GPU-formula results are
-reported separately; failed comparisons still return nonzero. Full methodology,
-observed counts and limits: [independent JPEG baseline](../../../../docs/superpowers/specs/2026-10-15-jpeg-avif-baseline.md).
-
-Run from a dependency-installed checkout:
+Run from an installed checkout with Node supporting Float16Array, Python 3, a C/C++ compiler, pkg-config, libavif 1.4.1 with gain maps, and Playwright Chromium.
+The paired JPEG run additionally needs libultrahdr 2.0.2 and libjpeg-turbo 3.2.0.
+No private photos, cloud credentials or running gallery are required.
 
 ```sh
+pnpm --filter @afilmory/webgl-viewer test
+pnpm --filter @afilmory/webgl-viewer type-check
 PLAYWRIGHT_MODULE=/path/to/@playwright/test python3 packages/webgl-viewer/tests/browser/run.py
+JPEG_BASELINE=1 PLAYWRIGHT_MODULE=/path/to/@playwright/test python3 packages/webgl-viewer/tests/browser/run.py
 ```
 
-The runner requires Chromium installed by Playwright, libavif 1.4.1 gain-map
-support, a C compiler and pkg-config. `NODE` overrides the node executable.
-It compiles an isolated test entry, serves temporary files on loopback and writes
-`.local/avif-verification/engine-readback-chromium.json`. Set
-`BROWSER_CHANNEL=msedge` to run installed Edge serially, producing a separate
-`engine-readback-msedge.json`. No private photos or cloud access.
-`BROWSER_CHANNEL=safari` uses the installed macOS Safari through `/usr/bin/safaridriver`
-and requires the user to enable Remote Automation. It opens an isolated automation
-session, runs the same Engine evaluation and closes it; it never toggles Safari
-settings. The test HTTP server supplies equivalent worker-fault injection and
-request accounting, with caching disabled. Its driver defaults to loopback port
-19615 (`SAFARIDRIVER_PORT` overrides it). Browser runs must remain serial.
+Set `BROWSER_CHANNEL=msedge` for installed Edge and run browsers serially.
+`NODE` overrides the Node executable.
+`BROWSER_CHANNEL=safari` uses macOS safaridriver with Remote Automation already enabled; Safari color upload correctness remains a separate limitation, not an accepted browser target.
+`SAFARIDRIVER_PORT` overrides its loopback port 19615.
+The runner closes its own automation session and does not change browser settings.
 
-The runner also generates 42 synthetic encoding variants and a 4096×3072 image
-through libavif. `encode-corpus.c` performs actual RGB→YUV conversion and AV1
-encoding; range flags are not changed without changing samples. The base matrix
-crosses 8/10/12-bit, 4:2:0/4:4:4, full/limited range for colored edges and a ramp,
-holding the gain plane at 8-bit 4:4:4 half resolution. Separate gain cases vary
-8/10/12-bit, 4:2:0 and full/quarter resolution with a fixed 10-bit 4:4:4 base.
-These are synthetic re-encodes, not a real-camera corpus or a test that proves
-preservation of 10/12-bit source gradients. Generated AVIFs and SHA-256/encoder
-metadata are retained under `.local/avif-verification/corpus` and `corpus.json`.
+## Required checks
 
-**2026-10-15 high-depth gain fix:** 136 rendering scenarios run in Chromium and
-Edge, with 24 remaining final-image numerical failures. The original cases and
-four added native-decoder failure/missing-API cases pass. The formerly failing
-colored 12-bit 4:2:0 gain case now passes. A separate comparison of native RGB16
-libavif gain samples to actual GPU textures requires error ≤ 0.0003 for every
-10/12-bit gain recipe, in both HDR and SDR modes; observed maximum is 0.000248.
-Final-image tolerance has not changed. The full suite is still not green.
+The harness uses the real Engine, Worker, native AV1 decoder, texture upload and shader.
+It substitutes only the render target with a same-format readable texture and mocks dynamic-range capability to exercise HDR and SDR branches.
+It requires one image request, finite output, opaque alpha, expected HDR state, correct warning/fallback behavior and no unexpected GPU/page errors.
+JPEG ICC rendering must remain pixel-identical to the decoder at upstream commit `9a0413ddefe02da95bea9218cb7961b09e47b143`; keep that commit available when running this developer test.
 
-**Earlier baseline:** the expanded suite intentionally exits nonzero on both
-Chromium 151.0.7922.34 and Edge 155.0.4283.45: 25 of 132 rendering scenarios
-exceed the unchanged numerical tolerance. All original 46 scenarios and two
-added extracted-base fallback scenarios pass. Do not call this a green browser
-suite. The JSON records all numerical failures before the runner fails, instead
-of losing later evidence after the first mismatch. See the roadmap for the
-remaining decoder/interpolation investigation.
+Generated corpus cases require all of the following:
 
-Safari 27.0.1 completes the same suite with 78 numerical failures, including
-colored SDR inputs. `color-upload.cjs` separately compares pure canvas/bitmap
-uploads to sRGB/P3 GPU textures, plus a P3 canvas read, without AVIF or gain maps.
-It reproduces Safari returning identical RGB for both GPU destination color spaces.
-The roadmap records this shared-renderer blocker; do not label Safari supported
-just because the files decode or the HDR state changes successfully.
-One final serial Safari repeat hit a 60-second WebDriver transport timeout before
-producing a complete report. The earlier complete Safari report is retained; the
-timeout is recorded separately. Transport/setup failures now write `.error.txt`
-instead of overwriting a complete JSON report. No automatic browser retry is used.
+- Gain texture samples agree with independently decoded libavif RGB16 within 0.0003, covering float16 rounding.
+- Independent CPU reconstruction of uploaded samples agrees with GPU output.
+- An independent model of libavif scaling/intermediate precision agrees with its native output, validating the reference model.
+- Decoded RGB16 planes reconstructed with the viewer's pixel-center sampling agree with output, except the explicitly bounded base-conversion limitations below.
+- Gain-only substitution passes even for cases with a base-conversion limitation.
 
-This executes the real viewer Engine, texture Worker, AVIF decoding, texture
-upload, metadata uniforms and shader. Only the same-format canvas render target
-is substituted with a COPY_SRC-capable texture. Dynamic-range capability is
-mocked to exercise both engine branches; this is not a physical HDR display test.
+Final-image comparisons use linear Display P3, with unchanged per-pixel tolerance `0.005 + 0.02 * max(0.1, pixel peak magnitude)`.
+The reference emits Rec.2020/PQ half floats before conversion to linear P3 to avoid libavif's linear-output clipping.
+This is not a relative-error guarantee for each small color component.
+The paired JPEG/AVIF suite requires independent matched-sampling and uploaded-formula checks for both formats.
+Original transform, fallback and color fixtures without a matched reference still require native reconstruction agreement.
 
-Independent reference: libavif `avifImageApplyGainMap` reconstructs at full
-alternate headroom for HDR and zero for SDR. Its API clamps even float linear
-outputs to [0,1], so reference values are emitted as Rec.2020/PQ half floats and
-converted back to linear Display P3 (203-nit SDR white) for comparison. Rec.2020
-preserves colors that require negative Display P3 components. Tests compare all
-pixels/channels with a linear tolerance of 0.005 plus 2% of pixel peak magnitude,
-accounting for browser bitmap quantization, gain-map interpolation, and half-float
-PQ reference quantization. They also require output above 1 in HDR, base-only SDR
-output, one image request, alpha=1, and no viewer/GPU errors.
+The lifecycle cases cover three 12MP open/zoom/pan/destroy cycles, pending-load cancellation and an invalid image.
+They require termination/destruction of tracked Workers and GPU resources, empty queues, bounded texture accounting and float16 high-depth gain textures.
+These checks do not measure process RSS or driver reclamation timing.
 
-Transform cases use independently indexed reference pixels for rotations and
-mirrors. Clean aperture crops both libavif image planes before reconstruction,
-so lower-resolution gain-map interpolation clamps at the crop boundary. Fixtures
-include asymmetric color patterns and vertical ramps; no-op mirror checks are
-insufficient. `generate-transforms.ts` mutates only BMFF properties/metadata.
+## Known limitations versus reference differences
 
-libavif 1.4.1 rejects ICC reconstruction. The real LittleCMS sRGB ICC cases use
-the known equivalent sRGB nclx-only source as reference, both with alternate and
-base working primaries. This validates that profile, not arbitrary ICC color
-spaces. The JPEG test builds the pre-refactor decoder from Git commit `1a045b1`
-and requires its actual rendered pixels to match the current decoder exactly,
-in both HDR and SDR. Keep that commit reachable when running this developer test.
+libavif scales YUV before RGB conversion; the viewer samples RGB gain textures at pixel centers.
+The full native reconstruction comparison is retained in each report, but is not a shader-correctness oracle when independent sampling/formula controls pass.
+Set `STRICT_NATIVE_REFERENCE=1` to make every native difference fail the command as well.
 
-The harness also simulates extended-canvas rejection, both runtime dynamic-range
-transitions, gain-plane decode failure and extracted-base decode failure. The last
-case checks successful original-file retry and cleared custom HDR state, without
-asserting that native decoding must produce SDR. Ordinary AVIF stays silent; unsupported
-tmap metadata and failed gain decoding produce one warning and no HDR state.
-The unsupported fixture happens to decode as base-only in tested Chromium; native
-fallback behavior on other browsers must not be promised to be SDR.
+Eight generated HDR/SDR scenarios have independently isolated browser base-RGB conversion differences: colored 12-bit 4:2:0 full/limited in both modes, colored 10-bit 4:2:0 limited in HDR, colored 12-bit 4:4:4 full/limited in HDR, and the 12-bit 4:4:4 limited ramp in HDR.
+`acceptance.cjs` lists those exact cases and maximum-error regression bounds, rounded up to 0.001 from the diagnostic baseline.
+They are reported as `passed-with-known-limitations`, never as passing image-accuracy comparisons.
+An unlisted case, an increased maximum error, a gain/shader error or missing stage controls fails acceptance.
+Improvements do not require preserving the previous failure count.
+The recommended 10-bit full-range 4:4:4 recipe is not exempted.
 
-`lifecycle.cjs` adds three 12MP open/zoom/pan/destroy cycles, two pending-load
-cancellations and one undecodable-file case, serially in one page. It checks
-actual Worker termination and explicit destruction of created GPU textures,
-buffers and devices, empty engine queues and texture accounting, a 128 MiB
-texture budget and at most two pending tile requests. Chromium/Edge peak tracked
-texture allocation is now about 50.19 MiB with a 12-bit gain item. The test also
-requires its overview gain texture to use rgba16float. Earlier runs with 8-bit
-gain used 45.16 MiB; Safari passed those earlier six cases at about 81.39 MiB under
-its native display scale. Safari has not been revalidated for the precision fix.
-These are allocation/lifecycle checks,
-not OS resident-memory measurements, GPU-driver reclamation timing, or mobile
-performance certification. No benchmark timing is used as a CI pass threshold.
+`AVIF_DIAGNOSTICS=1` additionally compares native AV1 YUV samples exactly with libavif and compares pre-upload float16 P3 bitmap pixels with GPU base samples.
+It requires native ImageDecoder and float16 P3 canvas readback.
+The shared shader is not changed to imitate a particular native scaler.
 
-These checks establish computed HDR values and SDR gating, not display nits,
-OS tone mapping, Safari/iPhone correctness, or end-to-end 10/12-bit precision.
-The original AVIF fixtures are 10-bit and the corpus spans 8/10/12-bit, but browser ImageBitmap/texture conversion and the
-8-bit gain-map rgba8 texture may quantize. 10/12-bit gain items now use native YUV
-sample conversion and float16 bitmaps/textures with independent plane checks;
-this does not fix high-bit-depth base decoding or establish whole-image 12-bit
-precision. Missing native precision APIs warn and fall back to the SDR base.
-The tolerance is per-pixel peak plus an
-absolute term, not a claim of <2% error in every small RGB component.
+## Fixtures and reports
+
+Small public synthetic AVIF/JPEG/ICC fixtures and independently derived metadata expectations live in `src/fixtures`, with provenance and regeneration instructions.
+`encode-corpus.c` generates 42 encoding recipes crossing base depth/range/chroma and separately varying gain depth/chroma/size; `jpeg-baseline.cpp` generates 40 paired JPEG/AVIF recipes.
+These are synthetic inputs, not a real-camera interoperability corpus.
+Transformed fixtures use asymmetric pixels and independently indexed expected rotations/crops.
+The real LittleCMS sRGB ICC is compared with its known nclx equivalent; this does not validate arbitrary ICC profiles.
+
+Generated images, JSON reports, screenshots, logs and one-off investigation notes belong under ignored `.local/avif-verification/`, not in Git.
+Reports include browser version, native differences, stage controls, acceptance status and known limitations.
+Transport/setup failures write a separate error file without replacing an earlier complete report.
+Summarize the exact tested revision and relevant counts in the PR/release description instead of committing chronological run reports.
+
+Numerical HDR output and forced SDR gating do not establish physical display luminance, mobile-device behavior, Safari correctness or end-to-end 12-bit precision.
+See the [design and supported input policy](../../../../docs/superpowers/specs/2026-10-13-avif-gainmap-design.md).
