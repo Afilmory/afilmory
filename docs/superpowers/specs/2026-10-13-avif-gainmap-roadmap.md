@@ -1,5 +1,19 @@
 # AVIF gain-map coverage and next steps
 
+## Latest diagnosis: shared GPU rendering passes the independent controls
+
+The [stage-by-stage investigation](./2026-10-15-avif-stage-diagnosis.md) leaves
+production code unchanged and separates the 26 native-reference differences.
+All 88 GPU formula controls pass; browser native YUV and independent libavif YUV
+match exactly for all 42 generated recipes, and bitmap/GPU base pixels also
+match exactly. Matching the viewer's sampling policy reduces the final-image
+differences to eight scenarios, all independently reproducible by substituting
+only the base pixels. Gain-only substitutions pass. The next useful change is
+base RGB conversion fidelity, not shared shader math. In particular, 12-bit
+4:2:0 browser RGB follows nearest chroma while the reference uses smooth chroma.
+Do not label all native-library differences AVIF shader bugs or hide them by
+loosening the comparison. Full diagnostics and reproducible checks are linked above.
+
 ## Latest fix: retain fractional RGB from 8-bit AVIF gain samples
 
 The [8-bit gain precision fix](./2026-10-15-avif-eight-bit-gain-precision.md)

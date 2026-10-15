@@ -1,5 +1,12 @@
 # End-to-end AVIF rendering check
 
+`AVIF_DIAGNOSTICS=1` enables the [stage-by-stage controls](../../../../docs/superpowers/specs/2026-10-15-avif-stage-diagnosis.md):
+exact native YUV comparison, pre-upload bitmap readback, independently derived
+color matrices, uploaded-sample formula checks, matched sampling and a separate
+model of native scaling/intermediate depths. It writes a `-diagnostics.json`
+report and retains the original numerical gate. It requires native ImageDecoder
+and float16 P3 canvas readback. Chromium/Edge are verified; Safari remains tracked separately.
+
 **Latest AVIF fix:** colored 8-bit gain items now share the native YUV/float16
 path. Independent matched-sampling checks pass for all 80 AVIF and 80 JPEG
 scenarios; native reconstruction still differs for 12 AVIF and 38 JPEG cases.

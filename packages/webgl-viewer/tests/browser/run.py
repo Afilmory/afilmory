@@ -28,6 +28,9 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
     subprocess.run(['cc', str(HERE / 'encode-corpus.c'), *flags, '-o', str(encoder)], check=True)
     entry = tmp / 'entry.ts'
     entry.write_text('export { WebGPUImageViewerEngine } from ' + json.dumps(str(ROOT / 'packages/webgl-viewer/src/WebGPUImageViewerEngine')))
+    if os.environ.get('AVIF_DIAGNOSTICS'):
+        with entry.open('a') as stream:
+            stream.write('; export { extractAVIFGainMap } from ' + json.dumps(str(ROOT / 'packages/webgl-viewer/src/avif-gainmap')))
     dist = tmp / 'dist'
     config = tmp / 'vite.mjs'
     config.write_text('export default ' + json.dumps({'build': {'outDir': str(dist), 'emptyOutDir': True, 'lib': {'entry': str(entry), 'formats': ['es'], 'fileName': 'engine'}}}))
@@ -166,6 +169,8 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
         print(result.stdout)
         print(result.stderr)
         suffix = '-jpeg-baseline' if baseline_cases else ''
+        if os.environ.get('AVIF_DIAGNOSTICS'):
+            suffix += '-diagnostics'
         output = artifacts / f'engine-readback-{os.environ.get("BROWSER_CHANNEL", "chromium")}{suffix}.json'
         output.parent.mkdir(parents=True, exist_ok=True)
         # A transport/setup failure must not erase the previous complete report.

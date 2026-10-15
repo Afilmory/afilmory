@@ -341,6 +341,12 @@ const ref = process.env.AVIF_REFERENCE
           ]),
         )
         let gainPlaneError
+        if (process.env.AVIF_DIAGNOSTICS && !hdr && primary.startsWith('corpus-')) {
+          const bytes = require('node:fs').readFileSync(`${process.env.AVIF_FIXTURES}/gainmap-${primary}.avif`)
+          const probe = await require('./base-decode-probe.cjs')(page, Array.from(bytes))
+          assert.deepEqual(probe.yuv, reference.baseYUV, `${primary}: native AV1 YUV samples differ`)
+          actual.baseProbe = { rawYUVIdentical: true, bitmapPixels: probe.bitmapPixels }
+        }
         if (primary.startsWith('corpus-') || primary.startsWith('baseline-avif-') || ['color-base', 'icc-base'].includes(primary)) {
           gainPlaneError = 0
           actual.planes.gain.pixels.forEach((p, i) => p.forEach((value, c) => {
@@ -417,6 +423,7 @@ const ref = process.env.AVIF_REFERENCE
           mismatchedPixels: mismatches.length,
           firstMismatch: mismatches[0],
           gainPlaneError,
+          ...(process.env.AVIF_DIAGNOSTICS && (primary.startsWith('corpus-') || ['color-base', 'icc-base'].includes(primary)) ? { stages: require('./stage-diagnostics.cjs')(actual, reference, expectedHDR) } : {}),
           ...(['color-base', 'icc-base'].includes(primary) ? { srgbBaseReference: require('./format-baseline.cjs').srgbBaseReference(actual, reference, expectedHDR) } : {}),
           ...(primary.startsWith('baseline-') ? { baseline: require('./format-baseline.cjs')(actual, reference, expectedHDR) } : {}),
           ...(actual.planes ? { planes: actual.planes, referencePlanes: { base: reference.base, gain: reference.gain }, metadata: actual.metadata } : {}),
@@ -435,6 +442,8 @@ const ref = process.env.AVIF_REFERENCE
       assert.equal(baselineFailures.matchedSampling, 0, 'Matched-sampling independent reference differs; see saved report')
     }
     assert.equal(reports.filter(r => r.srgbBaseReference?.mismatchedPixels > 0).length, 0, 'sRGB base working-space reference differs; see saved report')
+    assert.equal(reports.filter(r => r.stages?.uploadedFormula.mismatchedPixels > 0).length, 0, 'GPU formula control differs; see saved report')
+    assert.equal(reports.filter(r => r.stages?.nativeModelVsLibrary.mismatchedPixels > 0).length, 0, 'Independent native reconstruction model differs; see saved report')
     assert.equal(reports.filter(r => r.mismatchedPixels > 0).length, 0, 'Numerical failures; see saved report (tolerance unchanged)')
   }
   finally {
