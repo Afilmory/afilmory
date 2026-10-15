@@ -99,8 +99,15 @@ it('rejects unsupported metadata versions, reserved flags, and zero denominators
   assert.equal(inspectAVIFGainMap(mutateMetadata(2, 1)).status, 'unsupported')
   assert.equal(inspectAVIFGainMap(mutateMetadata(5, 1)).status, 'invalid')
   assert.equal(inspectAVIFGainMap(mutateMetadata(13, 0)).status, 'invalid')
-  assert.equal(inspectAVIFGainMap(mutateMetadata(9, 1)).status, 'unsupported') // nonzero base headroom
+  assert.equal(inspectAVIFGainMap(mutateMetadata(6, 1)).status, 'unsupported') // base headroom above alternate
   assert.equal(inspectAVIFGainMap(mutate('pitm', 5, 2)).status, 'unsupported')
+})
+
+it('preserves positive SDR base headroom below the HDR alternate', () => {
+  const result = extractAVIFGainMap(mutateMetadata(9, 1))
+  assert.ok(result)
+  assert.equal(result.metadata.capacityMin, 1)
+  assert.ok(result.metadata.capacityMax > result.metadata.capacityMin)
 })
 
 it('selects base primaries when requested rather than assuming the alternate color space', () => {

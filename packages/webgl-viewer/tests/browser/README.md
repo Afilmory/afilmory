@@ -62,7 +62,7 @@ The shared shader is not changed to imitate a particular native scaler.
 ## Fixtures and reports
 
 Small public synthetic AVIF/JPEG/ICC fixtures and independently derived metadata expectations live in `src/fixtures`, with provenance and regeneration instructions.
-`encode-corpus.c` generates 42 encoding recipes crossing base depth/range/chroma and separately varying gain depth/chroma/size; `jpeg-baseline.cpp` generates 40 paired JPEG/AVIF recipes.
+`encode-corpus.c` generates 43 recipes crossing base depth/range/chroma, separately varying gain depth/chroma/size, and covering positive SDR base headroom; `jpeg-baseline.cpp` generates 40 paired JPEG/AVIF recipes.
 These are synthetic inputs, not a real-camera interoperability corpus.
 Transformed fixtures use asymmetric pixels and independently indexed expected rotations/crops.
 The real LittleCMS sRGB ICC is compared with its known nclx equivalent; this does not validate arbitrary ICC profiles.

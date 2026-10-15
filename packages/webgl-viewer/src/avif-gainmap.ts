@@ -57,7 +57,9 @@ function metadata(data: Uint8Array): GainMapMetadata {
   }
   const capacityMin = fraction()
   const capacityMax = fraction()
-  if (capacityMin !== 0 || capacityMax <= capacityMin || capacityMax > 16) {
+  // SDR transfer encoding does not require exactly zero measured headroom.
+  // Keep positive base headroom when the alternate still expands the range.
+  if (capacityMax <= capacityMin || capacityMax > 16) {
     unsupported('Unsupported HDR-to-SDR or headroom range')
   }
   // Each channel array must have separate storage.

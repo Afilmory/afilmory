@@ -29,6 +29,7 @@ The parser accepts sRGB, Display P3 and BT.2020 primaries, SDR transfer identifi
 Gain samples require full-range BT.601, including the unspecified matrix emitted by libavif which is explicitly pinned during remuxing.
 Native gain decoding accepts I420/I444 at 8/10/12 bits; explicitly sited gain chroma is unsupported.
 One- and three-channel tmap parameters, file/idat extents, and base/alternate gain working spaces are supported.
+Positive base headroom is preserved when it is below alternate headroom; SDR transfer encoding does not imply exactly zero measured headroom.
 Container parsing does not certify every permitted encoding combination.
 
 Aligned integer-pixel `clap`, then `irot`, then `imir` are supported on both planes.

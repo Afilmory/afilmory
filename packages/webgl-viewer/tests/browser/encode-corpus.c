@@ -3,6 +3,7 @@
 #include <avif/avif.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static void check(avifResult result) {
   if (result != AVIF_RESULT_OK) {
@@ -29,7 +30,7 @@ static avifImage *convert(const avifImage *source, int depth, avifPixelFormat fo
 }
 
 int main(int argc, char **argv) {
-  if (argc != 10) return 2;
+  if (argc != 10 && (argc != 11 || strcmp(argv[10], "positive-base-headroom"))) return 2;
   avifDecoder *decoder = avifDecoderCreate();
   decoder->imageContentToDecode = AVIF_IMAGE_CONTENT_ALL;
   check(avifDecoderSetIOFile(decoder, argv[1]));
@@ -41,6 +42,12 @@ int main(int argc, char **argv) {
   avifImage *image = convert(decoder->image, depth, format, atoi(argv[5]) ? AVIF_RANGE_FULL : AVIF_RANGE_LIMITED);
   image->gainMap = decoder->image->gainMap;
   decoder->image->gainMap = NULL;
+  // SDR encoders can measure small positive base headroom after conversion.
+  // Exercise that metadata without including a private photograph fixture.
+  if (argc == 11) {
+    image->gainMap->baseHdrHeadroom.n = 1;
+    image->gainMap->baseHdrHeadroom.d = 512;
+  }
   avifImage *gain = convert(image->gainMap->image, atoi(argv[8]),
                            atoi(argv[9]) == 420 ? AVIF_PIXEL_FORMAT_YUV420 : AVIF_PIXEL_FORMAT_YUV444, AVIF_RANGE_FULL);
   avifImageDestroy(image->gainMap->image);
