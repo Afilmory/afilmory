@@ -15,7 +15,7 @@ const ref = process.env.AVIF_REFERENCE
   try {
     const colorUpload = await require('./color-upload.cjs')(browser, process.env.AVIF_TEST_URL)
     const legacyPixels = {}
-    const cases = [
+    const cases = process.env.FORMAT_BASELINE_CASES ? ['jpeg-old', 'jpeg', ...JSON.parse(process.env.FORMAT_BASELINE_CASES)] : [
       '1',
       '12',
       '9',
@@ -185,9 +185,11 @@ const ref = process.env.AVIF_REFERENCE
               new URL(
                 primary === 'ordinary'
                   ? '/sdr.avif'
-                  : String(primary).startsWith('jpeg')
-                    ? '/gainmap-icc.jpg'
-                    : `/gainmap-${filePrimary}.avif`,
+                  : primary.startsWith('baseline-jpeg-')
+                    ? `/gainmap-${primary}.jpg`
+                    : String(primary).startsWith('jpeg')
+                      ? '/gainmap-icc.jpg'
+                      : `/gainmap-${filePrimary}.avif`,
                 window.location.origin,
               ).href,
               width,
@@ -232,7 +234,7 @@ const ref = process.env.AVIF_REFERENCE
               pixels,
               metadata: engine.metadata,
             }
-            if (primary.startsWith('corpus-')) {
+            if (primary.startsWith('corpus-') || primary.startsWith('baseline-')) {
               result.planes = {}
               for (const name of ['base', 'gain']) {
                 const texture = engine.overview[name].texture
@@ -322,8 +324,9 @@ const ref = process.env.AVIF_REFERENCE
                       : primary === 'icc-base' ? 'color-base' : primary
         const cropped = ['transform-crop', 'transform-combo'].includes(primary)
         const reference = JSON.parse(
-          cp.execFileSync(ref, [
-            `${process.env.AVIF_FIXTURES || `${root}/packages/webgl-viewer/src/fixtures`}/gainmap-${referencePrimary}.avif`,
+          cp.execFileSync(primary.startsWith('baseline-jpeg-') ? process.env.JPEG_REFERENCE : ref, [
+            ...(primary.startsWith('baseline-jpeg-') ? ['reference'] : []),
+            `${process.env.AVIF_FIXTURES || `${root}/packages/webgl-viewer/src/fixtures`}/gainmap-${referencePrimary}.${primary.startsWith('baseline-jpeg-') ? 'jpg' : 'avif'}`,
             expectedHDR ? 'hdr' : 'sdr',
             ...(cropped ? ['crop'] : []),
           ]),
@@ -336,9 +339,11 @@ const ref = process.env.AVIF_REFERENCE
           }))
           assert.ok(gainPlaneError <= 0.0003, `Native gain samples exceed float16 rounding: ${gainPlaneError}`)
         }
-        reference.pqRec2020 = indices
-          .flat()
-          .map(i => reference.pqRec2020[cropped ? Math.floor(i / 32) * 24 + (i % 32) : i])
+        if (reference.pqRec2020) {
+          reference.pqRec2020 = indices
+            .flat()
+            .map(i => reference.pqRec2020[cropped ? Math.floor(i / 32) * 24 + (i % 32) : i])
+        }
         const linear = x =>
           Math.sign(x) * (Math.abs(x) <= 0.04045 ? Math.abs(x) / 12.92 : ((Math.abs(x) + 0.055) / 1.055) ** 2.4)
         const pqLinear = (v) => {
@@ -358,11 +363,14 @@ const ref = process.env.AVIF_REFERENCE
           [-0.06529745, 1.0757879, -0.01049045],
           [0.00282179, -0.0195985, 1.0167767],
         ]
+        reference.linearP3 ??= reference.pqRec2020.map((p) => {
+          const rgb = p.map(pqLinear)
+          return toP3.map(row => row.reduce((sum, value, c) => sum + value * rgb[c], 0))
+        })
         actual.pixels.forEach((p, i) =>
           p.slice(0, 3).forEach((v, c) => {
             const got = linear(v)
-            const rgb = reference.pqRec2020[i].map(pqLinear)
-            const expected = toP3[c].reduce((n, v, k) => n + v * rgb[k], 0)
+            const expected = reference.linearP3[i][c]
             const err = Math.abs(got - expected)
             if (err > maxError) {
               maxError = err
@@ -372,8 +380,7 @@ const ref = process.env.AVIF_REFERENCE
             maxOutput = Math.max(maxOutput, v)
           }))
         actual.pixels.forEach((p, i) => {
-          const rgb = reference.pqRec2020[i].map(pqLinear)
-          const expected = toP3.map(row => row.reduce((n, v, k) => n + v * rgb[k], 0))
+          const expected = reference.linearP3[i]
           const peak = Math.max(0.1, ...expected.map(Math.abs))
           const error = Math.max(...expected.map((v, c) => Math.abs(linear(p[c]) - v)))
           maxPixelRelative = Math.max(maxPixelRelative, error / peak)
@@ -401,13 +408,22 @@ const ref = process.env.AVIF_REFERENCE
           mismatchedPixels: mismatches.length,
           firstMismatch: mismatches[0],
           gainPlaneError,
+          ...(primary.startsWith('baseline-') ? { baseline: require('./format-baseline.cjs')(actual, reference, expectedHDR) } : {}),
           ...(actual.planes ? { planes: actual.planes, referencePlanes: { base: reference.base, gain: reference.gain }, metadata: actual.metadata } : {}),
         })
         await page.close()
       }
     }
-    const resources = await lifecycle(browser, process.env.AVIF_TEST_URL)
-    process.stdout.write(`${JSON.stringify({ browser: browser.version(), numericalFailures: reports.filter(r => r.mismatchedPixels > 0).length, colorUpload, reports, resources }, null, 2)}\n`)
+    const resources = process.env.FORMAT_BASELINE_CASES ? [] : await lifecycle(browser, process.env.AVIF_TEST_URL)
+    const baselineFailures = process.env.FORMAT_BASELINE_CASES ? {
+      matchedSampling: reports.filter(r => r.baseline?.pixelCenterReference.mismatchedPixels > 0).length,
+      gpuFormula: reports.filter(r => r.baseline?.gpuFormulaControl.mismatchedPixels > 0).length,
+    } : undefined
+    process.stdout.write(`${JSON.stringify({ browser: browser.version(), numericalFailures: reports.filter(r => r.mismatchedPixels > 0).length, baselineFailures, colorUpload, reports, resources }, null, 2)}\n`)
+    if (baselineFailures) {
+      assert.equal(baselineFailures.gpuFormula, 0, 'GPU reconstruction disagrees with its uploaded samples')
+      assert.equal(baselineFailures.matchedSampling, 0, 'Matched-sampling independent reference differs; see saved report')
+    }
     assert.equal(reports.filter(r => r.mismatchedPixels > 0).length, 0, 'Numerical failures; see saved report (tolerance unchanged)')
   }
   finally {

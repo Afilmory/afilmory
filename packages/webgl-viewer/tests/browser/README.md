@@ -1,5 +1,15 @@
 # End-to-end AVIF rendering check
 
+The independent JPEG/AVIF comparison is available with `JPEG_BASELINE=1` using
+the same command below. It additionally requires libultrahdr 2.0.2, libjpeg-turbo
+3.2.0 and a C++ compiler. It generates 40 paired recipes (8-bit P3, mono/RGB gain,
+4:2:0/4:4:4, 1x/2x/4x gain scaling, color/ramp/constant controls), runs 160 HDR/SDR
+scenarios plus four legacy JPEG checks, and writes separate
+`engine-readback-<browser>-jpeg-baseline.json` reports. It does not run the large
+resource tests. Native-library, matched-sampling and GPU-formula results are
+reported separately; failed comparisons still return nonzero. Full methodology,
+observed counts and limits: [independent JPEG baseline](../../../../docs/superpowers/specs/2026-10-15-jpeg-avif-baseline.md).
+
 Run from a dependency-installed checkout:
 
 ```sh

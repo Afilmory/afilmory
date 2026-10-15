@@ -1,5 +1,22 @@
 # AVIF gain-map coverage and next steps
 
+## Latest: independent JPEG baseline changes failure interpretation
+
+The [paired JPEG/AVIF baseline](./2026-10-15-jpeg-avif-baseline.md) now covers 40
+encoding pairs in HDR and SDR, plus legacy JPEG parity. Chromium and Edge each
+complete 164 scenarios. Against native library reconstruction, JPEG differs in
+38/80 cases and AVIF in 15/80; with independently decoded planes and explicitly
+matched sampling, JPEG passes 80/80 and AVIF 78/80. Formula controls on uploaded
+samples pass 160/160. JPEG colored 4:2:0 SDR differences are isolated to chroma
+upsampling policy; low-resolution gain comparisons also differ by resampling.
+
+Therefore the earlier AVIF failure counts cannot all be labeled AVIF-only bugs,
+and "17 base-group / 7 gain-group" is not a root-cause classification. Retain the
+strict native comparisons and their failures, but use the independent plane and
+sampling controls to decide what actually needs changing. Keep JPEG runtime
+behavior intact; next isolate AVIF decoded/uploaded samples. This new corpus is
+8-bit P3 with simple metadata and does not resolve every earlier 10/12-bit case.
+
 ## 2026-10-15 AVIF-specific fix — high-bit-depth gain samples
 
 This change fixes one independently isolated AVIF defect, not the entire expanded
