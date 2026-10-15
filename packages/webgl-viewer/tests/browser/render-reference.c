@@ -92,10 +92,10 @@ int main(int argc, char **argv) {
   printf("{");
   printPlane("base", base);
   printPlane("gain", map->image);
-  if (getenv("AVIF_DIAGNOSTICS")) {
+  {
     if (base->transferCharacteristics != AVIF_TRANSFER_CHARACTERISTICS_SRGB) return 8;
     printPrimaries("basePrimaries", base->colorPrimaries);
-    printYUV(base);
+    if (getenv("AVIF_DIAGNOSTICS")) printYUV(base);
     printPrimaries("workingPrimaries", map->useBaseColorSpace ? base->colorPrimaries : map->altColorPrimaries);
     printPrimaries("displayPrimaries", AVIF_COLOR_PRIMARIES_SMPTE432);
     printPlaneVariant("baseNearest", base, 16, AVIF_CHROMA_UPSAMPLING_NEAREST, AVIF_RGB_FORMAT_RGB);

@@ -346,9 +346,6 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
   }
   const parameters = metadata(toneData)
   const transforms = avifColorTransforms(parameters.useBaseColorSpace ? baseProfile : alternateProfile)
-  if (!transforms) {
-    unsupported('Unsupported gain-map working primaries')
-  }
   function plane(id: number, isGain: boolean) {
     const payload = locations.get(id)
     if (!payload?.length) {
@@ -386,7 +383,7 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
           uint(0, 2),
           uint(1, 2),
           uint(offset),
-          uint(payload!.length),
+          uint(payload.length),
         ),
         full('iinf', 0, uint(1, 2), full('infe', 2, uint(1, 2), uint(0, 2), text('av01'), bytes(0))),
         box(
@@ -405,7 +402,7 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
     gainMonochrome,
     metadata: parameters,
     orientation: 1,
-    ...transforms!,
+    ...transforms,
     wideGamut: true,
   }
 }

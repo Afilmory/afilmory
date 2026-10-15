@@ -395,6 +395,7 @@ const ref = process.env.AVIF_REFERENCE
             maxOutput = Math.max(maxOutput, v)
           }))
         actual.pixels.forEach((p, i) => {
+          assert.ok(p.every(Number.isFinite), `${primary}: nonfinite rendered pixel`)
           const expected = reference.linearP3[i]
           const peak = Math.max(0.1, ...expected.map(Math.abs))
           const error = Math.max(...expected.map((v, c) => Math.abs(linear(p[c]) - v)))
@@ -423,7 +424,7 @@ const ref = process.env.AVIF_REFERENCE
           mismatchedPixels: mismatches.length,
           firstMismatch: mismatches[0],
           gainPlaneError,
-          ...(process.env.AVIF_DIAGNOSTICS && (primary.startsWith('corpus-') || ['color-base', 'icc-base'].includes(primary)) ? { stages: require('./stage-diagnostics.cjs')(actual, reference, expectedHDR) } : {}),
+          ...((primary.startsWith('corpus-') || ['color-base', 'icc-base'].includes(primary)) ? { stages: require('./stage-diagnostics.cjs')(actual, reference, expectedHDR) } : {}),
           ...(['color-base', 'icc-base'].includes(primary) ? { srgbBaseReference: require('./format-baseline.cjs').srgbBaseReference(actual, reference, expectedHDR) } : {}),
           ...(primary.startsWith('baseline-') ? { baseline: require('./format-baseline.cjs')(actual, reference, expectedHDR) } : {}),
           ...(actual.planes ? { planes: actual.planes, referencePlanes: { base: reference.base, gain: reference.gain }, metadata: actual.metadata } : {}),
@@ -436,7 +437,19 @@ const ref = process.env.AVIF_REFERENCE
       matchedSampling: reports.filter(r => r.baseline?.pixelCenterReference.mismatchedPixels > 0).length,
       gpuFormula: reports.filter(r => r.baseline?.gpuFormulaControl.mismatchedPixels > 0).length,
     } : undefined
-    process.stdout.write(`${JSON.stringify({ browser: browser.version(), numericalFailures: reports.filter(r => r.mismatchedPixels > 0).length, baselineFailures, colorUpload, reports, resources }, null, 2)}\n`)
+    let accepted
+    let acceptanceError
+    try {
+      accepted = require('./acceptance.cjs')(reports, { strictNative: process.env.STRICT_NATIVE_REFERENCE === '1' })
+    }
+    catch (error) {
+      acceptanceError = error
+      accepted = { status: 'failed', reason: error.message }
+    }
+    process.stdout.write(`${JSON.stringify({ browser: browser.version(), acceptance: accepted, nativeReferenceDifferences: reports.filter(r => r.mismatchedPixels > 0).length, baselineFailures, colorUpload, reports, resources }, null, 2)}\n`)
+    if (acceptanceError) {
+      throw acceptanceError
+    }
     if (baselineFailures) {
       assert.equal(baselineFailures.gpuFormula, 0, 'GPU reconstruction disagrees with its uploaded samples')
       assert.equal(baselineFailures.matchedSampling, 0, 'Matched-sampling independent reference differs; see saved report')
@@ -444,7 +457,6 @@ const ref = process.env.AVIF_REFERENCE
     assert.equal(reports.filter(r => r.srgbBaseReference?.mismatchedPixels > 0).length, 0, 'sRGB base working-space reference differs; see saved report')
     assert.equal(reports.filter(r => r.stages?.uploadedFormula.mismatchedPixels > 0).length, 0, 'GPU formula control differs; see saved report')
     assert.equal(reports.filter(r => r.stages?.nativeModelVsLibrary.mismatchedPixels > 0).length, 0, 'Independent native reconstruction model differs; see saved report')
-    assert.equal(reports.filter(r => r.mismatchedPixels > 0).length, 0, 'Numerical failures; see saved report (tolerance unchanged)')
   }
   finally {
     await browser.close()

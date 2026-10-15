@@ -40,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
     if engine.name != 'engine.js':
         engine.rename(dist / 'engine.js')
     legacy = tmp / 'jpeg-legacy.ts'
-    legacy.write_bytes(subprocess.check_output(['git', 'show', '1a045b1:packages/webgl-viewer/src/jpeg-gainmap.ts'], cwd=ROOT))
+    legacy.write_bytes(subprocess.check_output(['git', 'show', '9a0413ddefe02da95bea9218cb7961b09e47b143:packages/webgl-viewer/src/jpeg-gainmap.ts'], cwd=ROOT))
     legacy_config = {'resolve': {'alias': {'./jpeg-gainmap': str(legacy), 'fast-xml-parser': str(ROOT / 'packages/webgl-viewer/node_modules/fast-xml-parser/src/fxp.js')}}, 'build': {'outDir': str(dist), 'emptyOutDir': False, 'lib': {'entry': str(entry), 'formats': ['es'], 'fileName': 'engine-old'}}}
     config.write_text('export default ' + json.dumps(legacy_config))
     subprocess.run([NODE, str(ROOT / 'node_modules/vite/bin/vite.js'), 'build', '--config', str(config)], cwd=ROOT, check=True)
