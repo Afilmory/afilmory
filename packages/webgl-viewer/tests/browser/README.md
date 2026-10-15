@@ -43,6 +43,10 @@ uploads to sRGB/P3 GPU textures, plus a P3 canvas read, without AVIF or gain map
 It reproduces Safari returning identical RGB for both GPU destination color spaces.
 The roadmap records this shared-renderer blocker; do not label Safari supported
 just because the files decode or the HDR state changes successfully.
+One final serial Safari repeat hit a 60-second WebDriver transport timeout before
+producing a complete report. The earlier complete Safari report is retained; the
+timeout is recorded separately. Transport/setup failures now write `.error.txt`
+instead of overwriting a complete JSON report. No automatic browser retry is used.
 
 This executes the real viewer Engine, texture Worker, AVIF decoding, texture
 upload, metadata uniforms and shader. Only the same-format canvas render target

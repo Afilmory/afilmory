@@ -35,6 +35,9 @@ including previously Chromium-verified colored SDR fixtures. All six lifecycle
 checks pass, with about 81.39 MiB peak tracked textures under Safari's native
 display scale. The harness does not force Safari to Playwright's device scale.
 This is now actual WebKit coverage; it is not iPhone or physical-nits validation.
+A later final Safari repeat timed out at the WebDriver transport layer; retain
+the earlier complete 132-case result and the separate error record. Safari
+automation stability is also unresolved, not a reason to mark that repeat passed.
 
 An independent 1×1 canvas probe isolates a browser color-upload discrepancy:
 `copyExternalImageToTexture` of sRGB `#704030` yields the same half-float RGB

@@ -19,6 +19,8 @@ module.exports = async function launchSafari() {
       headers: { 'Content-Type': 'application/json' },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       signal: AbortSignal.timeout(60000),
+    }).catch((error) => {
+      throw new Error(`Safari WebDriver ${method} ${path}: ${error.message}`)
     })
     const { value } = await response.json()
     if (!response.ok || value?.error) {

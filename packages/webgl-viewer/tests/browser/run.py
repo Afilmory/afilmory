@@ -131,11 +131,21 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
         env = {**os.environ, 'UPSTREAM_ROOT': str(ROOT), 'AVIF_REFERENCE': str(reference),
                'AVIF_FIXTURES': str(dist), 'AVIF_CORPUS': json.dumps(corpus),
                'AVIF_TEST_URL': f'http://127.0.0.1:{server.server_port}'}
-        result = subprocess.run([NODE, str(HERE / 'engine-readback.cjs')], env=env, text=True, stdout=subprocess.PIPE)
+        result = subprocess.run([NODE, str(HERE / 'engine-readback.cjs')], env=env, text=True, capture_output=True)
         print(result.stdout)
+        print(result.stderr)
         output = artifacts / f'engine-readback-{os.environ.get("BROWSER_CHANNEL", "chromium")}.json'
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(result.stdout)
+        # A transport/setup failure must not erase the previous complete report.
+        try:
+            report = json.loads(result.stdout)
+            if not isinstance(report.get('reports'), list):
+                raise ValueError('Missing rendering reports')
+        except (ValueError, AttributeError):
+            output.with_suffix('.error.txt').write_text(result.stderr + '\n' + result.stdout)
+        else:
+            output.write_text(result.stdout)
+            output.with_suffix('.error.txt').unlink(missing_ok=True)
         result.check_returncode()
     finally:
         server.shutdown()
