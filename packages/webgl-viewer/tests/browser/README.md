@@ -29,7 +29,15 @@ These are synthetic re-encodes, not a real-camera corpus or a test that proves
 preservation of 10/12-bit source gradients. Generated AVIFs and SHA-256/encoder
 metadata are retained under `.local/avif-verification/corpus` and `corpus.json`.
 
-**2026-10-15 result:** the expanded suite intentionally exits nonzero on both
+**2026-10-15 high-depth gain fix:** 136 rendering scenarios run in Chromium and
+Edge, with 24 remaining final-image numerical failures. The original cases and
+four added native-decoder failure/missing-API cases pass. The formerly failing
+colored 12-bit 4:2:0 gain case now passes. A separate comparison of native RGB16
+libavif gain samples to actual GPU textures requires error ≤ 0.0003 for every
+10/12-bit gain recipe, in both HDR and SDR modes; observed maximum is 0.000248.
+Final-image tolerance has not changed. The full suite is still not green.
+
+**Earlier baseline:** the expanded suite intentionally exits nonzero on both
 Chromium 151.0.7922.34 and Edge 155.0.4283.45: 25 of 132 rendering scenarios
 exceed the unchanged numerical tolerance. All original 46 scenarios and two
 added extracted-base fallback scenarios pass. Do not call this a green browser
@@ -89,8 +97,10 @@ cancellations and one undecodable-file case, serially in one page. It checks
 actual Worker termination and explicit destruction of created GPU textures,
 buffers and devices, empty engine queues and texture accounting, a 128 MiB
 texture budget and at most two pending tile requests. Chromium/Edge peak tracked
-texture allocation is about 45.16 MiB.
-Safari also passes all six cases, with about 81.39 MiB at its native display scale.
+texture allocation is now about 50.19 MiB with a 12-bit gain item. The test also
+requires its overview gain texture to use rgba16float. Earlier runs with 8-bit
+gain used 45.16 MiB; Safari passed those earlier six cases at about 81.39 MiB under
+its native display scale. Safari has not been revalidated for the precision fix.
 These are allocation/lifecycle checks,
 not OS resident-memory measurements, GPU-driver reclamation timing, or mobile
 performance certification. No benchmark timing is used as a CI pass threshold.
@@ -98,5 +108,9 @@ performance certification. No benchmark timing is used as a CI pass threshold.
 These checks establish computed HDR values and SDR gating, not display nits,
 OS tone mapping, Safari/iPhone correctness, or end-to-end 10/12-bit precision.
 The original AVIF fixtures are 10-bit and the corpus spans 8/10/12-bit, but browser ImageBitmap/texture conversion and the
-gain-map rgba8 texture may quantize. The tolerance is per-pixel peak plus an
+8-bit gain-map rgba8 texture may quantize. 10/12-bit gain items now use native YUV
+sample conversion and float16 bitmaps/textures with independent plane checks;
+this does not fix high-bit-depth base decoding or establish whole-image 12-bit
+precision. Missing native precision APIs warn and fall back to the SDR base.
+The tolerance is per-pixel peak plus an
 absolute term, not a claim of <2% error in every small RGB component.

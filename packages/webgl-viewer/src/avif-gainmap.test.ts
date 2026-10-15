@@ -10,7 +10,8 @@ import { extractAVIFGainMap, inspectAVIFGainMap } from './avif-gainmap'
 import { gainMapColorTransforms } from './avif-gainmap-color'
 import { extractJPEGGainMap, multiplyMatrices } from './jpeg-gainmap'
 
-const fixture = (name = 'gainmap-12') => new Uint8Array(readFileSync(new URL(`./fixtures/${name}.avif`, import.meta.url)))
+const fixture = (name = 'gainmap-12') =>
+  new Uint8Array(readFileSync(new URL(`./fixtures/${name}.avif`, import.meta.url)))
 const buffer = (data: Uint8Array) => data.slice().buffer
 const mutate = (type: string, offset: number, value: number) => {
   const data = fixture()
@@ -120,4 +121,19 @@ it('keeps the JPEG decoder isolated from AVIF and retains ordinary JPEG behavior
   assert.deepEqual(result.metadata.max, [2, 2, 2])
   assert.deepEqual(result.metadata.gamma, [1, 1, 1])
   assert.equal(result.metadata.capacityMax, 2)
+})
+
+it('rejects high-depth gain chroma siting that the precision decoder cannot interpret', () => {
+  // Configuration-only mutation tests the parser boundary; actual high-depth
+  // AV1 samples are independently encoded and decoded by the browser corpus.
+  const data = fixture('gainmap-color-12')
+  const index = Buffer.from(data).lastIndexOf('av1C')
+  assert.ok(index >= 0)
+  data[index + 5] = (2 << 5) | (data[index + 5] & 31)
+  data[index + 6] = 0x6D // 12-bit 4:2:0, explicit vertical siting
+  const result = inspectAVIFGainMap(buffer(data))
+  assert.equal(result.status, 'unsupported')
+  if (result.status === 'unsupported') {
+    assert.match(result.reason, /sited high-bit-depth/)
+  }
 })

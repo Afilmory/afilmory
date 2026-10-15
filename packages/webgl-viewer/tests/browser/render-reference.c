@@ -10,6 +10,22 @@ static double half(uint16_t bits) {
   double value = exponent ? ldexp(1.0 + (bits & 1023) / 1024.0, exponent - 15) : ldexp(bits & 1023, -24);
   return (bits & 32768) ? -value : value;
 }
+static void printPlane(const char *name, const avifImage *image) {
+  avifRGBImage rgb;
+  avifRGBImageSetDefaults(&rgb, image);
+  rgb.format = AVIF_RGB_FORMAT_RGB;
+  rgb.depth = 16;
+  if (avifRGBImageAllocatePixels(&rgb) != AVIF_RESULT_OK || avifImageYUVToRGB(image, &rgb) != AVIF_RESULT_OK) exit(6);
+  printf("\"%s\":{\"width\":%u,\"height\":%u,\"pixels\":[", name, rgb.width, rgb.height);
+  for (uint32_t y = 0; y < rgb.height; y++) {
+    const uint16_t *row = (const uint16_t *)(rgb.pixels + rgb.rowBytes * y);
+    for (uint32_t x = 0; x < rgb.width; x++) {
+      printf("%s[%.9g,%.9g,%.9g]", y || x ? "," : "", row[x*3]/65535.0, row[x*3+1]/65535.0, row[x*3+2]/65535.0);
+    }
+  }
+  printf("]},");
+  avifRGBImageFreePixels(&rgb);
+}
 int main(int argc, char **argv) {
   if (argc != 3 && argc != 4) return 2;
   avifDecoder *decoder = avifDecoderCreate();
@@ -45,7 +61,10 @@ int main(int argc, char **argv) {
   result = avifImageApplyGainMap(base, map, headroom, AVIF_COLOR_PRIMARIES_BT2020,
                                 AVIF_TRANSFER_CHARACTERISTICS_SMPTE2084, &output, NULL, &diag);
   if (result != AVIF_RESULT_OK) { fprintf(stderr, "%s: %s", avifResultToString(result), diag.error); return 4; }
-  printf("{\"width\":%u,\"height\":%u,\"pqRec2020\":[", output.width, output.height);
+  printf("{");
+  printPlane("base", base);
+  printPlane("gain", map->image);
+  printf("\"width\":%u,\"height\":%u,\"pqRec2020\":[", output.width, output.height);
   for (uint32_t y = 0; y < output.height; y++) {
     const uint16_t *row = (const uint16_t *)(output.pixels + output.rowBytes * y);
     for (uint32_t x = 0; x < output.width; x++) {

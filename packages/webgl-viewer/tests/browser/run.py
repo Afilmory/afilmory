@@ -65,7 +65,7 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
                                 '10', '444', '1', str(ratio), '32', str(gain_depth), str(gain_yuv)], check=True)
                 corpus.append(name)
     subprocess.run([str(encoder), str(dist / 'gainmap-color-12.avif'), str(dist / 'large.avif'),
-                    '10', '420', '0', '2', '4096', '8', '444'], check=True)
+                    '10', '420', '0', '2', '4096', '12', '444'], check=True)
     artifacts = ROOT / '.local/avif-verification'
     corpus_dir = artifacts / 'corpus'
     corpus_dir.mkdir(parents=True, exist_ok=True)

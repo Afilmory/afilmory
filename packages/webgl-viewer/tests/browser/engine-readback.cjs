@@ -31,6 +31,8 @@ const ref = process.env.AVIF_REFERENCE
       'no-extended',
       'range-change',
       'gain-failure',
+      'precision-gain-failure',
+      'precision-no-decoder',
       'base-failure',
       'unsupported',
       'ordinary',
@@ -67,10 +69,14 @@ const ref = process.env.AVIF_REFERENCE
             warnings.push(m.text())
           }
         })
-        if (primary === 'gain-failure' || primary === 'base-failure') {
-          const prefix = primary === 'gain-failure'
-            ? 'const originalBitmap=self.createImageBitmap.bind(self);self.createImageBitmap=(source,...args)=>{if(source instanceof Blob && args[0]?.colorSpaceConversion==="none")return Promise.reject(new Error("Injected gain decode failure"));return originalBitmap(source,...args)};'
-            : 'const originalBitmap=self.createImageBitmap.bind(self);let calls=0;self.createImageBitmap=(...args)=>{if(++calls===1)return Promise.reject(new Error("Injected base decode failure"));return originalBitmap(...args)};'
+        if (['gain-failure', 'base-failure', 'precision-gain-failure', 'precision-no-decoder'].includes(primary)) {
+          const prefix = primary === 'precision-no-decoder'
+            ? 'self.ImageDecoder=undefined;'
+            : primary === 'precision-gain-failure'
+              ? 'self.ImageDecoder=class {constructor(){throw new Error("Injected native gain decode failure")}};'
+              : primary === 'gain-failure'
+                ? 'const originalBitmap=self.createImageBitmap.bind(self);self.createImageBitmap=(source,...args)=>{if(source instanceof Blob && args[0]?.colorSpaceConversion==="none")return Promise.reject(new Error("Injected gain decode failure"));return originalBitmap(source,...args)};'
+                : 'const originalBitmap=self.createImageBitmap.bind(self);let calls=0;self.createImageBitmap=(...args)=>{if(++calls===1)return Promise.reject(new Error("Injected base decode failure"));return originalBitmap(...args)};'
           if (page.setWorkerPrefix) {
             await page.setWorkerPrefix(prefix)
           }
@@ -161,6 +167,8 @@ const ref = process.env.AVIF_REFERENCE
             )
             await engine.initialized
             const device = engine.device
+            const createTexture = device.createTexture.bind(device)
+            device.createTexture = descriptor => createTexture({ ...descriptor, usage: descriptor.usage | GPUTextureUsage.COPY_SRC })
             // Keep the real engine's pipeline, worker, uniforms, uploads and HDR predicate.
             // Substitute only a same-format render target so it can be read back without presentation conversion.
             const format = engine.context.getConfiguration().format
@@ -170,7 +178,9 @@ const ref = process.env.AVIF_REFERENCE
               usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
             })
             engine.context.getCurrentTexture = () => output
-            const filePrimary = ['no-extended', 'range-change', 'gain-failure', 'base-failure'].includes(primary) ? 'color-12' : primary
+            const filePrimary = primary.startsWith('precision-')
+              ? 'corpus-color-gain-12-420-ratio2'
+              : ['no-extended', 'range-change', 'gain-failure', 'base-failure'].includes(primary) ? 'color-12' : primary
             await engine.loadImage(
               new URL(
                 primary === 'ordinary'
@@ -220,6 +230,33 @@ const ref = process.env.AVIF_REFERENCE
               failures,
               viewport: engine.getViewport(),
               pixels,
+              metadata: engine.metadata,
+            }
+            if (primary.startsWith('corpus-')) {
+              result.planes = {}
+              for (const name of ['base', 'gain']) {
+                const texture = engine.overview[name].texture
+                const bytesPerPixel = texture.format === 'rgba16float' ? 8 : 4
+                const bytesPerRow = Math.ceil(texture.width * bytesPerPixel / 256) * 256
+                const buffer = device.createBuffer({ size: bytesPerRow * texture.height, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ })
+                const command = device.createCommandEncoder()
+                command.copyTextureToBuffer({ texture }, { buffer, bytesPerRow }, [texture.width, texture.height])
+                device.queue.submit([command.finish()])
+                await buffer.mapAsync(GPUMapMode.READ)
+                const data = texture.format === 'rgba16float' ? new Uint16Array(buffer.getMappedRange()) : new Uint8Array(buffer.getMappedRange())
+                const samples = []
+                for (let y = 0; y < texture.height; y++) {
+                  for (let x = 0; x < texture.width; x++) {
+                    samples.push([0, 1, 2].map((c) => {
+                      const value = data[y * bytesPerRow / data.BYTES_PER_ELEMENT + x * 4 + c]
+                      return texture.format === 'rgba16float' ? half(value) : value / 255
+                    }))
+                  }
+                }
+                buffer.unmap()
+                buffer.destroy()
+                result.planes[name] = { width: texture.width, height: texture.height, pixels: samples }
+              }
             }
             output.destroy()
             read.destroy()
@@ -228,7 +265,7 @@ const ref = process.env.AVIF_REFERENCE
           },
           { primary, width, height, hdr },
         )
-        const expectedHDR = ['no-extended', 'gain-failure', 'base-failure', 'unsupported', 'ordinary'].includes(primary)
+        const expectedHDR = ['no-extended', 'gain-failure', 'precision-gain-failure', 'precision-no-decoder', 'base-failure', 'unsupported', 'ordinary'].includes(primary)
           ? false
           : primary === 'range-change'
             ? !hdr
@@ -238,12 +275,12 @@ const ref = process.env.AVIF_REFERENCE
         assert.deepEqual(actual.failures, [])
         assert.deepEqual(pageErrors, [])
         assert.equal(requests.length, 1)
-        const warns = ['gain-failure', 'base-failure', 'unsupported'].includes(primary)
+        const warns = ['gain-failure', 'precision-gain-failure', 'precision-no-decoder', 'base-failure', 'unsupported'].includes(primary)
         assert.equal(warnings.length, warns ? 1 : 0)
         if (warns) {
           assert.match(
             warnings[0],
-            primary === 'gain-failure' ? /HDR gain map could not be decoded/
+            primary.includes('gain-failure') || primary === 'precision-no-decoder' ? /HDR gain map could not be decoded/
               : primary === 'base-failure' ? /Extracted base could not be decoded/ : /AVIF gain map unsupported/,
           )
         }
@@ -271,16 +308,18 @@ const ref = process.env.AVIF_REFERENCE
           continue
         }
         const referencePrimary
-          = primary === 'ordinary'
-            ? 1
-            : ['transform-m0', 'transform-crop'].includes(primary)
-                ? 12
-                : String(primary).startsWith('transform-')
-                  || ['no-extended', 'range-change', 'gain-failure', 'unsupported'].includes(primary)
-                  ? 'color-12'
-                  : primary === 'icc'
-                    ? 'color-1'
-                    : primary === 'icc-base' ? 'color-base' : primary
+          = primary.startsWith('precision-')
+            ? 'corpus-color-gain-12-420-ratio2'
+            : primary === 'ordinary'
+              ? 1
+              : ['transform-m0', 'transform-crop'].includes(primary)
+                  ? 12
+                  : String(primary).startsWith('transform-')
+                    || ['no-extended', 'range-change', 'gain-failure', 'unsupported'].includes(primary)
+                    ? 'color-12'
+                    : primary === 'icc'
+                      ? 'color-1'
+                      : primary === 'icc-base' ? 'color-base' : primary
         const cropped = ['transform-crop', 'transform-combo'].includes(primary)
         const reference = JSON.parse(
           cp.execFileSync(ref, [
@@ -289,6 +328,14 @@ const ref = process.env.AVIF_REFERENCE
             ...(cropped ? ['crop'] : []),
           ]),
         )
+        let gainPlaneError
+        if (/^corpus-.*-gain-(?:10|12)-/.test(primary)) {
+          gainPlaneError = 0
+          actual.planes.gain.pixels.forEach((p, i) => p.forEach((value, c) => {
+            gainPlaneError = Math.max(gainPlaneError, Math.abs(value - reference.gain.pixels[i][c]))
+          }))
+          assert.ok(gainPlaneError <= 0.0003, `Native gain samples exceed float16 rounding: ${gainPlaneError}`)
+        }
         reference.pqRec2020 = indices
           .flat()
           .map(i => reference.pqRec2020[cropped ? Math.floor(i / 32) * 24 + (i % 32) : i])
@@ -353,6 +400,8 @@ const ref = process.env.AVIF_REFERENCE
           failures: actual.failures,
           mismatchedPixels: mismatches.length,
           firstMismatch: mismatches[0],
+          gainPlaneError,
+          ...(actual.planes ? { planes: actual.planes, referencePlanes: { base: reference.base, gain: reference.gain }, metadata: actual.metadata } : {}),
         })
         await page.close()
       }

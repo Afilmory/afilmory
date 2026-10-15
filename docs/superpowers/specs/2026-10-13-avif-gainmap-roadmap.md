@@ -1,6 +1,63 @@
 # AVIF gain-map coverage and next steps
 
-## 2026-10-15 validation update — expanded corpus is not green
+## 2026-10-15 AVIF-specific fix — high-bit-depth gain samples
+
+This change fixes one independently isolated AVIF defect, not the entire expanded
+corpus. 10/12-bit gain items now use native `ImageDecoder` YUV samples, full-range
+BT.601 conversion with centered chroma interpolation, float16 ImageData/bitmaps,
+and rgba16float gain textures. Original AV1 bytes remain in the single AVIF;
+there is no auxiliary request or bundled software AV1 decoder. Frame transforms
+are applied once. Native frames and decoders close on success and failure.
+8-bit AVIF gain items and JPEG/Ultra HDR retain their previous bitmap/rgba8 path.
+
+The independent libavif RGB16 plane reference exposes the original 12-bit 4:2:0
+gain error of approximately 0.3534. The new gain textures match all 12 high-depth
+corpus recipes within 0.000248 (normalized samples, including float16 rounding),
+with a separate strict 0.0003 gate in both HDR and SDR runs. The previously failing
+colored 12-bit 4:2:0 gain reconstruction now satisfies the unchanged final-image
+tolerance. This is gain-plane precision, not end-to-end 12-bit output precision.
+
+Validation: 55 unit tests, scoped ESLint and package typecheck pass. Chromium
+151.0.7922.34 and Edge 155.0.4283.45 complete 136 rendering scenarios: 112 satisfy
+their checks, 24 still exceed the unchanged final-image numerical tolerance
+(previously 25 failures among 132). Original scenarios and four added native
+gain-decode failure/missing-API scenarios pass. JPEG HDR/SDR pixels remain exactly
+equal to the legacy decoder. Six lifecycle/error cases per browser pass with a
+12MP base and 12-bit gain, confirmed rgba16float overview, approximately 50.19 MiB
+peak tracked textures, and zero remaining tracked resources after disposal.
+The full browser command intentionally still exits nonzero.
+
+Missing native sample decoding, reduced decoder bit depth, unsupported native
+pixel layout/transform metadata, ignored float16 ImageData, or a conversion
+allocation over 128 MiB produces one existing viewer warning and an SDR-base
+fallback without reconstructed-HDR status. This limit bounds native sample plus
+conversion buffers; it is not total process RSS. The separate GPU budget remains
+128 MiB and accounts for 8 bytes per gain texel. Explicitly sited high-depth 4:2:0
+chroma is conservatively unsupported. Float16 has more precision than rgba8, but
+does not represent every 12-bit normalized value exactly.
+
+Next AVIF work, in order:
+
+1. Isolate and fix base-plane decoding, especially 12-bit 4:2:0 colored edges
+   already different in SDR, plus 10/12-bit quantization amplified in HDR. Keep
+   ICC/profile handling and bounded large-photo memory; do not blindly apply the
+   gain-data decoder to display colors.
+2. Establish a controlled resampling comparison for low-resolution gain maps.
+   libavif resizes YUV before conversion (including endpoint alignment in the
+   observed scaler), while the viewer samples RGB textures at pixel centers.
+   Quarter-resolution ramps expose this even with correct native gain samples.
+   Preserve both results and the existing strict gate; do not change the shared
+   JPEG shader or relax tolerance just to match one scaler.
+3. Add real high-depth transformed exports and tile-seam numerical coverage.
+   Native transform mapping has unit coverage; the existing real transformed
+   fixtures still exercise the unchanged 8-bit gain path.
+
+Safari shared color-upload correctness is explicitly outside this fix. Its
+[independent issue draft](./2026-10-15-safari-webgpu-color-upload-issue.md) retains
+the prior evidence. No Safari support claim, production deploy, or thumbnail-mode
+change is made here.
+
+## Earlier 2026-10-15 baseline — expanded corpus is not green
 
 The first follow-up validation pass adds 42 reproducible synthetic AVIF recipes,
 two extracted-base retry scenarios and six resource/error lifecycle scenarios.

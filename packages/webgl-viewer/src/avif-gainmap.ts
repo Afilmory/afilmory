@@ -22,7 +22,16 @@ export function inspectAVIFGainMap(buffer: ArrayBuffer): AVIFGainMapResult {
     return image ? { status: 'supported', image } : { status: 'none' }
   }
   catch (error) {
-    return { status: error instanceof UnsupportedAVIFGainMap || error instanceof UnsupportedAVIFColor || error instanceof UnsupportedICCProfile || error instanceof UnsupportedAVIFTransform ? 'unsupported' : 'invalid', reason: String(error) }
+    return {
+      status:
+        error instanceof UnsupportedAVIFGainMap
+        || error instanceof UnsupportedAVIFColor
+        || error instanceof UnsupportedICCProfile
+        || error instanceof UnsupportedAVIFTransform
+          ? 'unsupported'
+          : 'invalid',
+      reason: String(error),
+    }
   }
 }
 function metadata(data: Uint8Array): GainMapMetadata {
@@ -62,8 +71,16 @@ function metadata(data: Uint8Array): GainMapMetadata {
     if (fields[2][c] <= 0 || fields[0][c] > fields[1][c]) {
       throw new Error('Invalid gain map parameters')
     }
-    if (fields[0][c] < -32 || fields[1][c] > 32 || fields[3][c] < 0 || fields[4][c] < 0
-      || fields[3][c] > 1 || fields[4][c] > 1 || fields[2][c] < 1e-6 || fields[2][c] > 32) {
+    if (
+      fields[0][c] < -32
+      || fields[1][c] > 32
+      || fields[3][c] < 0
+      || fields[4][c] < 0
+      || fields[3][c] > 1
+      || fields[4][c] > 1
+      || fields[2][c] < 1e-6
+      || fields[2][c] > 32
+    ) {
       unsupported('Gain map parameters exceed renderer numerical range')
     }
   }
@@ -279,15 +296,23 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
     if (!result) {
       throw new Error('Missing AVIF properties')
     }
-    const unknown = result.find(p => !['ispe', 'pixi', 'av1C', 'colr', 'clli', 'mdcv', 'clap', 'irot', 'imir'].includes(p.type)
-      && (p.essential || ['irot', 'imir', 'clap', 'lsel', 'a1op'].includes(p.type)))
+    const unknown = result.find(
+      p =>
+        !['ispe', 'pixi', 'av1C', 'colr', 'clli', 'mdcv', 'clap', 'irot', 'imir'].includes(p.type)
+        && (p.essential || ['irot', 'imir', 'clap', 'lsel', 'a1op'].includes(p.type)),
+    )
     if (unknown) {
       unsupported(`Unsupported AVIF property: ${unknown.type}`)
     }
     return result
   }
   validateGainMapTransforms(props(baseId), props(gainId), props(tone))
-  const color = (id: number) => readAVIFColor(props(id).filter(p => p.type === 'colr').map(p => p.data))
+  const color = (id: number) =>
+    readAVIFColor(
+      props(id)
+        .filter(p => p.type === 'colr')
+        .map(p => p.data),
+    )
   const baseProfile = color(baseId)
   const alternateProfile = color(tone)
   const baseColor = baseProfile.cicp
@@ -305,6 +330,14 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
   }
   if (![2, 6].includes(gainColor[2]) || gainColor[3] !== 128) {
     unsupported('Only full-range BT.601 gain-map samples are supported')
+  }
+  const gainAV1C = one(props(gainId), 'av1C').data
+  if (gainAV1C.length < 4) {
+    throw new Error('Truncated gain-map AV1 configuration')
+  }
+  const gainBitDepth = gainAV1C[2] & 0x40 ? (gainAV1C[2] & 0x20 ? 12 : 10) : 8
+  if (gainBitDepth > 8 && (gainAV1C[2] & 0x0C) === 0x0C && gainAV1C[2] & 3) {
+    unsupported('Explicitly sited high-bit-depth gain-map chroma is not supported')
   }
   const toneData = locations.get(tone)
   if (!toneData) {
@@ -367,6 +400,7 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
   return {
     base: plane(baseId, false),
     gain: plane(gainId, true),
+    gainBitDepth,
     metadata: parameters,
     orientation: 1,
     ...transforms!,

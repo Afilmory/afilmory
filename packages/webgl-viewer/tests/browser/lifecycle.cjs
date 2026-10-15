@@ -104,6 +104,7 @@ module.exports = async function lifecycle(browser, url) {
           engine.destroy()
         }
         const status = await outcome
+        const gainFormat = engine.overview?.gain?.texture.format
         if (mode === 'view') {
           await settled()
           for (let n = 0; n < 3; n++) {
@@ -122,7 +123,7 @@ module.exports = async function lifecycle(browser, url) {
         host.remove()
         await frame()
         await frame()
-        reports.push({ mode, status, failures, elapsedMs, peakTextureBytes, peakPending, maximumTiles, resources: snapshot(), textureBytesAfterDestroy: engine.textureBytes, queuedAfterDestroy: engine.pending.size + engine.uploads.length + engine.tiles.size, workerCleared: engine.worker === null, overviewCleared: engine.overview === null })
+        reports.push({ mode, status, failures, gainFormat, elapsedMs, peakTextureBytes, peakPending, maximumTiles, resources: snapshot(), textureBytesAfterDestroy: engine.textureBytes, queuedAfterDestroy: engine.pending.size + engine.uploads.length + engine.tiles.size, workerCleared: engine.worker === null, overviewCleared: engine.overview === null })
       }
       return reports
     })
@@ -137,6 +138,7 @@ module.exports = async function lifecycle(browser, url) {
       if (r.mode === 'view') {
         assert.equal(r.status, 'loaded')
         assert.ok(r.maximumTiles > 0)
+        assert.equal(r.gainFormat, 'rgba16float')
       }
       if (r.mode === 'cancel') {
         assert.equal(r.status, 'AbortError')
