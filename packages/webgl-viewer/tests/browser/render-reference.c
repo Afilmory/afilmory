@@ -64,6 +64,24 @@ int main(int argc, char **argv) {
   printf("{");
   printPlane("base", base);
   printPlane("gain", map->image);
+  printf("\"metadata\":{\"useBaseColorSpace\":%s,\"capacityMin\":%.12g,\"capacityMax\":%.12g",
+         map->useBaseColorSpace ? "true" : "false",
+         (double)map->baseHdrHeadroom.n / map->baseHdrHeadroom.d,
+         (double)map->alternateHdrHeadroom.n / map->alternateHdrHeadroom.d);
+  const char *fields[] = {"min", "max", "gamma", "offsetBase", "offsetAlternate"};
+  for (int field = 0; field < 5; field++) {
+    printf(",\"%s\":[", fields[field]);
+    for (int c = 0; c < 3; c++) {
+      double value = field == 0 ? (double)map->gainMapMin[c].n / map->gainMapMin[c].d
+        : field == 1 ? (double)map->gainMapMax[c].n / map->gainMapMax[c].d
+        : field == 2 ? (double)map->gainMapGamma[c].n / map->gainMapGamma[c].d
+        : field == 3 ? (double)map->baseOffset[c].n / map->baseOffset[c].d
+        : (double)map->alternateOffset[c].n / map->alternateOffset[c].d;
+      printf("%s%.12g", c ? "," : "", value);
+    }
+    printf("]");
+  }
+  printf("},");
   printf("\"width\":%u,\"height\":%u,\"pqRec2020\":[", output.width, output.height);
   for (uint32_t y = 0; y < output.height; y++) {
     const uint16_t *row = (const uint16_t *)(output.pixels + output.rowBytes * y);

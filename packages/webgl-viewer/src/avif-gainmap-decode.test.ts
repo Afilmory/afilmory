@@ -61,15 +61,7 @@ it('interpolates centered 4:2:0 chroma before clipping RGB', () => {
 })
 
 it('handles odd chroma dimensions and clamps sampling at image edges', () => {
-  const output = gainSamplesToRGBA(
-    samples(
-      12,
-      Array.from({ length: 9 }).fill(2048),
-      3,
-      3,
-      true,
-    ),
-  )
+  const output = gainSamplesToRGBA(samples(12, Array.from<number>({ length: 9 }).fill(2048), 3, 3, true))
   assert.equal(output.data.length, 36)
   assert.ok(Array.from(output.data).every(Number.isFinite))
 })
@@ -108,11 +100,14 @@ it('rejects unsupported sample layout and truncated native buffers', () => {
   assert.throws(() => gainSamplesToRGBA({ ...samples(8, [0]), bytes: new Uint8Array(0) }), RangeError)
 })
 
-for (const failure of ['decode', 'format', 'depth', 'budget', 'copy', 'bitmap', 'precision', 'success']) {
-  it(`releases native decoder/frame resources on ${failure}`, async () => {
+for (const [depth, failure] of [8, 10, 12].flatMap(depth =>
+  ['decode', 'format', 'depth', 'budget', 'copy', 'bitmap', 'precision', 'success'].map(
+    failure => [depth, failure] as const,
+  ))) {
+  it(`releases native ${depth}-bit decoder/frame resources on ${failure}`, async () => {
     const frameClose = vi.fn()
     const decoderClose = vi.fn()
-    const source = samples(10, [1])
+    const source = samples(depth, [1])
     vi.stubGlobal(
       'ImageDecoder',
       class {
@@ -123,7 +118,16 @@ for (const failure of ['decode', 'format', 'depth', 'budget', 'copy', 'bitmap', 
           }
           return {
             image: {
-              format: failure === 'format' ? 'RGBA' : failure === 'depth' ? 'I444' : 'I444P10',
+              format:
+                failure === 'format'
+                  ? 'RGBA'
+                  : failure === 'depth'
+                    ? depth === 8
+                      ? 'I444P10'
+                      : 'I444'
+                    : depth === 8
+                      ? 'I444'
+                      : `I444P${depth}`,
               colorSpace: { fullRange: true, matrix: 'smpte170m' },
               visibleRect: { x: 0, y: 0, width: 1, height: 1 },
               displayWidth: 1,
@@ -159,7 +163,7 @@ for (const failure of ['decode', 'format', 'depth', 'budget', 'copy', 'bitmap', 
       }
       return { width: 1, height: 1 }
     })
-    const result = decodeAVIFGainMap(new Blob([new Uint8Array(1)]), 10)
+    const result = decodeAVIFGainMap(new Blob([new Uint8Array(1)]), depth)
     if (failure === 'success') {
       assert.equal((await result).width, 1)
     }

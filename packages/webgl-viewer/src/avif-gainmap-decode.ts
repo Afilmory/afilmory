@@ -1,5 +1,6 @@
 // Gain maps contain numbers, not display colors. ImageBitmap decoding can
-// quantize 10/12-bit AV1 to 8-bit and use nearest-neighbor chroma upsampling.
+// quantize YUV-to-RGB conversion to 8-bit and use nearest chroma upsampling,
+// even when the compressed source itself is 8-bit.
 // Read native YUV samples instead, and retain their precision through tiling.
 interface AVIFFrame extends VideoFrame {
   readonly rotation: number
@@ -113,7 +114,9 @@ export async function decodeAVIFGainMap(blob: Blob, expectedDepth: number): Prom
     frame = (await decoder.decode()).image
     const format = /^(I420|I444)(?:P(10|12))?$/.exec(frame.format ?? '')
     if (!format || frame.colorSpace.fullRange !== true || frame.colorSpace.matrix !== 'smpte170m') {
-      throw new Error('Unsupported native AVIF gain-map pixel format or color range')
+      throw new Error(
+        `Unsupported native AVIF gain-map pixel format or color range: ${frame.format}, ${frame.colorSpace.matrix}, fullRange=${frame.colorSpace.fullRange}`,
+      )
     }
     if (Number(format[2] ?? 8) !== expectedDepth) {
       throw new Error('Browser did not preserve AVIF gain-map bit depth')

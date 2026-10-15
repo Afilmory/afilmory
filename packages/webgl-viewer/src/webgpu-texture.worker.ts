@@ -138,7 +138,10 @@ self.onmessage = async ({ data: request }: MessageEvent<TextureWorkerRequest>) =
           extracted = result.image
           gainIsData = true
           gainBitDepth = result.image.gainBitDepth
-          gainFloat16 = gainBitDepth > 8
+          // Even 8-bit YUV produces fractional RGB samples. Quantizing those
+          // to rgba8 amplifies color errors during exponential reconstruction.
+          // Mono 8-bit gain has no chroma conversion and is already lossless.
+          gainFloat16 = gainBitDepth > 8 || !result.image.gainMonochrome
         }
         else if (result.status !== 'none') {
           warning = `AVIF gain map ${result.status}: ${result.reason}; using browser decoding`

@@ -1,5 +1,25 @@
 # AVIF gain-map coverage and next steps
 
+## Latest fix: retain fractional RGB from 8-bit AVIF gain samples
+
+The [8-bit gain precision fix](./2026-10-15-avif-eight-bit-gain-precision.md)
+extends native YUV/float16 decoding to colored 8-bit gain items. The paired
+baseline's two AVIF-only matched-sampling failures now pass in Chromium and
+Edge: JPEG 80/80, AVIF 80/80, uploaded-sample formula controls 160/160. Maximum
+AVIF gain error is 0.000245. Mono 8-bit gains and JPEG retain their bitmap path.
+Missing native APIs warn and fall back to the extracted SDR base; explicit
+unsupported chroma siting uses the existing original-file browser fallback.
+
+Native-library comparisons remain strict and nonzero: the paired AVIF count
+improves 15 -> 12 (JPEG remains 38), while the full Chromium/Edge corpus changes
+24 -> 26 across 140 scenarios. Two old sRGB-base/ICC HDR cases cross the native
+threshold after removing compensating gain quantization. Their new independent
+decoded-plane/metadata, matched-sampling checks pass. The detailed report retains
+both results; this is not a green full suite. 73 unit tests and six lifecycle
+checks pass. Base-plane high-depth/chroma accuracy and native gain-resampling
+differences remain next; shared JPEG shader changes are not justified by these
+results. Safari's separate issue remains open locally.
+
 ## Latest: independent JPEG baseline changes failure interpretation
 
 The [paired JPEG/AVIF baseline](./2026-10-15-jpeg-avif-baseline.md) now covers 40

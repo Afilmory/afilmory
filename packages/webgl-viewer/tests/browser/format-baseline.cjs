@@ -18,7 +18,7 @@ function compare(a, b) {
   return { maxError, mismatchedPixels }
 }
 
-function centerReconstruction(planes, hdr) {
+function centerReconstruction(planes, hdr, metadata) {
   const { base, gain } = planes
   const read = (x, y, c) => gain.pixels[y * gain.width + x][c]
   return base.pixels.map((rgb, i) => {
@@ -33,9 +33,38 @@ function centerReconstruction(planes, hdr) {
     return rgb.map((value, c) => {
       const g = (read(x0, y0, c) * (1 - fx) + read(x1, y0, c) * fx) * (1 - fy)
         + (read(x0, y1, c) * (1 - fx) + read(x1, y1, c) * fx) * fy
-      return linear(value) * (hdr ? 2 ** (3 * g) : 1)
+      if (!hdr) {
+        return linear(value)
+      }
+      if (!metadata) {
+        return linear(value) * 2 ** (3 * g)
+      }
+      const logGain = metadata.min[c] + (metadata.max[c] - metadata.min[c]) * g ** (1 / metadata.gamma[c])
+      return (linear(value) + metadata.offsetBase[c]) * 2 ** logGain - metadata.offsetAlternate[c]
     })
   })
+}
+
+// Two existing fixtures use sRGB as both base and gain working primaries,
+// including an equivalent ICC variant. Keep their native-library differences
+// visible while checking an independent decoded-plane, pixel-center reference.
+function srgbBaseReference(actual, reference, hdr) {
+  const expected = reference.metadata
+  assert.equal(actual.metadata.useBaseColorSpace, true)
+  assert.equal(expected.useBaseColorSpace, true)
+  assert.equal(expected.capacityMin, 0)
+  for (const key of ['min', 'max', 'gamma', 'offsetBase', 'offsetAlternate']) {
+    actual.metadata[key].forEach((v, c) => assert.ok(Math.abs(v - expected[key][c]) < 1e-6))
+  }
+  const working = centerReconstruction({ base: reference.base, gain: reference.gain }, hdr, expected)
+  // Linear sRGB -> linear Display P3 (D65), independent of viewer uniforms.
+  const matrix = [
+    [0.822461969, 0.177538031, 0],
+    [0.033194199, 0.966805801, 0],
+    [0.017082631, 0.072397441, 0.910519929],
+  ]
+  const p3 = working.map(rgb => matrix.map(row => row.reduce((sum, v, c) => sum + v * rgb[c], 0)))
+  return compare(actual.pixels.map(p => p.slice(0, 3).map(linear)), p3)
 }
 
 module.exports = function diagnose(actual, reference, hdr) {
@@ -76,3 +105,4 @@ module.exports = function diagnose(actual, reference, hdr) {
     } : {}),
   }
 }
+module.exports.srgbBaseReference = srgbBaseReference

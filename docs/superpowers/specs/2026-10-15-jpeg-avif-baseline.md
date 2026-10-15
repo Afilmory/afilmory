@@ -1,5 +1,10 @@
 # JPEG / AVIF independent baseline
 
+This report records the pre-fix baseline. The subsequent
+[8-bit AVIF gain precision fix](./2026-10-15-avif-eight-bit-gain-precision.md)
+resolves both matched-sampling AVIF failures, while retaining the remaining
+native-library differences and documenting additional full-suite diagnostics.
+
 ## Result
 
 The new JPEG baseline changes the interpretation of the earlier AVIF failures:

@@ -336,8 +336,9 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
     throw new Error('Truncated gain-map AV1 configuration')
   }
   const gainBitDepth = gainAV1C[2] & 0x40 ? (gainAV1C[2] & 0x20 ? 12 : 10) : 8
-  if (gainBitDepth > 8 && (gainAV1C[2] & 0x0C) === 0x0C && gainAV1C[2] & 3) {
-    unsupported('Explicitly sited high-bit-depth gain-map chroma is not supported')
+  const gainMonochrome = Boolean(gainAV1C[2] & 0x10)
+  if (!gainMonochrome && (gainAV1C[2] & 0x0C) === 0x0C && gainAV1C[2] & 3) {
+    unsupported('Explicitly sited gain-map chroma is not supported')
   }
   const toneData = locations.get(tone)
   if (!toneData) {
@@ -401,6 +402,7 @@ export function extractAVIFGainMap(buffer: ArrayBuffer) {
     base: plane(baseId, false),
     gain: plane(gainId, true),
     gainBitDepth,
+    gainMonochrome,
     metadata: parameters,
     orientation: 1,
     ...transforms!,

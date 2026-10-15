@@ -1,5 +1,15 @@
 # End-to-end AVIF rendering check
 
+**Latest AVIF fix:** colored 8-bit gain items now share the native YUV/float16
+path. Independent matched-sampling checks pass for all 80 AVIF and 80 JPEG
+scenarios; native reconstruction still differs for 12 AVIF and 38 JPEG cases.
+The full Chromium/Edge suites each have 140 scenarios and 26 native differences (including
+two sRGB/ICC cases with newly passing independent sampled-plane controls).
+All generated AVIF gains now have a separate 0.0003 normalized-sample gate,
+not just 10/12-bit gains. Missing native APIs warn and use the SDR base for
+colored 8-bit gains too. See the [fix and limits](../../../../docs/superpowers/specs/2026-10-15-avif-eight-bit-gain-precision.md).
+Historical counts below describe earlier revisions.
+
 The independent JPEG/AVIF comparison is available with `JPEG_BASELINE=1` using
 the same command below. It additionally requires libultrahdr 2.0.2, libjpeg-turbo
 3.2.0 and a C++ compiler. It generates 40 paired recipes (8-bit P3, mono/RGB gain,
