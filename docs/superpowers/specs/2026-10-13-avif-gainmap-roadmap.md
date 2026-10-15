@@ -1,5 +1,57 @@
 # AVIF gain-map coverage and next steps
 
+## 2026-10-15 validation update — expanded corpus is not green
+
+The first follow-up validation pass adds 42 reproducible synthetic AVIF recipes,
+two extracted-base retry scenarios and six resource/error lifecycle scenarios.
+Both Chromium 151.0.7922.34 and Edge 155.0.4283.45 complete 132 rendering scenarios:
+107 satisfy their checks; 25 exceed the existing `0.005 + 0.02 × pixel peak`
+linear numerical tolerance. The original 46 scenarios still pass. All six
+12MP lifecycle/error scenarios pass in each browser; peak tracked texture
+allocation is 45.16 MiB and tracked resources return to zero after disposal.
+The command exits nonzero for numerical failures and saves their complete report.
+
+The controlled base matrix covers 8/10/12-bit, 4:2:0/4:4:4 and full/limited range
+with a fixed half-resolution 8-bit 4:4:4 gain plane. Gain cases independently vary
+depth, chroma and size. Seventeen failed scenarios are in the base matrix and
+eight in the gain variants. Two failures already appear in SDR for 12-bit 4:2:0
+colored edges; the other 23 are HDR comparisons. Quarter-resolution gain maps
+also expose differences on the grayscale ramp. Do not attribute every difference
+to bit depth or mark these recipes supported merely because they decode.
+
+The next focused task is to separate decoded base/gain plane error from scaling
+and reconstruction error. The reference uses libavif scaling of YUV gain planes
+before YUV→RGB; the current renderer samples browser-decoded RGB gain textures
+bilinearly and stores gain textures as rgba8. These are known differences in
+the paths, not yet a demonstrated root cause for every failing pixel. Preserve
+the current strict reference checks; add independent plane/interpolation controls
+before changing precision, sampling or supported-input policy. Do not raise
+tolerance, silently skip failing recipes, or claim every libavif pixel difference
+is itself an AVIF-standard violation.
+
+After the user enabled Remote Automation, installed Safari 27.0.1 completed the
+same 132 scenarios through its real WebDriver: 78 numerical comparisons fail,
+including previously Chromium-verified colored SDR fixtures. All six lifecycle
+checks pass, with about 81.39 MiB peak tracked textures under Safari's native
+display scale. The harness does not force Safari to Playwright's device scale.
+This is now actual WebKit coverage; it is not iPhone or physical-nits validation.
+
+An independent 1×1 canvas probe isolates a browser color-upload discrepancy:
+`copyExternalImageToTexture` of sRGB `#704030` yields the same half-float RGB
+`[0.439209, 0.250977, 0.188232]` for both sRGB and Display P3 destinations in this
+Safari. A color-managed P3 canvas read instead yields `[105,66,51] / 255`.
+Canvas and ImageBitmap sources both reproduce the upload discrepancy. Safari also
+returns 8-bit ImageData when this probe requests `rgba-float16`; do not assume a
+CPU-readback workaround preserves wide-gamut/float precision. This identifies a
+shared image→GPU color-conversion problem, not an AVIF parser-only problem or a
+complete explanation of all 78 failures. Next work must add a validated capability
+policy or color-correct upload path shared with JPEG, with independent color tests;
+the exact old/new JPEG parity check alone cannot detect a pre-existing shared bug.
+
+No viewer runtime behavior, production gallery patch or default thumbnail mode
+changed in this pass. Reports and generated fixtures are ignored local artifacts;
+reproduction commands and limits are in `packages/webgl-viewer/tests/browser/README.md`.
+
 ## Current, verified scope
 
 Single-file SDR-primary AVIF extraction reuses the existing texture worker and

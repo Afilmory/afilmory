@@ -5,6 +5,7 @@ Requires libavif 1.4.1 with gain-map support, pkg-config, C compiler, node and
 Playwright Chromium. Set PLAYWRIGHT_MODULE for an externally installed package.
 """
 import functools
+import hashlib
 import http.server
 import json
 import os
@@ -23,6 +24,8 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
     reference = tmp / 'reference'
     flags = shlex.split(subprocess.check_output(['pkg-config', '--cflags', '--libs', 'libavif'], text=True))
     subprocess.run(['cc', str(HERE / 'render-reference.c'), *flags, '-o', str(reference)], check=True)
+    encoder = tmp / 'encode-corpus'
+    subprocess.run(['cc', str(HERE / 'encode-corpus.c'), *flags, '-o', str(encoder)], check=True)
     entry = tmp / 'entry.ts'
     entry.write_text('export { WebGPUImageViewerEngine } from ' + json.dumps(str(ROOT / 'packages/webgl-viewer/src/WebGPUImageViewerEngine')))
     dist = tmp / 'dist'
@@ -44,20 +47,96 @@ with tempfile.TemporaryDirectory(prefix='afilmory-avif-e2e-') as temporary:
     for fixture in (ROOT / 'packages/webgl-viewer/src/fixtures').iterdir():
         if fixture.suffix in ('.avif', '.jpg'):
             shutil.copyfile(fixture, dist / fixture.name)
+    corpus = []
+    for pattern in ('color', 'ramp'):
+        source = dist / ('gainmap-color-12.avif' if pattern == 'color' else 'gainmap-12.avif')
+        for depth in (8, 10, 12):
+            for yuv in (420, 444):
+                for full in (False, True):
+                    name = f'corpus-{pattern}-{depth}-{yuv}-{"full" if full else "limited"}'
+                    subprocess.run([str(encoder), str(source), str(dist / f'gainmap-{name}.avif'),
+                                    str(depth), str(yuv), str(int(full)), '2', '32', '8', '444'], check=True)
+                    corpus.append(name)
+        # Vary gain encoding separately: avoid attributing ratio/chroma effects to base depth.
+        for gain_depth in (8, 10, 12):
+            for ratio, gain_yuv in ((1, 444), (4, 444), (2, 420)):
+                name = f'corpus-{pattern}-gain-{gain_depth}-{gain_yuv}-ratio{ratio}'
+                subprocess.run([str(encoder), str(source), str(dist / f'gainmap-{name}.avif'),
+                                '10', '444', '1', str(ratio), '32', str(gain_depth), str(gain_yuv)], check=True)
+                corpus.append(name)
+    subprocess.run([str(encoder), str(dist / 'gainmap-color-12.avif'), str(dist / 'large.avif'),
+                    '10', '420', '0', '2', '4096', '8', '444'], check=True)
+    artifacts = ROOT / '.local/avif-verification'
+    corpus_dir = artifacts / 'corpus'
+    corpus_dir.mkdir(parents=True, exist_ok=True)
+    encoded = []
+    for name in [f'gainmap-{name}.avif' for name in corpus] + ['large.avif']:
+        data = (dist / name).read_bytes()
+        (corpus_dir / name).write_bytes(data)
+        encoded.append({'file': name, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()})
+    (artifacts / 'corpus.json').write_text(json.dumps({
+        'libavif': subprocess.check_output(['pkg-config', '--modversion', 'libavif'], text=True).strip(),
+        'quality': 95, 'gainQuality': 95, 'speed': 8, 'files': encoded,
+        'note': 'Synthetic re-encodes; bit depth denotes encoding, not preserved end-to-end precision.',
+    }, indent=2) + '\n')
     (dist / 'index.html').write_text('<!doctype html><link rel="icon" href="data:,"><title>AVIF engine verification</title>')
+    (dist / 'broken.avif').write_bytes(b'\x00\x00\x00\x20ftypavif')
     class Quiet(http.server.SimpleHTTPRequestHandler):
+        worker_prefix = ''
+        image_requests = []
+
+        def end_headers(self):
+            # Keep per-case requests and injected worker faults observable in Safari.
+            self.send_header('Cache-Control', 'no-store')
+            super().end_headers()
+
+        def do_POST(self):
+            if self.path != '/_test/control':
+                self.send_error(404)
+                return
+            control = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            Quiet.worker_prefix = control.get('prefix', '')
+            if control.get('reset'):
+                Quiet.image_requests.clear()
+            self.send_response(204)
+            self.end_headers()
+
+        def do_GET(self):
+            if self.path == '/_test/requests':
+                data = json.dumps(Quiet.image_requests).encode()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            if self.path.endswith(('.avif', '.jpg')):
+                Quiet.image_requests.append(self.path)
+            if Quiet.worker_prefix and self.path.startswith('/assets/webgpu-texture.worker-') and self.path.endswith('.js'):
+                data = Quiet.worker_prefix.encode() + Path(self.translate_path(self.path)).read_bytes()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/javascript')
+                self.send_header('Content-Length', str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            super().do_GET()
+
         def log_message(self, *_args):
             pass
     server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(Quiet, directory=str(dist)))
     worker = threading.Thread(target=server.serve_forever, daemon=True)
     worker.start()
     try:
-        env = {**os.environ, 'UPSTREAM_ROOT': str(ROOT), 'AVIF_REFERENCE': str(reference), 'AVIF_TEST_URL': f'http://127.0.0.1:{server.server_port}'}
-        result = subprocess.check_output([NODE, str(HERE / 'engine-readback.cjs')], env=env, text=True)
-        print(result)
-        output = ROOT / '.local/avif-verification/engine-readback.json'
+        env = {**os.environ, 'UPSTREAM_ROOT': str(ROOT), 'AVIF_REFERENCE': str(reference),
+               'AVIF_FIXTURES': str(dist), 'AVIF_CORPUS': json.dumps(corpus),
+               'AVIF_TEST_URL': f'http://127.0.0.1:{server.server_port}'}
+        result = subprocess.run([NODE, str(HERE / 'engine-readback.cjs')], env=env, text=True, stdout=subprocess.PIPE)
+        print(result.stdout)
+        output = artifacts / f'engine-readback-{os.environ.get("BROWSER_CHANNEL", "chromium")}.json'
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(result)
+        output.write_text(result.stdout)
+        result.check_returncode()
     finally:
         server.shutdown()
         server.server_close()

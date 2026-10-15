@@ -3,13 +3,17 @@ const process = require('node:process')
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '@playwright/test')
 const cp = require('node:child_process')
 const assert = require('node:assert/strict')
+const lifecycle = require('./lifecycle.cjs')
 
 const root = process.env.UPSTREAM_ROOT
 const ref = process.env.AVIF_REFERENCE
 ;(async () => {
-  const browser = await chromium.launch({ channel: 'chromium', args: ['--enable-unsafe-webgpu'] })
+  const browser = process.env.BROWSER_CHANNEL === 'safari'
+    ? await require('./safari-driver.cjs')()
+    : await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'chromium', args: ['--enable-unsafe-webgpu'] })
   const reports = []
   try {
+    const colorUpload = await require('./color-upload.cjs')(browser, process.env.AVIF_TEST_URL)
     const legacyPixels = {}
     const cases = [
       '1',
@@ -27,8 +31,10 @@ const ref = process.env.AVIF_REFERENCE
       'no-extended',
       'range-change',
       'gain-failure',
+      'base-failure',
       'unsupported',
       'ordinary',
+      ...JSON.parse(process.env.AVIF_CORPUS || '[]'),
     ]
     for (const primary of cases) {
       for (const hdr of [false, true]) {
@@ -51,6 +57,8 @@ const ref = process.env.AVIF_REFERENCE
         const page = await browser.newPage({ viewport: { width: 200, height: 150 }, deviceScaleFactor: 1 })
         const consoleErrors = []
         const warnings = []
+        const pageErrors = []
+        page.on('pageerror', e => pageErrors.push(e.message))
         page.on('console', (m) => {
           if (m.type() === 'error') {
             consoleErrors.push(m.text())
@@ -59,17 +67,23 @@ const ref = process.env.AVIF_REFERENCE
             warnings.push(m.text())
           }
         })
-        if (primary === 'gain-failure') {
-          await page.route('**/assets/webgpu-texture.worker-*.js', async (route) => {
-            const response = await route.fetch()
-            const source = await response.text()
-            await route.fulfill({
-              response,
-              body:
-                `const originalBitmap=self.createImageBitmap.bind(self);self.createImageBitmap=(source,...args)=>{if(source instanceof Blob && args[0]?.colorSpaceConversion==="none")return Promise.reject(new Error("Injected gain decode failure"));return originalBitmap(source,...args)};${
-                  source}`,
+        if (primary === 'gain-failure' || primary === 'base-failure') {
+          const prefix = primary === 'gain-failure'
+            ? 'const originalBitmap=self.createImageBitmap.bind(self);self.createImageBitmap=(source,...args)=>{if(source instanceof Blob && args[0]?.colorSpaceConversion==="none")return Promise.reject(new Error("Injected gain decode failure"));return originalBitmap(source,...args)};'
+            : 'const originalBitmap=self.createImageBitmap.bind(self);let calls=0;self.createImageBitmap=(...args)=>{if(++calls===1)return Promise.reject(new Error("Injected base decode failure"));return originalBitmap(...args)};'
+          if (page.setWorkerPrefix) {
+            await page.setWorkerPrefix(prefix)
+          }
+          else {
+            await page.route('**/assets/webgpu-texture.worker-*.js', async (route) => {
+              const response = await route.fetch()
+              const source = await response.text()
+              await route.fulfill({
+                response,
+                body: prefix + source,
+              })
             })
-          })
+          }
         }
         await page.addInitScript(
           ({ hdr, primary }) => {
@@ -156,7 +170,7 @@ const ref = process.env.AVIF_REFERENCE
               usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
             })
             engine.context.getCurrentTexture = () => output
-            const filePrimary = ['no-extended', 'range-change', 'gain-failure'].includes(primary) ? 'color-12' : primary
+            const filePrimary = ['no-extended', 'range-change', 'gain-failure', 'base-failure'].includes(primary) ? 'color-12' : primary
             await engine.loadImage(
               new URL(
                 primary === 'ordinary'
@@ -214,7 +228,7 @@ const ref = process.env.AVIF_REFERENCE
           },
           { primary, width, height, hdr },
         )
-        const expectedHDR = ['no-extended', 'gain-failure', 'unsupported', 'ordinary'].includes(primary)
+        const expectedHDR = ['no-extended', 'gain-failure', 'base-failure', 'unsupported', 'ordinary'].includes(primary)
           ? false
           : primary === 'range-change'
             ? !hdr
@@ -222,14 +236,23 @@ const ref = process.env.AVIF_REFERENCE
         assert.equal(actual.hdr, expectedHDR)
         assert.equal(actual.extended, primary !== 'no-extended')
         assert.deepEqual(actual.failures, [])
+        assert.deepEqual(pageErrors, [])
         assert.equal(requests.length, 1)
-        const warns = ['gain-failure', 'unsupported'].includes(primary)
+        const warns = ['gain-failure', 'base-failure', 'unsupported'].includes(primary)
         assert.equal(warnings.length, warns ? 1 : 0)
         if (warns) {
           assert.match(
             warnings[0],
-            primary === 'gain-failure' ? /HDR gain map could not be decoded/ : /AVIF gain map unsupported/,
+            primary === 'gain-failure' ? /HDR gain map could not be decoded/
+              : primary === 'base-failure' ? /Extracted base could not be decoded/ : /AVIF gain map unsupported/,
           )
+        }
+        if (primary === 'base-failure') {
+          assert.deepEqual(consoleErrors, [])
+          assert.ok(actual.pixels.every(p => p.every(Number.isFinite) && p[3] === 1))
+          reports.push({ primary, hdr: actual.hdr, requests: requests.length, warnings, comparison: 'Original browser decoding fallback; no reconstructed-HDR or guaranteed SDR claim' })
+          await page.close()
+          continue
         }
         if (String(primary).startsWith('jpeg')) {
           if (primary === 'jpeg-old') {
@@ -261,7 +284,7 @@ const ref = process.env.AVIF_REFERENCE
         const cropped = ['transform-crop', 'transform-combo'].includes(primary)
         const reference = JSON.parse(
           cp.execFileSync(ref, [
-            `${root}/packages/webgl-viewer/src/fixtures/gainmap-${referencePrimary}.avif`,
+            `${process.env.AVIF_FIXTURES || `${root}/packages/webgl-viewer/src/fixtures`}/gainmap-${referencePrimary}.avif`,
             expectedHDR ? 'hdr' : 'sdr',
             ...(cropped ? ['crop'] : []),
           ]),
@@ -282,6 +305,7 @@ const ref = process.env.AVIF_REFERENCE
         let maxOutput = 0
         let worst = null
         let maxPixelRelative = 0
+        const mismatches = []
         const toP3 = [
           [1.3435783, -0.2821797, -0.0613986],
           [-0.06529745, 1.0757879, -0.01049045],
@@ -306,10 +330,9 @@ const ref = process.env.AVIF_REFERENCE
           const peak = Math.max(0.1, ...expected.map(Math.abs))
           const error = Math.max(...expected.map((v, c) => Math.abs(linear(p[c]) - v)))
           maxPixelRelative = Math.max(maxPixelRelative, error / peak)
-          assert.ok(
-            error <= 0.005 + 0.02 * peak,
-            `CICP ${primary} HDR=${hdr} pixel ${i}: linear error ${error}, reference peak ${peak}`,
-          )
+          if (error > 0.005 + 0.02 * peak) {
+            mismatches.push({ pixel: i, error, peak })
+          }
           assert.equal(p[3], 1)
         })
         assert.deepEqual(consoleErrors, [])
@@ -328,11 +351,15 @@ const ref = process.env.AVIF_REFERENCE
           viewport: actual.viewport,
           warnings,
           failures: actual.failures,
+          mismatchedPixels: mismatches.length,
+          firstMismatch: mismatches[0],
         })
         await page.close()
       }
     }
-    process.stdout.write(`${JSON.stringify({ browser: browser.version(), reports }, null, 2)}\n`)
+    const resources = await lifecycle(browser, process.env.AVIF_TEST_URL)
+    process.stdout.write(`${JSON.stringify({ browser: browser.version(), numericalFailures: reports.filter(r => r.mismatchedPixels > 0).length, colorUpload, reports, resources }, null, 2)}\n`)
+    assert.equal(reports.filter(r => r.mismatchedPixels > 0).length, 0, 'Numerical failures; see saved report (tolerance unchanged)')
   }
   finally {
     await browser.close()
