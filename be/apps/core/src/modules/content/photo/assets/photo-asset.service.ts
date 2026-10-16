@@ -25,6 +25,7 @@ import type {
 import { BillingPlanService } from '@core/modules/platform/billing/plan/billing-plan.service'
 import { StoragePlanService } from '@core/modules/platform/billing/plan/storage-plan.service'
 import { quotaExceeded } from '@core/modules/platform/billing/quota/billing-quota.error'
+import { resolveLibraryItemLimit } from '@core/modules/platform/billing/quota/billing-quota.policy'
 import { BILLING_USAGE_EVENT } from '@core/modules/platform/billing/usage/billing-usage.constants'
 import { BillingUsageService } from '@core/modules/platform/billing/usage/billing-usage.service'
 import { ManagedStorageService } from '@core/modules/platform/managed-storage/managed-storage.service'
@@ -389,7 +390,7 @@ export class PhotoAssetService {
 
       const pendingPhotoPlans = photoPlans.filter(plan => !existingPhotoKeySet.has(plan.storageKey))
       await this.billingPlanService.ensurePhotoProcessingAllowance(tenant.tenant.id, pendingPhotoPlans.length)
-      const libraryLimit = planQuota.libraryItemLimit
+      const libraryLimit = resolveLibraryItemLimit(planQuota.libraryItemLimit, storageConfig.provider === 'managed')
       await this.ensurePhotoLibraryCapacity(tenant.tenant.id, db, pendingPhotoPlans.length, libraryLimit)
       throwIfAborted()
 

@@ -40,3 +40,11 @@ export function summarizeQuotas(input: QuotaUsageInput): QuotaDimension[] {
     toDimension('custom_domain', 'count', input.customDomains),
   ]
 }
+
+// The library item (photo count) quota bounds what Afilmory hosts on managed storage. Tenants that
+// bring their own storage (S3/B2/GitHub, ...) own those bytes, so the count quota does not apply to
+// them. Every other plan quota (monthly processing, upload/sync object size, custom domains) applies
+// regardless of where photos are stored.
+export function resolveLibraryItemLimit(planLimit: number | null, usesManagedStorage: boolean): number | null {
+  return usesManagedStorage ? planLimit : null
+}

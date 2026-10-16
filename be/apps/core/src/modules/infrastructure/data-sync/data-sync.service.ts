@@ -12,6 +12,7 @@ import { PhotoStorageService } from '@core/modules/content/photo/storage/photo-s
 import { formatBytesToMb } from '@core/modules/content/photo/storage/storage.utils'
 import { BillingPlanService } from '@core/modules/platform/billing/plan/billing-plan.service'
 import { quotaExceeded } from '@core/modules/platform/billing/quota/billing-quota.error'
+import { resolveLibraryItemLimit } from '@core/modules/platform/billing/quota/billing-quota.policy'
 import { BILLING_USAGE_EVENT } from '@core/modules/platform/billing/usage/billing-usage.constants'
 import { BillingUsageService } from '@core/modules/platform/billing/usage/billing-usage.service'
 import { selectGalleryPushPreview } from '@core/modules/platform/push-notifications/gallery-push.payload'
@@ -101,12 +102,12 @@ export class DataSyncService {
     const runStartedAt = new Date()
     const planQuota = await this.billingPlanService.getQuotaForTenant(tenant.tenant.id)
     const effectiveMaxObjectMb = planQuota.maxSyncObjectSizeMb
+    const { builderConfig, storageConfig } = await this.resolveBuilderConfigForTenant(tenant.tenant.id, options)
     const syncLimits = {
       maxObjectBytes: this.convertMbToBytes(effectiveMaxObjectMb),
       maxObjectSizeMb: effectiveMaxObjectMb,
-      libraryLimit: planQuota.libraryItemLimit,
+      libraryLimit: resolveLibraryItemLimit(planQuota.libraryItemLimit, storageConfig.provider === 'managed'),
     }
-    const { builderConfig, storageConfig } = await this.resolveBuilderConfigForTenant(tenant.tenant.id, options)
     const context = await this.prepareSyncContext(tenant.tenant.id, builderConfig, storageConfig)
     this.ensureLibraryCapacityLimit({
       current: context.records.length,

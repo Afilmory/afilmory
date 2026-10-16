@@ -1,9 +1,8 @@
 import type { Context } from 'hono'
 import { describe, expect, it, vi } from 'vitest'
 
-import { ManifestPublicController } from './manifest.public.controller'
-import type { ManifestService } from './manifest.service'
-import { computeManifestETag, computeRevisionETag } from './manifest.service'
+import { ManifestPublicController, SearchPhotosSchema } from './manifest.public.controller'
+import { computeManifestETag, computeRevisionETag, MANIFEST_SEARCH_MAX_LIMIT, ManifestService } from './manifest.service'
 
 function createContext(headers: Record<string, string> = {}): Context {
   const normalized = new Map(Object.entries(headers).map(([key, value]) => [key.toLowerCase(), value]))
@@ -107,5 +106,47 @@ describe('manifestPublicController#getManifest', () => {
     expect(response.headers.get('etag')).toBe('"rev-0"')
     expect(await response.json()).toEqual(manifest)
     expect(manifestService.getManifest).toHaveBeenCalledOnce()
+  })
+})
+
+describe('manifest photo search pagination', () => {
+  const photos = Array.from({ length: 250 }, (_, index) => ({ id: `photo-${index}` }))
+
+  function createService() {
+    const service = new ManifestService({} as never, {} as never)
+    vi.spyOn(service, 'getManifest').mockResolvedValue({ data: photos } as never)
+    return service
+  }
+
+  it('accepts page sizes up to the maximum and rejects larger ones', () => {
+    expect(SearchPhotosSchema.safeParse({}).success).toBe(true)
+    expect(SearchPhotosSchema.safeParse({ limit: 1 }).success).toBe(true)
+    expect(SearchPhotosSchema.safeParse({ limit: MANIFEST_SEARCH_MAX_LIMIT }).success).toBe(true)
+    expect(SearchPhotosSchema.safeParse({ limit: MANIFEST_SEARCH_MAX_LIMIT + 1 }).success).toBe(false)
+    expect(SearchPhotosSchema.safeParse({ limit: 0 }).success).toBe(false)
+    expect(SearchPhotosSchema.safeParse({ offset: -1 }).success).toBe(false)
+  })
+
+  it('returns one maximum-size page and the full total when limit is omitted', async () => {
+    const result = await createService().searchPhotos({})
+
+    expect(MANIFEST_SEARCH_MAX_LIMIT).toBe(100)
+    expect(result.total).toBe(250)
+    expect(result.data).toHaveLength(MANIFEST_SEARCH_MAX_LIMIT)
+    expect(result.data[0]?.id).toBe('photo-0')
+  })
+
+  it('pages through the full result set with offset', async () => {
+    const service = createService()
+
+    const small = await service.searchPhotos({ limit: 6 })
+    const last = await service.searchPhotos({ limit: MANIFEST_SEARCH_MAX_LIMIT, offset: 200 })
+    const beyond = await service.searchPhotos({ limit: 10, offset: 250 })
+
+    expect(small.data.map(photo => photo.id)).toEqual(photos.slice(0, 6).map(photo => photo.id))
+    expect(last.data).toHaveLength(50)
+    expect(last.data[0]?.id).toBe('photo-200')
+    expect(last.total).toBe(250)
+    expect(beyond).toEqual({ data: [], total: 250 })
   })
 })

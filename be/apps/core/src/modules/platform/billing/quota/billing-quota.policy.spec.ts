@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { summarizeQuotas } from './billing-quota.policy'
+import { resolveLibraryItemLimit, summarizeQuotas } from './billing-quota.policy'
 
 const base = {
   customDomains: { limit: null, used: 0 },
@@ -37,5 +37,19 @@ describe('summarizeQuotas', () => {
     const dimensions = summarizeQuotas({ ...base, storage: { limit: 100, used: 10 } })
     expect(dimensions.find(d => d.reason === 'storage')?.unit).toBe('bytes')
     expect(dimensions.find(d => d.reason === 'monthly_process')?.unit).toBe('count')
+  })
+})
+
+describe('resolveLibraryItemLimit', () => {
+  it('keeps the plan library item limit for managed storage', () => {
+    expect(resolveLibraryItemLimit(500, true)).toBe(500)
+    expect(resolveLibraryItemLimit(100, true)).toBe(100)
+    expect(resolveLibraryItemLimit(null, true)).toBeNull()
+  })
+
+  it('drops the library item limit for bring-your-own storage', () => {
+    expect(resolveLibraryItemLimit(500, false)).toBeNull()
+    expect(resolveLibraryItemLimit(100, false)).toBeNull()
+    expect(resolveLibraryItemLimit(null, false)).toBeNull()
   })
 })
