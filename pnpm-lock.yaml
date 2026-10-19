@@ -1024,9 +1024,15 @@ importers:
       ejs:
         specifier: 7.0.1
         version: 7.0.1
+      heic-convert:
+        specifier: 2.1.0
+        version: 2.1.0
       hono:
         specifier: 4.13.13
         version: 4.13.13
+      ioredis:
+        specifier: ^6.0.0
+        version: 6.0.0
       jose:
         specifier: 6.2.12
         version: 6.2.12
@@ -1036,6 +1042,9 @@ importers:
       mime-types:
         specifier: 3.0.2
         version: 3.0.2
+      nodejs-snowflake:
+        specifier: ^2.0.1
+        version: 2.0.1
       pg:
         specifier: ^8.23.1
         version: 8.23.1(pg-native@3.9.1)
@@ -1054,6 +1063,9 @@ importers:
       satori:
         specifier: 'catalog:'
         version: 0.56.1
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5
       tsyringe:
         specifier: 4.10.0
         version: 4.10.0
