@@ -20,8 +20,12 @@ private struct PhotoSocialKey: Hashable, Sendable {
   let photoId: String
 }
 
-final class PhotoDetailViewController: UIViewController {
-  let detailView: PhotoDetailView
+final class PhotoDetailViewController: UINavigationController {
+  private let contentController = UIViewController()
+  private(set) lazy var detailView = PhotoDetailView(
+    navigationBar: navigationBar as! PhotoDetailNavigationBar,
+    navigationItem: contentController.navigationItem
+  )
 
   let photos: [GalleryPhoto]
   private let initialIndex: Int
@@ -55,8 +59,12 @@ final class PhotoDetailViewController: UIViewController {
     self.onRequestSignIn = onRequestSignIn
     self.sourceProvider = sourceProvider
     currentIndex = self.initialIndex
-    detailView = PhotoDetailView(frame: .zero)
-    super.init(nibName: nil, bundle: nil)
+    super.init(navigationBarClass: PhotoDetailNavigationBar.self, toolbarClass: nil)
+
+    contentController.view = detailView
+    setViewControllers([contentController], animated: false)
+    overrideUserInterfaceStyle = .dark
+    detailView.installArrangement(in: contentController)
 
     transitionDelegateOwner = PhotoTransitionDelegate(detailController: self)
     transitioningDelegate = transitionDelegateOwner
@@ -71,9 +79,14 @@ final class PhotoDetailViewController: UIViewController {
     fatalError("init(coder:) is not supported")
   }
 
-  override func loadView() {
-    view = detailView
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    detailView.setNeedsLayout()
   }
+
+  override var childForStatusBarHidden: UIViewController? { nil }
+  override var childForStatusBarStyle: UIViewController? { nil }
+  override var childForHomeIndicatorAutoHidden: UIViewController? { nil }
 
   override var prefersStatusBarHidden: Bool {
     statusBarHidden

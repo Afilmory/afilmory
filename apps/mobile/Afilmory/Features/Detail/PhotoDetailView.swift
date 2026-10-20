@@ -14,7 +14,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   private let infoView = PhotoDetailInfoView()
   private let topScrim = PhotoDetailScrimView(edge: .top)
   private let bottomScrim = PhotoDetailScrimView(edge: .bottom)
-  private let navigationBar = PhotoDetailNavigationBar()
+  private let navigationBar: PhotoDetailNavigationBar
   private let toolbar = PhotoDetailToolbar()
   private let loadingPillHost = UIView()
   private let loadingPill = PhotoDetailLoadingPillView()
@@ -24,7 +24,8 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     host: self,
     mediaViewport: mediaViewport,
     viewer: viewer,
-    infoView: infoView
+    infoView: infoView,
+    overlayAnchor: bottomScrim
   )
   private lazy var tapGestureRecognizer: UITapGestureRecognizer = {
     let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleUserTap))
@@ -45,18 +46,26 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   private var reactionFailureNonce: Double = 0
   private var visibility = PhotoDetailChromeVisibility(userHidden: false, infoProgress: 0, zoomed: false)
   private var lastLayoutSize = CGSize.zero
+  private var hasHinge = false
+  private var transitionChromeAlpha: CGFloat?
+  private var fullScreenAnimator: UIViewPropertyAnimator?
+  private var fullScreenTransitionView: PhotoDetailTransitionImageView?
+  private var fullScreenInfoSnapshot: UIView?
+  private var fullScreenChromeAlpha: CGFloat = 1
   private var dismissalMediaAnimator: UIViewPropertyAnimator?
   private var dismissalBackdropAnimator: UIViewPropertyAnimator?
   private var dismissalChromeAnimator: UIViewPropertyAnimator?
-  private var dismissalTransitionView: PhotoDismissalTransitionView?
+  private var dismissalTransitionView: PhotoDetailTransitionImageView?
   private var dismissalTransitionTarget: PhotoTransitionTarget?
   private var dismissalGestureOrigin = PhotoTransitionTransform(scale: 1, translation: .zero)
   private var dismissalState = PhotoTransitionTransform(scale: 1, translation: .zero)
   private var dismissalGeneration = 0
 
-  override init(frame: CGRect) {
+  init(navigationBar: PhotoDetailNavigationBar, navigationItem: UINavigationItem) {
     viewer = PhotoViewerView(frame: .zero)
-    super.init(frame: frame)
+    self.navigationBar = navigationBar
+    super.init(frame: .zero)
+    navigationBar.bind(to: navigationItem)
 
     backgroundColor = .clear
     clipsToBounds = true
@@ -72,7 +81,6 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     addSubview(bottomScrim)
     addSubview(infoView)
     addSubview(topScrim)
-    addSubview(navigationBar)
     addSubview(toolbar)
     loadingPillHost.isUserInteractionEnabled = false
     loadingPillHost.addSubview(loadingPill)
@@ -83,11 +91,21 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     configureChrome()
     configureViewer()
     configureInspector()
+    if #available(iOS 27.1, *) {
+      addInteraction(UIHingeInteraction { [weak self] _, update in
+        self?.hasHinge = update.hinge != nil
+        self?.setNeedsLayout()
+      })
+    }
   }
 
   @available(*, unavailable)
   required init?(coder: NSCoder) {
     fatalError("init(coder:) is not supported")
+  }
+
+  func installArrangement(in controller: UIViewController) {
+    inspector.installArrangement(in: controller)
   }
 
   override func layoutSubviews() {
@@ -97,8 +115,18 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     backgroundView.frame = bounds
     infoView.installScrollEdgeEffect(under: toolbar)
     if lastLayoutSize != bounds.size {
+      finishFullScreenTransition()
       inspector.stopAnimationAtCurrentPosition()
       lastLayoutSize = bounds.size
+    }
+    if #available(iOS 27.1, *) {
+      if !hasHinge {
+        hasHinge = reservedRegions(kind: .division, options: .includeInactive).contains {
+          $0.frame.height > $0.frame.width && $0.frame.midX > bounds.minX
+            && $0.frame.midX < bounds.maxX
+        }
+      }
+      inspector.setExpandedFold(hasHinge && bounds.width > bounds.height && traitCollection.horizontalSizeClass == .regular)
     }
     if !visibility.dismissing {
       inspector.reapplyProgress()
@@ -111,12 +139,8 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   }
 
   private func setOpeningChromeAlpha(_ alpha: CGFloat) {
-    navigationBar.alpha = alpha
-    toolbar.alpha = alpha
-    topScrim.alpha = alpha
-    bottomScrim.alpha = alpha
-    loadingPillHost.alpha = alpha
-    viewer.setLiveBadgeAlpha(alpha)
+    transitionChromeAlpha = alpha
+    applyVisibility(animated: false)
   }
 
   func setGallerySlug(_ slug: String?) {
@@ -207,7 +231,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
       imageFrame: imageFrameInViewport,
       targetRect: targetRect,
       viewportBounds: mediaViewport.bounds,
-      viewportCenter: mediaViewport.center
+      viewportCenter: mediaViewport.convert(CGPoint(x: mediaViewport.bounds.midX, y: mediaViewport.bounds.midY), to: self)
     )
   }
 
@@ -268,6 +292,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     dismissalChromeAnimator = nil
     clearDismissalTransition()
     visibility.dismissing = false
+    transitionChromeAlpha = nil
     dismissalGestureOrigin = PhotoTransitionTransform(scale: 1, translation: .zero)
     dismissalState = dismissalGestureOrigin
     mediaViewport.transform = .identity
@@ -278,6 +303,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   }
 
   func beginViewControllerDismissal(target: PhotoTransitionTarget?) {
+    finishFullScreenTransition()
     dismissalGeneration += 1
     visibility.dismissing = true
     settleDismissalAnimationsAtCurrentPosition()
@@ -321,7 +347,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
         imageViewport: PhotoTransitionGeometry.transformedRect(
           target.imageFrame,
           by: state.transform,
-          around: mediaViewport.center
+          around: mediaViewport.convert(CGPoint(x: mediaViewport.bounds.midX, y: mediaViewport.bounds.midY), to: self)
         ),
         fitMode: .contain,
         cornerRadius: 0
@@ -356,7 +382,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
       let currentImageFrame = PhotoTransitionGeometry.transformedRect(
         target.imageFrame,
         by: dismissalState,
-        around: mediaViewport.center
+        around: mediaViewport.convert(CGPoint(x: mediaViewport.bounds.midX, y: mediaViewport.bounds.midY), to: self)
       )
       let duration = dismissalSettlingDuration(
         from: CGPoint(x: currentImageFrame.midX, y: currentImageFrame.midY),
@@ -444,6 +470,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   ) {
     let generation = dismissalGeneration
     visibility.dismissing = false
+    transitionChromeAlpha = nil
     settleAnimatorAtCurrentPosition(dismissalChromeAnimator)
     dismissalChromeAnimator = nil
     let duration = dismissalSettlingDuration(
@@ -538,6 +565,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   }
 
   func prepareDismissalTransition(target: PhotoTransitionTarget?) {
+    finishFullScreenTransition()
     if dismissalTransitionView != nil, let target {
       dismissalTransitionTarget = target
       return
@@ -546,7 +574,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     guard let target,
           let image = viewer.currentTransitionImage()
     else { return }
-    let transitionView = PhotoDismissalTransitionView(
+    let transitionView = PhotoDetailTransitionImageView(
       image: image,
       frame: bounds,
       imageViewport: target.imageFrame,
@@ -554,7 +582,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
       cornerRadius: 0
     )
     transitionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    insertSubview(transitionView, aboveSubview: mediaViewport)
+    insertSubview(transitionView, belowSubview: bottomScrim)
     dismissalTransitionView = transitionView
     dismissalTransitionTarget = target
     mediaViewport.alpha = 0
@@ -629,7 +657,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   }
 
   func canBeginViewControllerDismissal() -> Bool {
-    !visibility.dismissing
+    fullScreenAnimator == nil && !visibility.dismissing
       && viewer.interactiveDismissEnabled
       && inspector.progress <= 0.001
       && viewer.allowsDismissGesture()
@@ -661,6 +689,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
 
   private func configureChrome() {
     navigationBar.onRequestClose = { [weak self] in self?.requestClose() }
+    navigationBar.onRequestFullScreen = { [weak self] in self?.toggleFullScreen() }
 
     navigationBar.ownerActionsProvider = { [weak self] in
       guard let self, photos.indices.contains(currentIndex) else { return [] }
@@ -715,7 +744,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
     inspector.onGestureBegan = { [weak self] in self?.setReactionRailPresented(false, animated: true) }
     inspector.onProgressChange = { [weak self] progress in
       guard let self else { return }
-      visibility.infoProgress = progress
+      visibility.infoProgress = inspector.isExpandedFold ? 0 : progress
       layoutChrome()
       applyVisibility(animated: false)
       updateToolbarState()
@@ -725,37 +754,41 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   }
 
   private func layoutChrome() {
-    let width = mediaViewport.frame.width
     let safeInsets = safeAreaInsets
+    let safeFrame = bounds.inset(by: safeInsets)
+    let mediaFrame = viewer.convert(viewer.bounds, to: self)
+    let chromeX = max(mediaFrame.minX, safeFrame.minX)
+    let chromeMaxX = min(mediaFrame.maxX, safeFrame.maxX)
+    let width = max(chromeMaxX - chromeX, 0)
     let scrimSpan = PhotoDetailScrimView.span
 
-    let navigationBarHeight = navigationBar.sizeThatFits(CGSize(width: width, height: 0)).height
-    navigationBar.frame = CGRect(x: 0, y: safeInsets.top, width: width, height: navigationBarHeight)
+    navigationBar.setFullScreenState(available: inspector.isExpandedFold, fullScreen: inspector.isFullScreen)
     topScrim.frame = CGRect(x: 0, y: 0, width: width, height: scrimSpan)
 
     let toolbarHeight = toolbar.sizeThatFits(CGSize(width: width, height: 0)).height
     let toolbarY = bounds.height - safeInsets.bottom - toolbarHeight
-    toolbar.frame = CGRect(x: 0, y: toolbarY, width: width, height: toolbarHeight)
+    toolbar.frame = CGRect(x: chromeX, y: toolbarY, width: width, height: toolbarHeight)
     bottomScrim.frame = CGRect(x: 0, y: bounds.height - scrimSpan, width: width, height: scrimSpan)
 
     loadingPillHost.frame = bounds
-    let pillSize = loadingPill.sizeThatFits(CGSize(width: width - 32, height: .greatestFiniteMagnitude))
+    let pillSize = loadingPill.sizeThatFits(CGSize(width: max(width - 32, 0), height: .greatestFiniteMagnitude))
     loadingPill.bounds = CGRect(origin: .zero, size: pillSize)
     loadingPill.center = CGPoint(
-      x: width - 16 - pillSize.width / 2,
+      x: chromeMaxX - 16 - pillSize.width / 2,
       y: toolbarY - 12 - pillSize.height / 2
     )
 
     toolbar.layoutIfNeeded()
     let reactionsItemFrame = toolbar.reactionsItemFrame(in: self)
-    reactionRail.anchorXCenter = reactionsItemFrame?.midX
+    reactionRail.anchorXCenter = reactionsItemFrame.map { $0.midX - chromeX }
     let railFrame = reactionRail.preferredFrame(
       containerWidth: width,
       bottomY: reactionsItemFrame?.minY ?? toolbarY
     )
     reactionRail.bounds = CGRect(origin: .zero, size: railFrame.size)
-    reactionRail.center = CGPoint(x: railFrame.midX, y: railFrame.midY)
-    reactionBurst.frame = CGRect(x: 0, y: 0, width: width, height: bounds.height)
+    reactionRail.center = CGPoint(x: chromeX + railFrame.midX, y: railFrame.midY)
+    reactionBurst.frame = CGRect(x: chromeX, y: 0, width: width, height: bounds.height)
+
   }
 
   private func applyVisibility(animated: Bool) {
@@ -774,12 +807,15 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
 
   private func visibilityChanges() -> () -> Void {
     { [self] in
-      navigationBar.alpha = visibility.navBarAlpha
-      toolbar.alpha = visibility.toolbarAlpha
-      topScrim.alpha = visibility.topScrimAlpha
-      bottomScrim.alpha = visibility.bottomScrimAlpha
-      loadingPillHost.alpha = visibility.loadingPillAlpha
-      viewer.setLiveBadgeAlpha(visibility.liveBadgeAlpha)
+      let openingAlpha = transitionChromeAlpha ?? 1
+      let alpha = openingAlpha * fullScreenChromeAlpha
+      navigationBar.setContentAlpha(visibility.navBarAlpha * alpha, keepsFullScreen: inspector.isExpandedFold && !visibility.dismissing && openingAlpha > 0)
+      toolbar.alpha = visibility.toolbarAlpha * alpha
+      topScrim.alpha = visibility.topScrimAlpha * alpha
+      bottomScrim.alpha = visibility.bottomScrimAlpha * alpha
+      loadingPillHost.alpha = visibility.loadingPillAlpha * alpha
+      infoView.alpha = (visibility.dismissing ? 0 : 1) * alpha
+      viewer.setLiveBadgeAlpha(visibility.liveBadgeAlpha * alpha)
     }
   }
 
@@ -834,6 +870,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   }
 
   @objc private func handleUserTap() {
+    guard !inspector.isExpandedFold else { return }
     guard visibility.allowsImmersiveToggle else { return }
     visibility.userHidden.toggle()
     if visibility.userHidden {
@@ -866,17 +903,97 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
 
   private func toggleInfo() {
     guard currentMetadata != nil else { return }
+    if inspector.isExpandedFold {
+      if inspector.isFullScreen { toggleFullScreen() }
+      return
+    }
     setReactionRailPresented(false, animated: true)
     inspector.settle(open: inspector.progress < 0.5, velocity: 0)
   }
 
   private func toggleReactionRail() {
     guard socialActionsEnabled else { return }
-    if inspector.progress > 0.001 {
+    if !inspector.isFoldPreview && inspector.progress > 0.001 {
       inspector.settle(open: false, velocity: 0)
     }
     reactionRail.prepareHaptics()
     setReactionRailPresented(!reactionRailPresented, animated: true)
+  }
+
+  private func toggleFullScreen() {
+    guard inspector.isExpandedFold, !visibility.dismissing, transitionChromeAlpha == nil else { return }
+    setReactionRailPresented(false, animated: false)
+    let entering = !inspector.isFullScreen
+    let image = viewer.currentTransitionImage()
+    let animated = UIView.areAnimationsEnabled && !UIAccessibility.isReduceMotionEnabled
+    let imageFrame = fullScreenTransitionView?.presentationImageFrame(in: self)
+      ?? viewer.currentImageFrame().map { viewer.convert($0, to: self) }
+    let sourceLayer = fullScreenTransitionView?.layer.presentation()
+      ?? fullScreenTransitionView?.layer ?? mediaViewport.layer
+    let sourceViewport = sourceLayer.convert(sourceLayer.bounds, to: layer.presentation() ?? layer)
+    let infoSnapshot = entering && animated ? infoView.snapshotView(afterScreenUpdates: false) : nil
+    let infoFrame = infoView.convert(infoView.bounds, to: self)
+    finishFullScreenTransition()
+
+    if animated, let image, let imageFrame {
+      let transition = PhotoDetailTransitionImageView(
+        image: image, frame: sourceViewport,
+        imageViewport: imageFrame.offsetBy(dx: -sourceViewport.minX, dy: -sourceViewport.minY),
+        fitMode: .contain, cornerRadius: 0
+      )
+      transition.clipsToBounds = true
+      insertSubview(transition, belowSubview: bottomScrim)
+      fullScreenTransitionView = transition
+      if let infoSnapshot {
+        infoSnapshot.frame = infoFrame
+        insertSubview(infoSnapshot, belowSubview: bottomScrim)
+        fullScreenInfoSnapshot = infoSnapshot
+      }
+      mediaViewport.alpha = 0
+      fullScreenChromeAlpha = entering ? 1 : 0
+    }
+
+    visibility.userHidden = entering
+    inspector.setFullScreen(entering)
+    setNeedsLayout()
+    layoutIfNeeded()
+    viewer.layoutIfNeeded()
+    applyScreenTraits()
+    guard let transition = fullScreenTransitionView else { return }
+    guard let target = viewer.currentImageFrame().map({ viewer.convert($0, to: self) }) else {
+      finishFullScreenTransition()
+      return
+    }
+    let viewport = mediaViewport.convert(mediaViewport.bounds, to: self)
+    let animator = UIViewPropertyAnimator(duration: 0.38, dampingRatio: 1) { [self] in
+      transition.frame = viewport
+      transition.apply(
+        imageViewport: target.offsetBy(dx: -viewport.minX, dy: -viewport.minY),
+        fitMode: .contain, cornerRadius: 0
+      )
+      fullScreenInfoSnapshot?.alpha = 0
+      fullScreenChromeAlpha = 1
+      applyVisibility(animated: false)
+    }
+    animator.addCompletion { [weak self, weak animator] _ in
+      guard self?.fullScreenAnimator === animator else { return }
+      self?.finishFullScreenTransition()
+    }
+    fullScreenAnimator = animator
+    animator.startAnimation()
+  }
+
+  private func finishFullScreenTransition() {
+    guard fullScreenTransitionView != nil else { return }
+    if fullScreenAnimator?.state == .active { fullScreenAnimator?.stopAnimation(true) }
+    fullScreenAnimator = nil
+    fullScreenTransitionView?.removeFromSuperview()
+    fullScreenTransitionView = nil
+    fullScreenInfoSnapshot?.removeFromSuperview()
+    fullScreenInfoSnapshot = nil
+    fullScreenChromeAlpha = 1
+    mediaViewport.alpha = 1
+    applyVisibility(animated: false)
   }
 
   private func setReactionRailPresented(_ presented: Bool, animated: Bool) {
@@ -927,7 +1044,7 @@ final class PhotoDetailView: UIView, UIGestureRecognizerDelegate {
   }
 }
 
-private final class PhotoDismissalTransitionView: UIView {
+private final class PhotoDetailTransitionImageView: UIView {
   enum FitMode {
     case contain
     case cover
@@ -935,6 +1052,11 @@ private final class PhotoDismissalTransitionView: UIView {
 
   private let imageView = UIImageView()
   private let imageSize: CGSize
+
+  func presentationImageFrame(in view: UIView) -> CGRect {
+    let layer = imageView.layer.presentation() ?? imageView.layer
+    return layer.convert(layer.bounds, to: view.layer.presentation() ?? view.layer)
+  }
 
   init(
     image: UIImage,

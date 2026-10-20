@@ -2,12 +2,17 @@ import UIKit
 
 final class PhotoDetailNavigationBar: UINavigationBar {
   var onRequestClose: (() -> Void)?
+  var onRequestFullScreen: (() -> Void)?
   var ownerActionsProvider: (() -> [UIMenuElement])?
 
-  private let item = UINavigationItem()
+  private var item = UINavigationItem()
   private let backButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .plain, target: nil, action: nil)
   private let moreButtonItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), style: .plain, target: nil, action: nil)
+  private let fullScreenButtonItem = UIBarButtonItem(image: UIImage(systemName: "arrow.up.left.and.arrow.down.right"), style: .plain, target: nil, action: nil)
   private let titleCapsule = PhotoDetailTitleCapsule()
+  private var ownerActionsEnabled = false
+  private var fullScreenEnabled = false
+  private var fullScreen = false
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -27,14 +32,19 @@ final class PhotoDetailNavigationBar: UINavigationBar {
     backButtonItem.primaryAction = UIAction { [weak self] _ in self?.onRequestClose?() }
     moreButtonItem.accessibilityIdentifier = "photo-detail-more"
     moreButtonItem.accessibilityLabel = String(localized: "More")
+    moreButtonItem.title = String(localized: "More")
     moreButtonItem.menu = UIMenu(children: [
       UIDeferredMenuElement.uncached { [weak self] completion in
         completion(self?.ownerActionsProvider?() ?? [])
       },
     ])
-    item.leftBarButtonItem = backButtonItem
-    item.titleView = titleCapsule
-    setItems([item], animated: false)
+    fullScreenButtonItem.accessibilityIdentifier = "photo-detail-fullscreen"
+    fullScreenButtonItem.accessibilityLabel = String(localized: "Full Screen")
+    fullScreenButtonItem.primaryAction = UIAction { [weak self] _ in self?.onRequestFullScreen?() }
+    if #available(iOS 27.1, *) {
+      backButtonItem.axisBehavior = .verticalPreferred
+      fullScreenButtonItem.axisBehavior = .verticalPreferred
+    }
   }
 
   @available(*, unavailable)
@@ -42,17 +52,54 @@ final class PhotoDetailNavigationBar: UINavigationBar {
     fatalError("init(coder:) is not supported")
   }
 
+  func bind(to item: UINavigationItem) {
+    self.item = item
+    item.leftItemsSupplementBackButton = false
+    item.leftBarButtonItem = backButtonItem
+    item.titleView = titleCapsule
+    updateTrailingItems()
+  }
+
   func setTitle(_ title: String, subtitle: String) {
     titleCapsule.setTitle(title, subtitle: subtitle)
+    titleCapsule.sizeToFit()
     item.titleView = titleCapsule
+    setNeedsLayout()
   }
 
   func setOwnerActionsEnabled(_ enabled: Bool) {
-    item.rightBarButtonItem = enabled ? moreButtonItem : nil
+    guard ownerActionsEnabled != enabled else { return }
+    ownerActionsEnabled = enabled
+    updateTrailingItems()
+  }
+
+  func setFullScreenState(available enabled: Bool, fullScreen: Bool) {
+    guard fullScreenEnabled != enabled || self.fullScreen != fullScreen else { return }
+    fullScreenEnabled = enabled
+    self.fullScreen = fullScreen
+    let title = fullScreen ? String(localized: "Exit Full Screen") : String(localized: "Full Screen")
+    fullScreenButtonItem.title = title
+    fullScreenButtonItem.accessibilityLabel = title
+    fullScreenButtonItem.image = UIImage(systemName: fullScreen
+      ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+    updateTrailingItems()
+  }
+
+  func setContentAlpha(_ alpha: CGFloat, keepsFullScreen: Bool) {
+    backButtonItem.isHidden = alpha <= 0.001
+    moreButtonItem.isHidden = alpha <= 0.001
+    fullScreenButtonItem.isHidden = alpha <= 0.001 && !keepsFullScreen
+    titleCapsule.alpha = alpha
+  }
+
+  private func updateTrailingItems() {
+    item.rightBarButtonItems = (fullScreenEnabled ? [fullScreenButtonItem] : [])
+      + (ownerActionsEnabled ? [moreButtonItem] : [])
   }
 
   func setBackAccessibilityLabel(_ label: String) {
     backButtonItem.accessibilityLabel = label
+    backButtonItem.title = label
   }
 
   override func sizeThatFits(_ size: CGSize) -> CGSize {
@@ -76,7 +123,7 @@ private final class PhotoDetailTitleCapsule: UIVisualEffectView {
   private let titleLabel = UILabel()
   private let subtitleLabel = UILabel()
   private let stack = UIStackView()
-  private static let contentInset = UIView().layoutMargins.top
+  private static let contentInset: CGFloat = 8
 
   init() {
     super.init(effect: AdaptiveGlass.effect(fallbackStyle: .systemThinMaterialDark))
@@ -126,7 +173,7 @@ private final class PhotoDetailTitleCapsule: UIVisualEffectView {
 
   override func sizeThatFits(_ size: CGSize) -> CGSize {
     let content = contentSize
-    let height = content.height + Self.contentInset * 2
+    let height = max(44, content.height + Self.contentInset * 2)
     // A capsule has to inset its content by its own corner radius, or the text
     // rides the curve.
     return CGSize(width: ceil(content.width + height), height: ceil(height))

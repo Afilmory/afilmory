@@ -18,6 +18,13 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate {
   private var isSearching = false
   private var scrollEdgeInteraction: AnyObject?
   private var headerBarItem: UIBarButtonItem?
+  private var contentHeaderConstraints: [NSLayoutConstraint] = []
+  private var pagerTopConstraint: NSLayoutConstraint!
+  private var contentPagerTopConstraint: NSLayoutConstraint!
+
+  private var displaysContentHeader: Bool {
+    traitCollection.horizontalSizeClass == .regular && (isSearching || isSectionRailVisible)
+  }
 
   private lazy var signInItem: UIBarButtonItem = {
     let item = UIBarButtonItem(
@@ -149,10 +156,16 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate {
     pagerScrollView.accessibilityIdentifier = "explore.pageContainer"
     view.addSubview(pagerScrollView)
 
+    pagerTopConstraint = pagerScrollView.topAnchor.constraint(equalTo: view.topAnchor)
+    contentPagerTopConstraint = pagerScrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 64)
+    contentHeaderConstraints = [
+      headerView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+      headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+    ]
     NSLayoutConstraint.activate([
-      pagerScrollView.topAnchor.constraint(equalTo: view.topAnchor),
-      pagerScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      pagerScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      pagerTopConstraint,
+      pagerScrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+      pagerScrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
       pagerScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
     ])
 
@@ -199,6 +212,9 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate {
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
+    if (headerView.superview === view) != displaysContentHeader {
+      applyHeaderChrome()
+    }
     updateSearchBarWidth()
     let width = pagerScrollView.bounds.width
     guard width > 0, abs(width - previousPagerWidth) >= 0.5 else { return }
@@ -247,6 +263,39 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate {
 
   private func applyHeaderChrome() {
     updateSearchBarWidth()
+    if displaysContentHeader {
+      navigationItem.leftBarButtonItem = nil
+      navigationItem.title = nil
+      headerBarItem = nil
+      if headerView.superview !== view {
+        headerView.removeFromSuperview()
+        view.addSubview(headerView)
+        NSLayoutConstraint.activate(contentHeaderConstraints)
+      }
+      pagerTopConstraint.isActive = false
+      contentPagerTopConstraint.isActive = true
+    } else {
+      NSLayoutConstraint.deactivate(contentHeaderConstraints)
+      contentPagerTopConstraint.isActive = false
+      pagerTopConstraint.isActive = true
+      if headerView.superview === view {
+        headerView.removeFromSuperview()
+      }
+      applyNavigationHeader()
+    }
+
+    searchItem.image = UIImage(systemName: isSearching ? "xmark" : "magnifyingglass")
+    searchItem.accessibilityLabel = isSearching
+      ? String(localized: "Close")
+      : String(localized: "Search")
+    if isVisitorChromeVisible, !isSearching {
+      navigationItem.rightBarButtonItems = [signInItem, searchItem]
+    } else {
+      navigationItem.rightBarButtonItem = searchItem
+    }
+  }
+
+  private func applyNavigationHeader() {
     if isSearching || isSectionRailVisible {
       installHeaderBarItem(force: true)
       navigationItem.title = nil
@@ -260,15 +309,6 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate {
       navigationItem.title = String(localized: "Explore")
     }
 
-    searchItem.image = UIImage(systemName: isSearching ? "xmark" : "magnifyingglass")
-    searchItem.accessibilityLabel = isSearching
-      ? String(localized: "Close")
-      : String(localized: "Search")
-    if isVisitorChromeVisible, !isSearching {
-      navigationItem.rightBarButtonItems = [signInItem, searchItem]
-    } else {
-      navigationItem.rightBarButtonItem = searchItem
-    }
   }
 
   private func installHeaderBarItem(force: Bool) {
@@ -306,6 +346,10 @@ final class GalleriesController: UIViewController, UIScrollViewDelegate {
   }
 
   private func updateSearchBarWidth() {
+    if displaysContentHeader {
+      headerView.setAvailableSearchWidth(view.safeAreaLayoutGuide.layoutFrame.width - 40)
+      return
+    }
     let barWidth = navigationController?.navigationBar.bounds.width ?? view.bounds.width
     guard barWidth > 0 else { return }
     let trailing: CGFloat = isVisitorChromeVisible ? 160 : 88

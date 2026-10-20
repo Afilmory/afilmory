@@ -92,11 +92,10 @@ struct StudioCommentsView: View {
         ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
       } else if let error = model.error, model.comments.isEmpty {
         StudioFailureView(error: error) { Task { await model.load() } }
-      } else if horizontalSizeClass == .regular {
-        HStack(spacing: 0) {
+      } else if horizontalSizeClass == .regular, !model.comments.isEmpty {
+        HStack(spacing: 16) {
           commentsForm
             .frame(minWidth: 340, idealWidth: 380, maxWidth: 430)
-          Divider()
           detailForm
         }
       } else {

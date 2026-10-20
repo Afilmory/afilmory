@@ -32,8 +32,13 @@ final class MasonryLayout: UICollectionViewLayout {
   }
 
   var itemWidth: CGFloat {
+    columnWidth(for: columnCount, width: availableWidth)
+  }
+
+  var availableWidth: CGFloat {
     guard let collectionView else { return 0 }
-    return columnWidth(for: columnCount, width: collectionView.bounds.width)
+    let insets = collectionView.adjustedContentInset
+    return max(0, collectionView.bounds.width - insets.left - insets.right)
   }
 
   private func columnWidth(for columns: Int, width: CGFloat) -> CGFloat {
@@ -69,8 +74,8 @@ final class MasonryLayout: UICollectionViewLayout {
   }
 
   func interpolatedFrame(at index: Int) -> CGRect {
-    guard let collectionView, aspectRatios.indices.contains(index) else { return .zero }
-    let width = collectionView.bounds.width
+    guard aspectRatios.indices.contains(index) else { return .zero }
+    let width = availableWidth
     guard width > 0 else { return .zero }
     let lower = Int(zoomPosition.rounded(.down))
     let upper = Int(zoomPosition.rounded(.up))
@@ -81,8 +86,7 @@ final class MasonryLayout: UICollectionViewLayout {
   }
 
   func interpolatedContentHeight() -> CGFloat {
-    guard let collectionView else { return 0 }
-    let width = collectionView.bounds.width
+    let width = availableWidth
     guard width > 0, !aspectRatios.isEmpty else { return 0 }
     let lower = Int(zoomPosition.rounded(.down))
     let upper = Int(zoomPosition.rounded(.up))
@@ -96,8 +100,7 @@ final class MasonryLayout: UICollectionViewLayout {
     super.prepare()
     attributesCache.removeAll(keepingCapacity: true)
     contentHeight = 0
-    guard let collectionView else { return }
-    let width = collectionView.bounds.width
+    let width = availableWidth
     guard width > 0, !aspectRatios.isEmpty else { return }
 
     let lower = Int(zoomPosition.rounded(.down))
@@ -118,7 +121,7 @@ final class MasonryLayout: UICollectionViewLayout {
   }
 
   override var collectionViewContentSize: CGSize {
-    CGSize(width: collectionView?.bounds.width ?? 0, height: contentHeight)
+    CGSize(width: availableWidth, height: contentHeight)
   }
 
   override func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {

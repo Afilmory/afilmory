@@ -194,7 +194,7 @@ final class PhotoViewerView: UIView {
       prefetchTokens.removeValue(forKey: index)
     }
 
-    let screenScale = window?.screen.scale ?? UIScreen.main.scale
+    let screenScale = traitCollection.displayScale
     for index in desiredIndices where prefetchTokens[index] == nil {
       let photo = photos[index]
       guard let url = URL(string: photo.originalUrl), !photo.originalUrl.isEmpty else { continue }

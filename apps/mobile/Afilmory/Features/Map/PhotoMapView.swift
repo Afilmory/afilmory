@@ -227,6 +227,10 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
   private var selectedPhotoId = ""
   private var needsInitialFit = false
 
+  private var contentBounds: CGRect {
+    bounds.inset(by: UIEdgeInsets(top: 0, left: safeAreaInsets.left, bottom: 0, right: safeAreaInsets.right))
+  }
+
   override init(frame: CGRect) {
     super.init(frame: frame)
     backgroundColor = .black
@@ -244,6 +248,7 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
   override func layoutSubviews() {
     super.layoutSubviews()
     mapView.frame = bounds
+    let content = contentBounds
 
     let horizontalInset: CGFloat = 12
     let topY = safeAreaInsets.top + 8
@@ -252,8 +257,8 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
       infoTitle.sizeThatFits(CGSize(width: bounds.width, height: infoHeight)).width,
       infoDetail.sizeThatFits(CGSize(width: bounds.width, height: infoHeight)).width
     )
-    let infoWidth = min(max(infoCopyWidth + 66, 170), max(bounds.width - horizontalInset * 2, 0))
-    infoSurface.frame = CGRect(x: horizontalInset, y: topY, width: infoWidth, height: infoHeight)
+    let infoWidth = min(max(infoCopyWidth + 66, 170), max(content.width - horizontalInset * 2, 0))
+    infoSurface.frame = CGRect(x: content.minX + horizontalInset, y: topY, width: infoWidth, height: infoHeight)
     infoSurface.layer.cornerRadius = 18
     infoIconBackground.frame = CGRect(x: 9, y: 9, width: 38, height: 38)
     infoIconBackground.layer.cornerRadius = 12
@@ -261,10 +266,10 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
     infoTitle.frame = CGRect(x: 57, y: 10, width: max(infoWidth - 66, 0), height: 20)
     infoDetail.frame = CGRect(x: 57, y: 30, width: max(infoWidth - 66, 0), height: 16)
 
-    let loadingSize = loadingLabel.sizeThatFits(CGSize(width: max(bounds.width - 96, 0), height: 44))
-    let loadingWidth = min(max(loadingSize.width + 52, 154), max(bounds.width - 48, 0))
+    let loadingSize = loadingLabel.sizeThatFits(CGSize(width: max(content.width - 96, 0), height: 44))
+    let loadingWidth = min(max(loadingSize.width + 52, 154), max(content.width - 48, 0))
     loadingSurface.frame = CGRect(
-      x: (bounds.width - loadingWidth) / 2,
+      x: content.midX - loadingWidth / 2,
       y: (bounds.height - 44) / 2,
       width: loadingWidth,
       height: 44
@@ -279,7 +284,7 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
     let bottomY = bounds.height - bottomClearance
     let fitSize: CGFloat = 44
     fitSurface.frame = CGRect(
-      x: bounds.width - horizontalInset - fitSize,
+      x: content.maxX - horizontalInset - fitSize,
       y: bottomY - fitSize,
       width: fitSize,
       height: fitSize
@@ -289,9 +294,9 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
 
     let previewHeight: CGFloat = 70
     let fitReservation = fitSurface.isHidden ? 0 : fitSize + 10
-    let previewWidth = min(430, max(bounds.width - horizontalInset * 2 - fitReservation, 0))
+    let previewWidth = min(430, max(content.width - horizontalInset * 2 - fitReservation, 0))
     previewSurface.frame = CGRect(
-      x: horizontalInset,
+      x: content.minX + horizontalInset,
       y: bottomY - previewHeight,
       width: previewWidth,
       height: previewHeight
@@ -551,7 +556,7 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
 
   private func layoutStateCard() {
     guard !stateSurface.isHidden else { return }
-    let width = min(350, max(bounds.width - 48, 0))
+    let width = min(350, max(contentBounds.width - 48, 0))
     let textWidth = max(width - 40, 0)
     let titleHeight = stateTitle.sizeThatFits(CGSize(width: textWidth, height: 80)).height
     let descriptionHeight = stateDescription.sizeThatFits(CGSize(width: textWidth, height: 120)).height
@@ -559,7 +564,7 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
     let actionSpacing: CGFloat = stateActionButton.isHidden ? 0 : 16
     let height = 24 + 30 + 12 + titleHeight + 7 + descriptionHeight + actionSpacing + actionHeight + 24
     let frame = CGRect(
-      x: (bounds.width - width) / 2,
+      x: contentBounds.midX - width / 2,
       y: (bounds.height - height) / 2,
       width: width,
       height: height
@@ -693,7 +698,7 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
 
     mapView.setVisibleMapRect(
       rect,
-      edgePadding: UIEdgeInsets(top: 120, left: 56, bottom: 190, right: 56),
+      edgePadding: UIEdgeInsets(top: 120, left: safeAreaInsets.left + 56, bottom: 190, right: safeAreaInsets.right + 56),
       animated: animated
     )
   }
@@ -719,7 +724,7 @@ final class PhotoMapView: UIView, MKMapViewDelegate {
     } else {
       mapView.setVisibleMapRect(
         rect,
-        edgePadding: UIEdgeInsets(top: 120, left: 56, bottom: 190, right: 56),
+        edgePadding: UIEdgeInsets(top: 120, left: safeAreaInsets.left + 56, bottom: 190, right: safeAreaInsets.right + 56),
         animated: true
       )
     }

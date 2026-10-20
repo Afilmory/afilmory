@@ -252,7 +252,7 @@ final class PhotoMasonryView: UIView {
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    let widthChanged = lastLayoutWidth > 0 && abs(lastLayoutWidth - bounds.width) > 0.5
+    let widthChanged = lastLayoutWidth > 0 && abs(lastLayoutWidth - contentWidth) > 0.5
     let anchor = widthChanged ? captureViewportAnchor() : nil
     collectionView.frame = bounds
     overlayView.frame = bounds
@@ -260,17 +260,22 @@ final class PhotoMasonryView: UIView {
     refreshHeaderViewHeight()
     applyInitialColumnCountIfNeeded()
     if widthChanged {
-      applyPreferredItemWidth(for: bounds.width)
+      applyPreferredItemWidth(for: contentWidth)
       collectionView.layoutIfNeeded()
       restoreViewportAnchor(anchor)
     }
-    lastLayoutWidth = bounds.width
+    lastLayoutWidth = contentWidth
     layoutChrome()
   }
 
   override func safeAreaInsetsDidChange() {
     super.safeAreaInsetsDidChange()
+    layout.invalidateLayout()
     setNeedsLayout()
+  }
+
+  private var contentWidth: CGFloat {
+    max(0, bounds.width - safeAreaInsets.left - safeAreaInsets.right)
   }
 
   // Registers the collection view as the screen's content scroll view so UIKit drives
@@ -661,7 +666,7 @@ final class PhotoMasonryView: UIView {
     if let queryHeaderModel {
       queryHeaderView.configure(queryHeaderModel)
       queryHeaderView.isHidden = false
-      queryHeaderHeight = PhotoQueryHeaderView.layoutMetrics(for: bounds.width).reservedHeight
+      queryHeaderHeight = PhotoQueryHeaderView.layoutMetrics(for: contentWidth).reservedHeight
     } else {
       queryHeaderView.isHidden = true
       queryHeaderHeight = 0
@@ -680,7 +685,7 @@ final class PhotoMasonryView: UIView {
     if let headerView, bounds.width > 0 {
       height = ceil(
         headerView.systemLayoutSizeFitting(
-          CGSize(width: bounds.width, height: 0),
+          CGSize(width: contentWidth, height: 0),
           withHorizontalFittingPriority: .required,
           verticalFittingPriority: .fittingSizeLevel
         ).height
@@ -704,7 +709,7 @@ final class PhotoMasonryView: UIView {
     headerView.frame = CGRect(
       x: 0,
       y: -queryHeaderHeight - headerViewHeight,
-      width: bounds.width,
+      width: contentWidth,
       height: headerViewHeight
     )
   }
@@ -714,7 +719,7 @@ final class PhotoMasonryView: UIView {
       queryHeaderView.frame = .zero
       return
     }
-    let metrics = PhotoQueryHeaderView.layoutMetrics(for: bounds.width)
+    let metrics = PhotoQueryHeaderView.layoutMetrics(for: contentWidth)
     if queryHeaderHeight != metrics.reservedHeight {
       queryHeaderHeight = metrics.reservedHeight
       updateInsets()
@@ -722,7 +727,7 @@ final class PhotoMasonryView: UIView {
     queryHeaderView.frame = CGRect(
       x: metrics.horizontalInset,
       y: -queryHeaderHeight + metrics.topSpacing,
-      width: max(bounds.width - metrics.horizontalInset * 2, 0),
+      width: max(contentWidth - metrics.horizontalInset * 2, 0),
       height: metrics.cardHeight
     )
   }
@@ -765,7 +770,8 @@ final class PhotoMasonryView: UIView {
 
   private func layoutChrome() {
     let controlY = safeAreaInsets.top + chromeTopOffset
-    let filterX = bounds.width - chromeEdgeInset - chromeControlSize
+    let leadingX = safeAreaInsets.left + chromeEdgeInset
+    let filterX = bounds.width - safeAreaInsets.right - chromeEdgeInset - chromeControlSize
     let profileX = filterX - chromeControlGap - chromeControlSize
 
     controlCluster.frame = CGRect(
@@ -788,7 +794,7 @@ final class PhotoMasonryView: UIView {
     avatarImageView.layer.cornerRadius = avatarImageSize / 2
     profileInitialLabel.frame = avatarFrame
 
-    let dateMaxWidth = max(profileX - chromeDateRightGap - chromeEdgeInset, 0)
+    let dateMaxWidth = max(profileX - chromeDateRightGap - leadingX, 0)
     // Recomposing the title needs the width the pill actually gets, which only exists here.
     if dateMaxWidth != dateAvailableWidth {
       dateAvailableWidth = dateMaxWidth
@@ -798,7 +804,7 @@ final class PhotoMasonryView: UIView {
       CGSize(width: dateMaxWidth, height: chromeControlSize)
     ).width
     dateButton.frame = CGRect(
-      x: chromeEdgeInset,
+      x: leadingX,
       y: controlY,
       width: min(fittingWidth, dateMaxWidth),
       height: chromeControlSize
@@ -836,8 +842,8 @@ final class PhotoMasonryView: UIView {
     guard !hasAppliedInitialColumnCount, bounds.width > 0 else { return }
     hasAppliedInitialColumnCount = true
     let clamped = preferredItemWidth > 0
-      ? columnCount(forPreferredItemWidth: preferredItemWidth, containerWidth: bounds.width)
-      : min(max(defaultColumnCount, minColumnCount), maxAllowedColumnCount(for: bounds.width))
+      ? columnCount(forPreferredItemWidth: preferredItemWidth, containerWidth: contentWidth)
+      : min(max(defaultColumnCount, minColumnCount), maxAllowedColumnCount(for: contentWidth))
     guard clamped != columnCount else { return }
     columnCount = clamped
     layout.zoomPosition = CGFloat(clamped)
@@ -847,7 +853,7 @@ final class PhotoMasonryView: UIView {
   private func applyPreferredItemWidthIfPossible() {
     guard hasAppliedInitialColumnCount, bounds.width > 0, preferredItemWidth > 0 else { return }
     let anchor = captureViewportAnchor()
-    applyPreferredItemWidth(for: bounds.width)
+    applyPreferredItemWidth(for: contentWidth)
     collectionView.layoutIfNeeded()
     restoreViewportAnchor(anchor)
   }
@@ -1069,7 +1075,7 @@ final class PhotoMasonryView: UIView {
   private func clampPosition(_ position: CGFloat) -> CGFloat {
     min(
       max(position, CGFloat(minColumnCount)),
-      CGFloat(maxAllowedColumnCount(for: collectionView.bounds.width))
+      CGFloat(maxAllowedColumnCount(for: layout.availableWidth))
     )
   }
 

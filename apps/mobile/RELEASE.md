@@ -3,6 +3,11 @@
 CI: `.github/workflows/mobile-testflight.yml` — XcodeGen → SwiftPM resolution → archive → TestFlight upload.
 Trigger: push a `mobile-v*` tag, or run manually via workflow_dispatch.
 
+Build with Xcode 27.1 or later for the iPhone Duo hinge and reserved-region APIs.
+The deployment target remains iOS 18; older systems retain the existing phone layout.
+TestFlight CI uses the `xcode-27` runner, pins Xcode 27.1, and verifies the iOS 27.1
+device SDK before archiving. `macos-26` does not include this toolchain.
+
 ## Local simulator variant
 
 The Xcode project exposes two independently installable schemes from the same Swift sources.

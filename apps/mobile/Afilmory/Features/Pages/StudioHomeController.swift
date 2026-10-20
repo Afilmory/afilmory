@@ -111,9 +111,10 @@ private enum StudioHomeFormatter {
   }
 }
 
-final class StudioHomeController: UITableViewController {
+final class StudioHomeController: UIViewController, UITableViewDataSource, UITableViewDelegate {
   private struct Section {
     let title: String?
+    var isManagement = false
     let rows: [Row]
   }
 
@@ -146,6 +147,12 @@ final class StudioHomeController: UITableViewController {
   private var activeWorkspaceID: String?
   private var switchingWorkspaceID: String?
   private var hasAppeared = false
+  private let summaryController = UITableViewController(style: .insetGrouped)
+  private let managementController = UITableViewController(style: .insetGrouped)
+  private var columnsController: UIViewController?
+  private var usesColumns = false
+
+  var tableView: UITableView { summaryController.tableView }
 
   init(
     onRequestSignIn: @escaping () -> Void,
@@ -157,7 +164,7 @@ final class StudioHomeController: UITableViewController {
     self.onRequestSignOut = onRequestSignOut
     self.onNavigate = onNavigate
     self.onWorkspaceChanged = onWorkspaceChanged
-    super.init(style: .insetGrouped)
+    super.init(nibName: nil, bundle: nil)
   }
 
   @available(*, unavailable)
@@ -175,15 +182,41 @@ final class StudioHomeController: UITableViewController {
     title = String(localized: "Studio")
     navigationItem.largeTitleDisplayMode = .always
     navigationController?.navigationBar.prefersLargeTitles = true
-    tableView.backgroundColor = .systemGroupedBackground
-    tableView.cellLayoutMarginsFollowReadableWidth = true
-    tableView.keyboardDismissMode = .interactive
-    tableView.rowHeight = UITableView.automaticDimension
-    tableView.estimatedRowHeight = 56
-
-    let refreshControl = UIRefreshControl()
-    refreshControl.addAction(UIAction { [weak self] _ in self?.loadStudio() }, for: .valueChanged)
-    self.refreshControl = refreshControl
+    view.backgroundColor = .systemGroupedBackground
+    for controller in [summaryController, managementController] {
+      controller.loadViewIfNeeded()
+      let table = controller.tableView!
+      table.dataSource = self
+      table.delegate = self
+      table.backgroundColor = .systemGroupedBackground
+      table.cellLayoutMarginsFollowReadableWidth = true
+      table.keyboardDismissMode = .interactive
+      table.rowHeight = UITableView.automaticDimension
+      table.estimatedRowHeight = 56
+      let refresh = UIRefreshControl()
+      refresh.addAction(UIAction { [weak self] _ in self?.loadStudio() }, for: .valueChanged)
+      table.refreshControl = refresh
+    }
+    tableView.accessibilityIdentifier = "studio.summary"
+    managementController.tableView.accessibilityIdentifier = "studio.management"
+    if #available(iOS 27.1, *) {
+      let arrangement = UIArrangementViewController()
+      addChild(arrangement)
+      arrangement.setViewController(summaryController, for: .primary)
+      arrangement.updateArrangement(.overlay)
+      view.addSubview(arrangement.view)
+      arrangement.didMove(toParent: self)
+      columnsController = arrangement
+    } else {
+      addChild(summaryController)
+      view.addSubview(tableView)
+      summaryController.didMove(toParent: self)
+      addChild(managementController)
+      view.addSubview(managementController.tableView)
+      managementController.didMove(toParent: self)
+      managementController.tableView.isHidden = true
+    }
+    setContentScrollView(tableView, for: .top)
 
     sessionObservation = AfilmorySessionStore.shared.observe { [weak self] state in
       DispatchQueue.main.async {
@@ -191,6 +224,46 @@ final class StudioHomeController: UITableViewController {
       }
     }
     AfilmorySessionStore.shared.bootstrap()
+  }
+
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    let expanded = traitCollection.horizontalSizeClass == .regular && view.bounds.width > view.bounds.height
+    if usesColumns != expanded {
+      usesColumns = expanded
+      if #available(iOS 27.1, *), let arrangement = columnsController as? UIArrangementViewController {
+        arrangement.setViewController(expanded ? managementController : nil, for: .secondary)
+        if expanded {
+          arrangement.updateArrangement(.split.axes(.horizontal))
+        } else {
+          arrangement.updateArrangement(.overlay)
+        }
+      }
+      reloadTables()
+    }
+    if let columnsController {
+      columnsController.view.frame = view.bounds
+    } else {
+      let width = expanded ? view.bounds.width / 2 : view.bounds.width
+      tableView.frame = CGRect(x: 0, y: 0, width: width, height: view.bounds.height)
+      managementController.tableView.frame = CGRect(x: width, y: 0, width: width, height: view.bounds.height)
+      managementController.tableView.isHidden = !expanded
+    }
+  }
+
+  private func sections(in table: UITableView) -> [Section] {
+    guard usesColumns else { return sections }
+    return sections.filter { $0.isManagement == (table === managementController.tableView) }
+  }
+
+  private func reloadTables() {
+    tableView.reloadData()
+    managementController.tableView.reloadData()
+  }
+
+  private func endRefreshing() {
+    tableView.refreshControl?.endRefreshing()
+    managementController.tableView.refreshControl?.endRefreshing()
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -234,23 +307,23 @@ final class StudioHomeController: UITableViewController {
     )
   }
 
-  override func numberOfSections(in tableView: UITableView) -> Int {
-    sections.count
+  func numberOfSections(in tableView: UITableView) -> Int {
+    sections(in: tableView).count
   }
 
-  override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    sections[section].rows.count
+  func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    sections(in: tableView)[section].rows.count
   }
 
-  override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String?
+  func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String?
   {
-    sections[section].title
+    sections(in: tableView)[section].title
   }
 
-  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath)
+  func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath)
     -> UITableViewCell
   {
-    let row = sections[indexPath.section].rows[indexPath.row]
+    let row = sections(in: tableView)[indexPath.section].rows[indexPath.row]
     let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
     cell.selectionStyle = isRowEnabled(row) ? .default : .none
 
@@ -345,9 +418,9 @@ final class StudioHomeController: UITableViewController {
     return cell
   }
 
-  override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     defer { tableView.deselectRow(at: indexPath, animated: true) }
-    let row = sections[indexPath.section].rows[indexPath.row]
+    let row = sections(in: tableView)[indexPath.section].rows[indexPath.row]
     guard isRowEnabled(row) else { return }
     switch row {
     case .navigation(_, _, _, _, let route):
@@ -421,7 +494,7 @@ final class StudioHomeController: UITableViewController {
 
   private func loadStudio() {
     guard currentSession != nil, let workspaceID = activeWorkspaceID else {
-      refreshControl?.endRefreshing()
+      endRefreshing()
       return
     }
     loadTask?.cancel()
@@ -484,7 +557,7 @@ final class StudioHomeController: UITableViewController {
           presentError(message: error.localizedDescription)
         }
       }
-      refreshControl?.endRefreshing()
+      endRefreshing()
     }
   }
 
@@ -551,6 +624,7 @@ final class StudioHomeController: UITableViewController {
       ),
       Section(
         title: String(localized: "Manage"),
+        isManagement: true,
         rows: [
           .navigation(
             title: String(localized: "Photo Library"),
@@ -591,6 +665,7 @@ final class StudioHomeController: UITableViewController {
       ),
       Section(
         title: String(localized: "Operations"),
+        isManagement: true,
         rows: [
           .navigation(
             title: String(localized: "Data sync"),
@@ -622,14 +697,14 @@ final class StudioHomeController: UITableViewController {
 
     sections = nextSections
     contentUnavailableConfiguration = nil
-    tableView.reloadData()
-    refreshControl?.endRefreshing()
+    reloadTables()
+    endRefreshing()
   }
 
   private func switchWorkspace(id: String) {
     guard switchingWorkspaceID == nil, id != activeWorkspaceID else { return }
     switchingWorkspaceID = id
-    tableView.reloadData()
+    reloadTables()
     workspaceSwitchTask?.cancel()
     workspaceSwitchTask = Task { [weak self] in
       guard let self else { return }
@@ -650,7 +725,7 @@ final class StudioHomeController: UITableViewController {
         return
       } catch {
         switchingWorkspaceID = nil
-        tableView.reloadData()
+        reloadTables()
         presentError(message: error.localizedDescription)
       }
     }
@@ -697,13 +772,13 @@ final class StudioHomeController: UITableViewController {
     switchingWorkspaceID = nil
     snapshot = nil
     sections = []
-    refreshControl?.endRefreshing()
-    tableView.reloadData()
+    endRefreshing()
+    reloadTables()
   }
 
   private func showLoading() {
     sections = []
-    tableView.reloadData()
+    reloadTables()
     contentUnavailableConfiguration = UIContentUnavailableConfiguration.loading()
   }
 
@@ -728,7 +803,7 @@ final class StudioHomeController: UITableViewController {
 
   private func showError(message: String) {
     sections = []
-    tableView.reloadData()
+    reloadTables()
     var configuration = UIContentUnavailableConfiguration.empty()
     configuration.image = UIImage(systemName: "exclamationmark.triangle")
     configuration.text = String(localized: "Unable to load Studio")
@@ -746,7 +821,7 @@ final class StudioHomeController: UITableViewController {
       }
     }
     contentUnavailableConfiguration = configuration
-    refreshControl?.endRefreshing()
+    endRefreshing()
   }
 
   private func presentError(message: String) {

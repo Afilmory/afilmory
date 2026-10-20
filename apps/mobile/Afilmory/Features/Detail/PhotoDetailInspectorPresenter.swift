@@ -12,11 +12,19 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
   private static let sideInspectorWidth: CGFloat = 380
 
   private(set) var progress: CGFloat = 0
+  private(set) var isExpandedFold = false
+  private(set) var isFullScreen = false
+
+  var isFoldPreview: Bool { isExpandedFold && !isFullScreen }
 
   private unowned let host: UIView
   private unowned let infoView: PhotoDetailInfoView
   private unowned let mediaViewport: UIView
   private unowned let viewer: PhotoViewerView
+  private unowned let overlayAnchor: UIView
+  private weak var owner: UIViewController?
+  private var arrangementController: UIViewController?
+  private let infoController = UIViewController()
 
   private var animator: UIViewPropertyAnimator?
   private var gestureStartProgress: CGFloat = 0
@@ -29,16 +37,83 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
     return recognizer
   }()
 
-  init(host: UIView, mediaViewport: UIView, viewer: PhotoViewerView, infoView: PhotoDetailInfoView) {
+  init(host: UIView, mediaViewport: UIView, viewer: PhotoViewerView, infoView: PhotoDetailInfoView, overlayAnchor: UIView) {
     self.host = host
     self.mediaViewport = mediaViewport
     self.viewer = viewer
     self.infoView = infoView
+    self.overlayAnchor = overlayAnchor
     super.init()
   }
 
+  func installArrangement(in owner: UIViewController) {
+    guard #available(iOS 27.1, *) else { return }
+    self.owner = owner
+    let arrangement = PhotoDetailArrangementController()
+    arrangement.onLayout = { [weak self] in
+      guard let self else { return }
+      apply(progress)
+    }
+    arrangementController = arrangement
+    let mediaController = UIViewController()
+    mediaViewport.removeFromSuperview()
+    mediaController.view = mediaViewport
+    owner.addChild(arrangement)
+    arrangement.setViewController(mediaController, for: .primary)
+    arrangement.updateArrangement(.overlay)
+    arrangement.view.frame = host.bounds
+    arrangement.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    host.insertSubview(arrangement.view, belowSubview: overlayAnchor)
+    arrangement.didMove(toParent: owner)
+    infoView.removeFromSuperview()
+    infoController.view = infoView
+    owner.addChild(infoController)
+    host.insertSubview(infoView, aboveSubview: overlayAnchor)
+    infoController.didMove(toParent: owner)
+  }
+
   func reapplyProgress() {
+    arrangementController?.view.frame = host.bounds
+    arrangementController?.view.layoutIfNeeded()
     apply(progress)
+  }
+
+  func setExpandedFold(_ expanded: Bool) {
+    guard expanded != isExpandedFold else { return }
+    stopAnimationAtCurrentPosition()
+    isExpandedFold = expanded
+    updateInfoPlacement()
+    apply(isFoldPreview ? 1 : 0)
+  }
+
+  func setFullScreen(_ fullScreen: Bool) {
+    isFullScreen = fullScreen
+    updateInfoPlacement()
+    apply(isFoldPreview ? 1 : 0)
+  }
+
+  private func updateInfoPlacement() {
+    guard #available(iOS 27.1, *),
+          let arrangement = arrangementController as? UIArrangementViewController,
+          let owner
+    else { return }
+    infoView.transform = .identity
+    if isFoldPreview {
+      guard infoController.parent !== arrangement else { return }
+      infoController.willMove(toParent: nil)
+      infoView.removeFromSuperview()
+      infoController.removeFromParent()
+      arrangement.setViewController(infoController, for: .secondary)
+      arrangement.updateArrangement(.split.axes(.horizontal))
+    } else {
+      guard infoController.parent !== owner else { return }
+      arrangement.setViewController(nil, for: .secondary)
+      arrangement.updateArrangement(.overlay)
+      owner.addChild(infoController)
+      host.insertSubview(infoView, aboveSubview: overlayAnchor)
+      infoController.didMove(toParent: owner)
+    }
+    arrangement.view.layoutIfNeeded()
   }
 
   func settle(open: Bool, velocity: CGFloat) {
@@ -99,7 +174,7 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
   }
 
   private var usesSideInspector: Bool {
-    host.bounds.width >= Self.sideInspectorMinimumWidth
+    isExpandedFold || host.bounds.width >= Self.sideInspectorMinimumWidth
   }
 
   private var compactInspectorHeight: CGFloat {
@@ -110,7 +185,7 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
   }
 
   private var sideInspectorWidth: CGFloat {
-    min(Self.sideInspectorWidth, host.bounds.width * 0.48)
+    return min(Self.sideInspectorWidth, host.bounds.width * 0.48)
   }
 
   private func apply(_ rawProgress: CGFloat) {
@@ -118,7 +193,11 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
     self.progress = progress
     viewer.infoPresented = progress > 0.001
 
-    if usesSideInspector {
+    if isFoldPreview {
+      viewer.transform = .identity
+      infoView.transform = .identity
+      setBaseFrame(viewer, mediaViewport.bounds)
+    } else if usesSideInspector {
       applySideProgress(progress)
     } else {
       applyCompactProgress(progress)
@@ -127,7 +206,7 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
   }
 
   private func applyCompactProgress(_ progress: CGFloat) {
-    mediaViewport.frame = host.bounds
+    if arrangementController == nil { mediaViewport.frame = host.bounds }
     setBaseFrame(viewer, mediaViewport.bounds)
 
     let panelHeight = compactInspectorHeight
@@ -144,10 +223,10 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
 
   private func applySideProgress(_ progress: CGFloat) {
     let inspectorWidth = sideInspectorWidth
-    let mediaWidth = host.bounds.width - inspectorWidth * progress
-    mediaViewport.frame = CGRect(x: 0, y: 0, width: mediaWidth, height: host.bounds.height)
+    if arrangementController == nil { mediaViewport.frame = host.bounds }
+    let mediaWidth = mediaViewport.bounds.width - inspectorWidth * progress
     viewer.transform = .identity
-    setBaseFrame(viewer, mediaViewport.bounds)
+    setBaseFrame(viewer, CGRect(x: 0, y: 0, width: mediaWidth, height: mediaViewport.bounds.height))
 
     setBaseFrame(
       infoView,
@@ -241,5 +320,15 @@ final class PhotoDetailInspectorPresenter: NSObject, UIGestureRecognizerDelegate
       candidate = view.superview
     }
     return nil
+  }
+}
+
+@available(iOS 27.1, *)
+private final class PhotoDetailArrangementController: UIArrangementViewController {
+  var onLayout: (() -> Void)?
+
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    onLayout?()
   }
 }
