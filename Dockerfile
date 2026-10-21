@@ -5,9 +5,9 @@
 # -----------------
 # Base stage
 # -----------------
-FROM node:lts-alpine AS base
+FROM node:26-alpine AS base
 WORKDIR /app
-RUN corepack enable
+RUN npm install -g pnpm@12.3.2
 
 # -----------------
 # Builder stage

@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:lts-alpine AS base
+FROM node:26-alpine AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@10.19.0 --activate
+RUN npm install -g pnpm@12.3.2
 
 FROM base AS builder
 WORKDIR /workspace

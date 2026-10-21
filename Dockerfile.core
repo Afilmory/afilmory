@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile:1.7
 
 # Use Alpine base image for smaller size
-FROM node:lts-alpine AS builder
+FROM node:26-alpine AS builder
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@10.19.0 --activate
+RUN npm install -g pnpm@12.3.2
 
 RUN apk add --no-cache python3 make g++ postgresql-dev
 
@@ -29,7 +29,7 @@ RUN pnpm --filter @afilmory/web build:serve \
 RUN mkdir -p be/apps/core/dist/static/web && cp -r apps/web/dist/* be/apps/core/dist/static/web/
 RUN mkdir -p be/apps/core/dist/static/dashboard && cp -r be/apps/dashboard/dist/* be/apps/core/dist/static/dashboard/
 
-FROM node:lts-alpine AS runner
+FROM node:26-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 

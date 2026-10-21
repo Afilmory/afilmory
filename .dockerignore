@@ -1,10 +1,16 @@
 node_modules
+**/node_modules
 .git
 .github
 .vscode
 
 .DS_Store
 dist
+**/dist
+.next
+**/.next
+.turbo
+**/.turbo
 dist-ssr
 *.local
 
