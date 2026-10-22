@@ -14,6 +14,7 @@
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:color-upload": "node tests/color-upload/run.cjs",
     "type-check": "tsc --noEmit"
   },
   "peerDependencies": {
