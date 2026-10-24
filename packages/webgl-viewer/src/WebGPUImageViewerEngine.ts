@@ -250,7 +250,7 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
 
   private createPlane(plane: BitmapPlane, gain: boolean): TexturePlane {
     const device = this.device!
-    const format = !gain && this.wideGamut ? 'rgba16float' : 'rgba8unorm'
+    const format = plane.float16 || (!gain && this.wideGamut) ? 'rgba16float' : 'rgba8unorm'
     const { width, height } = plane.bitmap
     const texture = device.createTexture({
       size: [width, height],
@@ -331,7 +331,7 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
             }
             const needed
               = pixels.base.bitmap.width * pixels.base.bitmap.height * (this.wideGamut ? 8 : 4)
-                + (pixels.gain ? pixels.gain.bitmap.width * pixels.gain.bitmap.height * 4 : 0)
+                + (pixels.gain ? pixels.gain.bitmap.width * pixels.gain.bitmap.height * (pixels.gain.float16 ? 8 : 4) : 0)
             while (this.textureBytes + needed > TEXTURE_BUDGET) {
               const entry = [...this.tiles.entries()].find(([key]) => !this.requests.some(r => r.key === key))
               if (!entry) {
@@ -370,7 +370,7 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
       this.devicePixelRatio,
       this.overview.level,
       TEXTURE_BUDGET - overviewBytes,
-      (this.wideGamut ? 8 : 4) + (this.metadata ? 4 : 0),
+      (this.wideGamut ? 8 : 4) + (this.metadata ? (this.overview.gain!.texture.format === 'rgba16float' ? 8 : 4) : 0),
     )
     for (const request of this.requests) {
       const cached = this.tiles.get(request.key)

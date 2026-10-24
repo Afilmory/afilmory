@@ -1,7 +1,10 @@
 import { XMLParser } from 'fast-xml-parser'
 
-export type RGB = [number, number, number]
-export type Matrix3 = [number, number, number, number, number, number, number, number, number]
+import type { Matrix3, RGB } from './gainmap-color'
+import { inverseMatrix, multiplyMatrices, P3_TO_XYZ, readICCColorants, SRGB_TO_XYZ } from './gainmap-color'
+
+export type { Matrix3, RGB } from './gainmap-color'
+export { inverseMatrix, multiplyMatrices, P3_TO_XYZ, SRGB_TO_XYZ } from './gainmap-color'
 
 export interface GainMapMetadata {
   appleHeadroom?: number
@@ -38,57 +41,6 @@ const xmlParser = new XMLParser({
   parseAttributeValue: false,
   processEntities: false,
 })
-
-// ICC RGB colorants are PCS D50, stored column-major like WGSL matrices.
-export const SRGB_TO_XYZ: Matrix3 = [
-  0.4360747,
-  0.2225045,
-  0.0139322,
-  0.3850649,
-  0.7168786,
-  0.0971045,
-  0.1430804,
-  0.0606169,
-  0.7141733,
-]
-export const P3_TO_XYZ: Matrix3 = [
-  0.515102,
-  0.241182,
-  -0.001049,
-  0.291965,
-  0.692236,
-  0.041882,
-  0.157153,
-  0.0665819,
-  0.784378,
-]
-
-export function multiplyMatrices(a: Matrix3, b: Matrix3): Matrix3 {
-  return Array.from({ length: 9 }, (_, index) => {
-    const row = index % 3
-    const col = Math.floor(index / 3)
-    return a[row] * b[col * 3] + a[row + 3] * b[col * 3 + 1] + a[row + 6] * b[col * 3 + 2]
-  }) as Matrix3
-}
-
-export function inverseMatrix(m: Matrix3): Matrix3 {
-  const [a, d, g, b, e, h, c, f, i] = m
-  const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
-  if (!Number.isFinite(det) || Math.abs(det) < 1e-8) {
-    throw new Error('Invalid ICC colorants')
-  }
-  return [
-    e * i - f * h,
-    f * g - d * i,
-    d * h - e * g,
-    c * h - b * i,
-    a * i - c * g,
-    b * g - a * h,
-    b * f - c * e,
-    c * d - a * f,
-    a * e - b * d,
-  ].map(v => v / det) as Matrix3
-}
 
 function parseJPEG(bytes: Uint8Array, start: number): JPEG {
   if (bytes[start] !== 0xFF || bytes[start + 1] !== 0xD8) {
@@ -333,6 +285,9 @@ function colorants(bytes: Uint8Array, jpeg: JPEG): Matrix3 {
   if (!segments.length) {
     return SRGB_TO_XYZ
   }
+  if (segments.some(s => s.end - s.data < 14)) {
+    throw new Error('Truncated ICC JPEG segment')
+  }
   segments.sort((a, b) => bytes[a.data + 12] - bytes[b.data + 12])
   if (segments.some((s, i) => bytes[s.data + 12] !== i + 1 || bytes[s.data + 13] !== segments.length)) {
     throw new Error('Incomplete ICC profile')
@@ -344,36 +299,7 @@ function colorants(bytes: Uint8Array, jpeg: JPEG): Matrix3 {
     icc.set(part, cursor)
     cursor += part.length
   }
-  const view = new DataView(icc.buffer)
-  if (decoder.decode(icc.subarray(16, 20)) !== 'RGB ') {
-    throw new Error('Unsupported HDR ICC color space')
-  }
-  const count = view.getUint32(128)
-  if (count > 1024 || 132 + count * 12 > icc.length) {
-    throw new Error('Invalid ICC tags')
-  }
-  const result = Array.from({ length: 9 })
-  for (let i = 0; i < count; i++) {
-    const pos = 132 + i * 12
-    const tag = decoder.decode(icc.subarray(pos, pos + 4))
-    const channel = ['rXYZ', 'gXYZ', 'bXYZ'].indexOf(tag)
-    if (channel < 0) {
-      continue
-    }
-    const offset = view.getUint32(pos + 4)
-    const size = view.getUint32(pos + 8)
-    if (size < 20 || offset + size > icc.length || decoder.decode(icc.subarray(offset, offset + 4)) !== 'XYZ ') {
-      throw new Error('Invalid ICC colorant')
-    }
-    for (let c = 0; c < 3; c++) {
-      result[channel * 3 + c] = view.getInt32(offset + 8 + c * 4) / 65536
-    }
-  }
-  if (result.filter(Number.isFinite).length !== 9) {
-    throw new Error('HDR ICC profile has no RGB matrix')
-  }
-  inverseMatrix(result as Matrix3)
-  return result as Matrix3
+  return readICCColorants(icc)
 }
 
 function orientation(bytes: Uint8Array, jpeg: JPEG): number {
