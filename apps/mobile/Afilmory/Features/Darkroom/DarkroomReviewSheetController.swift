@@ -133,6 +133,7 @@ private final class DarkroomPickButton: UIButton {
   private let photo = UIImageView()
   private let badge = UILabel()
   private let pick: DarkroomPick
+  private var requestedThumbnail = false
 
   init(pick: DarkroomPick) {
     self.pick = pick
@@ -163,15 +164,21 @@ private final class DarkroomPickButton: UIButton {
       badge.widthAnchor.constraint(equalToConstant: 24),
       badge.heightAnchor.constraint(equalToConstant: 24),
     ])
-    pick.loadThumbnail(height: 150, scale: UIScreen.main.scale) { [weak self] image in
-      guard let self else { return }
-      UIView.transition(with: self.photo, duration: 0.2, options: .transitionCrossDissolve) { self.photo.image = image }
-    }
   }
 
   @available(*, unavailable)
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    guard !requestedThumbnail, let scale = window?.windowScene?.screen.scale else { return }
+    requestedThumbnail = true
+    pick.loadThumbnail(height: 150, scale: scale) { [weak self] image in
+      guard let self else { return }
+      UIView.transition(with: self.photo, duration: 0.2, options: .transitionCrossDissolve) { self.photo.image = image }
+    }
   }
 
   func setOrder(_ order: Int?, animated: Bool) {

@@ -3,21 +3,14 @@ import UIKit
 final class DarkroomNavigationDelegate: NSObject, UINavigationControllerDelegate, UIGestureRecognizerDelegate {
   private weak var navigation: UINavigationController?
   private var interaction: UIPercentDrivenInteractiveTransition?
-  private let backPan: UIPanGestureRecognizer = {
-    if #available(iOS 26.0, *) { return UIPanGestureRecognizer() }
-    let edge = UIScreenEdgePanGestureRecognizer()
-    edge.edges = .left
-    return edge
-  }()
+  private let backPan = UIPanGestureRecognizer()
 
   init(navigation: UINavigationController) {
     self.navigation = navigation
     super.init()
     navigation.delegate = self
     navigation.interactivePopGestureRecognizer?.isEnabled = false
-    if #available(iOS 26.0, *) {
-      navigation.interactiveContentPopGestureRecognizer?.isEnabled = false
-    }
+    navigation.interactiveContentPopGestureRecognizer?.isEnabled = false
     backPan.delegate = self
     backPan.addTarget(self, action: #selector(handleBackPan(_:)))
     navigation.view.addGestureRecognizer(backPan)
@@ -47,13 +40,12 @@ final class DarkroomNavigationDelegate: NSObject, UINavigationControllerDelegate
     guard (navigation?.viewControllers.count ?? 0) > 1, navigation?.transitionCoordinator == nil,
           gesture === backPan, let view = backPan.view
     else { return false }
-    if backPan is UIScreenEdgePanGestureRecognizer { return true }
     return BackSwipeRule.isBackDrag(velocity: backPan.velocity(in: view))
       && !BackSwipeRule.isBlocked(at: backPan.location(in: view), in: view)
   }
 
   func gestureRecognizer(_ gesture: UIGestureRecognizer, shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
-    gesture === backPan && other is UIPanGestureRecognizer && !(other is UIScreenEdgePanGestureRecognizer)
+    gesture === backPan && other is UIPanGestureRecognizer
   }
 
   @objc private func handleBackPan(_ gesture: UIPanGestureRecognizer) {

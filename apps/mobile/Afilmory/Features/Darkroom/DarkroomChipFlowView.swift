@@ -78,7 +78,7 @@ final class DarkroomChipFlowView: UIView {
   private var lastHeight: CGFloat = 0
 
   override var intrinsicContentSize: CGSize {
-    let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width - 60
+    let width = bounds.width > 0 ? bounds.width : (window?.windowScene?.screen.bounds.width ?? 402) - 60
     return CGSize(width: UIView.noIntrinsicMetric, height: frames(for: width).map(\.maxY).max() ?? 0)
   }
 

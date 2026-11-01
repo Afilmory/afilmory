@@ -5,7 +5,7 @@ final class DarkroomHeaderBar: UIView {
 
   private let backdrop = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
   private let tint = UIView()
-  private let hairline = UIView()
+  private let hairline = AFHairlineView()
   let content = UIView()
 
   override init(frame: CGRect) {
@@ -37,7 +37,6 @@ final class DarkroomHeaderBar: UIView {
       hairline.leadingAnchor.constraint(equalTo: leadingAnchor),
       hairline.trailingAnchor.constraint(equalTo: trailingAnchor),
       hairline.bottomAnchor.constraint(equalTo: bottomAnchor),
-      hairline.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
     ])
     applyTransparency()
     NotificationCenter.default.addObserver(

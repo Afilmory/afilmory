@@ -17,20 +17,12 @@ struct AfilmoryButton<Label: View>: View {
   }
 
   var body: some View {
-    if #available(iOS 26.0, *) {
-      if prominent {
-        Button(action: action, label: label)
-          .buttonStyle(.glassProminent)
-      } else {
-        Button(action: action, label: label)
-          .buttonStyle(.glass)
-      }
-    } else if prominent {
+    if prominent {
       Button(action: action, label: label)
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
     } else {
       Button(action: action, label: label)
-        .buttonStyle(.bordered)
+        .buttonStyle(.glass)
     }
   }
 }

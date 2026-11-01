@@ -179,17 +179,11 @@ enum UploadJobPreparer {
     if !originalExtension.isEmpty {
       return originalExtension.lowercased()
     }
-    if #available(iOS 26.0, *) {
-      return resource.contentType.preferredFilenameExtension ?? "bin"
-    }
-    return UTType(resource.uniformTypeIdentifier)?.preferredFilenameExtension ?? "bin"
+    return resource.contentType.preferredFilenameExtension ?? "bin"
   }
 
   private static func mimeType(for resource: PHAssetResource) -> String {
-    if #available(iOS 26.0, *) {
-      return resource.contentType.preferredMIMEType ?? "application/octet-stream"
-    }
-    return UTType(resource.uniformTypeIdentifier)?.preferredMIMEType ?? "application/octet-stream"
+    resource.contentType.preferredMIMEType ?? "application/octet-stream"
   }
 
   private static func write(_ handle: FileHandle, _ text: String) {

@@ -178,11 +178,19 @@ extension NativeAuthorizationSessions: ASAuthorizationControllerPresentationCont
   ASWebAuthenticationPresentationContextProviding
 {
   nonisolated func presentationAnchor(for _: ASAuthorizationController) -> ASPresentationAnchor {
-    MainActor.assumeIsolated { anchor ?? ASPresentationAnchor() }
+    MainActor.assumeIsolated { anchor ?? Self.sceneAnchor() }
   }
 
   nonisolated func presentationAnchor(for _: ASWebAuthenticationSession) -> ASPresentationAnchor {
-    MainActor.assumeIsolated { anchor ?? ASPresentationAnchor() }
+    MainActor.assumeIsolated { anchor ?? Self.sceneAnchor() }
+  }
+
+  @MainActor
+  private static func sceneAnchor() -> ASPresentationAnchor {
+    guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
+      preconditionFailure("Authorization needs a connected window scene")
+    }
+    return ASPresentationAnchor(windowScene: scene)
   }
 }
 

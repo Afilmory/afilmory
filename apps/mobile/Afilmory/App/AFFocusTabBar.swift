@@ -15,7 +15,7 @@ final class AFFocusTabBar: UIView {
   private var dots: [UIView] = []
   private let backdrop = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
   private let tint = UIView()
-  private let hairline = UIView()
+  private let hairline = AFHairlineView()
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -57,7 +57,6 @@ final class AFFocusTabBar: UIView {
       hairline.topAnchor.constraint(equalTo: topAnchor),
       hairline.leadingAnchor.constraint(equalTo: leadingAnchor),
       hairline.trailingAnchor.constraint(equalTo: trailingAnchor),
-      hairline.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
       stack.topAnchor.constraint(equalTo: topAnchor),
       stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
       stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),

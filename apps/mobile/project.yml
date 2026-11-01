@@ -3,7 +3,7 @@ name: Afilmory
 options:
   projectFormat: xcode16_0
   deploymentTarget:
-    iOS: "18.0"
+    iOS: "26.0"
   developmentLanguage: en
   groupSortPosition: top
   minimumXcodeGenVersion: 2.45.4
@@ -25,7 +25,7 @@ settings:
     CLANG_ENABLE_MODULES: YES
     DEVELOPMENT_TEAM: KAMM5N88X3
     GENERATE_INFOPLIST_FILE: NO
-    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_STRICT_CONCURRENCY: targeted
     SWIFT_VERSION: "6.0"
@@ -35,7 +35,7 @@ targets:
   Afilmory:
     type: application
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - path: Afilmory
         type: syncedFolder
@@ -177,7 +177,7 @@ targets:
   AfilmoryShare:
     type: app-extension
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - path: targets/share
         type: syncedFolder
@@ -212,7 +212,7 @@ targets:
   AfilmoryWidgets:
     type: app-extension
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - path: targets/widgets
         type: syncedFolder
@@ -244,7 +244,7 @@ targets:
   AfilmoryNotification:
     type: app-extension
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - path: targets/notification
         type: syncedFolder
@@ -280,7 +280,7 @@ targets:
   AfilmoryTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - path: Tests
         type: syncedFolder

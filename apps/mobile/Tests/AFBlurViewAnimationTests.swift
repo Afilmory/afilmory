@@ -10,7 +10,7 @@ final class AFBlurViewAnimationTests: XCTestCase {
   }
 
   private func hostedBlur() -> (UIWindow, AFBlurView) {
-    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+    let window = makeTestWindow(size: CGSize(width: 100, height: 100))
     let blur = AFBlurView(frame: window.bounds)
     window.addSubview(blur)
     window.isHidden = false

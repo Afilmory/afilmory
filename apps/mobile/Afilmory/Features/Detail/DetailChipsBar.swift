@@ -6,7 +6,7 @@ final class DetailChipsBar: UIView {
   var onReaction: (() -> Void)?
   var onShare: (() -> Void)?
 
-  private let pill = UIVisualEffectView(effect: AdaptiveGlass.effect(fallbackStyle: .systemUltraThinMaterialDark))
+  private let pill = UIVisualEffectView(effect: AdaptiveGlass.effect())
   private let dot = UIView()
   private let pillLabel = AFLabel.exhibit(size: 16)
   private(set) lazy var reactionButton = AFGlassButton.symbol("heart", accessibilityLabel: String(localized: "React"), pointSize: 17) { [weak self] in

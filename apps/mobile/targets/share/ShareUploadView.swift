@@ -159,12 +159,7 @@ struct ShareUploadView: View {
 }
 
 private extension View {
-  @ViewBuilder
   func shareUploadButtonStyle() -> some View {
-    if #available(iOS 26.0, *) {
-      buttonStyle(.glassProminent)
-    } else {
-      buttonStyle(.borderedProminent)
-    }
+    buttonStyle(.glassProminent)
   }
 }

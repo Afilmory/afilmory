@@ -63,7 +63,7 @@ final class AFMotionTests: XCTestCase {
 
   func testRackInBlurIsStillVisibleMidwayInsteadOfSnapping() {
     AFMotion.reduceMotionOverride = false
-    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+    let window = makeTestWindow(size: CGSize(width: 200, height: 200))
     let view = UIView(frame: window.bounds)
     window.addSubview(view)
     window.isHidden = false
@@ -84,7 +84,7 @@ final class AFMotionTests: XCTestCase {
 
   func testDefocusRampsBlurUpGradually() {
     AFMotion.reduceMotionOverride = false
-    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+    let window = makeTestWindow(size: CGSize(width: 200, height: 200))
     let view = UIView(frame: window.bounds)
     window.addSubview(view)
     window.isHidden = false

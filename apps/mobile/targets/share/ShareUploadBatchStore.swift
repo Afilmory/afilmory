@@ -407,10 +407,7 @@ actor ShareUploadBatchStore {
   }
 
   private func resourceType(_ resource: PHAssetResource) -> UTType? {
-    if #available(iOS 26.0, *) {
-      return resource.contentType
-    }
-    return UTType(resource.uniformTypeIdentifier)
+    resource.contentType
   }
 
   private func write(resource: PHAssetResource, to destinationURL: URL) async throws {

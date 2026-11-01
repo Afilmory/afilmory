@@ -99,9 +99,9 @@ String Catalogs only; there is no runtime locale loader and the iOS app does **n
 
 Shipping languages are declared in `project.yml` (`CFBundleLocalizations`): en, zh-Hans, zh-Hant, zh-HK, ja, ko.
 
-## iOS 18 target with iOS 26 opt-ins
+## iOS 26 minimum
 
-`IPHONEOS_DEPLOYMENT_TARGET` is **18.0** (Swift 6, `SWIFT_STRICT_CONCURRENCY: targeted`). Post-18 APIs need an availability guard *and* an iOS 18 fallback. Liquid Glass goes through `AdaptiveGlass`, which falls back to `UIBlurEffect`/`.filled()` — prefer it over inline `#available` checks for glass surfaces.
+`IPHONEOS_DEPLOYMENT_TARGET` is **26.0** for every target (Swift 6, `SWIFT_STRICT_CONCURRENCY: targeted`). iOS 18 is not supported: use iOS 26 APIs (Liquid Glass, `interactiveContentPopGestureRecognizer`, `PHAssetResource.contentType`) directly, with no `#available` checks or older fallbacks. Glass surfaces go through `AdaptiveGlass` so effect and button styles stay consistent.
 
 Gotcha that still applies: `UIGlassEffect.isInteractive = true` swallows touches meant for buttons hosted in the effect view's `contentView` — keep it off for tappable glass.
 

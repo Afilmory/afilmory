@@ -46,10 +46,6 @@ final class ExhibitionEdgeSwipe: NSObject, UIGestureRecognizerDelegate {
   }
 
   private static func popGestures(of navigation: UINavigationController) -> [UIGestureRecognizer] {
-    var gestures = [navigation.interactivePopGestureRecognizer].compactMap { $0 }
-    if #available(iOS 26.0, *), let content = navigation.interactiveContentPopGestureRecognizer {
-      gestures.append(content)
-    }
-    return gestures
+    [navigation.interactivePopGestureRecognizer, navigation.interactiveContentPopGestureRecognizer].compactMap { $0 }
   }
 }

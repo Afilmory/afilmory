@@ -6,7 +6,7 @@ final class DetailReactionRail: UIView {
 
   var onSend: ((PhotoReaction, Int) -> Void)?
 
-  private let background = UIVisualEffectView(effect: AdaptiveGlass.effect(fallbackStyle: .systemUltraThinMaterialDark))
+  private let background = UIVisualEffectView(effect: AdaptiveGlass.effect())
   private var buttons: [UIButton] = []
   private var counts: [UILabel] = []
   private var streamTimer: Timer?

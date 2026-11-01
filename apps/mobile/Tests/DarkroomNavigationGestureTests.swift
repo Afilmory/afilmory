@@ -11,17 +11,13 @@ final class DarkroomNavigationGestureTests: XCTestCase {
     return navigation
   }
 
-  func testBackSwipeStartsAnywhereOnIOS26AndFromTheLeftEdgeBefore() {
+  func testBackSwipeStartsAnywhere() {
     let navigation = navigation()
     let delegate = DarkroomNavigationDelegate(navigation: navigation)
     let mine = (navigation.view.gestureRecognizers ?? []).filter { $0.delegate === delegate }
     XCTAssertEqual(mine.count, 1)
-    if #available(iOS 26.0, *) {
-      XCTAssertTrue(mine.first is UIPanGestureRecognizer)
-      XCTAssertFalse(mine.first is UIScreenEdgePanGestureRecognizer)
-    } else {
-      XCTAssertEqual((mine.first as? UIScreenEdgePanGestureRecognizer)?.edges, .left)
-    }
+    XCTAssertTrue(mine.first is UIPanGestureRecognizer)
+    XCTAssertFalse(mine.first is UIScreenEdgePanGestureRecognizer)
   }
 
   func testBackSwipeOnlyTakesRightwardHorizontalDrags() {
@@ -34,9 +30,7 @@ final class DarkroomNavigationGestureTests: XCTestCase {
     let navigation = navigation()
     let delegate = DarkroomNavigationDelegate(navigation: navigation)
     XCTAssertFalse(try XCTUnwrap(navigation.interactivePopGestureRecognizer).isEnabled)
-    if #available(iOS 26.0, *) {
-      XCTAssertEqual(navigation.interactiveContentPopGestureRecognizer?.isEnabled, false)
-    }
+    XCTAssertEqual(navigation.interactiveContentPopGestureRecognizer?.isEnabled, false)
     withExtendedLifetime(delegate) {}
   }
 }

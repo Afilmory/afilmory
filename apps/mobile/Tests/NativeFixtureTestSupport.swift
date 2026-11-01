@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import XCTest
 @testable import Afilmory
 
@@ -109,4 +110,12 @@ enum NativeFixtureTestSupport {
 struct ExpectedLocalizedModel<Model: Codable & Equatable>: Codable, Equatable {
   let id: String
   let model: Model
+}
+
+@MainActor
+func makeTestWindow(size: CGSize) -> UIWindow {
+  let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first!
+  let window = UIWindow(windowScene: scene)
+  window.frame = CGRect(origin: .zero, size: size)
+  return window
 }

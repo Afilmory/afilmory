@@ -11,7 +11,6 @@ enum AFGlassButton {
     configuration.contentInsets = NSDirectionalEdgeInsets(top: 11, leading: 11, bottom: 11, trailing: 11)
     let button = UIButton(configuration: configuration, primaryAction: UIAction { _ in action() })
     button.accessibilityLabel = accessibilityLabel
-    applyFallbackTint(to: button)
     return button
   }
 
@@ -30,15 +29,7 @@ enum AFGlassButton {
     configuration.cornerStyle = .capsule
     configuration.baseForegroundColor = AFColor.textPrimary
     configuration.contentInsets = NSDirectionalEdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 14)
-    let button = UIButton(configuration: configuration, primaryAction: UIAction { _ in action() })
-    applyFallbackTint(to: button)
-    return button
-  }
-
-  private static func applyFallbackTint(to button: UIButton) {
-    if #available(iOS 26.0, *) { return }
-    button.configuration?.background.backgroundColor = AFColor.raised.withAlphaComponent(0.78)
-    button.configuration?.background.visualEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+    return UIButton(configuration: configuration, primaryAction: UIAction { _ in action() })
   }
 }
 

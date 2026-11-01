@@ -11,7 +11,7 @@ final class DarkroomRowButton: UIButton {
   private let titleText = UILabel()
   private let detailText = UILabel()
   private let chevron = UIImageView()
-  private let separator = UIView()
+  private let separator = AFHairlineView()
   private let spinner = UIActivityIndicatorView(style: .medium)
 
   var detail: String? {
@@ -100,7 +100,6 @@ final class DarkroomRowButton: UIButton {
       separator.leadingAnchor.constraint(equalTo: titleText.leadingAnchor),
       separator.trailingAnchor.constraint(equalTo: trailingAnchor),
       separator.bottomAnchor.constraint(equalTo: bottomAnchor),
-      separator.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
     ])
   }
 }
