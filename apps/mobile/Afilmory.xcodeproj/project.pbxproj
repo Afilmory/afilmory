@@ -334,10 +334,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 87FDBEAD353E9D7025483411 /* Build configuration list for PBXNativeTarget "Afilmory" */;
 			buildPhases = (
+				EDFCF7438A32E1179200B461 /* Check generated assets */,
 				4684EEBBA53293F4CDD22475 /* Sources */,
 				795FBA0B87E05C321B4B6FBF /* Resources */,
 				C917EBF8F91D5CBCE842C420 /* Frameworks */,
 				690B7D90A4B9DE5A8F4F19F7 /* Embed Foundation Extensions */,
+				8FCB2868CA0640A6AE4476AC /* Strip fixture resources */,
 			);
 			buildRules = (
 			);
@@ -494,6 +496,47 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8FCB2868CA0640A6AE4476AC /* Strip fixture resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Strip fixture resources";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# EXCLUDED_SOURCE_FILE_NAMES drops Fixtures sources but synced-folder resources are still copied.\n[ \"$CONFIGURATION\" = \"Debug\" ] && exit 0\nfind \"$SRCROOT/Afilmory/Fixtures\" -type f ! -name '*.swift' -exec basename {} \\; | sort -u | while IFS= read -r name; do\n  rm -f \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/$name\"\ndone\n";
+		};
+		EDFCF7438A32E1179200B461 /* Check generated assets */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Check generated assets";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "missing=\"\"\nfor font in TeXGyreSchola-Regular TeXGyreSchola-Italic SourceHanSerifSC-SemiBold-Subset SourceHanSerifTC-SemiBold-Subset SourceHanSerifHK-SemiBold-Subset SourceHanSerifJP-SemiBold-Subset SourceHanSerifKR-SemiBold-Subset; do\n  [ -f \"$SRCROOT/Afilmory/Resources/Fonts/$font.otf\" ] || missing=\"$missing $font.otf\"\ndone\nif [ \"$CONFIGURATION\" = \"Debug\" ] && [ -z \"$(ls \"$SRCROOT/Afilmory/Fixtures/Media\" 2>/dev/null | head -1)\" ]; then\n  missing=\"$missing Fixtures/Media\"\nfi\nif [ -n \"$missing\" ]; then\n  echo \"error: Generated assets are missing:$missing. Run apps/mobile/scripts/prepare-assets.sh (fonts only: scripts/subset-fonts.sh).\"\n  exit 1\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		4684EEBBA53293F4CDD22475 /* Sources */ = {
@@ -814,6 +857,7 @@
 				CODE_SIGN_ENTITLEMENTS = Afilmory/Afilmory.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				EXCLUDED_SOURCE_FILE_NAMES = "*/Fixtures/*";
 				INFOPLIST_FILE = Afilmory/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (

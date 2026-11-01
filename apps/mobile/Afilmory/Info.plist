@@ -81,6 +81,16 @@
 	<array>
 		<string>INSendMessageIntent</string>
 	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>TeXGyreSchola-Regular.otf</string>
+		<string>TeXGyreSchola-Italic.otf</string>
+		<string>SourceHanSerifSC-SemiBold-Subset.otf</string>
+		<string>SourceHanSerifTC-SemiBold-Subset.otf</string>
+		<string>SourceHanSerifHK-SemiBold-Subset.otf</string>
+		<string>SourceHanSerifJP-SemiBold-Subset.otf</string>
+		<string>SourceHanSerifKR-SemiBold-Subset.otf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

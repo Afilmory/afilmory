@@ -6,7 +6,11 @@ enum AfilmoryURLSessionFactory {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.httpCookieStorage = nil
     configuration.httpShouldSetCookies = false
-    return configuration
+    #if DEBUG
+      return FixtureRuntime.sessionConfiguration(configuration)
+    #else
+      return configuration
+    #endif
   }
 
   static func cookieIsolated() -> URLSession {

@@ -63,6 +63,14 @@ targets:
         AfilmoryAppVariant: "$(AFILMORY_APP_VARIANT)"
         AfilmoryURLScheme: "$(AFILMORY_URL_SCHEME)"
         CFBundleAllowMixedLocalizations: true
+        UIAppFonts:
+          - TeXGyreSchola-Regular.otf
+          - TeXGyreSchola-Italic.otf
+          - SourceHanSerifSC-SemiBold-Subset.otf
+          - SourceHanSerifTC-SemiBold-Subset.otf
+          - SourceHanSerifHK-SemiBold-Subset.otf
+          - SourceHanSerifJP-SemiBold-Subset.otf
+          - SourceHanSerifKR-SemiBold-Subset.otf
         CFBundleDisplayName: "$(AFILMORY_DISPLAY_NAME)"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
@@ -130,6 +138,7 @@ targets:
           PRODUCT_BUNDLE_IDENTIFIER: app.afilmory.local
           PRODUCT_NAME: Afilmory
         Release:
+          EXCLUDED_SOURCE_FILE_NAMES: "*/Fixtures/*"
           AFILMORY_API_ENVIRONMENT: production
           AFILMORY_APP_GROUP_IDENTIFIER: group.app.afilmory
           AFILMORY_APP_VARIANT: production
@@ -139,6 +148,31 @@ targets:
           CODE_SIGN_ENTITLEMENTS: Afilmory/Afilmory.entitlements
           PRODUCT_BUNDLE_IDENTIFIER: app.afilmory
           PRODUCT_NAME: Afilmory
+
+    preBuildScripts:
+      - name: Check generated assets
+        basedOnDependencyAnalysis: false
+        script: |
+          missing=""
+          for font in TeXGyreSchola-Regular TeXGyreSchola-Italic SourceHanSerifSC-SemiBold-Subset SourceHanSerifTC-SemiBold-Subset SourceHanSerifHK-SemiBold-Subset SourceHanSerifJP-SemiBold-Subset SourceHanSerifKR-SemiBold-Subset; do
+            [ -f "$SRCROOT/Afilmory/Resources/Fonts/$font.otf" ] || missing="$missing $font.otf"
+          done
+          if [ "$CONFIGURATION" = "Debug" ] && [ -z "$(ls "$SRCROOT/Afilmory/Fixtures/Media" 2>/dev/null | head -1)" ]; then
+            missing="$missing Fixtures/Media"
+          fi
+          if [ -n "$missing" ]; then
+            echo "error: Generated assets are missing:$missing. Run apps/mobile/scripts/prepare-assets.sh (fonts only: scripts/subset-fonts.sh)."
+            exit 1
+          fi
+    postBuildScripts:
+      - name: Strip fixture resources
+        basedOnDependencyAnalysis: false
+        script: |
+          # EXCLUDED_SOURCE_FILE_NAMES drops Fixtures sources but synced-folder resources are still copied.
+          [ "$CONFIGURATION" = "Debug" ] && exit 0
+          find "$SRCROOT/Afilmory/Fixtures" -type f ! -name '*.swift' -exec basename {} \; | sort -u | while IFS= read -r name; do
+            rm -f "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/$name"
+          done
 
   AfilmoryShare:
     type: app-extension

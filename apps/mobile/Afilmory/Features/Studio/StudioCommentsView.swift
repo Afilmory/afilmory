@@ -138,100 +138,114 @@ struct StudioCommentsView: View {
 
   private var commentsForm: some View {
     Form {
-      Section {
-        Picker(String(localized: "Status"), selection: $model.filter) {
-          ForEach(filters, id: \.self) { value in
-            Text(commentStatusLabel(value))
-              .tag(value)
-          }
-        }
-        .pickerStyle(.menu)
-      }
-
-      Section(
-        String(localized: "Comments (\(model.comments.count))")
-      ) {
-        if model.comments.isEmpty {
-          ContentUnavailableView(
-            String(localized: "No comments"),
-            systemImage: "text.bubble",
-            description: Text("There are no comments in this status.")
-          )
-        } else {
-          ForEach(model.comments) { comment in
-            commentRow(comment)
-              .contentShape(.rect)
-              .onTapGesture {
-                if horizontalSizeClass == .regular { model.selectedCommentID = comment.id }
-              }
-              .contextMenu {
-                Button(String(localized: "Delete"), role: .destructive) {
-                  pendingDeletionID = comment.id
-                }
-              }
-              .swipeActions(edge: .trailing) {
-                Button(String(localized: "Delete"), role: .destructive) {
-                  pendingDeletionID = comment.id
-                }
-              }
-          }
-        }
-        if model.nextCursor != nil {
-          Button {
-            Task { await model.loadMore() }
-          } label: {
-            if model.loadingMore {
-              ProgressView().frame(maxWidth: .infinity)
-            } else {
-              Text("Load more")
-                .frame(maxWidth: .infinity)
+      Group {
+        Section {
+          Picker(String(localized: "Status"), selection: $model.filter) {
+            ForEach(filters, id: \.self) { value in
+              Text(commentStatusLabel(value))
+                .tag(value)
             }
           }
-          .disabled(model.loadingMore)
+          .pickerStyle(.menu)
+        }
+
+        Section(
+          String(localized: "Comments (\(model.comments.count))")
+        ) {
+          if model.comments.isEmpty, model.filter == "pending" {
+            DarkroomEmptyState(
+              symbol: "bubble.left",
+              title: String(localized: "No pending replies"),
+              message: String(localized: "Visitors' comments appear here first")
+            )
+          } else if model.comments.isEmpty {
+            ContentUnavailableView(
+              String(localized: "No comments"),
+              systemImage: "text.bubble",
+              description: Text("There are no comments in this status.")
+            )
+          } else {
+            ForEach(model.comments) { comment in
+              commentRow(comment)
+                .contentShape(.rect)
+                .onTapGesture {
+                  if horizontalSizeClass == .regular { model.selectedCommentID = comment.id }
+                }
+                .contextMenu {
+                  Button(String(localized: "Delete"), role: .destructive) {
+                    pendingDeletionID = comment.id
+                  }
+                }
+                .swipeActions(edge: .trailing) {
+                  Button(String(localized: "Delete"), role: .destructive) {
+                    pendingDeletionID = comment.id
+                  }
+                }
+            }
+          }
+          if model.nextCursor != nil {
+            Button {
+              Task { await model.loadMore() }
+            } label: {
+              if model.loadingMore {
+                ProgressView().frame(maxWidth: .infinity)
+              } else {
+                Text("Load more")
+                  .frame(maxWidth: .infinity)
+              }
+            }
+            .disabled(model.loadingMore)
+          }
         }
       }
+      .darkroomRows()
     }
     .formStyle(.grouped)
+    .darkroomForm()
     .refreshable { await model.load() }
   }
 
   private var detailForm: some View {
     Form {
-      if let comment = selectedComment {
-        Section(model.users[comment.userId]?.name ?? String(localized: "Unknown user")) {
-          VStack(alignment: .leading, spacing: 10) {
-            Text(comment.content)
-            Text(
-              "\(commentStatusLabel(comment.status)) · \(NativeStudioFormatters.dateTime(comment.createdAt) ?? "")"
-            )
-            .foregroundStyle(.secondary)
-            Text(comment.photoId)
-              .font(.caption.monospaced())
+      Group {
+        if let comment = selectedComment {
+          Section(model.users[comment.userId]?.name ?? String(localized: "Unknown user")) {
+            VStack(alignment: .leading, spacing: 10) {
+              Text(comment.content)
+              Text(
+                "\(commentStatusLabel(comment.status)) · \(NativeStudioFormatters.dateTime(comment.createdAt) ?? "")"
+              )
               .foregroundStyle(.secondary)
-            let count = comment.reactionCounts.values.reduce(0, +)
-            if count > 0 { Text("♥ \(count)") }
-          }
-        }
-        Section {
-          if model.deletingID == comment.id {
-            ProgressView().frame(maxWidth: .infinity)
-          } else {
-            Button(String(localized: "Delete"), role: .destructive) {
-              pendingDeletionID = comment.id
+              Text(comment.photoId)
+                .font(.caption.monospaced())
+                .foregroundStyle(.secondary)
+              let count = comment.reactionCounts.values.reduce(0, +)
+              if count > 0 { Text("♥ \(count)") }
             }
           }
-        }
-      } else {
-        Section {
-          ContentUnavailableView(
-            String(localized: "No comments"),
-            systemImage: "text.bubble",
-            description: Text("There are no comments in this status.")
-          )
+          Section {
+            if model.deletingID == comment.id {
+              ProgressView().frame(maxWidth: .infinity)
+            } else {
+              Button(String(localized: "Delete"), role: .destructive) {
+                pendingDeletionID = comment.id
+              }
+            }
+          }
+        } else {
+          Section {
+            ContentUnavailableView(
+              String(localized: "No comments"),
+              systemImage: "text.bubble",
+              description: Text("There are no comments in this status.")
+            )
+          }
         }
       }
+      .darkroomRows()
     }
     .formStyle(.grouped)
+    .darkroomForm()
   }
 
   private var selectedComment: StudioCommentRecord? {
@@ -244,7 +258,7 @@ struct StudioCommentsView: View {
         .font(.system(size: 22))
         .foregroundStyle(
           horizontalSizeClass == .regular && selectedComment?.id == comment.id
-            ? Color.accentColor
+            ? Color(AFColor.textPrimary)
             : Color.secondary
         )
       VStack(alignment: .leading, spacing: 3) {
@@ -270,7 +284,7 @@ struct StudioCommentsView: View {
       } else if horizontalSizeClass == .regular, selectedComment?.id == comment.id {
         Image(systemName: "checkmark")
           .font(.system(size: 13))
-          .foregroundStyle(Color.accentColor)
+          .foregroundStyle(Color(AFColor.textPrimary))
       }
     }
   }

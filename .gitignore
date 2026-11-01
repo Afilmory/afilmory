@@ -85,3 +85,10 @@ acceptance-report/
 /metadata/
 apps/mobile/metadata/
 apps/mobile/fastlane/metadata/
+apps/mobile/Afilmory/Resources/Fonts/SourceHanSerifHK-SemiBold-Subset.otf
+apps/mobile/Afilmory/Resources/Fonts/SourceHanSerifJP-SemiBold-Subset.otf
+apps/mobile/Afilmory/Resources/Fonts/SourceHanSerifKR-SemiBold-Subset.otf
+apps/mobile/Afilmory/Resources/Fonts/SourceHanSerifSC-SemiBold-Subset.otf
+apps/mobile/Afilmory/Resources/Fonts/SourceHanSerifTC-SemiBold-Subset.otf
+apps/mobile/Afilmory/Resources/Fonts/TeXGyreSchola-Italic.otf
+apps/mobile/Afilmory/Resources/Fonts/TeXGyreSchola-Regular.otf

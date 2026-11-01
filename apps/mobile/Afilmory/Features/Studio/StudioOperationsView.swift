@@ -186,91 +186,95 @@ struct StudioOperationsView: View {
 
   private var operationsForm: some View {
     Form {
-      if model.running {
-        Section(String(localized: "Current operation")) {
-          VStack(alignment: .leading, spacing: 8) {
-            Text(model.runMessage ?? String(localized: "Synchronizing storage and database…"))
-            ProgressView(value: model.runProgress)
+      Group {
+        if model.running {
+          Section(String(localized: "Current operation")) {
+            VStack(alignment: .leading, spacing: 8) {
+              Text(model.runMessage ?? String(localized: "Synchronizing storage and database…"))
+              ProgressView(value: model.runProgress)
+            }
           }
         }
-      }
 
-      Section(String(localized: "Last run")) {
-        if let lastRun = model.status?.lastRun {
-          LabeledContent(
-            String(localized: "Completed"),
-            value: NativeStudioFormatters.dateTime(lastRun.completedAt) ?? "—"
-          )
-          LabeledContent(
-            String(localized: "Mode"),
-            value: lastRun.dryRun
-              ? String(localized: "Dry run")
-              : String(localized: "Applied")
-          )
-          LabeledContent(
-            String(localized: "Actions"),
-            value: NativeStudioFormatters.count(lastRun.actionsCount)
-          )
-          LabeledContent(
-            String(localized: "Conflicts"),
-            value: NativeStudioFormatters.count(lastRun.summary.conflicts)
-          )
-          LabeledContent(
-            String(localized: "Errors"),
-            value: NativeStudioFormatters.count(lastRun.summary.errors)
-          )
-        } else {
-          ContentUnavailableView(
-            String(localized: "No sync history"),
-            systemImage: "clock.arrow.circlepath",
-            description: Text("No sync has completed yet")
-          )
+        Section(String(localized: "Last run")) {
+          if let lastRun = model.status?.lastRun {
+            LabeledContent(
+              String(localized: "Completed"),
+              value: NativeStudioFormatters.dateTime(lastRun.completedAt) ?? "—"
+            )
+            LabeledContent(
+              String(localized: "Mode"),
+              value: lastRun.dryRun
+                ? String(localized: "Dry run")
+                : String(localized: "Applied")
+            )
+            LabeledContent(
+              String(localized: "Actions"),
+              value: NativeStudioFormatters.count(lastRun.actionsCount)
+            )
+            LabeledContent(
+              String(localized: "Conflicts"),
+              value: NativeStudioFormatters.count(lastRun.summary.conflicts)
+            )
+            LabeledContent(
+              String(localized: "Errors"),
+              value: NativeStudioFormatters.count(lastRun.summary.errors)
+            )
+          } else {
+            ContentUnavailableView(
+              String(localized: "No sync history"),
+              systemImage: "clock.arrow.circlepath",
+              description: Text("No sync has completed yet")
+            )
+          }
         }
-      }
 
-      Section(
-        String(localized: "Conflicts (\(model.conflicts.count))")
-      ) {
-        if model.conflicts.isEmpty {
-          ContentUnavailableView(
-            String(localized: "No unresolved conflicts"),
-            systemImage: "checkmark.circle",
-            description: Text("Storage and database records are aligned.")
-          )
-        } else {
-          ForEach(model.conflicts) { conflict in
-            Button {
-              resolutionConflict = conflict
-            } label: {
-              HStack(spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                  .font(.system(size: 20))
-                  .foregroundStyle(.orange)
-                VStack(alignment: .leading, spacing: 3) {
-                  Text(conflict.photoId ?? conflict.storageKey)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                  Text(conflict.reason ?? conflict.storageProvider)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                }
-                Spacer()
-                if model.resolvingID == conflict.id {
-                  ProgressView()
-                } else {
-                  Image(systemName: "chevron.right")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+        Section(
+          String(localized: "Conflicts (\(model.conflicts.count))")
+        ) {
+          if model.conflicts.isEmpty {
+            ContentUnavailableView(
+              String(localized: "No unresolved conflicts"),
+              systemImage: "checkmark.circle",
+              description: Text("Storage and database records are aligned.")
+            )
+          } else {
+            ForEach(model.conflicts) { conflict in
+              Button {
+                resolutionConflict = conflict
+              } label: {
+                HStack(spacing: 12) {
+                  Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Color.darkroomSecondary)
+                  VStack(alignment: .leading, spacing: 3) {
+                    Text(conflict.photoId ?? conflict.storageKey)
+                      .font(.subheadline.weight(.semibold))
+                      .lineLimit(1)
+                    Text(conflict.reason ?? conflict.storageProvider)
+                      .font(.caption)
+                      .foregroundStyle(.secondary)
+                      .lineLimit(2)
+                  }
+                  Spacer()
+                  if model.resolvingID == conflict.id {
+                    ProgressView()
+                  } else {
+                    Image(systemName: "chevron.right")
+                      .font(.system(size: 12))
+                      .foregroundStyle(.secondary)
+                  }
                 }
               }
+              .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
           }
         }
       }
+      .darkroomRows()
     }
     .formStyle(.grouped)
+    .darkroomForm()
     .refreshable { await model.load() }
   }
 

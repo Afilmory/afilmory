@@ -45,6 +45,7 @@ struct LivePhotoSyncTransport: PhotoSyncTransport {
 @MainActor
 final class PhotoSyncEngine {
   static let shared = PhotoSyncEngine()
+  static let didFinishSync = Notification.Name("PhotoSyncEngine.didFinishSync")
 
   private let repository: PhotoReplicaRepository
   private let transport: PhotoSyncTransport
@@ -110,8 +111,10 @@ final class PhotoSyncEngine {
         return
       }
       NSLog("[PhotoSyncEngine] Sync failed for %@: %@", slug, error.localizedDescription)
+      NotificationCenter.default.post(name: Self.didFinishSync, object: nil, userInfo: ["slug": slug, "succeeded": false])
       return
     }
+    NotificationCenter.default.post(name: Self.didFinishSync, object: nil, userInfo: ["slug": slug, "succeeded": true])
     refreshWidgetSnapshot(slug: slug)
   }
 

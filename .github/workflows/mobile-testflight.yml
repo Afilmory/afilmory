@@ -37,6 +37,11 @@ jobs:
       - name: Install XcodeGen
         run: brew list xcodegen > /dev/null 2>&1 || brew install xcodegen
 
+      - name: Generate bundled fonts
+        run: |
+          brew list fonttools > /dev/null 2>&1 || brew install fonttools
+          bash scripts/subset-fonts.sh
+
       - name: Generate Xcode project
         run: xcodegen generate --spec project.yml
 
@@ -91,6 +96,9 @@ jobs:
           for language in en ja ko zh-Hans zh-Hant zh-HK; do
             test -s "$APP_BUNDLE/$language.lproj/ExifValues.strings"
           done
+
+      - name: Verify no fixture resources ship
+        run: bash scripts/check-release-bundle.sh "$RUNNER_TEMP/Afilmory.xcarchive/Products/Applications/Afilmory.app"
 
       - name: Prepare App Store Connect authentication
         env:

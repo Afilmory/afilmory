@@ -62,7 +62,7 @@ final class UploadCenter: NSObject, @unchecked Sendable {
 
   private static let rootDirectory: URL = {
     let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-    let url = base.appendingPathComponent("uploads", isDirectory: true)
+    let url = FixtureMode.storageRoot("uploads", base: base)
     try? FileManager.default.createDirectory(
       at: url.appendingPathComponent("bodies", isDirectory: true),
       withIntermediateDirectories: true
@@ -349,6 +349,10 @@ final class UploadCenter: NSObject, @unchecked Sendable {
     guard let index = jobs.firstIndex(where: { $0.id == jobId }),
           let url = URL(string: jobs[index].endpoint)
     else { return }
+    if FixtureMode.isOn {
+      simulateFixtureUploadLocked(jobId: jobId, step: 0, delay: delay)
+      return
+    }
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("multipart/form-data; boundary=\(jobs[index].boundary)", forHTTPHeaderField: "Content-Type")
@@ -366,6 +370,30 @@ final class UploadCenter: NSObject, @unchecked Sendable {
     tasks[jobId] = task
     responses[jobId] = SseResponseState()
     task.resume()
+  }
+
+  private func simulateFixtureUploadLocked(jobId: String, step: Int, delay: TimeInterval) {
+    let steps = 14
+    let interval = 0.32 + Double(abs(jobId.hashValue % 5)) * 0.04
+    stateQueue.asyncAfter(deadline: .now() + delay + interval) {
+      guard let index = self.jobs.firstIndex(where: { $0.id == jobId }),
+            self.jobs[index].status == .queued || self.jobs[index].status == .uploading
+      else { return }
+      if FixtureMode.uploadsFail, step == 4 {
+        self.jobs[index].status = .failed
+        self.jobs[index].error = URLError(.notConnectedToInternet).localizedDescription
+      } else if step >= steps {
+        self.jobs[index].status = .done
+        self.jobs[index].progress = 1
+        self.jobs[index].error = nil
+      } else {
+        self.jobs[index].status = .uploading
+        self.jobs[index].progress = Double(step + 1) / Double(steps + 1)
+        self.simulateFixtureUploadLocked(jobId: jobId, step: step + 1, delay: 0)
+      }
+      self.persistLocked()
+      self.scheduleEmitLocked()
+    }
   }
 
   private func completeTaskLocked(jobId: String, error: Error?, httpStatus: Int?) {

@@ -41,3 +41,9 @@ yarn-error.*
 
 # APNs sandbox verification derived data
 .derived-apns-sandbox/
+
+# Offline UI catalog output
+.ui-catalog/
+
+# Generated binary assets (scripts/prepare-assets.sh)
+Afilmory/Fixtures/Media/

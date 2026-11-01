@@ -53,13 +53,18 @@ final class PhotoRevisionStream {
     else { return }
 
     task = Task.detached {
+      var policy = RevisionStreamReconnectPolicy()
       while !Task.isCancelled {
+        let started = Date()
+        var failed = false
         do {
           try await Self.listen()
         } catch {
-          if Task.isCancelled { return }
-          try? await Task.sleep(for: .seconds(3))
+          failed = true
         }
+        if Task.isCancelled { return }
+        let delay = policy.nextDelay(connectedFor: Date().timeIntervalSince(started), failed: failed)
+        try? await Task.sleep(for: .seconds(delay))
       }
     }
   }
@@ -77,8 +82,13 @@ final class PhotoRevisionStream {
     }
 
     let (bytes, response) = try await URLSession.shared.bytes(for: request)
-    if let http = response as? HTTPURLResponse, http.statusCode == 401 {
-      throw APIError.unauthorized
+    if let http = response as? HTTPURLResponse {
+      if http.statusCode == 401 {
+        throw APIError.unauthorized
+      }
+      guard (200..<300).contains(http.statusCode) else {
+        throw URLError(.badServerResponse)
+      }
     }
 
     var dataLines: [String] = []
@@ -102,6 +112,22 @@ final class PhotoRevisionStream {
         dataLines.append(String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces))
       }
     }
+  }
+}
+
+struct RevisionStreamReconnectPolicy {
+  private static let stableConnection: TimeInterval = 30
+  private static let maximumDelay: TimeInterval = 30
+  private var consecutiveShortLived = 0
+
+  mutating func nextDelay(connectedFor duration: TimeInterval, failed: Bool) -> TimeInterval {
+    if !failed, duration >= Self.stableConnection {
+      consecutiveShortLived = 0
+      return 1
+    }
+    let delay = min(Self.maximumDelay, 3 * pow(2, Double(consecutiveShortLived)))
+    consecutiveShortLived += 1
+    return delay
   }
 }
 

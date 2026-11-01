@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 
 enum PhotoReplicaDatabase {
-  static let shared = PhotoReplicaStore(queue: makeQueue(at: storeURL()))
+  static let shared = FixtureMode.isOn ? makeInMemory() : PhotoReplicaStore(queue: makeQueue(at: storeURL()))
 
   static func makeInMemory() -> PhotoReplicaStore {
     PhotoReplicaStore(queue: try! DatabaseQueue())

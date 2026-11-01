@@ -1,90 +1,6 @@
 import SwiftUI
 import UIKit
 
-@MainActor
-final class StudioDomainViewModel: ObservableObject {
-  @Published private(set) var listing: StudioDomainListing?
-  @Published var domainInput = ""
-  @Published private(set) var loading = false
-  @Published private(set) var mutating = false
-  @Published private(set) var verifyingID: String?
-  @Published private(set) var deletingID: String?
-  @Published var error: Error?
-  @Published var actionMessage: String?
-  @Published var quotaReason: QuotaWallReason?
-
-  var pendingDomain: StudioTenantDomain? {
-    listing?.domains.first { $0.status == .pending }
-  }
-
-  func load() async {
-    if listing == nil { loading = true }
-    defer { loading = false }
-    do {
-      listing = try await NativeStudioAPI.tenantDomains()
-      error = nil
-    } catch is CancellationError {
-      return
-    } catch {
-      self.error = error
-    }
-  }
-
-  func add() async {
-    guard let listing, !mutating else { return }
-    switch StudioDomainPolicy.addDecision(for: domainInput, listing: listing) {
-    case .empty:
-      actionMessage = String(localized: "Please enter a domain before binding.")
-    case .invalid:
-      actionMessage = String(localized: "Enter a valid domain such as photos.example.com.")
-    case .upgrade(let reason):
-      quotaReason = reason
-    case .request(let host):
-      await mutate {
-        _ = try await NativeStudioAPI.requestDomain(host)
-        domainInput = ""
-      }
-    }
-  }
-
-  func verify(_ domain: StudioTenantDomain) async {
-    guard domain.canVerify, verifyingID == nil else { return }
-    verifyingID = domain.id
-    defer { verifyingID = nil }
-    await mutate {
-      _ = try await NativeStudioAPI.verifyDomain(id: domain.id)
-    }
-  }
-
-  func delete(_ domain: StudioTenantDomain) async {
-    guard deletingID == nil else { return }
-    deletingID = domain.id
-    defer { deletingID = nil }
-    await mutate {
-      try await NativeStudioAPI.deleteDomain(id: domain.id)
-    }
-  }
-
-  private func mutate(_ work: () async throws -> Void) async {
-    mutating = true
-    defer { mutating = false }
-    do {
-      try await work()
-      await load()
-    } catch let error as APIError {
-      if let reason = QuotaWallReason.parse(apiError: error) {
-        quotaReason = reason
-      } else {
-        actionMessage = error.localizedDescription
-      }
-    } catch is CancellationError {
-      return
-    } catch {
-      actionMessage = error.localizedDescription
-    }
-  }
-}
-
 struct StudioDomainView: View {
   @StateObject private var model = StudioDomainViewModel()
   @State private var showingPlan = false
@@ -144,64 +60,68 @@ struct StudioDomainView: View {
 
   private func domainForm(_ listing: StudioDomainListing) -> some View {
     Form {
-      if let pending = model.pendingDomain {
+      Group {
+        if let pending = model.pendingDomain {
+          Section {
+            Text("Cloudflare is provisioning \(pending.domain). DNS and certificate activation may take a few minutes.")
+              .font(.subheadline)
+          }
+        }
+
         Section {
-          Text("Cloudflare is provisioning \(pending.domain). DNS and certificate activation may take a few minutes.")
-            .font(.subheadline)
-        }
-      }
-
-      Section {
-        TextField("photos.yourdomain.com", text: $model.domainInput)
-          .textInputAutocapitalization(.never)
-          .autocorrectionDisabled()
-          .keyboardType(.URL)
-          .submitLabel(.done)
-          .onSubmit { Task { await model.add() } }
-          .disabled(model.mutating)
-        if StudioDomainPolicy.needsUnlock(listing) {
-          Button(String(localized: "Unlock with Pro")) { showingPlan = true }
-        } else {
-          Button(String(localized: "Bind domain")) {
-            Task { await model.add() }
+          TextField("photos.yourdomain.com", text: $model.domainInput)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .keyboardType(.URL)
+            .submitLabel(.done)
+            .onSubmit { Task { await model.add() } }
+            .disabled(model.mutating)
+          if StudioDomainPolicy.needsUnlock(listing) {
+            Button(String(localized: "Unlock with Pro")) { showingPlan = true }
+          } else {
+            Button(String(localized: "Bind domain")) {
+              Task { await model.add() }
+            }
+            .disabled(model.mutating || model.domainInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
           }
-          .disabled(model.mutating || model.domainInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        } header: {
+          Text("Custom domain")
+        } footer: {
+          Text("A subdomain is recommended. Apex domains require compatible DNS flattening or Cloudflare Apex Proxying.")
         }
-      } header: {
-        Text("Custom domain")
-      } footer: {
-        Text("A subdomain is recommended. Apex domains require compatible DNS flattening or Cloudflare Apex Proxying.")
-      }
 
-      Section(String(localized: "Verification steps")) {
-        labeledStep(
-          number: 1,
-          title: String(localized: "Point CNAME to Afilmory"),
-          detail: String(
-            localized: "Create a CNAME record that points your custom hostname to \(cnameTarget(listing))."
+        Section(String(localized: "Verification steps")) {
+          labeledStep(
+            number: 1,
+            title: String(localized: "Point CNAME to Afilmory"),
+            detail: String(
+              localized: "Create a CNAME record that points your custom hostname to \(cnameTarget(listing))."
+            )
           )
-        )
-        labeledStep(
-          number: 2,
-          title: String(localized: "Confirm Cloudflare activation"),
-          detail: String(
-            localized: "After DNS propagates, check the status. The domain becomes active only when both hostname and SSL are active."
+          labeledStep(
+            number: 2,
+            title: String(localized: "Confirm Cloudflare activation"),
+            detail: String(
+              localized: "After DNS propagates, check the status. The domain becomes active only when both hostname and SSL are active."
+            )
           )
-        )
-      }
+        }
 
-      Section(String(localized: "Bound domains")) {
-        if listing.domains.isEmpty {
-          Text("No custom domains yet. Add one above to start verification.")
-            .foregroundStyle(.secondary)
-        } else {
-          ForEach(listing.domains) { domain in
-            domainBlock(domain, cnameTarget: cnameTarget(listing))
+        Section(String(localized: "Bound domains")) {
+          if listing.domains.isEmpty {
+            Text("No custom domains yet. Add one above to start verification.")
+              .foregroundStyle(.secondary)
+          } else {
+            ForEach(listing.domains) { domain in
+              domainBlock(domain, cnameTarget: cnameTarget(listing))
+            }
           }
         }
       }
+      .darkroomRows()
     }
     .formStyle(.grouped)
+    .darkroomForm()
     .scrollDismissesKeyboard(.interactively)
     .refreshable { await model.load() }
   }
@@ -221,7 +141,7 @@ struct StudioDomainView: View {
         }
         .disabled(model.deletingID != nil)
         .accessibilityLabel(String(localized: "Remove Domain"))
-        .tint(.red)
+        .tint(Color.darkroomDestructive)
       }
 
       HStack {
@@ -271,7 +191,7 @@ struct StudioDomainView: View {
         VStack(alignment: .leading, spacing: 4) {
           Text("Cloudflare validation")
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.red)
+            .foregroundStyle(Color.darkroomDestructive)
           ForEach(domain.verificationErrors, id: \.self) { error in
             Text(error)
               .font(.caption)
@@ -309,8 +229,8 @@ struct StudioDomainView: View {
       Text("\(number)")
         .font(.subheadline.weight(.semibold))
         .frame(width: 24, height: 24)
-        .background(Color.accentColor, in: Circle())
-        .foregroundStyle(.white)
+        .background(Color(AFColor.textPrimary), in: Circle())
+        .foregroundStyle(Color(AFColor.onLight))
       VStack(alignment: .leading, spacing: 4) {
         Text(title).font(.subheadline.weight(.semibold))
         Text(detail).font(.subheadline).foregroundStyle(.secondary)
@@ -341,9 +261,9 @@ struct StudioDomainView: View {
 
   private func statusColor(_ status: StudioDomainStatus) -> Color {
     switch status {
-    case .pending: .orange
-    case .verified: .green
-    case .disabled: .secondary
+    case .pending: .darkroomSecondary
+    case .verified: Color(AFColor.textPrimary)
+    case .disabled: .darkroomTertiary
     }
   }
 }

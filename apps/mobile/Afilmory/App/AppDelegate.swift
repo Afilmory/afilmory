@@ -1,3 +1,4 @@
+import SDWebImage
 import UIKit
 import UserNotifications
 
@@ -7,6 +8,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     _: UIApplication,
     didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    #if DEBUG
+      if ProcessInfo.processInfo.arguments.contains("-catalog-list") {
+        print(UICatalog.listing())
+        fflush(stdout)
+        exit(0)
+      }
+      FixtureRuntime.activate()
+    #endif
+    PhotoImageSizing.configure(.shared)
     CacheLifecycleCoordinator.shared.runOnce()
     PhotoRevisionStream.shared.start()
     return true

@@ -9,7 +9,7 @@ enum AfilmoryDatabase {
     CachedSession.self,
   ])
 
-  static let shared: ModelContainer = makeContainer(at: storeURL())
+  static let shared: ModelContainer = FixtureMode.isOn ? makeInMemoryContainer() : makeContainer(at: storeURL())
 
   static func makeInMemoryContainer() -> ModelContainer {
     let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)

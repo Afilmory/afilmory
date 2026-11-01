@@ -286,4 +286,12 @@ final class PushNotificationTests: XCTestCase {
       )
     }
   }
+
+  func testFollowingAskForNotificationsOnlyWhileUndecided() {
+    XCTAssertTrue(shouldRequestNotificationsAfterFollow(didFollow: true, permission: .notDetermined))
+    XCTAssertFalse(shouldRequestNotificationsAfterFollow(didFollow: false, permission: .notDetermined))
+    XCTAssertFalse(shouldRequestNotificationsAfterFollow(didFollow: true, permission: .enabled))
+    XCTAssertFalse(shouldRequestNotificationsAfterFollow(didFollow: true, permission: .disabled))
+    XCTAssertFalse(shouldRequestNotificationsAfterFollow(didFollow: true, permission: .unknown))
+  }
 }

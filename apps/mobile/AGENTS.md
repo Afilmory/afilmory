@@ -54,19 +54,20 @@ The variant flows `project.yml` build settings → `Info.plist` (`AfilmoryAppVar
 
 Everything app-side lives under a single `Afilmory/` root (the old `NativeApp` + `modules/photo-masonry/ios` split was historical and has been merged in), organized feature-first.
 
-- `Afilmory/App/` — entry + shell: `AppDelegate`, `SceneDelegate`, `ApplicationCoordinator`, `AfilmoryTabBarController`, `LoadingViewController`, `GalleryRouteRequest` (deep links).
-- `Afilmory/Features/` — one folder per feature: `Masonry/`, `Detail/`, `Viewer/`, `Comments/`, `Upload/`, `Map/`, `Filters/`, `Pages/` (Photos/Explore/Studio home controllers), `Studio/` (SwiftUI screens + `NativeStudioAPI`), `Authentication/`, `Billing/`, `Sharing/`, `Sheets/`.
+- `Afilmory/App/` — entry + shell: `AppDelegate`, `SceneDelegate`, `ApplicationCoordinator`, `AfilmoryTabBarController` + `AFFocusTabBar` (custom three-item focus bar), `AppTab`/`DeepLinkTabRouting`, `AppNavigator` (cross-tab navigation), `LoadingViewController`, `GalleryRouteRequest` (deep links), `Catalog/` (DEBUG UI catalog).
+- `Afilmory/Features/` — one folder per feature: `Exhibition/` (own gallery + other galleries' pages, contact sheet, ∞ map, projection), `Detail/`, `Viewing/` (rolls + galleries), `Darkroom/` (upload + management), `Comments/`, `Upload/`, `Filters/`, `Studio/` (SwiftUI leaves + `NativeStudioAPI`), `Authentication/`, `Billing/`, `Sharing/`.
+- `Afilmory/Fixtures/` — DEBUG-only offline backend. Release drops its sources via `EXCLUDED_SOURCE_FILE_NAMES`, which does not reach synced-folder resources, so the "Strip fixture resources" post-build phase removes its media and payloads; `scripts/check-release-bundle.sh <app>` verifies a Release bundle.
 - `Afilmory/Core/` — non-UI infrastructure: `Networking/` (`AfilmoryAPI`, `APIEndpoint`, `APIError`), `Session/` (`AfilmorySessionStore`), `Data/`, `Persistence/`, `Push/`, `Models/`, plus `AfilmoryBuildConfiguration` and `ThumbHash` at its root.
-- `Afilmory/DesignSystem/` — `AdaptiveGlass`, `NativeControls`, `LiquidGlassSegmentedControl`, shared UIKit extensions, and `Transition/` (photo transition animators).
-- `Afilmory/Resources/` — String Catalogs, asset catalogs.
+- `Afilmory/DesignSystem/` — `AFTheme` (colour/type/radius tokens), `AFMotion` + `AFBlurView` (focus motion language), `AccentExtractor`/`AccentStore` (photo-derived accent), `AFComponents`, `AdaptiveGlass`, `NativeControls`. The design spec is `docs/superpowers/specs/2026-11-02-mobile-darkroom-redesign-design.md`.
+- `Afilmory/Resources/` — String Catalogs, asset catalogs, `Fonts/` (generated, gitignored — see Generated assets).
 - `Tests/` — the `AfilmoryTests` unit-test bundle (plus `Tests/Fixtures/`).
 - `targets/share/`, `targets/widgets/`, and `targets/notification/` — separate app-extension targets. They do **not** see app-target code; the share extension re-declares its own `group.app.afilmory` constant and its own String Catalog. The notification service compiles `Afilmory/Core/Push/GalleryPushImageAttachment.swift` into its own module.
 
 ## Runtime architecture
 
-**Session drives the root view controller.** `SceneDelegate` → `ApplicationCoordinator.start()` observes `AfilmorySessionStore` and swaps the window root per `AfilmorySessionState`: `.loading` → `LoadingViewController`, `.signedIn` → `AfilmoryTabBarController` (Photos / Map / Explore / Studio), `.signedOut`/`.failed` → a visitor-only Explore nav stack. `replaceRoot` is type-compared, so re-renders of the same state are no-ops. Deep links parsed by `AfilmoryDeepLink` are buffered in `pendingDeepLink` and only applied once the root is no longer `LoadingViewController` — tab indices are hardcoded there (Explore `2`, Studio `3`), so reordering tabs means updating `applyPendingDeepLinkIfPossible`.
+**Session drives the root view controller.** `SceneDelegate` → `ApplicationCoordinator.start()` observes `AfilmorySessionStore` and swaps the window root per `AfilmorySessionState`: `.loading` → `LoadingViewController`, `.signedIn` → `AfilmoryTabBarController` (Exhibition / Viewing / Darkroom, `AppTab`), `.signedOut`/`.failed` → a visitor-only Viewing nav stack. `replaceRoot` is type-compared, so re-renders of the same state are no-ops. Deep links parsed by `AfilmoryDeepLink` are buffered in `pendingDeepLink` and only applied once the root is no longer `LoadingViewController`; `DeepLinkTabRouting.tab(for:)` maps them to tabs (`.map` opens Exhibition at the ∞ level).
 
-**UIKit-first, SwiftUI at the leaves.** Scrolling, gestures, transitions, and the masonry grid are UIKit (`PhotoMasonryView` is a `UICollectionView` with a custom `MasonryLayout` and a pinch-driven column count). Settings-shaped screens are SwiftUI wrapped in `UIHostingController`. Don't rewrite a working UIKit surface in SwiftUI.
+**UIKit-first, SwiftUI at the leaves.** Scrolling, gestures, transitions, and the Exhibition contact sheet are UIKit (`ExhibitionSheetLayout` is a custom `UICollectionViewLayout`; pinch steps through `ContactSheetLevel` up to the ∞ map level). Settings-shaped screens are SwiftUI wrapped in `UIHostingController`. Don't rewrite a working UIKit surface in SwiftUI.
 
 **Singletons with observer tokens, not Combine.** `AfilmorySessionStore.shared`, `PhotoFeedStore.shared`, `UploadCenter.shared`, `ApiEnvironmentStore.shared`. Observation is a closure + cancellation token (`observe { }` → `AfilmorySessionObservationToken` / `PhotoFeedObservationToken`); feeds additionally use `@Observable`. Mutable shared state is guarded by an `NSLock` under `@unchecked Sendable`, with `@MainActor` reserved for anything touching UI or SwiftData's `mainContext`.
 
@@ -103,6 +104,19 @@ Shipping languages are declared in `project.yml` (`CFBundleLocalizations`): en, 
 `IPHONEOS_DEPLOYMENT_TARGET` is **18.0** (Swift 6, `SWIFT_STRICT_CONCURRENCY: targeted`). Post-18 APIs need an availability guard *and* an iOS 18 fallback. Liquid Glass goes through `AdaptiveGlass`, which falls back to `UIBlurEffect`/`.filled()` — prefer it over inline `#available` checks for glass surfaces.
 
 Gotcha that still applies: `UIGlassEffect.isInteractive = true` swallows touches meant for buttons hosted in the effect view's `contentView` — keep it off for tappable glass.
+
+## Generated assets (never committed)
+
+Binary assets are generated locally, not stored in git: `scripts/prepare-assets.sh` runs `scripts/subset-fonts.sh` (downloads Source Han Serif + TeX Gyre Schola, subsets the CJK serif to the display strings listed in `Resources/Fonts/display-keys.json`; needs `brew install fonttools`) and `scripts/fixture-media.sh` (builds `Afilmory/Fixtures/Media/` from `apps/web/public/thumbnails` — run `pnpm build:manifest` at the repo root first — and `photos/` originals). The "Check generated assets" build phase fails with this instruction when they're missing. Re-run `subset-fonts.sh` whenever a display string in `display-keys.json` changes; `FontSubsetCoverageTests` fails otherwise.
+
+## Offline verification (fixture mode + UI catalog)
+
+Verify UI without any backend:
+
+- `-fixture.mode YES -fixture.scenario owner|newcomer|empty|visitor|offline` — `FixtureURLProtocol` answers every API request and image from `Afilmory/Fixtures/` (stateful in memory for the session), SwiftData/GRDB/cookie storage are in-memory, `UploadCenter` simulates progress. Knobs: `-fixture.reduceMotion YES`, `-fixture.latency <ms>`, plus `-AppleLanguages "(ja)"`, `-UIPreferredContentSizeCategoryName …`.
+- UI catalog: every screen state is a `CatalogEntry` in `Features/<Tab>/<Tab>Catalog.swift` (string id, scenario, `.screen` or `.app` launch). `-catalog-open <id>` jumps straight to it; `-catalog-open shell.catalog` shows the list; `-catalog-list` prints the registry. `UICatalogRegistryTests` guards it. Add an entry for every new state you build.
+- `scripts/ui-catalog.sh [id-prefix…]` builds, then launches every entry in its scenario and writes screenshots + `index.html` to `.ui-catalog/<timestamp>/` (`DEVICE`, `LANGS`, `MOTION=both`, `TEXT_SIZE`, `SKIP_BUILD=1`). Read the PNGs; use `axe`/`sim-use` for interactions and `simctl io recordVideo` for motion.
+- Fixture misses log `Fixture miss: <method> <url>` under the `fixture` OSLog category; add the route in `Afilmory/Fixtures/*Routes.swift` with a decode test in `Tests/FixtureBackend*Tests.swift`.
 
 ## Tests
 

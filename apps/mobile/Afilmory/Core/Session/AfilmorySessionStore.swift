@@ -88,7 +88,12 @@ struct KeychainSessionCookieStorage: SessionCookieStorage {
 }
 
 final class AfilmorySessionStore: @unchecked Sendable {
-  static let shared = AfilmorySessionStore()
+  static let shared: AfilmorySessionStore = FixtureMode.isOn
+    ? AfilmorySessionStore(
+      repository: InMemoryPhotoCacheRepository(),
+      cookieStorage: FixtureCookieStorage(signedIn: FixtureMode.scenario != .visitor)
+    )
+    : AfilmorySessionStore()
   private static let logger = Logger(subsystem: "app.afilmory", category: "session-store")
 
   private let repository: PhotoCacheRepository
