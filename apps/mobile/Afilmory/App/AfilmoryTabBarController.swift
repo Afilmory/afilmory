@@ -8,6 +8,9 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
   private var developerLabTapCount = 0
   private var lastDeveloperLabTap: TimeInterval?
   private lazy var duoContextProvider = DuoContextProvider(controller: self)
+  private var horizontalBarConstraints: [NSLayoutConstraint] = []
+
+  private var usesRail: Bool { traitCollection.duoContext.hasVerticalBar }
 
   init(controllers: [UIViewController]) {
     super.init(nibName: nil, bundle: nil)
@@ -32,20 +35,61 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
     focusBar.translatesAutoresizingMaskIntoConstraints = false
     focusBar.onSelect = { [weak self] tab in self?.userSelected(tab) }
     view.addSubview(focusBar)
-    NSLayoutConstraint.activate([
+    horizontalBarConstraints = [
       focusBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
       focusBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       focusBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
       focusBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -AFFocusTabBar.barHeight),
-    ])
-    applyContentInsets()
+    ]
+    NSLayoutConstraint.activate(horizontalBarConstraints)
+    registerForTraitChanges([DuoContextTrait.self]) { (tabs: AfilmoryTabBarController, _: UITraitCollection) in
+      tabs.applyBarAxis()
+    }
+    applyBarAxis()
     _ = duoContextProvider
   }
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
     view.bringSubviewToFront(focusBar)
+    if usesRail {
+      focusBar.frame = Self.railFrame(
+        edge: traitCollection.duoContext.barEdge,
+        bounds: view.bounds,
+        safeArea: view.safeAreaInsets,
+        occlusionMaxY: occlusionMaxY()
+      )
+    }
     duoContextProvider.refresh()
+  }
+
+  static func railFrame(edge: DuoBarEdge, bounds: CGRect, safeArea: UIEdgeInsets, occlusionMaxY: CGFloat) -> CGRect {
+    let width = edge == .leading ? safeArea.left : safeArea.right
+    let x = edge == .leading ? bounds.minX : bounds.maxX - width
+    let top = max(occlusionMaxY + 24, bounds.minY + bounds.height * 0.4)
+    let bottom = bounds.maxY - max(safeArea.bottom, 16)
+    return CGRect(x: x, y: top, width: width, height: max(0, bottom - top))
+  }
+
+  private func occlusionMaxY() -> CGFloat {
+    guard #available(iOS 27.1, *) else { return 0 }
+    return view.reservedRegions(kind: .occlusion)
+      .map(\.frame.maxY)
+      .max() ?? 0
+  }
+
+  private func applyBarAxis() {
+    let rail = usesRail
+    focusBar.axis = rail ? .vertical : .horizontal
+    if rail {
+      NSLayoutConstraint.deactivate(horizontalBarConstraints)
+      focusBar.translatesAutoresizingMaskIntoConstraints = true
+    } else {
+      focusBar.translatesAutoresizingMaskIntoConstraints = false
+      NSLayoutConstraint.activate(horizontalBarConstraints)
+    }
+    applyContentInsets()
+    view.setNeedsLayout()
   }
 
   override func setViewControllers(_ viewControllers: [UIViewController]?, animated: Bool) {
@@ -69,7 +113,7 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
     applyContentInsets()
     let changes = {
       self.focusBar.alpha = hidden ? 0 : 1
-      self.focusBar.transform = hidden ? CGAffineTransform(translationX: 0, y: 24) : .identity
+      self.focusBar.transform = hidden ? self.hiddenBarTransform : .identity
     }
     focusBar.isUserInteractionEnabled = !hidden
     animated ? AFMotion.spring(duration: 0.4, animations: changes) : changes()
@@ -114,8 +158,16 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
     select(tab, animated: true)
   }
 
+  private var hiddenBarTransform: CGAffineTransform {
+    switch traitCollection.duoContext.barEdge {
+    case .none: CGAffineTransform(translationX: 0, y: 24)
+    case .leading: CGAffineTransform(translationX: -24, y: 0)
+    case .trailing: CGAffineTransform(translationX: 24, y: 0)
+    }
+  }
+
   private func applyContentInsets() {
-    let inset: CGFloat = isFocusBarHidden ? 0 : AFFocusTabBar.barHeight
+    let inset: CGFloat = isFocusBarHidden || usesRail ? 0 : AFFocusTabBar.barHeight
     for controller in viewControllers ?? [] {
       controller.additionalSafeAreaInsets.bottom = inset
     }

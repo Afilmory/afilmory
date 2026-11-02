@@ -6,16 +6,33 @@ final class AFFocusTabBar: UIView {
   var onSelect: ((AppTab) -> Void)?
   private(set) var selectedTab: AppTab = .exhibition
   var accentColor: UIColor = AFColor.accentFallback {
-    didSet { dots.forEach { $0.backgroundColor = accentColor } }
+    didSet { items.forEach { $0.dot.backgroundColor = accentColor } }
   }
 
-  var itemTitles: [String] { buttons.map { $0.title(for: .normal) ?? "" } }
+  var axis: NSLayoutConstraint.Axis = .horizontal {
+    didSet {
+      guard axis != oldValue else { return }
+      applyAxis()
+    }
+  }
 
-  private var buttons: [UIButton] = []
-  private var dots: [UIView] = []
+  var itemTitles: [String] { items.map { $0.button.accessibilityLabel ?? "" } }
+
+  private struct Item {
+    let button: UIButton
+    let dot: UIView
+    let verticalLabel: AFFocusTabVerticalLabel
+    let horizontalConstraints: [NSLayoutConstraint]
+    let verticalConstraints: [NSLayoutConstraint]
+  }
+
+  private var items: [Item] = []
+  private let stack = UIStackView()
   private let backdrop = UIVisualEffectView(effect: UIBlurEffect(style: .systemUltraThinMaterialDark))
   private let tint = UIView()
   private let hairline = AFHairlineView()
+  private var horizontalLayout: [NSLayoutConstraint] = []
+  private var verticalLayout: [NSLayoutConstraint] = []
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -23,26 +40,19 @@ final class AFFocusTabBar: UIView {
     accessibilityTraits = .tabBar
     shouldGroupAccessibilityChildren = true
 
-    backdrop.translatesAutoresizingMaskIntoConstraints = false
-    tint.translatesAutoresizingMaskIntoConstraints = false
+    [backdrop, tint, hairline, stack].forEach {
+      $0.translatesAutoresizingMaskIntoConstraints = false
+      addSubview($0)
+    }
     tint.backgroundColor = AFColor.ground.withAlphaComponent(0.72)
-    hairline.translatesAutoresizingMaskIntoConstraints = false
     hairline.backgroundColor = AFColor.hairline
-    addSubview(backdrop)
-    addSubview(tint)
-    addSubview(hairline)
-
-    let stack = UIStackView()
     stack.axis = .horizontal
     stack.distribution = .fillEqually
-    stack.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(stack)
 
     for tab in AppTab.allCases {
-      let (button, dot) = makeItem(for: tab)
-      buttons.append(button)
-      dots.append(dot)
-      stack.addArrangedSubview(button)
+      let item = makeItem(for: tab)
+      items.append(item)
+      stack.addArrangedSubview(item.button)
     }
 
     NSLayoutConstraint.activate([
@@ -57,11 +67,19 @@ final class AFFocusTabBar: UIView {
       hairline.topAnchor.constraint(equalTo: topAnchor),
       hairline.leadingAnchor.constraint(equalTo: leadingAnchor),
       hairline.trailingAnchor.constraint(equalTo: trailingAnchor),
+    ])
+    horizontalLayout = [
       stack.topAnchor.constraint(equalTo: topAnchor),
       stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
       stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
       stack.heightAnchor.constraint(equalToConstant: Self.barHeight),
-    ])
+    ]
+    verticalLayout = [
+      stack.centerXAnchor.constraint(equalTo: centerXAnchor),
+      stack.centerYAnchor.constraint(equalTo: centerYAnchor),
+      stack.widthAnchor.constraint(equalTo: widthAnchor),
+    ]
+    applyAxis()
     apply(selected: .exhibition, previous: nil, animated: false)
   }
 
@@ -77,7 +95,26 @@ final class AFFocusTabBar: UIView {
     apply(selected: tab, previous: previous, animated: animated)
   }
 
-  private func makeItem(for tab: AppTab) -> (UIButton, UIView) {
+  private func applyAxis() {
+    let vertical = axis == .vertical
+    NSLayoutConstraint.deactivate(vertical ? horizontalLayout : verticalLayout)
+    NSLayoutConstraint.activate(vertical ? verticalLayout : horizontalLayout)
+    stack.axis = axis
+    stack.distribution = vertical ? .equalSpacing : .fillEqually
+    stack.alignment = vertical ? .center : .fill
+    stack.spacing = vertical ? 26 : 0
+    [backdrop, tint, hairline].forEach { $0.isHidden = vertical }
+    for (index, item) in items.enumerated() {
+      let title = AppTab.allCases[index].title
+      NSLayoutConstraint.deactivate(vertical ? item.horizontalConstraints : item.verticalConstraints)
+      NSLayoutConstraint.activate(vertical ? item.verticalConstraints : item.horizontalConstraints)
+      item.button.setTitle(vertical ? nil : title, for: .normal)
+      item.verticalLabel.isHidden = !vertical
+    }
+    apply(selected: selectedTab, previous: nil, animated: false)
+  }
+
+  private func makeItem(for tab: AppTab) -> Item {
     let button = UIButton(type: .custom)
     button.setTitle(tab.title, for: .normal)
     button.titleLabel?.font = AFFont.ui(size: 13, weight: .medium)
@@ -89,6 +126,11 @@ final class AFFocusTabBar: UIView {
     button.accessibilityIdentifier = "tab.\(tab)"
     button.addAction(UIAction { [weak self] _ in self?.onSelect?(tab) }, for: .touchUpInside)
 
+    let verticalLabel = AFFocusTabVerticalLabel(title: tab.title)
+    verticalLabel.translatesAutoresizingMaskIntoConstraints = false
+    verticalLabel.isUserInteractionEnabled = false
+    button.addSubview(verticalLabel)
+
     let dot = UIView()
     dot.translatesAutoresizingMaskIntoConstraints = false
     dot.backgroundColor = accentColor
@@ -99,29 +141,42 @@ final class AFFocusTabBar: UIView {
       dot.widthAnchor.constraint(equalToConstant: 4),
       dot.heightAnchor.constraint(equalToConstant: 4),
       dot.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-      dot.topAnchor.constraint(equalTo: button.topAnchor, constant: 34),
     ])
-    return (button, dot)
+    let horizontal = [dot.topAnchor.constraint(equalTo: button.topAnchor, constant: 34)]
+    let vertical = [
+      verticalLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 6),
+      verticalLabel.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+      button.widthAnchor.constraint(equalToConstant: 44),
+      dot.topAnchor.constraint(equalTo: verticalLabel.bottomAnchor, constant: 6),
+      button.bottomAnchor.constraint(equalTo: dot.bottomAnchor, constant: 6),
+    ]
+    return Item(button: button, dot: dot, verticalLabel: verticalLabel, horizontalConstraints: horizontal, verticalConstraints: vertical)
+  }
+
+  private func label(of item: Item) -> UIView? {
+    axis == .vertical ? item.verticalLabel : item.button.titleLabel
   }
 
   private func apply(selected: AppTab, previous: AppTab?, animated: Bool) {
     for tab in AppTab.allCases {
-      let button = buttons[tab.rawValue]
+      let item = items[tab.rawValue]
       let isSelected = tab == selected
-      button.setTitleColor(isSelected ? AFColor.textPrimary : AFColor.textTertiary, for: .normal)
-      button.accessibilityTraits = isSelected ? [.button, .selected] : .button
+      let color = isSelected ? AFColor.textPrimary : AFColor.textTertiary
+      item.button.setTitleColor(color, for: .normal)
+      item.verticalLabel.textColor = color
+      item.button.accessibilityTraits = isSelected ? [.button, .selected] : .button
       if !isSelected {
-        dots[tab.rawValue].alpha = 0
+        item.dot.alpha = 0
       }
     }
-    let dot = dots[selected.rawValue]
-    guard animated, let label = buttons[selected.rawValue].titleLabel else {
+    let dot = items[selected.rawValue].dot
+    guard animated, let label = label(of: items[selected.rawValue]) else {
       dot.alpha = 1
       dot.transform = .identity
       return
     }
     AFMotion.afLock(label: label, dot: dot)
-    if let previous, let previousLabel = buttons[previous.rawValue].titleLabel, !AFMotion.reduceMotion {
+    if let previous, let previousLabel = self.label(of: items[previous.rawValue]), !AFMotion.reduceMotion {
       AFMotion.defocus(previousLabel, amount: 0.4)
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
         AFMotion.refocus(previousLabel)

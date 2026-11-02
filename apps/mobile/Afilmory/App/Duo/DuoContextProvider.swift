@@ -24,7 +24,7 @@ final class DuoContextProvider {
   func refresh() {
     guard let controller, let window = controller.view.window else { return }
     let next = resolve(controller: controller, window: window)
-    guard window.traitOverrides.duoContext != next else { return }
+    if window.traitOverrides.contains(DuoContextTrait.self), window.traitOverrides.duoContext == next { return }
     window.traitOverrides.duoContext = next
   }
 
