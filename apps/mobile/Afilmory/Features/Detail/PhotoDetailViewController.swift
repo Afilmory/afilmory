@@ -48,6 +48,7 @@ final class PhotoDetailViewController: UIViewController {
     social = DetailSocial(gallerySlug: gallerySlug)
     currentIndex = min(max(0, index), max(0, photos.count - 1))
     super.init(nibName: nil, bundle: nil)
+    initialPlaceholder = currentPhoto.flatMap { (sourceProvider($0.id) as? UIImageView)?.image }
     let delegate = DetailTransitionDelegate()
     transitionDelegateRef = delegate
     transitioningDelegate = delegate

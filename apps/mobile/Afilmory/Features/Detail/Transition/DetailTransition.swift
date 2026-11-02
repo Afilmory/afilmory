@@ -50,7 +50,6 @@ final class DetailTransitionAnimator: NSObject, UIViewControllerAnimatedTransiti
     presented.view.layoutIfNeeded()
     let source = detail.currentPhoto.flatMap { detail.sourceProvider($0.id) }
     let sourceImage = (source as? UIImageView)?.image
-    detail.initialPlaceholder = sourceImage
     detail.view.layoutIfNeeded()
     AppNavigator.shared.setTabBarHidden(true)
     let chrome: [UIView] = [detail.topChrome, detail.chips, detail.infoColumn]
