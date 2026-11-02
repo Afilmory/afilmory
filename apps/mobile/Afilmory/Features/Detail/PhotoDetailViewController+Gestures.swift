@@ -89,6 +89,7 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
     switch pan.state {
     case .began:
       dismissTranslation = 0
+      dismissDriftX = 0
     case .changed:
       if translation.y < 0, dismissTranslation == 0, duoSplit == nil {
         sheetProgress = DetailGestureRules.photoPanSheetProgress(translationY: translation.y)
@@ -100,9 +101,9 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
         layoutSheet()
       }
       dismissTranslation = max(0, translation.y)
+      dismissDriftX = translation.x * 0.6
+      applyPhotoRecession()
       let progress = min(1, dismissTranslation / max(1, view.bounds.height * 0.6))
-      let scale = 1 - 0.25 * progress
-      photoLayer.transform = CGAffineTransform(translationX: translation.x * 0.6, y: dismissTranslation).scaledBy(x: scale, y: scale)
       backdrop.alpha = 1 - progress
       [sheet, chips, topChrome].forEach { $0.alpha = 1 - min(1, progress * 2.5) }
       AppNavigator.shared.setTabBarHidden(true, animated: false)
@@ -119,6 +120,7 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
         close()
       } else {
         dismissTranslation = 0
+        dismissDriftX = 0
         AFMotion.spring(duration: 0.45, damping: 0.85, animations: {
           self.backdrop.alpha = 1
           [self.sheet, self.chips, self.topChrome].forEach { $0.alpha = 1 }

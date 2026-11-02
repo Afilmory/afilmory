@@ -24,6 +24,7 @@ final class PhotoDetailViewController: UIViewController {
   var sheetProgress: CGFloat = 0
   var sheetDragStartProgress: CGFloat = 0
   var dismissTranslation: CGFloat = 0
+  var dismissDriftX: CGFloat = 0
   var isRailShown = false
   var initialPlaceholder: UIImage?
   var hasLaidOutPager = false
@@ -165,6 +166,14 @@ final class PhotoDetailViewController: UIViewController {
 
   func applyPhotoRecession() {
     guard duoSplit == nil else { return }
+    if dismissTranslation > 0 {
+      let progress = min(1, dismissTranslation / max(1, view.bounds.height * 0.6))
+      let scale = 1 - 0.25 * progress
+      photoLayer.transform = CGAffineTransform(translationX: dismissDriftX, y: dismissTranslation).scaledBy(x: scale, y: scale)
+      photoDefocus.radius = 0
+      photoLayer.alpha = 1
+      return
+    }
     let t = sheetProgress
     if AFMotion.reduceMotion {
       photoLayer.transform = .identity
