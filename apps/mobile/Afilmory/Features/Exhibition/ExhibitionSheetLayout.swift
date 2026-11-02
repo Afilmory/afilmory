@@ -32,11 +32,11 @@ final class ExhibitionSheetLayout: UICollectionViewLayout {
     guard let collectionView else { return }
     let width = collectionView.bounds.width
     cache.removeAll(keepingCapacity: true)
-    let hero = UICollectionViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
-    hero.frame = CGRect(x: 0, y: 0, width: width, height: heroHeight)
-    cache.append(hero)
     let lanes = self.lanes.isEmpty ? [0...width] : self.lanes
     let spanning = (lanes.first?.lowerBound ?? 0)...(lanes.last?.upperBound ?? width)
+    let hero = UICollectionViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
+    hero.frame = CGRect(x: spanning.lowerBound, y: 0, width: spanning.upperBound - spanning.lowerBound, height: heroHeight)
+    cache.append(hero)
     let spacing = ContactSheetLayout.blockSpacing
     var cursor = heroHeight
     var pair: (top: CGFloat, bottom: CGFloat, lane: Int)?

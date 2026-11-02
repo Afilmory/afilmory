@@ -71,9 +71,9 @@ final class ExhibitionTopBar: UIView {
     projectButton.accessibilityLabel = String(localized: "Project")
     [brand, titleLabel, trailing].forEach(addSubview)
     NSLayoutConstraint.activate([
-      brand.leadingAnchor.constraint(equalTo: leadingAnchor, constant: showsBack ? 12 : 20),
+      brand.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: showsBack ? 12 : 20),
       brand.centerYAnchor.constraint(equalTo: bottomAnchor, constant: -Self.contentHeight / 2),
-      trailing.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+      trailing.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -12),
       trailing.centerYAnchor.constraint(equalTo: brand.centerYAnchor),
       titleLabel.centerYAnchor.constraint(equalTo: brand.centerYAnchor),
       titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: brand.trailingAnchor, constant: 8),

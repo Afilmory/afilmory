@@ -172,9 +172,10 @@ final class ExhibitionController: UIViewController {
       query: content.isFiltered ? querySummary : nil,
       animated: animatedLevelChange
     )
-    hero.spread = pages.count == 2 ? (pages[0], pages[1]) : nil
+    let span = pages.reduce(CGRect.null) { $0.union($1) }
+    hero.spread = pages.count == 2 ? (pages[0].offsetBy(dx: -span.minX, dy: 0), pages[1].offsetBy(dx: -span.minX, dy: 0)) : nil
     sheetLayout.lanes = pages.map { $0.minX...$0.maxX }
-    sheetLayout.heroHeight = hero.height(for: view.bounds.width)
+    sheetLayout.heroHeight = hero.height(for: span.width)
     sheetLayout.placements = level == .infinity
       ? [ExhibitionSheetLayout.Placement(height: ExhibitionMapCard.totalHeight, lane: ContactSheetPlacement.spanning)]
       : content.placements.map { ExhibitionSheetLayout.Placement(height: $0.block.height(level: level), lane: $0.lane) }
