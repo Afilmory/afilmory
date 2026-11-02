@@ -12,6 +12,8 @@ Environment:
   LANGS        space-separated app languages (default "en"; e.g. "en zh-Hans ja")
   MOTION       "full" (default), "reduce", or "both"
   TEXT_SIZE    UIContentSizeCategory name, e.g. UICTContentSizeCategoryAccessibilityXL
+  DUO_POSTURE  force the Duo layout in Debug builds: "outer", "book" or "flat"
+  SCREEN       simctl display to capture, e.g. 1 for the iPhone Duo outer display
   SKIP_BUILD=1 reuse the last build
   OUT          output directory (default .ui-catalog/<timestamp>)
 
@@ -92,10 +94,11 @@ for lang in $LANGS; do
         -AppleLanguages "($lang)" -AppleLocale "$lang")
       [[ "$motion" == "reduce" ]] && args+=(-fixture.reduceMotion YES)
       [[ -n "${TEXT_SIZE:-}" ]] && args+=(-UIPreferredContentSizeCategoryName "$TEXT_SIZE")
+      [[ -n "${DUO_POSTURE:-}" ]] && args+=(-duo.posture "$DUO_POSTURE")
       xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
       xcrun simctl launch "$UDID" "$BUNDLE" "${args[@]}" >/dev/null
       sleep "$(python3 -c "print(max(1.5, float('$settle')))")"
-      xcrun simctl io "$UDID" screenshot "$dir/$id.png" >/dev/null 2>&1
+      xcrun simctl io "$UDID" screenshot ${SCREEN:+--display="$SCREEN"} "$dir/$id.png" >/dev/null 2>&1
       echo "<figure><img src=\"$lang-$motion/$id.png\" loading=lazy><figcaption>$id · $scenario<br>$title</figcaption></figure>" >> "$INDEX"
       count=$((count + 1))
       echo "[$count] $lang $motion $id"

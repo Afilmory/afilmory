@@ -23,9 +23,28 @@ final class DuoContextProvider {
 
   func refresh() {
     guard let controller, let window = controller.view.window else { return }
-    let next = resolve(controller: controller, window: window)
+    var next = resolve(controller: controller, window: window)
+    #if DEBUG
+      if let forced = Self.forcedContext(UserDefaults.standard.string(forKey: "duo.posture"), windowBounds: window.bounds) {
+        next = forced
+      }
+    #endif
     if window.traitOverrides.contains(DuoContextTrait.self), window.traitOverrides.duoContext == next { return }
     window.traitOverrides.duoContext = next
+  }
+
+  static func forcedContext(_ value: String?, windowBounds: CGRect) -> DuoContext? {
+    switch value {
+    case "book":
+      let fold = CGRect(x: windowBounds.midX - 5, y: windowBounds.minY, width: 10, height: windowBounds.height)
+      return DuoContext(barEdge: .trailing, posture: .book(fold: fold))
+    case "flat":
+      return DuoContext(barEdge: .trailing, posture: .flat)
+    case "outer":
+      return DuoContext(barEdge: .trailing, posture: .single)
+    default:
+      return nil
+    }
   }
 
   private func resolve(controller: UIViewController, window: UIWindow) -> DuoContext {
