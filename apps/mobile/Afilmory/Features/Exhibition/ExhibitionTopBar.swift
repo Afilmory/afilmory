@@ -2,6 +2,7 @@ import UIKit
 
 final class ExhibitionTopBar: UIView {
   static let contentHeight: CGFloat = 44
+  static let controlHeight: CGFloat = 36
 
   var onBack: (() -> Void)?
   var onSearch: (() -> Void)?
@@ -40,7 +41,7 @@ final class ExhibitionTopBar: UIView {
   }
   private var isGrounded = false
   private var isTitleShown = false
-  private lazy var titleCenter = titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor)
+  private lazy var projectSquare = projectButton.widthAnchor.constraint(equalTo: projectButton.heightAnchor)
 
   init(showsBack: Bool) {
     self.showsBack = showsBack
@@ -55,7 +56,8 @@ final class ExhibitionTopBar: UIView {
     brand.translatesAutoresizingMaskIntoConstraints = false
     self.brand.isAccessibilityElement = false
     titleLabel.alpha = 0
-    titleLabel.textAlignment = .center
+    titleLabel.textAlignment = .natural
+    titleLabel.lineBreakMode = .byTruncatingTail
     titleLabel.accessibilityTraits = .header
     trailing.axis = .horizontal
     trailing.spacing = 8
@@ -76,7 +78,9 @@ final class ExhibitionTopBar: UIView {
       trailing.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -12),
       trailing.centerYAnchor.constraint(equalTo: brand.centerYAnchor),
       titleLabel.centerYAnchor.constraint(equalTo: brand.centerYAnchor),
-      titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: brand.trailingAnchor, constant: 8),
+      showsBack
+        ? titleLabel.leadingAnchor.constraint(equalTo: brand.trailingAnchor, constant: 12)
+        : titleLabel.leadingAnchor.constraint(equalTo: brand.leadingAnchor),
       titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailing.leadingAnchor, constant: -8),
     ])
     titleLabel.setContentCompressionResistancePriority(UILayoutPriority(760), for: .horizontal)
@@ -85,8 +89,11 @@ final class ExhibitionTopBar: UIView {
       $0.setContentCompressionResistancePriority(.required, for: .horizontal)
       $0.titleLabel?.numberOfLines = 1
     }
-    titleCenter.priority = .defaultHigh
-    titleCenter.isActive = true
+    NSLayoutConstraint.activate([projectButton, searchButton, followButton, backButton].map {
+      $0.heightAnchor.constraint(equalToConstant: Self.controlHeight)
+    } + [searchButton, backButton].map {
+      $0.widthAnchor.constraint(equalTo: $0.heightAnchor)
+    })
   }
 
   @available(*, unavailable)
@@ -196,13 +203,24 @@ final class ExhibitionTopBar: UIView {
     let showsTitle = scrollOffset > titleThreshold
     guard showsTitle != isTitleShown else { return }
     isTitleShown = showsTitle
-    if showsTitle {
-      titleLabel.alpha = 0
-      AFMotion.rackIn(titleLabel)
-    } else {
-      UIView.animate(withDuration: 0.25, delay: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
-        self.titleLabel.alpha = 0
-      }
+    setProjectCompact(showsTitle)
+    UIView.animate(withDuration: 0.25, delay: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
+      self.titleLabel.alpha = showsTitle ? 1 : 0
+      self.brand.alpha = showsTitle ? 0 : 1
+      self.layoutIfNeeded()
     }
+  }
+
+  private func setProjectCompact(_ compact: Bool) {
+    projectButton.configuration?.title = compact ? nil : String(localized: "Project")
+    projectButton.configuration?.image = UIImage(
+      systemName: "play.fill",
+      withConfiguration: UIImage.SymbolConfiguration(pointSize: compact ? 13 : 11, weight: .bold)
+    )
+    projectButton.configuration?.imagePadding = compact ? 0 : 6
+    projectButton.configuration?.contentInsets = compact
+      ? NSDirectionalEdgeInsets(top: 9, leading: 0, bottom: 9, trailing: 0)
+      : NSDirectionalEdgeInsets(top: 9, leading: 14, bottom: 9, trailing: 14)
+    projectSquare.isActive = compact
   }
 }
