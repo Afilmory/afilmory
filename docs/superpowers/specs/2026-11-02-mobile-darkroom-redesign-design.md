@@ -127,7 +127,7 @@ Cache per photo id. Results on the current library for calibration: robin → `#
 
 ### Layout (top to bottom)
 
-1. **Top bar** (transparent, gains a blurred ground and hairline after 24 pt of scroll): `AFILMORY` mono label left; a glass `▶ 放映` button right; when the section title scrolls under the bar, a small `Innei's Afilmory`-style gallery name rack-focuses into the centre.
+1. **Top bar** (transparent, gains a blurred ground and hairline after 24 pt of scroll): `AFILMORY` mono label left; a glass `▶ 放映` button right; when the section title scrolls under the bar, `AFILMORY` fades out and the gallery name fades in at the same leading spot (Schola 17, tail-truncated), and `▶ 放映` shrinks to a 36 pt ▶ circle matching Search; scrolling back reverses it (plain 0.25 s fade, no blur). Visitor galleries keep the back chevron and put the name right after it.
 2. **Opener (开场一帧):** one photograph, 366 × 470 pt card (12 pt side insets, 28 pt radius, aspect-fill). A random photo from the user's own feed on every cold launch. Below it a caption: accent dot, Schola Italic `开场 · No. 07`, and mono `date · time-of-day · camera`. Right of the caption, a `再曝光` button picks a different random photo and replays the exposure.
 3. **Section header:** Schola 30 `印样` with a mono caption that changes per level (`18 帧 · 12 天 · 按拍摄日剪开`, `18 帧 · 8 个月`, `18 帧 · 3 年`, `∞ · 有位置的照片铺在地图上`). Right of it, the **focus-distance scale** `日 · 月 · 年 · ∞`: four Schola labels over small tick marks, the active one marked by an accent `▾`.
 4. **Contact sheet (印样):** photos grouped by local calendar day (日), month (月) or year (年), each group a "film strip" on the film-base colour with tiny mono frame numbers above each frame and a group label above the strip (`07.19 · 2 帧`). Frame heights 72 / 56 / 40 pt by level, widths by aspect ratio. Strips pack greedily into rows; a strip wider than the screen scrolls horizontally on its own. Year dividers (mono year + hairline) at 日 and 月.
@@ -136,7 +136,7 @@ Cache per photo id. Results on the current library for calibration: robin → `#
 ### Behaviour
 
 - **Entrance:** the opener plays Exposure; caption, title, strips (staggered ~70 ms), then the tab bar rise in with a small upward rack focus. Total ≈ 1.2 s, input accepted immediately.
-- **Scroll:** the opener moves at ~0.35× (parallax), shrinks slightly and defocuses as it leaves. **Focal plane:** while the user is scrolling, rows far from a horizontal line at ~42 % of the viewport blur slightly (max ~5 pt) and dim; within ~160 ms of the scroll stopping everything is sharp. If this cannot hold frame rate on supported devices, degrade to opacity-only.
+- **Scroll:** the opener moves at ~0.35× (parallax), shrinks slightly and fades as it leaves (no blur). Rows stay sharp while scrolling (a focal-plane blur was built and removed on 2026-11-02: it read as noise, not focus).
 - **Scale changes (日/月/年):** tap a label or pinch on the contact sheet (pinch out = farther). Strips regroup and rise in with a short stagger.
 - **∞ (map level):** visible only when at least one photo has a location. Located thumbnails lift off their strips and fly to their map positions (clusters fan slightly, ±7°). The map is a card (366 × 300, 28 pt radius) using MapKit with a dark style, showing photo pins as 52 pt rounded thumbnails with a white border. Under the card: `另有 N 帧没有位置信息` with a note that they remain in 日 · 月 · 年. A glass `全屏` button on the card expands **only the map card** to full screen: the window grows to the screen bounds and the radius goes to 0, the map gains area rather than scaling (≤1.15× zoom), a close button, `∞` title and `N 处 · M 帧` chip fade in, and a bottom sheet card lists the located frames. Close reverses it. Pins and list items open Detail.
 - **Search and filters:** the top-bar search/filter button opens the existing filter UI restyled; results narrow the opener pool and the strips at every level, including ∞.
@@ -184,7 +184,7 @@ Cache per photo id. Results on the current library for calibration: robin → `#
 
 ## Tab bar
 
-Three items: 展览 · 观展 · 暗房, text labels in SF Pro 13 over a 4 pt focus dot (accent of the current context). Switching tabs: the outgoing page defocuses (blur 10, scale 0.985, fade), the incoming page racks in; the selected label plays AF hunt and lock, the previous label briefly defocuses. Tab bar hides for Detail, the review sheet and the account sheet. Built on `AfilmoryTabBarController`; whether this is a custom bar or a restyled `UITabBar` is the builder's call (it must keep VoiceOver tab semantics).
+Three items: 展览 · 观展 · 暗房, text labels in SF Pro 13 over a 4 pt focus dot (accent of the current context). Switching tabs is instant and never blocks the next tap (an animated tab transition stalls `UITabBarController` selection until it finishes); only the focus dot pops in, with a selection haptic. No label blur. Tab bar hides for Detail, the review sheet and the account sheet. Built on `AfilmoryTabBarController`; whether this is a custom bar or a restyled `UITabBar` is the builder's call (it must keep VoiceOver tab semantics).
 
 ## Accessibility
 
@@ -198,7 +198,7 @@ Three items: 展览 · 观展 · 暗房, text labels in SF Pro 13 over a 4 pt fo
 Each phase ships behind no flag (the app is unreleased; change code in place) and must leave the app fully usable.
 
 1. **Foundation:** colour and type tokens, font bundling (Schola + subset script and CJK subsets, `project.yml` resources + `UIAppFonts`), motion primitives (rack focus, defocus, AF lock, exposure, develop) with Reduce Motion fallbacks, accent extractor with unit tests, 3-tab shell with the new tab bar and tab transition, deep-link index updates, account settings moved to Darkroom.
-2. **Exhibition + Detail:** opener, contact sheet with 日/月/年 and pinch, focal-plane scroll, shared transitions, Detail sheet redesign, projection mode, ∞ map level with fly-in and full-screen map card.
+2. **Exhibition + Detail:** opener, contact sheet with 日/月/年 and pinch, shared transitions, Detail sheet redesign, projection mode, ∞ map level with fly-in and full-screen map card.
 3. **Viewing:** page-view segments with continuous indicator, rolls, galleries, mosaic layout, gallery page reusing the Exhibition module, visitor mode restyle.
 4. **Darkroom:** upload stage with review sheet and develop animation wired to `UploadCenter`/Live Activity, grouped lists, sub-page push animator, Site accent switch, restyled sub-pages.
 
@@ -225,7 +225,7 @@ Each phase ships behind no flag (the app is unreleased; change code in place) an
 - Detail keeps paging, zoom, Live Photo and drag-to-dismiss, with the sheet/gesture rules above.
 - Location on someone else's photo opens their gallery page at ∞.
 - Signed-out visitors see Viewing's 展厅 only.
-- Reduce Motion fallbacks and the opacity-only fallback for the focal plane.
+- Reduce Motion fallbacks.
 
 ## Copy and localization
 
@@ -258,7 +258,7 @@ All on https://claude.ai/artifact/VP9F8B8T6nkVSm4Ty5h1bj (Design canvas). Board 
 | D1 Detail | Approved | Photo as page, two-detent sheet, data-driven header, concentric corners |
 | D2 TypeSpecimen | Approved | Type roles (Schola, Source Han Serif, SF Pro, SF Mono) |
 | K1–K3 / K4 | Approved K1–K3 | Photo-derived accent; pure monochrome rejected |
-| H1 OpenerSheet | Approved | Opener + contact sheet + focal-plane scroll, Detail flight, projection |
+| H1 OpenerSheet | Approved | Opener + contact sheet, Detail flight, projection (focal-plane scroll later dropped) |
 | H2 FilmStrips | Rejected | Horizontal per-day strips |
 | H3 TabsMap | Approved | 3 tabs, 日·月·年·∞ scale, map fly-in, full-screen map card |
 | H4 Viewing | Approved | Compact header, swipe pages, rolls, galleries, mosaic, gallery entry |
