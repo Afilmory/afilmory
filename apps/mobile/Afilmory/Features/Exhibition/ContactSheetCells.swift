@@ -53,6 +53,9 @@ final class ContactSheetRowCell: ContactSheetBaseCell {
     super.init(frame: frame)
     scroller.showsHorizontalScrollIndicator = false
     scroller.alwaysBounceHorizontal = false
+    scroller.alwaysBounceVertical = false
+    scroller.isDirectionalLockEnabled = true
+    scroller.contentInsetAdjustmentBehavior = .never
     scroller.contentInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
     scroller.scrollsToTop = false
     contentView.addSubview(scroller)
@@ -66,6 +69,7 @@ final class ContactSheetRowCell: ContactSheetBaseCell {
   override func layoutSubviews() {
     super.layoutSubviews()
     scroller.frame = contentView.bounds
+    scroller.contentSize.height = scroller.bounds.height
   }
 
   override func prepareForReuse() {
@@ -110,7 +114,7 @@ final class ContactSheetRowCell: ContactSheetBaseCell {
       }
       x += max(group.stripWidth, label.frame.width) + ContactSheetLayout.groupGap
     }
-    scroller.contentSize = CGSize(width: max(0, x - ContactSheetLayout.groupGap), height: contentView.bounds.height)
+    scroller.contentSize = CGSize(width: max(0, x - ContactSheetLayout.groupGap), height: scroller.bounds.height)
     scroller.contentOffset = CGPoint(x: -scroller.contentInset.left, y: 0)
   }
 
