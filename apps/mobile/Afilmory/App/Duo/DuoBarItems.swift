@@ -12,6 +12,7 @@ enum DuoBarItems {
 
   static func custom(_ view: UIView, label: String) -> UIBarButtonItem {
     let item = UIBarButtonItem(customView: view)
+    item.hidesSharedBackground = true
     item.accessibilityLabel = label
     item.title = label
     return item

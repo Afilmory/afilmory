@@ -90,6 +90,7 @@ final class DuoBarItemsTests: XCTestCase {
     let darkroom = DarkroomController(onRequestSignIn: {})
     let navigation = host(darkroom, outer)
     XCTAssertEqual(labels(darkroom), [String(localized: "Account")])
+    XCTAssertEqual(darkroom.navigationItem.rightBarButtonItems?.first?.hidesSharedBackground, true)
     XCTAssertFalse(isShown(darkroom.avatarButton))
     navigation.traitOverrides.duoContext = flat
     navigation.view.layoutIfNeeded()
