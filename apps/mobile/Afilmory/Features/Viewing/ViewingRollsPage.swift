@@ -142,7 +142,8 @@ final class ViewingRollsPage: ViewingPageController, UICollectionViewDataSource 
 
   func collectionView(_: UICollectionView, layout _: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     let event = chapters[indexPath.section].rolls[indexPath.item]
-    return CGSize(width: cardWidth, height: ViewingRollCell.height(for: event, width: cardWidth))
+    let width = cardWidth(at: indexPath)
+    return CGSize(width: width, height: ViewingRollCell.height(for: event, width: width))
   }
 
   func collectionView(_ collectionView: UICollectionView, layout _: UICollectionViewLayout, referenceSizeForHeaderInSection _: Int) -> CGSize {

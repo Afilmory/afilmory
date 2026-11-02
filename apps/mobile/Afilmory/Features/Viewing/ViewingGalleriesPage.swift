@@ -55,7 +55,8 @@ final class ViewingGalleriesPage: ViewingPageController, UICollectionViewDataSou
 
   private func layoutSearchField() {
     let height = ViewingSearchField.height
-    searchField.frame = CGRect(x: 16, y: -height - 2, width: max(0, collectionView.bounds.width - 32), height: height)
+    let safe = view.safeAreaInsets
+    searchField.frame = CGRect(x: 16 + safe.left, y: -height - 2, width: max(0, collectionView.bounds.width - 32 - safe.left - safe.right), height: height)
   }
 
   override func modelChanged(_ change: ViewingModel.Change) {
@@ -194,7 +195,8 @@ final class ViewingGalleriesPage: ViewingPageController, UICollectionViewDataSou
 
   func collectionView(_: UICollectionView, layout _: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     guard let card = card(at: indexPath) else { return .zero }
-    return CGSize(width: cardWidth, height: ViewingGalleryCell.height(covers: covers(for: card), width: cardWidth))
+    let width = cardWidth(at: indexPath)
+    return CGSize(width: width, height: ViewingGalleryCell.height(covers: covers(for: card), width: width))
   }
 
   func collectionView(_ collectionView: UICollectionView, layout _: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {

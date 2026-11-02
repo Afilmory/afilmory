@@ -14,7 +14,7 @@ class ViewingPageController: UIViewController, UICollectionViewDelegateFlowLayou
   let page: ViewingPage
   let model: ViewingModel
   weak var host: ViewingPageHost?
-  let layout = UICollectionViewFlowLayout()
+  let layout = ViewingColumnsLayout()
   private(set) lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
   let stateView = ViewingStateView()
   private var observation: ViewingModel.Observation?
@@ -58,6 +58,27 @@ class ViewingPageController: UIViewController, UICollectionViewDelegateFlowLayou
       controller.layout.invalidateLayout()
       controller.collectionView.reloadData()
     }
+    registerForTraitChanges([DuoContextTrait.self]) { (controller: ViewingPageController, _: UITraitCollection) in
+      controller.updateColumns()
+    }
+  }
+
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    updateColumns()
+  }
+
+  private func updateColumns() {
+    let safe = view.safeAreaInsets
+    let inset = UIEdgeInsets(top: 0, left: 16 + safe.left, bottom: 0, right: 16 + safe.right)
+    if layout.sectionInset != inset {
+      layout.sectionInset = inset
+      layout.invalidateLayout()
+    }
+    let context = traitCollection.duoContext
+    let content = CGRect(x: safe.left, y: 0, width: max(0, collectionView.bounds.width - safe.left - safe.right), height: collectionView.bounds.height)
+    let fold = DuoGeometry.fold(of: context, in: collectionView).map { CGRect(x: $0.minX, y: 0, width: $0.width, height: content.height) }
+    layout.columns = ViewingColumnsLayout.columns(for: context, in: content, fold: fold, inset: 16, spacing: 12)
   }
 
   override func viewSafeAreaInsetsDidChange() {
@@ -85,6 +106,10 @@ class ViewingPageController: UIViewController, UICollectionViewDelegateFlowLayou
 
   var cardWidth: CGFloat {
     max(0, collectionView.bounds.width - layout.sectionInset.left - layout.sectionInset.right)
+  }
+
+  func cardWidth(at indexPath: IndexPath) -> CGFloat {
+    layout.itemWidth(at: indexPath) ?? cardWidth
   }
 
   func scrollToTop(animated: Bool) {
