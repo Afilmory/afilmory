@@ -22,6 +22,7 @@ extension PhotoDetailViewController {
     }
     social.onCommentCount = { [weak self] count in
       self?.sheet.setCommentCount(count)
+      self?.infoColumn.setCommentCount(count)
     }
   }
 

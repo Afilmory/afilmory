@@ -59,9 +59,10 @@ final class DuoDetailLayoutTests: XCTestCase {
     let photo = detail.photoLayer.convert(detail.photoLayer.bounds, to: detail.view)
     XCTAssertLessThanOrEqual(photo.maxX, fold.minX + 0.5)
     XCTAssertLessThanOrEqual(detail.chips.frame.maxX, fold.minX + 0.5)
-    XCTAssertGreaterThanOrEqual(detail.sheet.frame.minX, fold.maxX - 0.5)
-    XCTAssertGreaterThan(detail.sheet.frame.height, 400)
-    XCTAssertTrue(detail.sheet.isDocked)
+    XCTAssertGreaterThanOrEqual(detail.infoColumn.frame.minX, fold.maxX - 0.5)
+    XCTAssertGreaterThan(detail.infoColumn.frame.height, 400)
+    XCTAssertFalse(detail.infoColumn.isHidden)
+    XCTAssertTrue(detail.sheet.isHidden)
     XCTAssertEqual(labels(detail), [String(localized: "Back"), String(localized: "Full Screen"), String(localized: "More")])
     XCTAssertTrue(detail.backButton.isHidden || detail.topChrome.isHidden)
   }
@@ -69,8 +70,8 @@ final class DuoDetailLayoutTests: XCTestCase {
   func testFlatPostureGivesThePhotoTwoThirds() {
     let detail = hosted(DuoContext(barEdge: .trailing, posture: .flat))
     let photo = detail.photoLayer.convert(detail.photoLayer.bounds, to: detail.view)
-    XCTAssertGreaterThan(photo.width, detail.sheet.frame.width * 1.7)
-    XCTAssertGreaterThan(detail.sheet.frame.minX, photo.maxX)
+    XCTAssertGreaterThan(photo.width, detail.infoColumn.frame.width * 1.7)
+    XCTAssertGreaterThan(detail.infoColumn.frame.minX, photo.maxX)
   }
 
   func testFullScreenCoversTheContentAndFlipsTheItem() {
@@ -79,24 +80,26 @@ final class DuoDetailLayoutTests: XCTestCase {
     detail.view.layoutIfNeeded()
     let photo = detail.photoLayer.convert(detail.photoLayer.bounds, to: detail.view)
     XCTAssertGreaterThan(photo.maxX, fold.maxX)
-    XCTAssertEqual(detail.sheet.alpha, 0)
+    XCTAssertEqual(detail.infoColumn.alpha, 0)
     XCTAssertEqual(detail.chips.alpha, 0)
     XCTAssertEqual(labels(detail)[1], String(localized: "Exit Full Screen"))
     detail.toggleFullScreen(animated: false)
     detail.view.layoutIfNeeded()
-    XCTAssertEqual(detail.sheet.alpha, 1)
+    XCTAssertEqual(detail.infoColumn.alpha, 1)
     XCTAssertEqual(labels(detail)[1], String(localized: "Full Screen"))
   }
 
   func testTheOuterDisplayKeepsThePhoneLayoutWithBarItems() {
     let detail = hosted(DuoContext(barEdge: .trailing, posture: .single))
-    XCTAssertFalse(detail.sheet.isDocked)
+    XCTAssertTrue(detail.infoColumn.isHidden)
+    XCTAssertFalse(detail.sheet.isHidden)
     XCTAssertEqual(labels(detail), [String(localized: "Back"), String(localized: "More")])
   }
 
   func testPhonesKeepTheirChrome() {
     let detail = hosted(.phone)
-    XCTAssertFalse(detail.sheet.isDocked)
+    XCTAssertTrue(detail.infoColumn.isHidden)
+    XCTAssertFalse(detail.sheet.isHidden)
     XCTAssertEqual(labels(detail), [])
     XCTAssertFalse(detail.topChrome.isHidden)
   }

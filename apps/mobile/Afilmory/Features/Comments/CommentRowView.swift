@@ -5,6 +5,7 @@ struct CommentRowView: View {
   let comment: CommentItem
   let store: CommentsStore
   let bubbleMaxWidth: CGFloat
+  var style: CommentListStyle = .bubble
 
   @Environment(\.openURL) private var openURL
   @Environment(\.displayScale) private var displayScale
@@ -23,27 +24,8 @@ struct CommentRowView: View {
   private var isFlightTarget: Bool { store.flight?.clientId == comment.identity }
 
   var body: some View {
-    HStack(alignment: .bottom, spacing: 8) {
-      if own {
-        Spacer(minLength: 48)
-      } else {
-        CommentAvatarView(imageURL: user?.image, name: author, size: 30)
-      }
-
-      VStack(alignment: own ? .trailing : .leading, spacing: 4) {
-        if !own {
-          header
-        }
-        bubble
-        footer
-      }
-      .frame(maxWidth: .infinity, alignment: own ? .trailing : .leading)
-
-      if !own {
-        Spacer(minLength: 42)
-      }
-    }
-    .padding(.vertical, 6)
+    rowContent
+    .padding(.vertical, style == .flat ? 9 : 6)
     .opacity(isFlightTarget ? 0 : 1)
     .contentShape(Rectangle())
     .contextMenu {
@@ -121,19 +103,82 @@ struct CommentRowView: View {
     }
   }
 
-  private var header: some View {
-    HStack(alignment: .firstTextBaseline, spacing: 7) {
-      if let profileURL {
-        Button {
-          openURL(profileURL)
-        } label: {
-          authorText
+  @ViewBuilder private var rowContent: some View {
+    if style == .flat {
+      flatRow
+    } else {
+      HStack(alignment: .bottom, spacing: 8) {
+        if own {
+          Spacer(minLength: 48)
+        } else {
+          CommentAvatarView(imageURL: user?.image, name: author, size: 30)
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(.isLink)
-      } else {
+
+        VStack(alignment: own ? .trailing : .leading, spacing: 4) {
+          if !own {
+            header
+          }
+          bubble
+          footer
+        }
+        .frame(maxWidth: .infinity, alignment: own ? .trailing : .leading)
+
+        if !own {
+          Spacer(minLength: 42)
+        }
+      }
+    }
+  }
+
+  private var flatRow: some View {
+    HStack(alignment: .top, spacing: 10) {
+      CommentAvatarView(imageURL: user?.image, name: author, size: 28)
+      VStack(alignment: .leading, spacing: 3) {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
+          authorLink
+          if let relativeTime {
+            Text("· \(relativeTime)")
+              .font(.system(size: 11, design: .monospaced))
+              .foregroundStyle(Color(AFColor.textTertiary))
+              .lineLimit(1)
+          }
+        }
+        if let parent {
+          Text("Replying to \(store.authorName(for: parent))")
+            .font(.system(size: 11))
+            .foregroundStyle(Color(AFColor.textTertiary))
+            .lineLimit(1)
+        }
+        Text(comment.content)
+          .font(.system(size: 14))
+          .lineSpacing(3)
+          .foregroundStyle(Color(AFColor.textSecondary))
+          .textSelection(.enabled)
+          .modifier(FlightTargetReporter(store: store, identity: comment.identity, active: isFlightTarget))
+        footer
+          .padding(.leading, -9)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+    }
+  }
+
+  @ViewBuilder private var authorLink: some View {
+    if let profileURL {
+      Button {
+        openURL(profileURL)
+      } label: {
         authorText
       }
+      .buttonStyle(.plain)
+      .accessibilityAddTraits(.isLink)
+    } else {
+      authorText
+    }
+  }
+
+  private var header: some View {
+    HStack(alignment: .firstTextBaseline, spacing: 7) {
+      authorLink
 
       if let relativeTime {
         Text(relativeTime)
@@ -211,13 +256,13 @@ struct CommentRowView: View {
       .font(.system(size: 10))
       .foregroundStyle(.tertiary)
       .frame(minHeight: 26)
-      .padding(own ? .trailing : .leading, 3)
+      .padding(own && style == .bubble ? .trailing : .leading, 3)
       .accessibilityHidden(true)
   }
 
   private var settledFooter: some View {
     HStack(spacing: 4) {
-      if own, let relativeTime {
+      if own, style == .bubble, let relativeTime {
         Text(relativeTime)
           .font(.system(size: 10))
           .foregroundStyle(.tertiary)
@@ -240,7 +285,7 @@ struct CommentRowView: View {
       }
     }
     .frame(minHeight: 26)
-    .padding(own ? .trailing : .leading, 3)
+    .padding(own && style == .bubble ? .trailing : .leading, 3)
     .fixedSize(horizontal: true, vertical: false)
   }
 

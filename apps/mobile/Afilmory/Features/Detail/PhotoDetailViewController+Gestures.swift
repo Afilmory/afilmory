@@ -9,6 +9,8 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
     sheet.onCollapseRequest = { [weak self] in self?.setDetent(.collapsed, animated: true) }
     sheet.onOpenLocation = { [weak self] in self?.openLocation() }
     sheet.onOpenComments = { [weak self] in self?.presentComments() }
+    infoColumn.onOpenLocation = { [weak self] in self?.openLocation() }
+    infoColumn.onOpenComments = { [weak self] in self?.presentComments() }
   }
 
   func installGestures() {

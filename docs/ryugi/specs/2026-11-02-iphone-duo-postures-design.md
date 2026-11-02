@@ -115,9 +115,9 @@ Inner display reference size: 951×669, with the vertical bar on the trailing ed
 - **Closed**: phone layout (photo, chips bar, bottom sheet), with Back and More in the vertical bar. Folding while in detail keeps the current photo; this repeats the October decision.
 - **Book**:
   - Left page: the photo, aspect-fit, plus the existing chips bar (No. pill, React, Share) at the bottom of the left page.
-  - Right page: the content of `DetailSheetView` (header, tags, exposure grid, tone, location, comments row), always expanded and scrollable. No grabber or collapse.
+  - Right page: `DetailInfoColumn`, drawn like vb3-a / vb8 rather than the phone sheet: no card, accent dot + "No. NN", serif title, mono date · time · place · camera line, tags, exposure values with their own labels (3 columns at ≥ 360 pt, 2 below), tone, the remaining sheet sections, then location and comments rows. Scrollable; no grabber or collapse. (Changed at verification, user call.)
 - **Flat**: the photo column takes ≈ 2/3. The info column is ≈ 1/3 (about 272pt at 951 wide), and the exposure grid drops from 3 columns to 2.
-- **Comments in book and flat** (vb4-b): tapping the comments row replaces the info column with `PhotoCommentsSheetView`, plus an in-column "‹ Info" control that returns to the info column. No AFSheet. On phones and the outer display, comments keep using the AFSheet.
+- **Comments in book and flat** (vb4-b): tapping the comments row replaces the info column with `PhotoCommentsSheetView` in its flat style (vb4-B: avatar, name · time, plain text, like / Reply row; title "Comments · N"), plus an accent "‹ Info" text control that returns to the info column. No AFSheet. On phones and the outer display, comments keep using the AFSheet.
 - **Full Screen** (book and flat): the Full Screen item expands the photo over the whole content area and fades out the chips and info. The same item becomes Exit Full Screen. Horizontal paging still works. Tapping the photo does not toggle full screen.
 - Paging to another photo keeps the info column in sync.
 - Folding to closed (my call): Full Screen exits; an open comments column returns to the info view and the phone layout shows its collapsed sheet. The `CommentsStore` is not carried into an AFSheet.

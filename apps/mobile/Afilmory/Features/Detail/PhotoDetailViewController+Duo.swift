@@ -67,23 +67,21 @@ extension PhotoDetailViewController {
     let top = max(view.safeAreaInsets.top, 20) + 8
     let bottom = max(view.safeAreaInsets.bottom, 12) + 8
     let info = CGRect(x: split.info.minX + 4, y: top, width: split.info.width - 8, height: max(0, split.info.height - top - bottom))
-    sheet.transform = .identity
-    sheet.isDocked = true
-    sheet.bounds = CGRect(origin: .zero, size: info.size)
-    sheet.center = CGPoint(x: info.midX, y: info.midY)
-    sheet.setExpanded(progress: 1)
+    sheet.isHidden = true
+    infoColumn.isHidden = commentsColumn != nil
+    infoColumn.frame = info
     let chromeAlpha: CGFloat = isFullScreen ? 0 : 1
     if !isTransitioning {
       photoLayer.alpha = 1
       chips.alpha = chromeAlpha
-      sheet.alpha = chromeAlpha
+      infoColumn.alpha = chromeAlpha
     }
     if let column = commentsColumn {
       column.frame = info
-      column.alpha = sheet.alpha
+      column.alpha = infoColumn.alpha
       column.isUserInteractionEnabled = !isFullScreen
     }
-    sheet.isUserInteractionEnabled = !isFullScreen
+    infoColumn.isUserInteractionEnabled = !isFullScreen
     chips.isUserInteractionEnabled = !isFullScreen
     let area = duoPhotoArea(split)
     for cell in pager.visibleCells.compactMap({ $0 as? DetailPageCell }) {
@@ -93,7 +91,8 @@ extension PhotoDetailViewController {
 
   func leaveDuoLayout() {
     topChrome.isHidden = false
-    sheet.isDocked = false
+    sheet.isHidden = false
+    infoColumn.isHidden = true
     sheet.isUserInteractionEnabled = true
     chips.isUserInteractionEnabled = true
     if !isTransitioning {
@@ -109,7 +108,7 @@ extension PhotoDetailViewController {
     let alpha: CGFloat = isFullScreen ? 0 : 1
     let changes = {
       self.chips.alpha = alpha
-      self.sheet.alpha = alpha
+      self.infoColumn.alpha = alpha
       self.commentsColumn?.alpha = alpha
       self.view.setNeedsLayout()
       self.view.layoutIfNeeded()
@@ -163,6 +162,7 @@ extension PhotoDetailViewController {
         isFullScreen = false
         chips.alpha = 1
         sheet.alpha = 1
+        infoColumn.alpha = 1
       }
       closeCommentsColumn()
     }

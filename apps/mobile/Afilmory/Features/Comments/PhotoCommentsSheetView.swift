@@ -4,8 +4,14 @@ enum CommentsCoordinateSpace {
   static let root = "afilmory.comments.root"
 }
 
+enum CommentListStyle: Equatable {
+  case bubble
+  case flat
+}
+
 struct PhotoCommentsSheetView: View {
   @Bindable var store: CommentsStore
+  var style: CommentListStyle = .bubble
 
   @State private var contentWidth: CGFloat = 0
 
@@ -92,7 +98,7 @@ struct PhotoCommentsSheetView: View {
           }
 
           ForEach(store.collection.comments, id: \.identity) { comment in
-            CommentRowView(comment: comment, store: store, bubbleMaxWidth: bubbleMaxWidth)
+            CommentRowView(comment: comment, store: store, bubbleMaxWidth: bubbleMaxWidth, style: style)
               .id(comment.identity)
               .task(id: comment.id) {
                 await store.loadMoreIfNeeded(lastVisibleCommentId: comment.id)
@@ -117,7 +123,7 @@ struct PhotoCommentsSheetView: View {
             .foregroundStyle(Color.accentColor)
           }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, style == .flat ? 22 : 12)
         .padding(.top, 10)
         .padding(.bottom, 16)
       }

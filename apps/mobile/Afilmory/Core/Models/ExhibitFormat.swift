@@ -119,29 +119,39 @@ enum ExhibitFormat {
     [camera(for: photo), lens(for: photo)].compactMap { $0 }.joined(separator: " · ")
   }
 
+  enum ExposureKind: Equatable, Sendable {
+    case focalLength, aperture, shutter, iso, bias
+  }
+
+  struct ExposurePart: Equatable, Sendable {
+    let kind: ExposureKind
+    let value: String
+  }
+
   static func exifLine(for photo: GalleryPhoto) -> String {
-    guard let exif = photo.exif else { return "" }
-    var parts: [String] = []
+    exposureParts(for: photo).map(\.value).joined(separator: "  ")
+  }
+
+  static func exposureParts(for photo: GalleryPhoto) -> [ExposurePart] {
+    guard let exif = photo.exif else { return [] }
+    var parts: [ExposurePart] = []
     if let focal = numeric(exif["FocalLength"]), focal > 0 {
-      parts.append("\(trim(focal))mm")
+      parts.append(ExposurePart(kind: .focalLength, value: "\(trim(focal))mm"))
     }
     if let aperture = numeric(exif["FNumber"]), aperture > 0 {
-      parts.append("f/\(trim(aperture))")
+      parts.append(ExposurePart(kind: .aperture, value: "f/\(trim(aperture))"))
     }
     if let shutter = numeric(exif["ExposureTime"]), shutter > 0 {
-      parts.append(shutter < 1 ? "1/\(Int((1 / shutter).rounded()))s" : "\(trim(shutter))s")
+      parts.append(ExposurePart(kind: .shutter, value: shutter < 1 ? "1/\(Int((1 / shutter).rounded()))s" : "\(trim(shutter))s"))
     }
     if let iso = numeric(exif["ISO"]), iso > 0 {
-      parts.append("ISO \(Int(iso))")
+      parts.append(ExposurePart(kind: .iso, value: "ISO \(Int(iso))"))
     }
     if let bias = numeric(exif["ExposureCompensation"]) {
-      if abs(bias) < 0.05 {
-        parts.append("±0 EV")
-      } else {
-        parts.append("\(bias > 0 ? "+" : "−")\(trim(abs(bias))) EV")
-      }
+      let value = abs(bias) < 0.05 ? "±0 EV" : "\(bias > 0 ? "+" : "−")\(trim(abs(bias))) EV"
+      parts.append(ExposurePart(kind: .bias, value: value))
     }
-    return parts.joined(separator: "  ")
+    return parts
   }
 
   private static func numeric(_ value: JSONValue?) -> Double? {

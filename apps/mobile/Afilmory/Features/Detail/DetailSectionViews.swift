@@ -142,6 +142,32 @@ enum DetailSectionViews {
     return button
   }
 
+  static func view(for section: DetailSection, accent: UIColor, bars: inout [UIView], onOpenLocation: @escaping () -> Void) -> UIView {
+    switch section {
+    case .exposure(let rows):
+      return Self.section(String(localized: "Exposure & Metering"), body: grid(rows))
+    case .file(let values):
+      return Self.section(String(localized: "File"), body: chips(values))
+    case .tone(let type, let values):
+      let typeLabel = type.map { AFLabel.exhibit($0, size: 14, italic: true, color: AFColor.textSecondary) }
+      return Self.section(String(localized: "Tone"), trailing: typeLabel, body: tone(values, accent: accent, bars: &bars))
+    case .description(let text):
+      let label = AFLabel.exhibitUser(text, size: 16)
+      label.font = AFFont.exhibitUser(size: 16, relativeTo: .body)
+      label.numberOfLines = 0
+      return Self.section(String(localized: "Description"), body: label)
+    case .rating(let value):
+      return Self.section(String(localized: "Rating"), body: rating(value))
+    case .location(let latitude, let longitude, let place):
+      return Self.section(String(localized: "Location"), body: location(latitude: latitude, longitude: longitude, place: place, action: onOpenLocation))
+    case .fujiRecipe(let title, let rows):
+      let titleLabel = title.map { AFLabel.exhibit($0, size: 14, italic: true, color: AFColor.textSecondary) }
+      return Self.section(String(localized: "Film Simulation"), trailing: titleLabel, body: grid(rows))
+    case .attribution(let rows):
+      return Self.section(String(localized: "Attribution"), body: grid(rows))
+    }
+  }
+
   static func commentsRow(count: Int?, action: @escaping () -> Void) -> UIButton {
     var configuration = UIButton.Configuration.filled()
     configuration.baseBackgroundColor = UIColor(afHex: 0x1E1C19)

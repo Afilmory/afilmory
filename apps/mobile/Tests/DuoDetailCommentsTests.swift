@@ -49,11 +49,11 @@ final class DuoDetailCommentsTests: XCTestCase {
     XCTAssertNil(detail.presentedViewController)
     let column = try XCTUnwrap(detail.commentsColumn)
     XCTAssertGreaterThanOrEqual(column.frame.minX, fold.maxX - 0.5)
-    XCTAssertTrue(detail.sheet.isHidden)
+    XCTAssertTrue(detail.infoColumn.isHidden)
     column.closeButton.sendActions(for: .primaryActionTriggered)
     detail.view.layoutIfNeeded()
     XCTAssertNil(detail.commentsColumn)
-    XCTAssertFalse(detail.sheet.isHidden)
+    XCTAssertFalse(detail.infoColumn.isHidden)
   }
 
   func testPagingToAnotherPhotoReturnsToItsInformation() {
@@ -61,7 +61,7 @@ final class DuoDetailCommentsTests: XCTestCase {
     detail.openComments(store: store())
     detail.showPage(1, animated: false)
     XCTAssertNil(detail.commentsColumn)
-    XCTAssertFalse(detail.sheet.isHidden)
+    XCTAssertFalse(detail.infoColumn.isHidden)
   }
 
   func testFoldingClosesTheColumnAndFullScreen() {

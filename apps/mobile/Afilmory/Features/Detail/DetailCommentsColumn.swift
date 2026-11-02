@@ -4,27 +4,29 @@ import UIKit
 final class DetailCommentsColumn: UIView {
   let store: CommentsStore
   let host: UIHostingController<PhotoCommentsSheetView>
-  private(set) lazy var closeButton = AFGlassButton.titled(String(localized: "Info"), symbol: "chevron.left") { [weak self] in
-    self?.onClose?()
-  }
-
+  let closeButton: UIButton
   var onClose: (() -> Void)?
-  private let titleLabel = AFLabel.exhibit(String(localized: "Comments"), size: 22)
+  private let titleLabel: UILabel
 
-  init(store: CommentsStore) {
+  init(store: CommentsStore, accent: UIColor = AFColor.accentFallback, count: Int? = nil) {
     self.store = store
-    host = UIHostingController(rootView: PhotoCommentsSheetView(store: store))
+    host = UIHostingController(rootView: PhotoCommentsSheetView(store: store, style: .flat))
+    var back = UIButton.Configuration.plain()
+    back.attributedTitle = AttributedString("‹ " + String(localized: "Info"), attributes: AttributeContainer([.font: AFFont.ui(size: 15)]))
+    back.baseForegroundColor = accent
+    back.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 12)
+    closeButton = UIButton(configuration: back)
+    closeButton.accessibilityLabel = String(localized: "Info")
+    titleLabel = AFLabel.exhibit(count.map { String(localized: "Comments · \($0)") } ?? String(localized: "Comments"), size: 26)
     super.init(frame: .zero)
-    backgroundColor = AFColor.raised
-    layer.cornerRadius = AFRadius.sheet
-    layer.cornerCurve = .continuous
-    clipsToBounds = true
+    closeButton.addAction(UIAction { [weak self] _ in self?.onClose?() }, for: .primaryActionTriggered)
+    backgroundColor = AFColor.ground
     host.view.backgroundColor = .clear
     host.safeAreaRegions = []
     titleLabel.accessibilityTraits = .header
     [closeButton, titleLabel, host.view].forEach(addSubview)
     keyboardLayoutGuide.usesBottomSafeArea = false
-    hostTop.constant = 14 + 44 + 10 + titleLabel.font.lineHeight + 4 + 12
+    hostTop.constant = Self.titleTop + titleLabel.font.lineHeight + 14
     host.view.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       host.view.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -34,6 +36,7 @@ final class DetailCommentsColumn: UIView {
     ])
   }
 
+  private static let titleTop: CGFloat = 26 + 44 + 6
   private lazy var hostTop = host.view.topAnchor.constraint(equalTo: topAnchor)
 
   @available(*, unavailable)
@@ -44,8 +47,8 @@ final class DetailCommentsColumn: UIView {
   override func layoutSubviews() {
     super.layoutSubviews()
     let buttonSize = closeButton.sizeThatFits(CGSize(width: bounds.width, height: 44))
-    closeButton.frame = CGRect(x: 14, y: 14, width: buttonSize.width, height: 44)
-    titleLabel.frame = CGRect(x: 22, y: closeButton.frame.maxY + 10, width: bounds.width - 44, height: titleLabel.font.lineHeight + 4)
+    closeButton.frame = CGRect(x: 22, y: 26, width: buttonSize.width, height: 44)
+    titleLabel.frame = CGRect(x: 22, y: Self.titleTop, width: bounds.width - 44, height: titleLabel.font.lineHeight + 4)
   }
 }
 
@@ -59,13 +62,12 @@ extension PhotoDetailViewController {
       return
     }
     closeCommentsColumn()
-    let column = DetailCommentsColumn(store: store)
+    let column = DetailCommentsColumn(store: store, accent: infoColumn.accent, count: infoColumn.commentCount)
     column.onClose = { [weak self] in self?.closeCommentsColumn() }
     addChild(column.host)
     view.addSubview(column)
     column.host.didMove(toParent: self)
     commentsColumn = column
-    sheet.isHidden = true
     view.setNeedsLayout()
     UIAccessibility.post(notification: .screenChanged, argument: column)
   }
@@ -77,7 +79,6 @@ extension PhotoDetailViewController {
     column.removeFromSuperview()
     column.host.removeFromParent()
     commentsColumn = nil
-    sheet.isHidden = false
     view.setNeedsLayout()
   }
 }

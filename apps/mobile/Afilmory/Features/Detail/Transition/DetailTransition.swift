@@ -53,7 +53,7 @@ final class DetailTransitionAnimator: NSObject, UIViewControllerAnimatedTransiti
     detail.initialPlaceholder = sourceImage
     detail.view.layoutIfNeeded()
     AppNavigator.shared.setTabBarHidden(true)
-    let chrome: [UIView] = [detail.topChrome, detail.chips]
+    let chrome: [UIView] = [detail.topChrome, detail.chips, detail.infoColumn]
     chrome.forEach { $0.alpha = 0 }
     detail.backdrop.alpha = 0
     detail.sheet.transform = CGAffineTransform(translationX: 0, y: 280)
@@ -140,6 +140,8 @@ final class DetailTransitionAnimator: NSObject, UIViewControllerAnimatedTransiti
       detail.backdrop.alpha = 0
       [detail.topChrome, detail.chips, detail.rail].forEach { $0.alpha = 0 }
       detail.sheet.alpha = 0
+      detail.infoColumn.alpha = 0
+      detail.commentsColumn?.alpha = 0
       detail.sheet.transform = CGAffineTransform(translationX: 0, y: 200)
       detail.chips.transform = detail.sheet.transform
       if reduce { detail.photoLayer.alpha = 0 }

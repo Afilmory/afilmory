@@ -86,14 +86,6 @@ final class DetailSheetView: UIView, UIScrollViewDelegate {
     layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius).cgPath
   }
 
-  var isDocked = false {
-    didSet {
-      guard isDocked != oldValue else { return }
-      grabber.isHidden = isDocked
-      setExpanded(progress: expandedProgress)
-    }
-  }
-
   func setExpanded(progress: CGFloat) {
     expandedProgress = progress
     scroller.alpha = progress
@@ -103,7 +95,7 @@ final class DetailSheetView: UIView, UIScrollViewDelegate {
     grabber.accessibilityLabel = expanded ? String(localized: "Collapse details") : String(localized: "Expand details")
     grabber.accessibilityTraits = .button
     let radius = AFRadius.sheet
-    layer.maskedCorners = expanded && !isDocked
+    layer.maskedCorners = expanded
       ? [.layerMinXMinYCorner, .layerMaxXMinYCorner]
       : [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
     content.layer.maskedCorners = layer.maskedCorners
@@ -121,7 +113,7 @@ final class DetailSheetView: UIView, UIScrollViewDelegate {
     rule.heightAnchor.constraint(equalToConstant: 1).isActive = true
     stack.addArrangedSubview(rule)
     for section in model.sections {
-      stack.addArrangedSubview(view(for: section, accent: accent))
+      stack.addArrangedSubview(DetailSectionViews.view(for: section, accent: accent, bars: &toneBars) { [weak self] in self?.onOpenLocation?() })
     }
     if commentsEnabled {
       let row = DetailSectionViews.commentsRow(count: commentCount) { [weak self] in self?.onOpenComments?() }
@@ -140,33 +132,6 @@ final class DetailSheetView: UIView, UIScrollViewDelegate {
 
   func setAccent(_ color: UIColor) {
     toneBars.forEach { $0.backgroundColor = color }
-  }
-
-  private func view(for section: DetailSection, accent: UIColor) -> UIView {
-    switch section {
-    case .exposure(let rows):
-      return DetailSectionViews.section(String(localized: "Exposure & Metering"), body: DetailSectionViews.grid(rows))
-    case .file(let chips):
-      return DetailSectionViews.section(String(localized: "File"), body: DetailSectionViews.chips(chips))
-    case .tone(let type, let values):
-      let typeLabel = type.map { AFLabel.exhibit($0, size: 14, italic: true, color: AFColor.textSecondary) }
-      return DetailSectionViews.section(String(localized: "Tone"), trailing: typeLabel, body: DetailSectionViews.tone(values, accent: accent, bars: &toneBars))
-    case .description(let text):
-      let label = AFLabel.exhibitUser(text, size: 16)
-      label.font = AFFont.exhibitUser(size: 16, relativeTo: .body)
-      label.numberOfLines = 0
-      return DetailSectionViews.section(String(localized: "Description"), body: label)
-    case .rating(let value):
-      return DetailSectionViews.section(String(localized: "Rating"), body: DetailSectionViews.rating(value))
-    case .location(let latitude, let longitude, let place):
-      let body = DetailSectionViews.location(latitude: latitude, longitude: longitude, place: place) { [weak self] in self?.onOpenLocation?() }
-      return DetailSectionViews.section(String(localized: "Location"), body: body)
-    case .fujiRecipe(let title, let rows):
-      let titleLabel = title.map { AFLabel.exhibit($0, size: 14, italic: true, color: AFColor.textSecondary) }
-      return DetailSectionViews.section(String(localized: "Film Simulation"), trailing: titleLabel, body: DetailSectionViews.grid(rows))
-    case .attribution(let rows):
-      return DetailSectionViews.section(String(localized: "Attribution"), body: DetailSectionViews.grid(rows))
-    }
   }
 
   func scrollViewDidScroll(_ scrollView: UIScrollView) {

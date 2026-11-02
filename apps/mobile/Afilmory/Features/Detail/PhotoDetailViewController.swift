@@ -10,6 +10,7 @@ final class PhotoDetailViewController: UIViewController {
   let photoLayer = UIView()
   let photoDefocus = AFBlurView()
   let sheet = DetailSheetView()
+  let infoColumn = DetailInfoColumn()
   let chips = DetailChipsBar()
   let rail = DetailReactionRail()
   let topChrome = ExhibitionPassthroughView()
@@ -86,6 +87,8 @@ final class PhotoDetailViewController: UIViewController {
     view.addSubview(topChrome)
     view.addSubview(chips)
     view.addSubview(sheet)
+    infoColumn.isHidden = true
+    view.addSubview(infoColumn)
     rail.alpha = 0
     rail.isHidden = true
     view.addSubview(rail)
@@ -180,14 +183,16 @@ final class PhotoDetailViewController: UIViewController {
     let photo = photos[index]
     currentIndex = index
     let model = DetailSheetModel.make(photo: photo, number: number(of: photo), localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier)
+    let info = DuoInfoModel.make(photo: photo, number: number(of: photo), localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier)
     let accent = AccentStore.shared.cachedAccent(photoId: photo.id) ?? AFColor.accentFallback
     let apply = {
       self.sheet.configure(model: model, accent: accent, commentsEnabled: self.social.isAvailable)
+      self.infoColumn.configure(model: info, accent: accent, commentsEnabled: self.social.isAvailable)
       self.view.setNeedsLayout()
       self.view.layoutIfNeeded()
     }
     if animated, !AFMotion.reduceMotion {
-      UIView.transition(with: sheet, duration: 0.28, options: [.transitionCrossDissolve, .allowUserInteraction], animations: apply)
+      UIView.transition(with: duoSplit == nil ? sheet : infoColumn, duration: 0.28, options: [.transitionCrossDissolve, .allowUserInteraction], animations: apply)
     } else {
       apply()
     }
@@ -198,6 +203,7 @@ final class PhotoDetailViewController: UIViewController {
       guard let self, currentPhoto?.id == photo.id else { return }
       chips.setAccent(color)
       sheet.setAccent(color)
+      infoColumn.setAccent(color)
     }
     social.focus(photoID: photo.id)
     hideRail()
