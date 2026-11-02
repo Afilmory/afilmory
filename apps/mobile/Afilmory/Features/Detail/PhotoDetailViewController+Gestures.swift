@@ -44,6 +44,8 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
 
   func gestureRecognizerShouldBegin(_ gesture: UIGestureRecognizer) -> Bool {
     guard let pan = gesture as? UIPanGestureRecognizer else { return true }
+    if duoSplit != nil, pan.name != "detail.dismiss" { return false }
+    if isFullScreen, pan.name == "detail.dismiss" { return false }
     let velocity = pan.velocity(in: view)
     guard abs(velocity.y) > abs(velocity.x) * 1.2 else { return false }
     if pan.name == "detail.dismiss" {

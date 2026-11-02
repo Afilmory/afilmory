@@ -32,15 +32,22 @@ final class DetailTransitionAnimator: NSObject, UIViewControllerAnimatedTransiti
   }
 
   @MainActor
+  static func detail(in controller: UIViewController) -> PhotoDetailViewController? {
+    controller as? PhotoDetailViewController
+      ?? (controller as? UINavigationController)?.viewControllers.first as? PhotoDetailViewController
+  }
+
+  @MainActor
   private func present(_ context: UIViewControllerContextTransitioning) {
-    guard let detail = context.viewController(forKey: .to) as? PhotoDetailViewController else {
+    guard let presented = context.viewController(forKey: .to), let detail = Self.detail(in: presented) else {
       context.completeTransition(false)
       return
     }
     let container = context.containerView
     let background = context.viewController(forKey: .from)?.view
-    detail.view.frame = context.finalFrame(for: detail)
-    container.addSubview(detail.view)
+    presented.view.frame = context.finalFrame(for: presented)
+    container.addSubview(presented.view)
+    presented.view.layoutIfNeeded()
     let source = detail.currentPhoto.flatMap { detail.sourceProvider($0.id) }
     let sourceImage = (source as? UIImageView)?.image
     detail.initialPlaceholder = sourceImage
@@ -94,7 +101,7 @@ final class DetailTransitionAnimator: NSObject, UIViewControllerAnimatedTransiti
 
   @MainActor
   private func dismiss(_ context: UIViewControllerContextTransitioning) {
-    guard let detail = context.viewController(forKey: .from) as? PhotoDetailViewController else {
+    guard let presented = context.viewController(forKey: .from), let detail = Self.detail(in: presented) else {
       context.completeTransition(false)
       return
     }

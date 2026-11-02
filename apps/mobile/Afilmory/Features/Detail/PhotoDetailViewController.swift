@@ -27,7 +27,8 @@ final class PhotoDetailViewController: UIViewController {
   var initialPlaceholder: UIImage?
   var hasLaidOutPager = false
   var isTransitioning = true
-  private var transitionDelegateRef: DetailTransitionDelegate?
+  var isFullScreen = false
+  private(set) var transitionDelegateRef: DetailTransitionDelegate?
 
   init(
     photos: [GalleryPhoto],
@@ -91,7 +92,16 @@ final class PhotoDetailViewController: UIViewController {
     installGestures()
     moreButton.menu = moreMenu()
     moreButton.showsMenuAsPrimaryAction = true
+    registerForTraitChanges([DuoContextTrait.self]) { (detail: PhotoDetailViewController, _: UITraitCollection) in
+      detail.duoContextChanged()
+    }
+    applyVerticalBar()
     showPage(currentIndex, animated: false)
+  }
+
+  override func viewIsAppearing(_ animated: Bool) {
+    super.viewIsAppearing(animated)
+    applyVerticalBar()
   }
 
   override func viewDidLayoutSubviews() {
@@ -122,7 +132,8 @@ final class PhotoDetailViewController: UIViewController {
   }
 
   var photoArea: CGRect {
-    DetailGeometry.photoArea(
+    if let split = duoSplit { return duoPhotoArea(split) }
+    return DetailGeometry.photoArea(
       bounds: view.bounds,
       safeTop: view.safeAreaInsets.top,
       collapsedSheet: DetailGeometry.collapsedSheet(bounds: view.bounds, height: collapsedHeight)
@@ -130,6 +141,10 @@ final class PhotoDetailViewController: UIViewController {
   }
 
   func layoutSheet() {
+    if let split = duoSplit {
+      layoutDuo(split)
+      return
+    }
     let frame = DetailGeometry.sheet(bounds: view.bounds, safeTop: view.safeAreaInsets.top, collapsedHeight: collapsedHeight, progress: sheetProgress)
     sheet.bounds = CGRect(origin: .zero, size: frame.size)
     sheet.center = CGPoint(x: frame.midX, y: frame.midY)
@@ -143,6 +158,7 @@ final class PhotoDetailViewController: UIViewController {
   }
 
   func applyPhotoRecession() {
+    guard duoSplit == nil else { return }
     let t = sheetProgress
     if AFMotion.reduceMotion {
       photoLayer.transform = .identity

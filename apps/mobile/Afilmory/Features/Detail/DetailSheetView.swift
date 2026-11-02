@@ -86,6 +86,14 @@ final class DetailSheetView: UIView, UIScrollViewDelegate {
     layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius).cgPath
   }
 
+  var isDocked = false {
+    didSet {
+      guard isDocked != oldValue else { return }
+      grabber.isHidden = isDocked
+      setExpanded(progress: expandedProgress)
+    }
+  }
+
   func setExpanded(progress: CGFloat) {
     expandedProgress = progress
     scroller.alpha = progress
@@ -95,7 +103,7 @@ final class DetailSheetView: UIView, UIScrollViewDelegate {
     grabber.accessibilityLabel = expanded ? String(localized: "Collapse details") : String(localized: "Expand details")
     grabber.accessibilityTraits = .button
     let radius = AFRadius.sheet
-    layer.maskedCorners = expanded
+    layer.maskedCorners = expanded && !isDocked
       ? [.layerMinXMinYCorner, .layerMaxXMinYCorner]
       : [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
     content.layer.maskedCorners = layer.maskedCorners
