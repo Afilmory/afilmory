@@ -17,6 +17,7 @@ final class ExhibitionController: UIViewController {
   lazy var mapCard = makeMapCard()
   lazy var mapFullScreen = makeMapFullScreen()
   lazy var focalPlane = ExhibitionFocalPlane(collectionView: collectionView)
+  private var lastPages: [CGRect] = []
   var content = ExhibitionContent(all: [], filters: .empty, level: .day, width: 358)
   var level: ContactSheetLevel = .day
   var openerID: String?
@@ -71,7 +72,10 @@ final class ExhibitionController: UIViewController {
     view.addSubview(topBar)
     wireTopBar()
     topBar.onItemsChanged = { [weak self] in self?.applyVerticalBar() }
-    DuoBarItems.observe(self) { $0.applyVerticalBar() }
+    DuoBarItems.observe(self) { controller in
+      controller.applyVerticalBar()
+      controller.view.setNeedsLayout()
+    }
     applyVerticalBar()
     wireHero()
     feed.onChange = { [weak self] _ in self?.render() }
@@ -91,9 +95,11 @@ final class ExhibitionController: UIViewController {
     topBar.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: barHeight)
     collectionView.contentInset.bottom = view.safeAreaInsets.bottom
     collectionView.verticalScrollIndicatorInsets = UIEdgeInsets(top: barHeight, left: 0, bottom: view.safeAreaInsets.bottom, right: 0)
-    if hero.topInset != barHeight + 2 || lastWidth != view.bounds.width {
+    let pages = sheetPages()
+    if hero.topInset != barHeight + 2 || lastWidth != view.bounds.width || lastPages != pages {
       hero.topInset = barHeight + 2
       lastWidth = view.bounds.width
+      lastPages = pages
       render()
     }
   }
@@ -137,7 +143,8 @@ final class ExhibitionController: UIViewController {
   func render(animatedLevelChange: Bool = false) {
     guard isViewLoaded, view.bounds.width > 0 else { return }
     let snapshot = feed.snapshot
-    content = ExhibitionContent(all: snapshot.photos, filters: filters, level: level, width: view.bounds.width - 32)
+    let pages = sheetPages()
+    content = ExhibitionContent(all: snapshot.photos, filters: filters, level: level, laneWidths: pages.map { $0.width - 32 })
     level = content.level
     topBar.setTitle(isOwnSource ? feed.ownWorkspaceName : (galleryHeader?.name ?? slugTitle))
     topBar.setFilterActive(content.isFiltered, count: PhotoFilterEngine.countActiveDimensions(filters))
@@ -160,10 +167,12 @@ final class ExhibitionController: UIViewController {
       query: content.isFiltered ? querySummary : nil,
       animated: animatedLevelChange
     )
+    hero.spread = pages.count == 2 ? (pages[0], pages[1]) : nil
+    sheetLayout.lanes = pages.map { $0.minX...$0.maxX }
     sheetLayout.heroHeight = hero.height(for: view.bounds.width)
-    sheetLayout.blockHeights = level == .infinity
-      ? [ExhibitionMapCard.totalHeight]
-      : content.blocks.map { $0.height(level: level) }
+    sheetLayout.placements = level == .infinity
+      ? [ExhibitionSheetLayout.Placement(height: ExhibitionMapCard.totalHeight, lane: ContactSheetPlacement.spanning)]
+      : content.placements.map { ExhibitionSheetLayout.Placement(height: $0.block.height(level: level), lane: $0.lane) }
     if level == .infinity {
       mapCard.configure(model: content.map, photos: content.shown, numbers: content.numbers)
     }

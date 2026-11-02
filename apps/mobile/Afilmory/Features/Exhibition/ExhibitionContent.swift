@@ -9,9 +9,14 @@ struct ExhibitionContent {
   let level: ContactSheetLevel
   let groups: [ContactSheetGroup]
   let blocks: [ContactSheetBlock]
+  let placements: [ContactSheetPlacement]
   let map: ExhibitionMapModel
 
   init(all: [GalleryPhoto], filters: PhotoFilters, level requested: ContactSheetLevel, width: CGFloat) {
+    self.init(all: all, filters: filters, level: requested, laneWidths: [width])
+  }
+
+  init(all: [GalleryPhoto], filters: PhotoFilters, level requested: ContactSheetLevel, laneWidths: [CGFloat]) {
     self.all = all
     self.filters = filters
     numbers = ExhibitionLibrary.numbering(all)
@@ -19,7 +24,8 @@ struct ExhibitionContent {
     map = ExhibitionMapModel(photos: shown)
     level = requested == .infinity && !map.hasLocations ? .day : requested
     groups = ContactSheetLayout.groups(photos: shown, level: level, numbers: numbers)
-    blocks = ContactSheetLayout.pack(groups: groups, width: width)
+    placements = ContactSheetLayout.pack(groups: groups, laneWidths: laneWidths)
+    blocks = placements.map(\.block)
   }
 
   var isFiltered: Bool { PhotoFilterEngine.hasActiveFilters(filters) }

@@ -47,6 +47,13 @@ enum ContactSheetBlock: Equatable, Sendable {
   }
 }
 
+struct ContactSheetPlacement: Equatable, Sendable {
+  static let spanning = -1
+
+  let block: ContactSheetBlock
+  let lane: Int
+}
+
 enum ContactSheetLayout {
   static let frameGap: CGFloat = 3
   static let stripPadding: CGFloat = 5
@@ -98,6 +105,46 @@ enum ContactSheetLayout {
     return sortedKeys.compactMap { key in
       buckets[key].map { ContactSheetGroup(key: key, title: $0.title, year: $0.year, level: level, frames: $0.frames) }
     }
+  }
+
+  static func pack(groups: [ContactSheetGroup], laneWidths: [CGFloat]) -> [ContactSheetPlacement] {
+    guard laneWidths.count > 1 else {
+      return pack(groups: groups, width: laneWidths.first ?? 0).map {
+        ContactSheetPlacement(block: $0, lane: $0.dividerYear == nil ? 0 : ContactSheetPlacement.spanning)
+      }
+    }
+    let showsYears = groups.first?.showsYearDividers ?? false
+    var placements: [ContactSheetPlacement] = []
+    var row: [ContactSheetGroup] = []
+    var rowWidth: CGFloat = 0
+    var lane = 0
+    var lastYear: Int?
+    func flush() {
+      guard !row.isEmpty else { return }
+      placements.append(ContactSheetPlacement(block: .row(row), lane: lane))
+      row = []
+      rowWidth = 0
+      lane = (lane + 1) % laneWidths.count
+    }
+    for group in groups {
+      if showsYears, let year = group.year, year != lastYear {
+        flush()
+        placements.append(ContactSheetPlacement(block: .year(year), lane: ContactSheetPlacement.spanning))
+        lane = 0
+        lastYear = year
+      }
+      let stripWidth = group.stripWidth
+      if !row.isEmpty, rowWidth + groupGap + stripWidth <= laneWidths[lane] {
+        row.append(group)
+        rowWidth += groupGap + stripWidth
+      } else {
+        flush()
+        row = [group]
+        rowWidth = stripWidth
+      }
+    }
+    flush()
+    return placements
   }
 
   static func pack(groups: [ContactSheetGroup], width: CGFloat) -> [ContactSheetBlock] {

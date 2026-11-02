@@ -1,6 +1,12 @@
 import UIKit
 
 extension ExhibitionController {
+  func sheetPages() -> [CGRect] {
+    let safe = view.safeAreaInsets
+    let content = CGRect(x: safe.left, y: 0, width: max(0, view.bounds.width - safe.left - safe.right), height: view.bounds.height)
+    return DuoGeometry.lanes(in: content, context: traitCollection.duoContext, view: view)
+  }
+
   func applyVerticalBar() {
     topBar.usesVerticalBar = traitCollection.duoContext.hasVerticalBar
     DuoBarItems.install(topBar.verticalBarItems(), on: self)

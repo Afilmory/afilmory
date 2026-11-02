@@ -13,8 +13,14 @@ final class ExhibitionHostCell: UICollectionViewCell {
 }
 
 final class ExhibitionSheetLayout: UICollectionViewLayout {
+  struct Placement: Equatable {
+    let height: CGFloat
+    let lane: Int
+  }
+
   var heroHeight: CGFloat = 0
-  var blockHeights: [CGFloat] = []
+  var placements: [Placement] = []
+  var lanes: [ClosedRange<CGFloat>] = []
   var blockTop: CGFloat { heroHeight }
   var bottomPadding: CGFloat = 120
 
@@ -29,15 +35,37 @@ final class ExhibitionSheetLayout: UICollectionViewLayout {
     let hero = UICollectionViewLayoutAttributes(forCellWith: IndexPath(item: 0, section: 0))
     hero.frame = CGRect(x: 0, y: 0, width: width, height: heroHeight)
     cache.append(hero)
-    var y = heroHeight
-    let count = collectionView.numberOfSections > 1 ? collectionView.numberOfItems(inSection: 1) : 0
-    for index in 0..<min(count, blockHeights.count) {
-      let attributes = UICollectionViewLayoutAttributes(forCellWith: IndexPath(item: index, section: 1))
-      attributes.frame = CGRect(x: 0, y: y, width: width, height: blockHeights[index])
-      cache.append(attributes)
-      y += blockHeights[index] + ContactSheetLayout.blockSpacing
+    let lanes = self.lanes.isEmpty ? [0...width] : self.lanes
+    let spanning = (lanes.first?.lowerBound ?? 0)...(lanes.last?.upperBound ?? width)
+    let spacing = ContactSheetLayout.blockSpacing
+    var cursor = heroHeight
+    var pair: (top: CGFloat, bottom: CGFloat, lane: Int)?
+    func closePair() {
+      guard let open = pair else { return }
+      cursor = open.bottom + spacing
+      pair = nil
     }
-    contentHeight = y + bottomPadding
+    let count = collectionView.numberOfSections > 1 ? collectionView.numberOfItems(inSection: 1) : 0
+    for index in 0..<min(count, placements.count) {
+      let placement = placements[index]
+      let attributes = UICollectionViewLayoutAttributes(forCellWith: IndexPath(item: index, section: 1))
+      if lanes.count < 2 || !lanes.indices.contains(placement.lane) {
+        closePair()
+        let range = lanes.count < 2 ? lanes[0] : spanning
+        attributes.frame = CGRect(x: range.lowerBound, y: cursor, width: range.upperBound - range.lowerBound, height: placement.height)
+        cursor = attributes.frame.maxY + spacing
+      } else {
+        if let open = pair, placement.lane <= open.lane { closePair() }
+        let top = pair?.top ?? cursor
+        let range = lanes[placement.lane]
+        attributes.frame = CGRect(x: range.lowerBound, y: top, width: range.upperBound - range.lowerBound, height: placement.height)
+        pair = (top, max(pair?.bottom ?? top, attributes.frame.maxY), placement.lane)
+        if placement.lane == lanes.count - 1 { closePair() }
+      }
+      cache.append(attributes)
+    }
+    closePair()
+    contentHeight = cursor + bottomPadding
   }
 
   override var collectionViewContentSize: CGSize {
