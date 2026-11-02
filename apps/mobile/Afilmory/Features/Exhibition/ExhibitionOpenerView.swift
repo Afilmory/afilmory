@@ -9,7 +9,6 @@ final class ExhibitionOpenerView: UIView {
 
   let card = UIButton(type: .custom)
   let imageView = UIImageView()
-  private let defocus = AFBlurView()
   private let captionStack = UIView()
   private let dot = UIView()
   private let titleLabel = AFLabel.exhibit(size: 16, italic: true)
@@ -31,7 +30,6 @@ final class ExhibitionOpenerView: UIView {
     imageView.clipsToBounds = true
     imageView.isUserInteractionEnabled = false
     card.addSubview(imageView)
-    card.addSubview(defocus)
     card.layer.anchorPoint = CGPoint(x: 0.5, y: 0)
     dot.layer.cornerRadius = 3
     dot.backgroundColor = AFColor.accentFallback
@@ -59,7 +57,6 @@ final class ExhibitionOpenerView: UIView {
     card.frame = cardFrame
     card.transform = transform
     imageView.frame = card.bounds
-    defocus.frame = card.bounds
     let captionTop = cardFrame.maxY + 16
     let buttonSize = reExposeButton.sizeThatFits(CGSize(width: 200, height: 44))
     reExposeButton.frame = CGRect(
@@ -106,12 +103,10 @@ final class ExhibitionOpenerView: UIView {
     card.alpha = max(0, 1 - 1.1 * progress)
     guard !AFMotion.reduceMotion else {
       card.transform = .identity
-      defocus.radius = 0
       return
     }
     let scale = 1 - 0.06 * progress
     card.transform = CGAffineTransform(translationX: 0, y: max(0, offset) * 0.35).scaledBy(x: scale, y: scale)
-    defocus.radius = 12 * progress
   }
 
   func playExposure() {

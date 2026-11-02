@@ -53,15 +53,6 @@ extension ExhibitionController: UICollectionViewDataSource, UICollectionViewDele
     let offset = scrollView.contentOffset.y
     hero.opener.applyScroll(offset: offset)
     topBar.update(scrollOffset: offset, titleThreshold: hero.headerTop - topBar.bounds.height + 20)
-    focalPlane.scrolled()
-  }
-
-  func scrollViewDidEndDecelerating(_: UIScrollView) {
-    focalPlane.settle()
-  }
-
-  func scrollViewDidEndDragging(_: UIScrollView, willDecelerate decelerate: Bool) {
-    if !decelerate { focalPlane.settle() }
   }
 
   @objc func handlePinch(_ pinch: UIPinchGestureRecognizer) {

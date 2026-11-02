@@ -1,45 +1,14 @@
 import UIKit
 
-class ContactSheetFocusCell: UICollectionViewCell {
-  private var blur: AFBlurView?
-
-  func setFocus(blur radius: CGFloat, alpha: CGFloat, allowsBlur: Bool) {
-    contentView.alpha = alpha
-    guard allowsBlur, radius > 0.25 else {
-      blur?.radius = 0
-      return
-    }
-    let view = blur ?? {
-      let created = AFBlurView(frame: contentView.bounds)
-      created.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-      contentView.addSubview(created)
-      blur = created
-      return created
-    }()
-    contentView.bringSubviewToFront(view)
-    view.radius = radius
-  }
-
-  func clearFocus(animated: Bool) {
-    guard animated else {
-      contentView.alpha = 1
-      blur?.radius = 0
-      return
-    }
-    UIView.animate(withDuration: 0.3, delay: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
-      self.contentView.alpha = 1
-    }
-    blur?.setRadius(0, duration: 0.3)
-  }
-
+class ContactSheetBaseCell: UICollectionViewCell {
   override func prepareForReuse() {
     super.prepareForReuse()
-    clearFocus(animated: false)
+    contentView.alpha = 1
     contentView.transform = .identity
   }
 }
 
-final class ContactSheetYearCell: ContactSheetFocusCell {
+final class ContactSheetYearCell: ContactSheetBaseCell {
   static let reuseID = "year"
   private let label = AFLabel.mono(size: 11, color: AFColor.textPrimary)
   private let rule = UIView()
@@ -73,7 +42,7 @@ final class ContactSheetYearCell: ContactSheetFocusCell {
   }
 }
 
-final class ContactSheetRowCell: ContactSheetFocusCell {
+final class ContactSheetRowCell: ContactSheetBaseCell {
   static let reuseID = "row"
   var onOpen: ((String) -> Void)?
 

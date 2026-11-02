@@ -16,7 +16,6 @@ final class ExhibitionController: UIViewController {
   lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: sheetLayout)
   lazy var mapCard = makeMapCard()
   lazy var mapFullScreen = makeMapFullScreen()
-  lazy var focalPlane = ExhibitionFocalPlane(collectionView: collectionView)
   private var lastPages: [CGRect] = []
   var content = ExhibitionContent(all: [], filters: .empty, level: .day, width: 358)
   var level: ContactSheetLevel = .day
@@ -120,7 +119,6 @@ final class ExhibitionController: UIViewController {
 
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
-    focalPlane.settle()
     if navigationController?.viewControllers.contains(self) != true || navigationController?.topViewController !== self {
       edgeSwipe.detach()
     }
