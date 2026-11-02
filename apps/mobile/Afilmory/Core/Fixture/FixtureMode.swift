@@ -33,6 +33,10 @@ enum FixtureMode {
     scenario == .offline || UserDefaults.standard.bool(forKey: "fixture.uploadFails")
   }
 
+  static var mediaFails: Bool {
+    UserDefaults.standard.bool(forKey: "fixture.mediaFails")
+  }
+
   static var latency: TimeInterval {
     let milliseconds = UserDefaults.standard.double(forKey: "fixture.latency")
     return milliseconds > 0 ? milliseconds / 1000 : 0.12

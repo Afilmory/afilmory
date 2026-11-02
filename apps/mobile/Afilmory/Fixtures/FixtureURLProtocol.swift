@@ -40,8 +40,11 @@
         Self.logger.error("Fixture miss: \(request.httpMethod ?? "GET", privacy: .public) \(request.url?.absoluteString ?? "", privacy: .public)")
       }
       let isMedia = request.url?.path.hasPrefix("/media/") == true
-      let delay = isMedia ? FixtureMode.latency / 2 : FixtureMode.latency
-      DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + delay) { [weak self] in
+      if isMedia, response.status == 200 {
+        streamMedia(response)
+        return
+      }
+      DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + FixtureMode.latency) { [weak self] in
         guard let self, !self.cancelled, let url = request.url else { return }
         let isSession = url.path.hasSuffix("/auth/session")
         guard FixtureMode.scenario != .offline || isMedia || isSession else {
@@ -53,6 +56,37 @@
         self.client?.urlProtocol(self, didLoad: response.body)
         guard response.headers[FixtureResponse.holdOpenHeader] == nil else { return }
         self.client?.urlProtocolDidFinishLoading(self)
+      }
+    }
+
+    private func streamMedia(_ response: FixtureResponse) {
+      guard let url = request.url else { return }
+      let chunks = 20
+      let step = FixtureMode.latency / 2 / Double(chunks)
+      let body = response.body
+      var headers = response.headers
+      headers["Content-Length"] = String(body.count)
+      let queue = DispatchQueue.global(qos: .userInitiated)
+      queue.asyncAfter(deadline: .now() + step) { [weak self] in
+        guard let self, !self.cancelled else { return }
+        let http = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!
+        self.client?.urlProtocol(self, didReceive: http, cacheStoragePolicy: .notAllowed)
+      }
+      let size = max(1, (body.count + chunks - 1) / chunks)
+      for index in 0 ..< chunks {
+        queue.asyncAfter(deadline: .now() + step * Double(index + 1) + 0.001) { [weak self] in
+          guard let self, !self.cancelled else { return }
+          if FixtureMode.mediaFails, index == chunks / 2 {
+            self.cancelled = true
+            self.client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost))
+            return
+          }
+          let start = index * size
+          if start < body.count {
+            self.client?.urlProtocol(self, didLoad: body.subdata(in: start ..< min(body.count, start + size)))
+          }
+          if index == chunks - 1 { self.client?.urlProtocolDidFinishLoading(self) }
+        }
       }
     }
 
