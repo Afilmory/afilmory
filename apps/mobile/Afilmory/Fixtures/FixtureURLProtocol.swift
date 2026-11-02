@@ -62,30 +62,36 @@
     private func streamMedia(_ response: FixtureResponse) {
       guard let url = request.url else { return }
       let chunks = 20
-      let step = FixtureMode.latency / 2 / Double(chunks)
       let body = response.body
+      let step = FixtureMode.mediaStreamDuration(bytes: body.count) / Double(chunks)
       var headers = response.headers
       headers["Content-Length"] = String(body.count)
       let queue = DispatchQueue.global(qos: .userInitiated)
+      let size = max(1, (body.count + chunks - 1) / chunks)
       queue.asyncAfter(deadline: .now() + step) { [weak self] in
         guard let self, !self.cancelled else { return }
         let http = HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: headers)!
         self.client?.urlProtocol(self, didReceive: http, cacheStoragePolicy: .notAllowed)
+        self.deliver(chunk: 0, of: chunks, size: size, body: body, step: step, queue: queue)
       }
-      let size = max(1, (body.count + chunks - 1) / chunks)
-      for index in 0 ..< chunks {
-        queue.asyncAfter(deadline: .now() + step * Double(index + 1) + 0.001) { [weak self] in
-          guard let self, !self.cancelled else { return }
-          if FixtureMode.mediaFails, index == chunks / 2 {
-            self.cancelled = true
-            self.client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost))
-            return
-          }
-          let start = index * size
-          if start < body.count {
-            self.client?.urlProtocol(self, didLoad: body.subdata(in: start ..< min(body.count, start + size)))
-          }
-          if index == chunks - 1 { self.client?.urlProtocolDidFinishLoading(self) }
+    }
+
+    private func deliver(chunk index: Int, of chunks: Int, size: Int, body: Data, step: TimeInterval, queue: DispatchQueue) {
+      queue.asyncAfter(deadline: .now() + step) { [weak self] in
+        guard let self, !self.cancelled else { return }
+        if FixtureMode.mediaFails, index == chunks / 2 {
+          self.cancelled = true
+          self.client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost))
+          return
+        }
+        let start = index * size
+        if start < body.count {
+          self.client?.urlProtocol(self, didLoad: body.subdata(in: start ..< min(body.count, start + size)))
+        }
+        if index == chunks - 1 {
+          self.client?.urlProtocolDidFinishLoading(self)
+        } else {
+          self.deliver(chunk: index + 1, of: chunks, size: size, body: body, step: step, queue: queue)
         }
       }
     }

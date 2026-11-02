@@ -42,6 +42,14 @@ enum FixtureMode {
     return milliseconds > 0 ? milliseconds / 1000 : 0.12
   }
 
+  static var bandwidth: Double {
+    UserDefaults.standard.double(forKey: "fixture.bandwidth")
+  }
+
+  static func mediaStreamDuration(bytes: Int, latency: TimeInterval = latency, bandwidth: Double = bandwidth) -> TimeInterval {
+    bandwidth > 0 ? Double(bytes) / (bandwidth * 1024) : latency / 2
+  }
+
   static var catalogEntryID: String? {
     #if DEBUG
       let arguments = ProcessInfo.processInfo.arguments
