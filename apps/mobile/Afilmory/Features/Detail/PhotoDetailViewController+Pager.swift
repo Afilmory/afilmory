@@ -19,6 +19,7 @@ extension PhotoDetailViewController: UICollectionViewDataSource, UICollectionVie
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DetailPageCell.reuseID, for: indexPath) as! DetailPageCell
     let photo = photos[indexPath.item]
     cell.photoArea = photoArea
+    cell.progressFloor = progressFloor
     let placeholder = indexPath.item == currentIndex ? initialPlaceholder : nil
     cell.configure(photo: photo, number: number(of: photo), placeholder: placeholder)
     cell.scrollView.pinchGestureRecognizer?.isEnabled = rules.zoomEnabled

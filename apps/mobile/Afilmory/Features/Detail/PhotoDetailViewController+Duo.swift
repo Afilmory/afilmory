@@ -86,6 +86,7 @@ extension PhotoDetailViewController {
     let area = duoPhotoArea(split)
     for cell in pager.visibleCells.compactMap({ $0 as? DetailPageCell }) {
       cell.photoArea = area
+      cell.progressFloor = nil
     }
   }
 

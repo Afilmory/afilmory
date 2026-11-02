@@ -31,6 +31,12 @@ final class DetailPageCell: UICollectionViewCell, UIScrollViewDelegate, UIGestur
   var photoArea: CGRect = .zero {
     didSet { if photoArea != oldValue { layoutImage() } }
   }
+  var progressFloor: CGFloat? {
+    didSet { if progressFloor != oldValue { layoutImage() } }
+  }
+  private let progressView = DetailOriginalProgressView()
+  private var progress = DetailOriginalProgress()
+  private var progressTick: DispatchWorkItem?
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -49,6 +55,8 @@ final class DetailPageCell: UICollectionViewCell, UIScrollViewDelegate, UIGestur
     imageView.addSubview(live)
     contentView.addSubview(scrollView)
     contentView.addSubview(liveBadge)
+    contentView.addSubview(progressView)
+    progressView.onRetry = { [weak self] in self?.loadOriginal(placeholder: self?.imageView.image) }
     let doubleTap = UITapGestureRecognizer(target: self, action: #selector(doubleTapped(_:)))
     doubleTap.numberOfTapsRequired = 2
     scrollView.addGestureRecognizer(doubleTap)
@@ -73,11 +81,15 @@ final class DetailPageCell: UICollectionViewCell, UIScrollViewDelegate, UIGestur
     live.stop(animated: false)
     imageView.sd_cancelCurrentImageLoad()
     imageView.image = nil
+    progressTick?.cancel()
+    progress.reset()
+    progressView.apply(.hidden, animated: false)
   }
 
   override func layoutSubviews() {
     super.layoutSubviews()
     scrollView.frame = contentView.bounds
+    progressView.frame = contentView.bounds
     layoutImage()
   }
 
@@ -86,18 +98,61 @@ final class DetailPageCell: UICollectionViewCell, UIScrollViewDelegate, UIGestur
     let fallback = placeholder
       ?? SDImageCache.shared.imageFromMemoryCache(forKey: photo.thumbnailUrl)
       ?? ThumbHashCache.image(forHex: photo.thumbHash)
-    let fitting = contentView.bounds.isEmpty ? CGSize(width: 440, height: 956) : contentView.bounds.size
-    imageView.sd_setImage(
-      with: URL(string: photo.originalUrl),
-      placeholderImage: fallback,
-      options: [.retryFailed, .scaleDownLargeImages],
-      context: PhotoImageSizing.context(aspectRatio: photo.aspectRatio, fitting: fitting, scale: traitCollection.displayScale, headroom: scrollView.maximumZoomScale)
-    )
+    progressView.accent = AccentStore.shared.cachedAccent(photoId: photo.id) ?? AFColor.accentFallback
+    loadOriginal(placeholder: fallback)
     imageView.accessibilityLabel = String(localized: "Photo No. \(ExhibitFormat.frameNumber(number))")
     let videoURL = photo.video?.livePhotoVideoURL.flatMap(URL.init(string:))
     live.videoURL = videoURL
     liveBadge.isHidden = videoURL == nil
     layoutImage()
+  }
+
+  private func loadOriginal(placeholder: UIImage?) {
+    guard let photo else { return }
+    let fitting = contentView.bounds.isEmpty ? CGSize(width: 440, height: 956) : contentView.bounds.size
+    let id = photo.id
+    progress.start(now: CACurrentMediaTime())
+    renderProgress(animated: true)
+    scheduleProgressTick()
+    imageView.sd_setImage(
+      with: URL(string: photo.originalUrl),
+      placeholderImage: placeholder,
+      options: [.retryFailed, .scaleDownLargeImages],
+      context: PhotoImageSizing.context(aspectRatio: photo.aspectRatio, fitting: fitting, scale: traitCollection.displayScale, headroom: scrollView.maximumZoomScale),
+      progress: { @Sendable [weak self] received, expected, _ in
+        Task { @MainActor in
+          guard let self, self.photo?.id == id else { return }
+          self.progress.receive(bytes: received, of: expected, now: CACurrentMediaTime())
+          self.renderProgress(animated: true)
+        }
+      },
+      completed: { [weak self] image, error, _, _ in
+        guard let self, self.photo?.id == id else { return }
+        self.progressTick?.cancel()
+        if error != nil, (error as? NSError)?.code != SDWebImageError.cancelled.rawValue {
+          self.progress.fail()
+        } else if image != nil {
+          self.progress.finish(now: CACurrentMediaTime())
+        }
+        self.renderProgress(animated: true)
+      }
+    )
+  }
+
+  private func scheduleProgressTick() {
+    progressTick?.cancel()
+    guard let showAt = progress.showAt else { return }
+    let work = DispatchWorkItem { [weak self] in
+      guard let self else { return }
+      self.progress.tick(now: CACurrentMediaTime())
+      self.renderProgress(animated: true)
+    }
+    progressTick = work
+    DispatchQueue.main.asyncAfter(deadline: .now() + max(0, showAt - CACurrentMediaTime()), execute: work)
+  }
+
+  private func renderProgress(animated: Bool) {
+    progressView.apply(progress.display, animated: animated)
   }
 
   func fittedImageFrame(in area: CGRect) -> CGRect {
@@ -129,6 +184,7 @@ final class DetailPageCell: UICollectionViewCell, UIScrollViewDelegate, UIGestur
     scrollView.contentOffset = CGPoint(x: -fitted.minX, y: -fitted.minY)
     liveBadge.sizeToFit()
     liveBadge.frame.origin = CGPoint(x: fitted.minX + 12, y: fitted.minY + 12)
+    progressView.place(image: fitted, floor: progressFloor ?? area.maxY)
   }
 
   func viewForZooming(in _: UIScrollView) -> UIView? {
@@ -142,6 +198,7 @@ final class DetailPageCell: UICollectionViewCell, UIScrollViewDelegate, UIGestur
     let vertical = max(0, (size.height - content.height) / 2)
     scrollView.contentInset = UIEdgeInsets(top: vertical, left: horizontal, bottom: vertical, right: horizontal)
     liveBadge.alpha = isZoomed ? 0 : 1
+    progressView.isHidden = isZoomed
     onZoomChange?(isZoomed)
   }
 

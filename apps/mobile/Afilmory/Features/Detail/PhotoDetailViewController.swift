@@ -126,6 +126,7 @@ final class PhotoDetailViewController: UIViewController {
     let area = photoArea
     for cell in pager.visibleCells.compactMap({ $0 as? DetailPageCell }) {
       cell.photoArea = area
+      cell.progressFloor = progressFloor
     }
     if !hasLaidOutPager, pager.bounds.width > 0 {
       hasLaidOutPager = true
@@ -145,6 +146,11 @@ final class PhotoDetailViewController: UIViewController {
       safeTop: view.safeAreaInsets.top,
       collapsedSheet: DetailGeometry.collapsedSheet(bounds: chromeBounds, height: collapsedHeight)
     )
+  }
+
+  var progressFloor: CGFloat? {
+    guard duoSplit == nil else { return nil }
+    return DetailGeometry.chips(sheet: DetailGeometry.collapsedSheet(bounds: chromeBounds, height: collapsedHeight)).minY - 8
   }
 
   func layoutSheet() {
