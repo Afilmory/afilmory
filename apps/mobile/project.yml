@@ -123,7 +123,7 @@ targets:
       base:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CURRENT_PROJECT_VERSION: 1
-        MARKETING_VERSION: "1.5.3"
+        MARKETING_VERSION: "1.5.4"
         PRODUCT_MODULE_NAME: Afilmory
         SUPPORTS_MACCATALYST: NO
       configs:
@@ -197,7 +197,7 @@ targets:
     settings:
       base:
         CURRENT_PROJECT_VERSION: 1
-        MARKETING_VERSION: "1.5.3"
+        MARKETING_VERSION: "1.5.4"
         PRODUCT_MODULE_NAME: AfilmoryShare
         PRODUCT_NAME: AfilmoryShare
         SKIP_INSTALL: YES
@@ -230,7 +230,7 @@ targets:
       base:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: $accent
         CURRENT_PROJECT_VERSION: 1
-        MARKETING_VERSION: "1.5.3"
+        MARKETING_VERSION: "1.5.4"
         PRODUCT_MODULE_NAME: AfilmoryWidgets
         PRODUCT_NAME: AfilmoryWidgets
         SKIP_INSTALL: YES
@@ -266,7 +266,7 @@ targets:
     settings:
       base:
         CURRENT_PROJECT_VERSION: 1
-        MARKETING_VERSION: "1.5.3"
+        MARKETING_VERSION: "1.5.4"
         PRODUCT_MODULE_NAME: AfilmoryNotification
         PRODUCT_NAME: AfilmoryNotification
         SKIP_INSTALL: YES

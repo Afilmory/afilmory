@@ -615,7 +615,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.notification;
 				PRODUCT_MODULE_NAME = AfilmoryNotification;
 				PRODUCT_NAME = AfilmoryNotification;
@@ -697,7 +697,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.notification;
 				PRODUCT_MODULE_NAME = AfilmoryNotification;
 				PRODUCT_NAME = AfilmoryNotification;
@@ -719,7 +719,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.share;
 				PRODUCT_MODULE_NAME = AfilmoryShare;
 				PRODUCT_NAME = AfilmoryShare;
@@ -767,7 +767,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local;
 				PRODUCT_MODULE_NAME = Afilmory;
 				PRODUCT_NAME = Afilmory;
@@ -790,7 +790,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.widgets;
 				PRODUCT_MODULE_NAME = AfilmoryWidgets;
 				PRODUCT_NAME = AfilmoryWidgets;
@@ -812,7 +812,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.share;
 				PRODUCT_MODULE_NAME = AfilmoryShare;
 				PRODUCT_NAME = AfilmoryShare;
@@ -834,7 +834,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory.local.widgets;
 				PRODUCT_MODULE_NAME = AfilmoryWidgets;
 				PRODUCT_NAME = AfilmoryWidgets;
@@ -864,7 +864,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				PRODUCT_BUNDLE_IDENTIFIER = app.afilmory;
 				PRODUCT_MODULE_NAME = Afilmory;
 				PRODUCT_NAME = Afilmory;
