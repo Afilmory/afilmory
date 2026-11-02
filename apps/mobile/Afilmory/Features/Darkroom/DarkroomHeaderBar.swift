@@ -1,6 +1,8 @@
 import UIKit
 
 final class DarkroomHeaderBar: UIView {
+  private(set) weak var backButton: UIView?
+
   static let contentHeight: CGFloat = 44
 
   private let backdrop = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
@@ -91,6 +93,7 @@ final class DarkroomHeaderBar: UIView {
   static func subpage(title: String, onBack: @escaping () -> Void) -> DarkroomHeaderBar {
     let bar = DarkroomHeaderBar()
     let back = AFGlassButton.symbol("chevron.left", accessibilityLabel: String(localized: "Back"), action: onBack)
+    bar.backButton = back
     back.translatesAutoresizingMaskIntoConstraints = false
     let label = AFLabel.exhibit(title, size: 17)
     label.accessibilityTraits = .header

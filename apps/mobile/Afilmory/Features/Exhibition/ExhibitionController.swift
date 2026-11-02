@@ -54,6 +54,11 @@ final class ExhibitionController: UIViewController {
     isOwnSource ? PhotoFilterStore.shared.filters : .empty
   }
 
+  override func viewIsAppearing(_ animated: Bool) {
+    super.viewIsAppearing(animated)
+    applyVerticalBar()
+  }
+
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = AFColor.ground
@@ -65,6 +70,9 @@ final class ExhibitionController: UIViewController {
     view.addSubview(stateView)
     view.addSubview(topBar)
     wireTopBar()
+    topBar.onItemsChanged = { [weak self] in self?.applyVerticalBar() }
+    DuoBarItems.observe(self) { $0.applyVerticalBar() }
+    applyVerticalBar()
     wireHero()
     feed.onChange = { [weak self] _ in self?.render() }
     if isOwnSource {
@@ -133,7 +141,7 @@ final class ExhibitionController: UIViewController {
     level = content.level
     topBar.setTitle(isOwnSource ? feed.ownWorkspaceName : (galleryHeader?.name ?? slugTitle))
     topBar.setFilterActive(content.isFiltered, count: PhotoFilterEngine.countActiveDimensions(filters))
-    topBar.projectButton.isEnabled = !content.shown.isEmpty
+    topBar.setProjectEnabled(!content.shown.isEmpty)
     refreshFollowButton()
     if let state = stateKind(for: snapshot) {
       stateView.show(state)

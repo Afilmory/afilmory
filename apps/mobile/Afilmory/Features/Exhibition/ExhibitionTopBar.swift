@@ -7,6 +7,18 @@ final class ExhibitionTopBar: UIView {
   var onSearch: (() -> Void)?
   var onProject: (() -> Void)?
   var onFollow: (() -> Void)?
+  var onItemsChanged: (() -> Void)?
+
+  var usesVerticalBar = false {
+    didSet {
+      guard usesVerticalBar != oldValue else { return }
+      trailing.isHidden = usesVerticalBar
+      backButton.isHidden = usesVerticalBar
+    }
+  }
+
+  private let showsBack: Bool
+  private var followState: GallerySubscriptionButtonState = .hidden
 
   private let ground = UIVisualEffectView(effect: nil)
   private let tint = UIView()
@@ -31,6 +43,7 @@ final class ExhibitionTopBar: UIView {
   private lazy var titleCenter = titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor)
 
   init(showsBack: Bool) {
+    self.showsBack = showsBack
     super.init(frame: .zero)
     ground.alpha = 0
     tint.backgroundColor = AFColor.ground.withAlphaComponent(0.8)
@@ -101,7 +114,48 @@ final class ExhibitionTopBar: UIView {
     accessibilityLabel = title
   }
 
+  func verticalBarItems() -> [UIBarButtonItem] {
+    var items: [UIBarButtonItem] = []
+    if showsBack {
+      if let follow = followItem() { items.append(follow) }
+    } else {
+      items.append(DuoBarItems.symbol(
+        searchSymbol, label: searchButton.accessibilityLabel ?? String(localized: "Search and filters")
+      ) { [weak self] in self?.onSearch?() })
+    }
+    items.append(DuoBarItems.symbol("play.fill", label: String(localized: "Project"), enabled: projectButton.isEnabled) { [weak self] in
+      self?.onProject?()
+    })
+    return items
+  }
+
+  func setProjectEnabled(_ enabled: Bool) {
+    guard projectButton.isEnabled != enabled else { return }
+    projectButton.isEnabled = enabled
+    onItemsChanged?()
+  }
+
+  private var searchSymbol: String = "magnifyingglass"
+
+  private func followItem() -> UIBarButtonItem? {
+    let subscribed: Bool
+    switch followState {
+    case .hidden: return nil
+    case .subscribe: subscribed = false
+    case .subscribed: subscribed = true
+    case .updating(let target): subscribed = target
+    }
+    let updating: Bool = { if case .updating = followState { return true } else { return false } }()
+    return DuoBarItems.symbol(
+      subscribed ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus",
+      label: subscribed ? String(localized: "Following") : String(localized: "Follow"),
+      enabled: !updating
+    ) { [weak self] in self?.onFollow?() }
+  }
+
   func setFollow(_ state: GallerySubscriptionButtonState) {
+    followState = state
+    defer { onItemsChanged?() }
     switch state {
     case .hidden:
       followButton.isHidden = true
@@ -116,8 +170,10 @@ final class ExhibitionTopBar: UIView {
   }
 
   func setFilterActive(_ active: Bool, count: Int) {
+    searchSymbol = active ? "line.3.horizontal.decrease.circle.fill" : "magnifyingglass"
+    defer { onItemsChanged?() }
     searchButton.configuration?.image = UIImage(
-      systemName: active ? "line.3.horizontal.decrease.circle.fill" : "magnifyingglass",
+      systemName: searchSymbol,
       withConfiguration: UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
     )
     searchButton.accessibilityLabel = active

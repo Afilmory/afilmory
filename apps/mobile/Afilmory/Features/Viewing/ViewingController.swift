@@ -9,6 +9,7 @@ final class ViewingController: UIViewController, ViewingPageHost {
   private lazy var galleries = ViewingGalleriesPage(model: model)
   private var pager: ViewingPager!
   private var header: ViewingHeaderBar!
+  private var signInButton: UIButton?
   private var observation: ViewingModel.Observation?
   private var userHasChosenPage = false
   private var didApplyFetchedDefault = false
@@ -33,6 +34,11 @@ final class ViewingController: UIViewController, ViewingPageHost {
     return pager.currentPage
   }
 
+  override func viewIsAppearing(_ animated: Bool) {
+    super.viewIsAppearing(animated)
+    applyVerticalBar()
+  }
+
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = AFColor.ground
@@ -44,7 +50,10 @@ final class ViewingController: UIViewController, ViewingPageHost {
       cachedHasSubscriptions: model.cachedHasSubscriptions()
     )
     pager = ViewingPager(pages: pages, initial: initial)
-    header = ViewingHeaderBar(pages: pages.map(\.page), trailing: isVisitor ? makeSignInButton() : nil)
+    signInButton = isVisitor ? makeSignInButton() : nil
+    header = ViewingHeaderBar(pages: pages.map(\.page), trailing: signInButton)
+    DuoBarItems.observe(self) { $0.applyVerticalBar() }
+    applyVerticalBar()
     addChild(pager.controller)
     pager.controller.view.frame = view.bounds
     pager.controller.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -138,6 +147,15 @@ final class ViewingController: UIViewController, ViewingPageHost {
     }
     isReceded = view.window != nil
     navigationController.pushViewController(controller, animated: view.window != nil)
+  }
+
+  private func applyVerticalBar() {
+    let usesBar = traitCollection.duoContext.hasVerticalBar
+    signInButton?.isHidden = usesBar
+    let items = isVisitor
+      ? [DuoBarItems.symbol("person.crop.circle", label: String(localized: "Sign in")) { [weak self] in self?.onRequestSignIn() }]
+      : []
+    DuoBarItems.install(items, on: self)
   }
 
   private func makeSignInButton() -> UIButton {

@@ -29,6 +29,11 @@ final class DarkroomSubpageController: UIViewController {
     fatalError("init(coder:) has not been implemented")
   }
 
+  override func viewIsAppearing(_ animated: Bool) {
+    super.viewIsAppearing(animated)
+    applyVerticalBar()
+  }
+
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = AFColor.ground
@@ -47,6 +52,12 @@ final class DarkroomSubpageController: UIViewController {
       header.trailingAnchor.constraint(equalTo: view.trailingAnchor),
     ])
     content.didMove(toParent: self)
+    DuoBarItems.observe(self) { $0.applyVerticalBar() }
+    applyVerticalBar()
+  }
+
+  private func applyVerticalBar() {
+    header.backButton?.isHidden = traitCollection.duoContext.hasVerticalBar
   }
 
   override func viewDidLayoutSubviews() {

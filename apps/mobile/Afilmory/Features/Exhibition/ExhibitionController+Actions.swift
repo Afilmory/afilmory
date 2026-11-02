@@ -1,6 +1,11 @@
 import UIKit
 
 extension ExhibitionController {
+  func applyVerticalBar() {
+    topBar.usesVerticalBar = traitCollection.duoContext.hasVerticalBar
+    DuoBarItems.install(topBar.verticalBarItems(), on: self)
+  }
+
   func wireTopBar() {
     topBar.onBack = { [weak self] in self?.navigationController?.popViewController(animated: true) }
     topBar.onSearch = { [weak self] in

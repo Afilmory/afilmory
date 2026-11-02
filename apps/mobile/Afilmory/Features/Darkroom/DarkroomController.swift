@@ -10,6 +10,7 @@ final class DarkroomController: UIViewController {
   let adminNote = AFLabel.ui(String(localized: "Uploading and management are available to an active workspace administrator."), size: 14, color: AFColor.textSecondary)
   let loadErrorNote = AFLabel.mono(String(localized: "Couldn't reach your gallery. Pull down to try again."), size: 11, color: AFColor.destructive)
   let avatarButton = DarkroomAvatarButton()
+  private let barAvatarButton = DarkroomAvatarButton()
   let rows = DarkroomRows()
   private let scrollView = UIScrollView()
   private let content = UIStackView()
@@ -44,6 +45,11 @@ final class DarkroomController: UIViewController {
     }
   }
 
+  override func viewIsAppearing(_ animated: Bool) {
+    super.viewIsAppearing(animated)
+    applyVerticalBar()
+  }
+
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = AFColor.ground
@@ -58,7 +64,19 @@ final class DarkroomController: UIViewController {
     model.start()
     observeUploads()
     observeAccountStores()
+    barAvatarButton.addAction(UIAction { [weak self] _ in self?.presentAccountSheet() }, for: .primaryActionTriggered)
+    DuoBarItems.observe(self) { $0.applyVerticalBar() }
     render()
+    applyVerticalBar()
+  }
+
+  func applyVerticalBar() {
+    let context = traitCollection.duoContext
+    avatarButton.isHidden = context.hasVerticalBar
+    let items = context.hasVerticalBar && !context.isFlat
+      ? [DuoBarItems.custom(barAvatarButton, label: String(localized: "Account"))]
+      : []
+    DuoBarItems.install(items, on: self)
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -135,6 +153,7 @@ final class DarkroomController: UIViewController {
   func render() {
     let session = model.session
     avatarButton.configure(user: session?.user)
+    barAvatarButton.configure(user: session?.user)
     let canManage = model.canManage
     stageView.isHidden = !canManage
     statsView.isHidden = !canManage
