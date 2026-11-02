@@ -100,6 +100,23 @@ final class DuoViewingLayoutTests: XCTestCase {
     XCTAssertEqual(Set(itemFrames(collection).map(\.minX)).count, 3)
   }
 
+  func testOneCardChaptersFillEveryFlatColumn() {
+    let columns = ViewingColumnsLayout.columns(
+      for: DuoContext(barEdge: .trailing, posture: .flat),
+      in: CGRect(x: 0, y: 0, width: 882, height: 669), fold: nil, inset: 16, spacing: 12
+    )
+    let (collection, _) = laidOut(columns: columns, counts: [1, 1, 1, 1, 1, 1])
+    let frames = itemFrames(collection)
+    XCTAssertEqual(Set(frames.map(\.minX)).count, 3)
+    for (section, item) in frames.enumerated() {
+      let header = collection.collectionViewLayout.layoutAttributesForSupplementaryView(
+        ofKind: UICollectionView.elementKindSectionHeader, at: IndexPath(item: 0, section: section)
+      )?.frame ?? .null
+      XCTAssertEqual(header.maxY, item.minY, accuracy: 0.5)
+      XCTAssertEqual(header.maxX, item.maxX, accuracy: 0.5)
+    }
+  }
+
   func testPhonesKeepASingleFullWidthColumn() {
     let columns = ViewingColumnsLayout.columns(for: .phone, in: CGRect(x: 0, y: 0, width: 402, height: 874), fold: nil, inset: 16, spacing: 12)
     XCTAssertEqual(columns, [])
