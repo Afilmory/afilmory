@@ -1,6 +1,6 @@
 import UIKit
 
-final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDelegate {
+final class AfilmoryTabBarController: UITabBarController {
   var onRequestDeveloperLab: (() -> Void)?
 
   let focusBar = AFFocusTabBar()
@@ -28,7 +28,6 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    delegate = self
     view.backgroundColor = AFColor.ground
     isTabBarHidden = true
     tabBar.isHidden = true
@@ -101,11 +100,7 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
 
   func select(_ tab: AppTab, animated: Bool) {
     guard viewControllers?.indices.contains(tab.rawValue) == true else { return }
-    if animated, tab.rawValue != selectedIndex, let target = viewControllers?[tab.rawValue] {
-      selectedViewController = target
-    } else {
-      selectedIndex = tab.rawValue
-    }
+    selectedIndex = tab.rawValue
     focusBar.select(tab, animated: animated)
   }
 
@@ -143,14 +138,6 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
     #endif
   }
 
-  func tabBarController(
-    _: UITabBarController,
-    animationControllerForTransitionFrom _: UIViewController,
-    to _: UIViewController
-  ) -> UIViewControllerAnimatedTransitioning? {
-    AFTabFocusTransition()
-  }
-
   private func userSelected(_ tab: AppTab) {
     registerDeveloperLabTap(on: tab)
     if tab.rawValue == selectedIndex {
@@ -172,37 +159,6 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
     let inset: CGFloat = isFocusBarHidden || usesRail ? 0 : AFFocusTabBar.barHeight
     for controller in viewControllers ?? [] {
       controller.additionalSafeAreaInsets.bottom = inset
-    }
-  }
-}
-
-final class AFTabFocusTransition: NSObject, UIViewControllerAnimatedTransitioning {
-  func transitionDuration(using _: UIViewControllerContextTransitioning?) -> TimeInterval {
-    MainActor.assumeIsolated { AFMotion.reduceMotion ? 0.2 : 0.5 }
-  }
-
-  func animateTransition(using context: UIViewControllerContextTransitioning) {
-    MainActor.assumeIsolated {
-      guard let fromView = context.view(forKey: .from), let toView = context.view(forKey: .to) else {
-        context.completeTransition(!context.transitionWasCancelled)
-        return
-      }
-      let container = context.containerView
-      if let toController = context.viewController(forKey: .to) {
-        toView.frame = context.finalFrame(for: toController)
-      }
-      container.addSubview(toView)
-      let duration = transitionDuration(using: context)
-      AFMotion.defocus(fromView, amount: 1)
-      AFMotion.rackIn(toView)
-      UIView.animate(withDuration: duration, delay: 0, options: [.allowUserInteraction]) {
-        fromView.alpha = 0
-      } completion: { _ in
-        AFMotion.refocus(fromView, animated: false)
-        fromView.alpha = 1
-        fromView.transform = .identity
-        context.completeTransition(!context.transitionWasCancelled)
-      }
     }
   }
 }

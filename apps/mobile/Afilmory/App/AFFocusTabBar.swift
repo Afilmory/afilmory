@@ -80,7 +80,7 @@ final class AFFocusTabBar: UIView {
       stack.widthAnchor.constraint(equalTo: widthAnchor),
     ]
     applyAxis()
-    apply(selected: .exhibition, previous: nil, animated: false)
+    apply(selected: .exhibition, animated: false)
   }
 
   @available(*, unavailable)
@@ -90,9 +90,8 @@ final class AFFocusTabBar: UIView {
 
   func select(_ tab: AppTab, animated: Bool) {
     guard tab != selectedTab else { return }
-    let previous = selectedTab
     selectedTab = tab
-    apply(selected: tab, previous: previous, animated: animated)
+    apply(selected: tab, animated: animated)
   }
 
   private func applyAxis() {
@@ -111,7 +110,7 @@ final class AFFocusTabBar: UIView {
       item.button.setTitle(vertical ? nil : title, for: .normal)
       item.verticalLabel.isHidden = !vertical
     }
-    apply(selected: selectedTab, previous: nil, animated: false)
+    apply(selected: selectedTab, animated: false)
   }
 
   private func makeItem(for tab: AppTab) -> Item {
@@ -153,11 +152,7 @@ final class AFFocusTabBar: UIView {
     return Item(button: button, dot: dot, verticalLabel: verticalLabel, horizontalConstraints: horizontal, verticalConstraints: vertical)
   }
 
-  private func label(of item: Item) -> UIView? {
-    axis == .vertical ? item.verticalLabel : item.button.titleLabel
-  }
-
-  private func apply(selected: AppTab, previous: AppTab?, animated: Bool) {
+  private func apply(selected: AppTab, animated: Bool) {
     for tab in AppTab.allCases {
       let item = items[tab.rawValue]
       let isSelected = tab == selected
@@ -166,21 +161,20 @@ final class AFFocusTabBar: UIView {
       item.verticalLabel.textColor = color
       item.button.accessibilityTraits = isSelected ? [.button, .selected] : .button
       if !isSelected {
+        item.dot.layer.removeAllAnimations()
         item.dot.alpha = 0
       }
     }
     let dot = items[selected.rawValue].dot
-    guard animated, let label = label(of: items[selected.rawValue]) else {
-      dot.alpha = 1
+    dot.layer.removeAllAnimations()
+    dot.alpha = 1
+    dot.transform = .identity
+    guard animated else { return }
+    UISelectionFeedbackGenerator().selectionChanged()
+    guard !AFMotion.reduceMotion else { return }
+    dot.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+    UIView.animate(withDuration: 0.22, delay: 0, options: [.allowUserInteraction, .beginFromCurrentState, .curveEaseOut]) {
       dot.transform = .identity
-      return
-    }
-    AFMotion.afLock(label: label, dot: dot)
-    if let previous, let previousLabel = self.label(of: items[previous.rawValue]), !AFMotion.reduceMotion {
-      AFMotion.defocus(previousLabel, amount: 0.4)
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
-        AFMotion.refocus(previousLabel)
-      }
     }
   }
 }
