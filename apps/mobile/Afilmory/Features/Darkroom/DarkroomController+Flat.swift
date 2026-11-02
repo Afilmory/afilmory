@@ -10,12 +10,12 @@ extension DarkroomController {
      (rows.sync, .operations), (rows.site, .site), (rows.domain, .domain)]
   }
 
-  func selectFlat(_ route: StudioHomeRoute?) {
+  func selectFlat(_ route: StudioHomeRoute?, reusing existing: UIViewController? = nil) {
     guard route != flatSelection || (route != nil && flatDetail == nil) else { return }
     removeFlatDetail()
     flatSelection = route
     if let route {
-      let detail = makeSubpage(route)
+      let detail = existing ?? makeSubpage(route)
       addChild(detail)
       view.addSubview(detail.view)
       detail.didMove(toParent: self)
@@ -54,13 +54,22 @@ extension DarkroomController {
       if let navigation = navigationController,
          let top = navigation.topViewController as? DarkroomSubpageController, let route = top.route {
         navigation.popToRootViewController(animated: false)
-        selectFlat(route)
+        let reuse = { [weak self] in
+          guard let self, self.duoContext.isFlat, top.parent == nil else { return }
+          self.selectFlat(route, reusing: top)
+        }
+        if let coordinator = navigation.transitionCoordinator {
+          coordinator.animate(alongsideTransition: nil) { _ in reuse() }
+        } else {
+          DispatchQueue.main.async(execute: reuse)
+        }
       }
-    } else if let route = flatSelection {
+    } else if flatSelection != nil, let detail = flatDetail {
       removeFlatDetail()
       flatSelection = nil
       primaryColumn.alpha = 1
-      push(route, animated: false)
+      detail.view.transform = .identity
+      navigationController?.pushViewController(detail, animated: false)
     }
     updateFlatSelection()
     applyVerticalBar()

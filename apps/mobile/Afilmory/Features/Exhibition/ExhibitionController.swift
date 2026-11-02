@@ -97,10 +97,15 @@ final class ExhibitionController: UIViewController {
     collectionView.verticalScrollIndicatorInsets = UIEdgeInsets(top: barHeight, left: 0, bottom: view.safeAreaInsets.bottom, right: 0)
     let pages = sheetPages()
     if hero.topInset != barHeight + 2 || lastWidth != view.bounds.width || lastPages != pages {
+      let anchor = lastPages.isEmpty ? nil : topVisiblePhotoID()
       hero.topInset = barHeight + 2
       lastWidth = view.bounds.width
       lastPages = pages
       render()
+      if let anchor, let offset = Self.anchoredOffset(photoID: anchor, content: content, layout: sheetLayout, topInset: topBar.bounds.height) {
+        let maxOffset = max(0, collectionView.contentSize.height - collectionView.bounds.height)
+        collectionView.contentOffset = CGPoint(x: 0, y: min(offset, maxOffset))
+      }
     }
   }
 

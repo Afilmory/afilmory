@@ -56,9 +56,8 @@
           guard photos.indices.contains(photoIndex) else { return }
           exhibition.openDetail(photoID: photos[photoIndex].id)
           ExhibitionCatalog.after(1.0) {
-            guard let detail = exhibition.presentedViewController as? PhotoDetailViewController
-              ?? exhibition.view.window?.rootViewController?.presentedViewController as? PhotoDetailViewController
-            else { return }
+            let presented = exhibition.presentedViewController ?? exhibition.view.window?.rootViewController?.presentedViewController
+            guard let presented, let detail = DetailTransitionAnimator.detail(in: presented) else { return }
             drive(detail)
           }
         }

@@ -87,6 +87,7 @@ final class DuoDarkroomFlatTests: XCTestCase {
     settle(navigation)
     navigation.traitOverrides.duoContext = flat
     settle(navigation)
+    RunLoop.main.run(until: Date().addingTimeInterval(0.1))
     XCTAssertEqual(navigation.viewControllers.count, 1)
     XCTAssertEqual(darkroom.flatSelection, .site)
   }

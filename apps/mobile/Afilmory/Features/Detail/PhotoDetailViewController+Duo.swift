@@ -53,16 +53,11 @@ extension PhotoDetailViewController {
     photoLayer.transform = .identity
     photoDefocus.radius = 0
     let photoFrame = isFullScreen ? duoContentRect : split.photo
-    let sizeChanged = photoLayer.bounds.size != photoFrame.size
     photoLayer.bounds = CGRect(origin: .zero, size: photoFrame.size)
     photoLayer.center = CGPoint(x: photoFrame.midX, y: photoFrame.midY)
     pager.frame = photoLayer.bounds
     photoDefocus.frame = photoLayer.bounds
-    if sizeChanged {
-      pager.collectionViewLayout.invalidateLayout()
-      pager.layoutIfNeeded()
-      pager.contentOffset = CGPoint(x: CGFloat(currentIndex) * pager.bounds.width, y: 0)
-    }
+    resnapPagerIfResized()
     let chipsFrame = duoChipsFrame(split)
     chips.transform = .identity
     chips.bounds = CGRect(origin: .zero, size: chipsFrame.size)
@@ -144,7 +139,25 @@ extension PhotoDetailViewController {
     DuoBarItems.install(items, on: self)
   }
 
+  var chromeBounds: CGRect {
+    let safe = view.safeAreaInsets
+    return CGRect(x: safe.left, y: 0, width: max(0, view.bounds.width - safe.left - safe.right), height: view.bounds.height)
+  }
+
+  func resnapPagerIfResized() {
+    guard pager.bounds.width > 0, pager.bounds.width != pagerWidth else { return }
+    let first = pagerWidth == 0
+    pagerWidth = pager.bounds.width
+    guard !first else { return }
+    pager.collectionViewLayout.invalidateLayout()
+    pager.layoutIfNeeded()
+    pager.contentOffset = CGPoint(x: CGFloat(currentIndex) * pager.bounds.width, y: 0)
+  }
+
   func duoContextChanged() {
+    if traitCollection.duoContext.isExpanded, rules.detent != .collapsed {
+      setDetent(.collapsed, animated: false)
+    }
     if !traitCollection.duoContext.isExpanded {
       if isFullScreen {
         isFullScreen = false

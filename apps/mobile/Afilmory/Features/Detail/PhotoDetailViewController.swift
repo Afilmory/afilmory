@@ -28,6 +28,7 @@ final class PhotoDetailViewController: UIViewController {
   var hasLaidOutPager = false
   var isTransitioning = true
   var isFullScreen = false
+  var pagerWidth: CGFloat = 0
   var commentsColumn: DetailCommentsColumn?
   private(set) var transitionDelegateRef: DetailTransitionDelegate?
 
@@ -112,6 +113,7 @@ final class PhotoDetailViewController: UIViewController {
     photoLayer.center = CGPoint(x: view.bounds.midX, y: view.bounds.midY)
     pager.frame = photoLayer.bounds
     photoDefocus.frame = photoLayer.bounds
+    resnapPagerIfResized()
     let safeTop = view.safeAreaInsets.top
     topChrome.frame = CGRect(x: 0, y: max(safeTop, 20) + 4, width: view.bounds.width, height: 44)
     backButton.frame = CGRect(x: 12, y: 0, width: 44, height: 44)
@@ -129,15 +131,15 @@ final class PhotoDetailViewController: UIViewController {
   }
 
   var collapsedHeight: CGFloat {
-    sheet.collapsedHeight(width: view.bounds.width - 16)
+    sheet.collapsedHeight(width: chromeBounds.width - 16)
   }
 
   var photoArea: CGRect {
     if let split = duoSplit { return duoPhotoArea(split) }
     return DetailGeometry.photoArea(
-      bounds: view.bounds,
+      bounds: chromeBounds,
       safeTop: view.safeAreaInsets.top,
-      collapsedSheet: DetailGeometry.collapsedSheet(bounds: view.bounds, height: collapsedHeight)
+      collapsedSheet: DetailGeometry.collapsedSheet(bounds: chromeBounds, height: collapsedHeight)
     )
   }
 
@@ -146,7 +148,7 @@ final class PhotoDetailViewController: UIViewController {
       layoutDuo(split)
       return
     }
-    let frame = DetailGeometry.sheet(bounds: view.bounds, safeTop: view.safeAreaInsets.top, collapsedHeight: collapsedHeight, progress: sheetProgress)
+    let frame = DetailGeometry.sheet(bounds: chromeBounds, safeTop: view.safeAreaInsets.top, collapsedHeight: collapsedHeight, progress: sheetProgress)
     sheet.bounds = CGRect(origin: .zero, size: frame.size)
     sheet.center = CGPoint(x: frame.midX, y: frame.midY)
     chips.bounds = CGRect(origin: .zero, size: DetailGeometry.chips(sheet: frame).size)

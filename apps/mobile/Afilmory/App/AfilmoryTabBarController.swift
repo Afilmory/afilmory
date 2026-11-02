@@ -53,12 +53,14 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
     super.viewDidLayoutSubviews()
     view.bringSubviewToFront(focusBar)
     if usesRail {
-      focusBar.frame = Self.railFrame(
+      let rail = Self.railFrame(
         edge: traitCollection.duoContext.barEdge,
         bounds: view.bounds,
         safeArea: view.safeAreaInsets,
         occlusionMaxY: occlusionMaxY()
       )
+      focusBar.bounds = CGRect(origin: .zero, size: rail.size)
+      focusBar.center = CGPoint(x: rail.midX, y: rail.midY)
     }
     duoContextProvider.refresh()
   }

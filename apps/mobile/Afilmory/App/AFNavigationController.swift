@@ -27,6 +27,15 @@ final class AFNavigationController: UINavigationController {
     applyDuoContext()
   }
 
+  private lazy var duoContextProvider = DuoContextProvider(controller: self)
+
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    if view.window?.rootViewController === self {
+      duoContextProvider.refresh()
+    }
+  }
+
   override func pushViewController(_ viewController: UIViewController, animated: Bool) {
     untitle(viewController)
     super.pushViewController(viewController, animated: animated)

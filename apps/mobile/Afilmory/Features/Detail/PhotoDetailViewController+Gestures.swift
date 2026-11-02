@@ -69,8 +69,8 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
       sheetDragStartProgress = sheetProgress
       hideRail()
     case .changed:
-      let collapsed = DetailGeometry.collapsedSheet(bounds: view.bounds, height: collapsedHeight).minY
-      let expanded = DetailGeometry.expandedSheet(bounds: view.bounds, safeTop: view.safeAreaInsets.top).minY
+      let collapsed = DetailGeometry.collapsedSheet(bounds: chromeBounds, height: collapsedHeight).minY
+      let expanded = DetailGeometry.expandedSheet(bounds: chromeBounds, safeTop: view.safeAreaInsets.top).minY
       let span = max(1, collapsed - expanded)
       sheetProgress = min(1, max(0, sheetDragStartProgress - translation / span))
       layoutSheet()
@@ -88,7 +88,7 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
     case .began:
       dismissTranslation = 0
     case .changed:
-      if translation.y < 0, dismissTranslation == 0 {
+      if translation.y < 0, dismissTranslation == 0, duoSplit == nil {
         sheetProgress = DetailGestureRules.photoPanSheetProgress(translationY: translation.y)
         layoutSheet()
         return
@@ -107,6 +107,7 @@ extension PhotoDetailViewController: UIGestureRecognizerDelegate {
     case .ended, .cancelled:
       let velocity = pan.velocity(in: view).y
       if dismissTranslation == 0 {
+        guard duoSplit == nil else { return }
         setDetent(translation.y < -60 || velocity < -500 ? .expanded : .collapsed, animated: true)
         return
       }

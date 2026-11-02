@@ -5,13 +5,13 @@ enum DetailGeometry {
   static let expandedMaxHeight: CGFloat = 736
 
   static func collapsedSheet(bounds: CGRect, height: CGFloat) -> CGRect {
-    CGRect(x: 8, y: bounds.height - 8 - height, width: bounds.width - 16, height: height)
+    CGRect(x: bounds.minX + 8, y: bounds.height - 8 - height, width: bounds.width - 16, height: height)
   }
 
   static func expandedSheet(bounds: CGRect, safeTop: CGFloat) -> CGRect {
     let chromeBottom = max(safeTop, 20) + 4 + 44
     let height = min(expandedMaxHeight, bounds.height - chromeBottom - chipsGap - 44 - chipsGap)
-    return CGRect(x: 0, y: bounds.height - height, width: bounds.width, height: height)
+    return CGRect(x: bounds.minX, y: bounds.height - height, width: bounds.width, height: height)
   }
 
   static func sheet(bounds: CGRect, safeTop: CGFloat, collapsedHeight: CGFloat, progress: CGFloat) -> CGRect {
@@ -39,6 +39,6 @@ enum DetailGeometry {
 
   static func photoArea(bounds: CGRect, safeTop: CGFloat, collapsedSheet: CGRect) -> CGRect {
     let top = max(safeTop, 20)
-    return CGRect(x: 0, y: top, width: bounds.width, height: max(120, collapsedSheet.minY - chipsGap - top))
+    return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(120, collapsedSheet.minY - chipsGap - top))
   }
 }

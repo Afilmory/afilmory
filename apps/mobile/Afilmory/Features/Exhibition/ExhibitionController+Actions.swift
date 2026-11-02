@@ -1,6 +1,20 @@
 import UIKit
 
 extension ExhibitionController {
+  static func anchoredOffset(photoID: String, content: ExhibitionContent, layout: ExhibitionSheetLayout, topInset: CGFloat) -> CGFloat? {
+    guard let index = content.blockIndex(containing: photoID), let frame = layout.frameOfBlock(index) else { return nil }
+    return max(0, frame.minY - topInset)
+  }
+
+  func topVisiblePhotoID() -> String? {
+    let line = collectionView.contentOffset.y + topBar.bounds.height
+    for (index, placement) in content.placements.enumerated() {
+      guard let frame = sheetLayout.frameOfBlock(index), frame.maxY > line else { continue }
+      if let id = placement.block.groups?.first?.frames.first?.photoID { return id }
+    }
+    return nil
+  }
+
   func sheetPages() -> [CGRect] {
     let safe = view.safeAreaInsets
     let content = CGRect(x: safe.left, y: 0, width: max(0, view.bounds.width - safe.left - safe.right), height: view.bounds.height)

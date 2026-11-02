@@ -23,7 +23,18 @@ final class DetailCommentsColumn: UIView {
     host.safeAreaRegions = []
     titleLabel.accessibilityTraits = .header
     [closeButton, titleLabel, host.view].forEach(addSubview)
+    keyboardLayoutGuide.usesBottomSafeArea = false
+    hostTop.constant = 14 + 44 + 10 + titleLabel.font.lineHeight + 4 + 12
+    host.view.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      host.view.leadingAnchor.constraint(equalTo: leadingAnchor),
+      host.view.trailingAnchor.constraint(equalTo: trailingAnchor),
+      hostTop,
+      host.view.bottomAnchor.constraint(equalTo: keyboardLayoutGuide.topAnchor),
+    ])
   }
+
+  private lazy var hostTop = host.view.topAnchor.constraint(equalTo: topAnchor)
 
   @available(*, unavailable)
   required init?(coder: NSCoder) {
@@ -35,8 +46,6 @@ final class DetailCommentsColumn: UIView {
     let buttonSize = closeButton.sizeThatFits(CGSize(width: bounds.width, height: 44))
     closeButton.frame = CGRect(x: 14, y: 14, width: buttonSize.width, height: 44)
     titleLabel.frame = CGRect(x: 22, y: closeButton.frame.maxY + 10, width: bounds.width - 44, height: titleLabel.font.lineHeight + 4)
-    let top = titleLabel.frame.maxY + 12
-    host.view.frame = CGRect(x: 0, y: top, width: bounds.width, height: max(0, bounds.height - top))
   }
 }
 

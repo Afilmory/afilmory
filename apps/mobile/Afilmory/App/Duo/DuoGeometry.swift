@@ -20,8 +20,14 @@ enum DuoGeometry {
 
   static func fold(of context: DuoContext, in view: UIView) -> CGRect? {
     guard case .book(let fold) = context.posture else { return nil }
-    guard let window = view.window else { return fold }
-    return view.convert(fold, from: window)
+    guard view.window != nil else { return fold }
+    var origin: CGFloat = 0
+    var current: UIView = view
+    while let parent = current.superview {
+      origin += current.center.x - current.bounds.width / 2 - parent.bounds.minX
+      current = parent
+    }
+    return CGRect(x: fold.minX - origin + view.bounds.minX, y: fold.minY, width: fold.width, height: fold.height)
   }
 
   static func lanes(in rect: CGRect, context: DuoContext, view: UIView) -> [CGRect] {
