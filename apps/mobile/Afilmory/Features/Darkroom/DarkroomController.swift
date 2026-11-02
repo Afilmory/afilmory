@@ -14,12 +14,19 @@ final class DarkroomController: UIViewController {
   let rows = DarkroomRows()
   private let scrollView = UIScrollView()
   private let content = UIStackView()
-  private let primaryColumn = UIStackView()
+  let primaryColumn = UIStackView()
   private let secondaryColumn = UIStackView()
+  let stageRow = DarkroomRowButton(symbol: "camera.aperture", title: String(localized: "Stage"))
+  let accountCard = DarkroomAccountCard()
+  var flatSelection: StudioHomeRoute?
+  var flatDetail: UIViewController?
+  private lazy var stageGroup = DarkroomGroupView(rows: [stageRow])
+  private lazy var secondaryWidth = secondaryColumn.widthAnchor.constraint(equalToConstant: 0)
+  private var homeLayoutKey = ""
+  private var flatSidebarMaxX: CGFloat = 0
   private var contentLeading: NSLayoutConstraint?
   private var contentTrailing: NSLayoutConstraint?
   private lazy var primaryWidth = primaryColumn.widthAnchor.constraint(equalToConstant: 0)
-  private var homePages: [CGRect] = []
   private lazy var header = DarkroomHeaderBar.root(title: String(localized: "Darkroom"), accessory: avatarButton)
   private var navigationDelegate: DarkroomNavigationDelegate?
   lazy var uploadFlow = DarkroomUploadFlow(host: self) { [weak self] in self?.model.libraryTags ?? [] }
@@ -71,7 +78,10 @@ final class DarkroomController: UIViewController {
     observeUploads()
     observeAccountStores()
     barAvatarButton.addAction(UIAction { [weak self] _ in self?.presentAccountSheet() }, for: .primaryActionTriggered)
-    DuoBarItems.observe(self) { $0.applyVerticalBar() }
+    DuoBarItems.observe(self) { $0.duoPostureChanged() }
+    navigationController?.registerForTraitChanges([DuoContextTrait.self]) { [weak self] (_: UINavigationController, _: UITraitCollection) in
+      self?.duoPostureChanged()
+    }
     render()
     applyVerticalBar()
   }
@@ -140,9 +150,15 @@ final class DarkroomController: UIViewController {
     for item in [stageView, quotaStack, loadErrorNote, statsView, adminNote] as [UIView] {
       primaryColumn.addArrangedSubview(item)
     }
-    for item in [manageLabel, rows.manageGroup, accountLabel, rows.accountGroup] as [UIView] {
+    for item in [accountCard, stageGroup, manageLabel, rows.manageGroup, accountLabel, rows.accountGroup] as [UIView] {
       secondaryColumn.addArrangedSubview(item)
     }
+    accountCard.isHidden = true
+    stageGroup.isHidden = true
+    secondaryColumn.setCustomSpacing(18, after: accountCard)
+    secondaryColumn.setCustomSpacing(24, after: stageGroup)
+    stageRow.addAction(UIAction { [weak self] _ in self?.selectFlat(nil) }, for: .primaryActionTriggered)
+    accountCard.addAction(UIAction { [weak self] _ in self?.presentAccountSheet() }, for: .primaryActionTriggered)
     primaryColumn.setCustomSpacing(30, after: statsView)
     content.setCustomSpacing(30, after: primaryColumn)
     secondaryColumn.setCustomSpacing(10, after: manageLabel)
@@ -177,10 +193,29 @@ final class DarkroomController: UIViewController {
   private func applyHomeLayout() {
     let safe = view.safeAreaInsets
     let rect = CGRect(x: safe.left, y: 0, width: max(0, view.bounds.width - safe.left - safe.right), height: view.bounds.height)
-    let pages = DuoGeometry.lanes(in: rect, context: traitCollection.duoContext, view: view)
-    guard pages != homePages else { return }
-    homePages = pages
-    if pages.count == 2 {
+    let context = traitCollection.duoContext
+    let pages = DuoGeometry.lanes(in: rect, context: context, view: view)
+    let key = "\(pages)|\(context.isFlat)|\(view.bounds.width)"
+    guard key != homeLayoutKey else { return }
+    homeLayoutKey = key
+    accountCard.isHidden = !context.isFlat
+    stageGroup.isHidden = !context.isFlat
+    secondaryWidth.isActive = false
+    if context.isFlat {
+      let gap: CGFloat = 28
+      let sidebar = ((rect.width - 32 - gap) / 3).rounded()
+      content.insertArrangedSubview(secondaryColumn, at: 0)
+      content.axis = .horizontal
+      content.alignment = .top
+      content.setCustomSpacing(gap, after: secondaryColumn)
+      contentLeading?.constant = rect.minX + 16
+      contentTrailing?.constant = -(view.bounds.width - rect.maxX + 16)
+      primaryWidth.isActive = false
+      secondaryWidth.constant = sidebar
+      secondaryWidth.isActive = true
+      flatSidebarMaxX = rect.minX + 16 + sidebar
+    } else if pages.count == 2 {
+      content.insertArrangedSubview(primaryColumn, at: 0)
       let gap = pages[1].minX - pages[0].maxX + 32
       content.axis = .horizontal
       content.alignment = .top
@@ -190,6 +225,7 @@ final class DarkroomController: UIViewController {
       primaryWidth.constant = pages[0].width - 32
       primaryWidth.isActive = true
     } else {
+      content.insertArrangedSubview(primaryColumn, at: 0)
       primaryWidth.isActive = false
       content.axis = .vertical
       content.alignment = .fill
@@ -198,12 +234,21 @@ final class DarkroomController: UIViewController {
       contentTrailing?.constant = -(16 + safe.right)
     }
     content.updateConstraintsIfNeeded()
+    updateFlatSelection()
+  }
+
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    if traitCollection.duoContext.isFlat {
+      layoutFlatDetail(sidebarMaxX: flatSidebarMaxX)
+    }
   }
 
   func render() {
     let session = model.session
     avatarButton.configure(user: session?.user)
     barAvatarButton.configure(user: session?.user)
+    accountCard.configure(session: session)
     let canManage = model.canManage
     stageView.isHidden = !canManage
     statsView.isHidden = !canManage
@@ -234,6 +279,10 @@ final class DarkroomController: UIViewController {
   }
 
   func push(_ route: StudioHomeRoute, animated: Bool) {
+    if duoContext.isFlat {
+      selectFlat(route)
+      return
+    }
     guard let navigationController else { return }
     if let top = navigationController.topViewController as? DarkroomSubpageController, top.route == route { return }
     navigationController.popToRootViewController(animated: false)

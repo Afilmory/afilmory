@@ -26,6 +26,10 @@ final class DarkroomRowButton: UIButton {
     didSet { separator.isHidden = !showsSeparator }
   }
 
+  override var isSelected: Bool {
+    didSet { backgroundColor = isSelected ? AFColor.fill : .clear }
+  }
+
   var isBusy = false {
     didSet {
       isBusy ? spinner.startAnimating() : spinner.stopAnimating()
