@@ -39,6 +39,7 @@
         + DetailCatalog.entries
         + ViewingCatalog.entries
         + DarkroomCatalog.entries
+        + OnboardingCatalog.entries
     }
 
     static func entry(_ id: String) -> CatalogEntry? {

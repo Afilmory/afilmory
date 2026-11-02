@@ -25,4 +25,22 @@ final class FontSubsetCoverageTests: XCTestCase {
       }
     }
   }
+
+  func testEverySheetTitleIsSubsetForTheExhibitFace() throws {
+    let keys = Set(try AFDisplayStrings.keys())
+    let titles = [
+      "Account", "Review · %lld", "Search & Filter", "Sign in with email", "Comments", "Comments · %lld",
+      "Custom domains are not included", "Library is full", "Monthly photo limit reached", "Storage is full",
+      "File is too large", "Plan limit reached",
+    ]
+    for title in titles {
+      XCTAssertTrue(keys.contains(title), "\(title) is drawn in the exhibit face but missing from display-keys.json")
+    }
+  }
+
+  func testExhibitFaceSetsTitlesAtABookLineHeight() {
+    let font = AFFont.exhibit(size: 34, language: "en")
+    XCTAssertLessThanOrEqual(font.lineHeight, 34 * 1.25)
+    XCTAssertGreaterThanOrEqual(font.lineHeight, 34 * 1.1)
+  }
 }

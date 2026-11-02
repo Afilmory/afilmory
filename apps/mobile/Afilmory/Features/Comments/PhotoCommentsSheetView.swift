@@ -13,7 +13,7 @@ struct PhotoCommentsSheetView: View {
     content
       .safeAreaInset(edge: .bottom, spacing: 0) {
         VStack(spacing: 0) {
-          Divider()
+          Rectangle().fill(Color(AFColor.divider)).frame(height: 1)
           if store.isSignedIn {
             CommentComposerView(store: store)
           } else {

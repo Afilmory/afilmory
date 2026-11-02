@@ -83,26 +83,10 @@ extension PhotoDetailViewController {
   func presentComments() {
     guard let photo = currentPhoto, let request = social.commentsRequest(for: photo) else { return }
     let store = CommentsStore(request: request)
-    let host = UIHostingController(rootView: PhotoCommentsSheetView(store: store))
-    host.navigationItem.title = String(localized: "Comments")
-    if !request.photoTitle.isEmpty { host.navigationItem.prompt = request.photoTitle }
-    host.navigationItem.rightBarButtonItem = UIBarButtonItem(title: String(localized: "Done"), primaryAction: UIAction { [weak self, weak host] _ in
-      self?.social.commentCount.setCount(store.result.commentCount)
-      host?.dismiss(animated: true)
-    })
-    store.onRequestSignIn = { [weak host] in
-      host?.dismiss(animated: true) { AppNavigator.shared.presentSignIn() }
+    let sheet = CommentsSheetPresenter.make(store: store) { [weak self] count in
+      self?.social.commentCount.setCount(count)
     }
-    let navigation = UINavigationController(rootViewController: host)
-    navigation.overrideUserInterfaceStyle = .dark
-    navigation.modalPresentationStyle = .pageSheet
-    if let sheet = navigation.sheetPresentationController {
-      sheet.detents = [.medium(), .large()]
-      sheet.prefersGrabberVisible = true
-      sheet.prefersScrollingExpandsWhenScrolledToEdge = true
-      sheet.preferredCornerRadius = AFRadius.sheet
-    }
-    present(navigation, animated: true)
+    present(sheet, animated: true)
   }
 
   func openLocation() {

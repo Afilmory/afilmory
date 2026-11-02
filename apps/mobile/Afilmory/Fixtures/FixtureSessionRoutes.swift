@@ -7,7 +7,7 @@
     static func respond(_ request: FixtureRequest) -> FixtureResponse? {
       let state = request.state
       if request.match("GET", "auth/session") != nil {
-        return FixtureReply.json(state.read(\.signedIn) ? session() : signedOut)
+        return FixtureReply.json(state.read(\.signedIn) ? session(hasWorkspace: state.read(\.hasWorkspace)) : signedOut)
       }
       if request.match("POST", "auth/sign-in/email") != nil {
         guard request.string("password") != "wrong" else {
@@ -42,6 +42,7 @@
         return FixtureReply.json(["slug": slug])
       }
       if request.match("POST", "auth/sign-up/email") != nil {
+        state.mutate { $0.hasWorkspace = true }
         let tenant = request.body["tenant"] as? [String: Any]
         return FixtureReply.json(
           ["tenant": ["id": FixtureCatalog.ownTenantId, "slug": tenant?["slug"] ?? FixtureCatalog.ownSlug, "name": tenant?["name"] ?? workspaceName]],
@@ -106,15 +107,17 @@
       ]
     }
 
-    static func session() -> [String: Any] {
-      [
+    static func session(hasWorkspace: Bool = true) -> [String: Any] {
+      let active: Any = hasWorkspace ? workspace : NSNull()
+      let memberships: [Any] = hasWorkspace
+        ? [["id": "membership-innei", "role": "owner", "status": "active", "workspace": workspace] as [String: Any]]
+        : []
+      return [
         "user": user,
-        "activeWorkspace": workspace,
+        "activeWorkspace": active,
         "requestedWorkspace": NSNull(),
         "requestedMembership": NSNull(),
-        "memberships": [
-          ["id": "membership-innei", "role": "owner", "status": "active", "workspace": workspace],
-        ],
+        "memberships": memberships,
       ]
     }
 

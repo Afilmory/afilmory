@@ -6,11 +6,6 @@ enum WorkspaceCustomDomainDecision: Equatable, Sendable {
   case needsUpgrade(current: Int, limit: Int)
 }
 
-enum WorkspaceCustomDomainRequest: Equatable, Sendable {
-  case bound(domain: String, cnameTarget: String)
-  case needsUpgrade(QuotaWallReason)
-}
-
 enum WorkspaceCustomDomain {
   static func normalize(_ value: String) -> String {
     var host = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()

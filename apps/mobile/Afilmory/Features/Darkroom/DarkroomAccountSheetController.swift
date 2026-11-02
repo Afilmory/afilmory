@@ -1,15 +1,52 @@
 import UIKit
 
-final class DarkroomAccountSheetController: DarkroomSheetController {
+enum AccountSheetRow: Equatable {
+  case manageSubscription
+  case replayIntro
+  case signOut
+  case deleteAccount
+
+  static let primary: [AccountSheetRow] = [.manageSubscription, .replayIntro, .signOut]
+  static let destructive: AccountSheetRow = .deleteAccount
+
+  var title: String {
+    switch self {
+    case .manageSubscription: String(localized: "Manage subscription")
+    case .replayIntro: String(localized: "Replay introduction")
+    case .signOut: String(localized: "Sign out")
+    case .deleteAccount: String(localized: "Delete account")
+    }
+  }
+
+  var symbol: String {
+    switch self {
+    case .manageSubscription: "creditcard"
+    case .replayIntro: "play.rectangle"
+    case .signOut: "rectangle.portrait.and.arrow.right"
+    case .deleteAccount: "trash"
+    }
+  }
+}
+
+enum AccountRoute: Equatable {
+  case sheet
+  case deletion
+
+  init(startsDeletion: Bool) {
+    self = startsDeletion ? .deletion : .sheet
+  }
+}
+
+final class DarkroomAccountSheetController: AFSheetController {
   private let user: AfilmorySessionUser?
   private let subtitle: String
 
-  var onAccountSettings: (() -> Void)?
+  var onRow: ((AccountSheetRow) -> Void)?
 
   init(user: AfilmorySessionUser?, subtitle: String) {
     self.user = user
     self.subtitle = subtitle
-    super.init()
+    super.init(title: String(localized: "Account"), detent: .fit)
   }
 
   static func roleName(_ role: String?) -> String? {
@@ -43,24 +80,22 @@ final class DarkroomAccountSheetController: DarkroomSheetController {
     identity.isAccessibilityElement = true
     identity.accessibilityLabel = [user?.name, subtitle].compactMap { $0 }.joined(separator: ", ")
 
-    let settings = DarkroomPillButton(style: .filled, height: 50)
-    settings.setTitle(String(localized: "Account settings"))
-    settings.configuration?.baseBackgroundColor = AFColor.fill
-    settings.configuration?.baseForegroundColor = AFColor.textPrimary
-    settings.addAction(UIAction { [weak self] _ in
-      let action = self?.onAccountSettings
-      self?.dismiss(animated: true) { action?() }
-    }, for: .primaryActionTriggered)
-    let done = DarkroomPillButton(style: .outline, height: 50)
-    done.layer.borderWidth = 0
-    done.setTitle(String(localized: "Done"))
-    done.configuration?.baseForegroundColor = AFColor.textSecondary
-    done.addAction(UIAction { [weak self] _ in self?.dismiss(animated: true) }, for: .primaryActionTriggered)
+    let rows = AccountSheetRow.primary.map { row in
+      let button = DarkroomRowButton(symbol: row.symbol, title: row.title)
+      button.addAction(UIAction { [weak self] _ in self?.choose(row) }, for: .primaryActionTriggered)
+      return button
+    }
+    let group = DarkroomGroupView(rows: rows)
 
-    let stack = UIStackView(arrangedSubviews: [identity, settings, done])
+    let delete = AFTextButton.make(AccountSheetRow.destructive.title, color: AFColor.destructive) { [weak self] in
+      self?.choose(.deleteAccount)
+    }
+
+    let stack = UIStackView(arrangedSubviews: [identity, group, delete])
     stack.axis = .vertical
     stack.spacing = 8
-    stack.setCustomSpacing(18, after: identity)
+    stack.setCustomSpacing(20, after: identity)
+    stack.setCustomSpacing(18, after: group)
     stack.translatesAutoresizingMaskIntoConstraints = false
     sheetContent.addSubview(stack)
     NSLayoutConstraint.activate([
@@ -69,7 +104,12 @@ final class DarkroomAccountSheetController: DarkroomSheetController {
       stack.topAnchor.constraint(equalTo: sheetContent.topAnchor, constant: 4),
       stack.leadingAnchor.constraint(equalTo: sheetContent.leadingAnchor, constant: 22),
       stack.trailingAnchor.constraint(equalTo: sheetContent.trailingAnchor, constant: -22),
-      stack.bottomAnchor.constraint(equalTo: sheetContent.bottomAnchor, constant: -30),
+      stack.bottomAnchor.constraint(equalTo: sheetContent.bottomAnchor, constant: -22),
     ])
+  }
+
+  private func choose(_ row: AccountSheetRow) {
+    let handler = onRow
+    dismiss(animated: true) { handler?(row) }
   }
 }

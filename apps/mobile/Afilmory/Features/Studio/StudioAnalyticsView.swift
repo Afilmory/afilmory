@@ -41,7 +41,7 @@ struct StudioAnalyticsView: View {
   private func analyticsForm(_ data: StudioAnalyticsResponse) -> some View {
     Form {
       Group {
-        Section(String(localized: "Storage summary")) {
+        DarkroomSection(String(localized: "Storage summary")) {
           if horizontalSizeClass == .regular {
             LazyVGrid(
               columns: [GridItem(.flexible()), GridItem(.flexible())],
@@ -78,7 +78,7 @@ struct StudioAnalyticsView: View {
           }
         }
 
-        Section(String(localized: "Upload trend")) {
+        DarkroomSection(String(localized: "Upload trend")) {
           if data.uploadTrends.isEmpty {
             ContentUnavailableView(
               String(localized: "No upload history"),
@@ -98,7 +98,7 @@ struct StudioAnalyticsView: View {
           }
         }
 
-        Section(String(localized: "Storage providers")) {
+        DarkroomSection(String(localized: "Storage providers")) {
           if data.storageUsage.providers.isEmpty {
             Text("No data yet")
           } else {
@@ -154,7 +154,7 @@ struct StudioAnalyticsView: View {
     title: String,
     values: [StudioAnalyticsResponse.RankedValue]
   ) -> some View {
-    Section(title) {
+    DarkroomSection(title) {
       if values.isEmpty {
         Text("No data yet")
       } else {

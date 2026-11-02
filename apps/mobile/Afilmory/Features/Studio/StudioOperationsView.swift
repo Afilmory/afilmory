@@ -87,8 +87,6 @@ final class StudioOperationsViewModel: ObservableObject {
 
 struct StudioOperationsView: View {
   @StateObject private var model = StudioOperationsViewModel()
-  @State private var pendingQuotaReason: QuotaWallReason?
-  @State private var showingQuotaWall = false
   @State private var showRunModes = false
 
   private var quotaRejection: StudioQuotaRejection? {
@@ -157,19 +155,14 @@ struct StudioOperationsView: View {
     ) {
       if quotaRejection != nil {
         Button(String(localized: "Why?")) {
-          pendingQuotaReason = quotaRejection?.reason
+          let reason = quotaRejection?.reason
           model.operationError = nil
-          showingQuotaWall = true
+          if let reason { QuotaWallPresenter.present(reason: reason) }
         }
       }
       Button(String(localized: "Done")) { model.operationError = nil }
     } message: {
       Text(quotaRejection?.message ?? model.operationError?.localizedDescription ?? "")
-    }
-    .sheet(isPresented: $showingQuotaWall) {
-      if let reason = pendingQuotaReason {
-        QuotaWallSheet(reason: reason)
-      }
     }
     .alert(
       String(localized: "Sync complete"),
@@ -188,7 +181,7 @@ struct StudioOperationsView: View {
     Form {
       Group {
         if model.running {
-          Section(String(localized: "Current operation")) {
+          DarkroomSection(String(localized: "Current operation")) {
             VStack(alignment: .leading, spacing: 8) {
               Text(model.runMessage ?? String(localized: "Synchronizing storage and database…"))
               ProgressView(value: model.runProgress)
@@ -196,7 +189,7 @@ struct StudioOperationsView: View {
           }
         }
 
-        Section(String(localized: "Last run")) {
+        DarkroomSection(String(localized: "Last run")) {
           if let lastRun = model.status?.lastRun {
             LabeledContent(
               String(localized: "Completed"),
@@ -229,7 +222,7 @@ struct StudioOperationsView: View {
           }
         }
 
-        Section(
+        DarkroomSection(
           String(localized: "Conflicts (\(model.conflicts.count))")
         ) {
           if model.conflicts.isEmpty {

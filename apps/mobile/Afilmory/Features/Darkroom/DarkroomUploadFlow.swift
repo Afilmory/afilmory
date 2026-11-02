@@ -9,6 +9,7 @@ final class DarkroomUploadFlow {
   }
 
   var onInteractionChange: ((DarkroomInteraction) -> Void)?
+  var onEnqueued: (() -> Void)?
 
   init(host: UIViewController, availableTags: @escaping () -> [String]) {
     self.host = host
@@ -54,6 +55,7 @@ final class DarkroomUploadFlow {
     sheet.onStart = { [weak self] chosen, tags in
       self?.interaction = .none
       self?.enqueue(chosen, tags: tags)
+      self?.onEnqueued?()
     }
     sheet.onCancel = { [weak self] in self?.interaction = .none }
     host.present(sheet, animated: true)

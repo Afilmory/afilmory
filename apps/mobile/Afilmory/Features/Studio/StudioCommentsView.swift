@@ -149,7 +149,7 @@ struct StudioCommentsView: View {
           .pickerStyle(.menu)
         }
 
-        Section(
+        DarkroomSection(
           String(localized: "Comments (\(model.comments.count))")
         ) {
           if model.comments.isEmpty, model.filter == "pending" {
@@ -209,7 +209,7 @@ struct StudioCommentsView: View {
     Form {
       Group {
         if let comment = selectedComment {
-          Section(model.users[comment.userId]?.name ?? String(localized: "Unknown user")) {
+          DarkroomSection(model.users[comment.userId]?.name ?? String(localized: "Unknown user")) {
             VStack(alignment: .leading, spacing: 10) {
               Text(comment.content)
               Text(

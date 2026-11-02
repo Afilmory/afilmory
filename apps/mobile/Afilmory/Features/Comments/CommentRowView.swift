@@ -241,6 +241,7 @@ struct CommentRowView: View {
     }
     .frame(minHeight: 26)
     .padding(own ? .trailing : .leading, 3)
+    .fixedSize(horizontal: true, vertical: false)
   }
 
   private var likeButton: some View {

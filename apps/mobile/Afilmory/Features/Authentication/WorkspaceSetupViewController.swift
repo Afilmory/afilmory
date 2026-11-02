@@ -13,6 +13,6 @@ final class WorkspaceSetupViewController: UIHostingController<WorkspaceSetupView
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    view.backgroundColor = .systemBackground
+    view.backgroundColor = AFColor.ground
   }
 }

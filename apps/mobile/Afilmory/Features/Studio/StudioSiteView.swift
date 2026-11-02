@@ -50,7 +50,7 @@ struct StudioSiteView: View {
               settingField(field)
             }
           } header: {
-            Text(section.title)
+            DarkroomSectionHeader(title: section.title)
           } footer: {
             if let description = section.description { Text(description) }
           }

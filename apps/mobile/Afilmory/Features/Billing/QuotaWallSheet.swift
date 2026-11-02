@@ -1,70 +1,83 @@
 import SwiftUI
+import UIKit
 
 struct QuotaWallSheet: View {
-  @Environment(\.dismiss) private var dismiss
   @ObservedObject private var entitlements = EntitlementStore.shared
-  @State private var showingPlan = false
 
   let reason: QuotaWallReason
+  let onClose: () -> Void
+  let onUpgrade: () -> Void
 
   var body: some View {
-    VStack(spacing: 14) {
-      VStack(spacing: 9) {
-        Image(systemName: "exclamationmark.circle.fill")
-          .font(.system(size: 34))
-          .foregroundStyle(.red)
-        Text(reason.title)
-          .font(.system(size: 19, weight: .semibold))
-          .multilineTextAlignment(.center)
-        Text(reason.explanation)
-          .font(.system(size: 13.5))
-          .foregroundStyle(.secondary)
-          .multilineTextAlignment(.center)
-      }
-      .padding(.top, 8)
+    VStack(alignment: .leading, spacing: 16) {
+      Text(reason.explanation)
+        .font(.system(size: 15))
+        .foregroundStyle(Color(AFColor.textSecondary))
+        .fixedSize(horizontal: false, vertical: true)
 
-      if !reason.readout.isEmpty {
-        VStack(spacing: 6) {
+      if !reason.readout.isEmpty || reason.meter != nil {
+        VStack(spacing: 8) {
+          if let meter = reason.meter {
+            QuotaMeterView(meter: meter, accent: Color(AFColor.accentFallback))
+              .padding(.bottom, 8)
+          }
           ForEach(reason.readout, id: \.label) { line in
             HStack {
-              Text(line.label).foregroundStyle(.secondary)
+              Text(line.label).foregroundStyle(Color(AFColor.textTertiary))
               Spacer()
-              Text(line.value).monospacedDigit()
+              Text(line.value).foregroundStyle(Color(AFColor.textPrimary))
             }
-            .font(.system(size: 13))
+            .font(Font(AFFont.mono(size: 13)))
           }
         }
-        .padding(14)
-        .background(Color(uiColor: .systemGroupedBackground))
-        .clipShape(.rect(cornerRadius: 10, style: .continuous))
+        .padding(16)
+        .background(Color(AFColor.raised), in: .rect(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color(AFColor.fill), lineWidth: 1))
       }
 
-      if entitlements.isAvailable {
-        // HIG sizes a prominent call to action as a Large control. Express that through controlSize
-        // rather than a height: the glass background draws past an explicit frame, and a minHeight
-        // on the label adds to the style's own padding instead of replacing it.
-        AfilmoryButton(prominent: true) {
-          showingPlan = true
-        } label: {
-          Text("Upgrade")
-            .font(.system(size: 17, weight: .semibold))
+      VStack(spacing: 4) {
+        if entitlements.isAvailable {
+          Button(String(localized: "Upgrade"), action: onUpgrade)
+            .buttonStyle(.afPrimary)
+        } else {
+          Text("Ask the workspace owner to upgrade this plan.")
+            .font(.system(size: 13))
+            .foregroundStyle(Color(AFColor.textTertiary))
             .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
         }
-        .controlSize(.large)
-      } else {
-        Text("Ask the workspace owner to upgrade this plan.")
-          .font(.system(size: 13))
-          .foregroundStyle(.secondary)
-          .multilineTextAlignment(.center)
+        Button(reason.secondaryActionTitle, action: onClose)
+          .buttonStyle(.afText)
+          .frame(maxWidth: .infinity)
       }
+      .padding(.top, 4)
+    }
+    .padding(.horizontal, 22)
+    .padding(.bottom, 24)
+  }
+}
 
-      Button(reason.secondaryActionTitle) { dismiss() }
-        .font(.system(size: 15))
-    }
-    .padding(22)
-    .presentationDetents([.medium])
-    .sheet(isPresented: $showingPlan) {
-      SubscriptionView(focus: reason)
-    }
+@MainActor
+enum QuotaWallPresenter {
+  static func make(reason: QuotaWallReason, onDismiss: (() -> Void)? = nil) -> AFSheetController {
+    weak var sheet: AFSheetController?
+    let view = QuotaWallSheet(
+      reason: reason,
+      onClose: { sheet?.dismiss(animated: true, completion: onDismiss) },
+      onUpgrade: {
+        sheet?.dismiss(animated: true) {
+          onDismiss?()
+          AppNavigator.shared.presentSubscription(focus: reason)
+        }
+      }
+    )
+    let controller = AFSheetController(title: reason.title, detent: .fit, rootView: view)
+    controller.closeAction = { sheet?.dismiss(animated: true, completion: onDismiss) }
+    sheet = controller
+    return controller
+  }
+
+  static func present(reason: QuotaWallReason, onDismiss: (() -> Void)? = nil) {
+    AFSheetController.topPresenter()?.present(make(reason: reason, onDismiss: onDismiss), animated: true)
   }
 }

@@ -110,6 +110,9 @@ extension View {
   func darkroomForm() -> some View {
     scrollContentBackground(.hidden)
       .background(Color(AFColor.ground))
+      .environment(\.defaultMinListRowHeight, 56)
+      .listSectionSpacing(22)
+      .tint(Color(AFColor.accentFallback))
   }
 }
 
@@ -117,4 +120,35 @@ extension Color {
   static let darkroomTertiary = Color(AFColor.textTertiary)
   static let darkroomSecondary = Color(AFColor.textSecondary)
   static let darkroomDestructive = Color(AFColor.destructive)
+}
+
+struct DarkroomSectionHeader: View {
+  let title: String
+
+  var body: some View {
+    Text(title.uppercased())
+      .font(Font(AFFont.mono(size: 11)))
+      .tracking(0.6)
+      .foregroundStyle(Color(AFColor.textTertiary))
+      .textCase(nil)
+      .accessibilityAddTraits(.isHeader)
+  }
+}
+
+struct DarkroomSection<Content: View>: View {
+  let title: String
+  let content: Content
+
+  init(_ title: String, @ViewBuilder content: () -> Content) {
+    self.title = title
+    self.content = content()
+  }
+
+  var body: some View {
+    Section {
+      content
+    } header: {
+      DarkroomSectionHeader(title: title)
+    }
+  }
 }

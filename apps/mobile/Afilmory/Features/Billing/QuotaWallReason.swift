@@ -123,3 +123,30 @@ extension QuotaWallReason {
     String(format: "%.0f MB", value.rounded())
   }
 }
+
+struct QuotaMeter: Equatable {
+  let used: Double
+  let projected: Double?
+  let limit: Double
+  let frames: Int?
+}
+
+extension QuotaWallReason {
+  var meter: QuotaMeter? {
+    switch self {
+    case .libraryItems(let current, let limit) where limit > 0:
+      QuotaMeter(used: Double(current), projected: nil, limit: Double(limit), frames: limit <= 40 ? limit : nil)
+    case .customDomain(let current, let limit) where limit > 0:
+      QuotaMeter(used: Double(current), projected: nil, limit: Double(limit), frames: limit <= 40 ? limit : nil)
+    case .monthlyProcess(let used, let limit, let requested) where limit > 0:
+      QuotaMeter(used: Double(used), projected: Double(used + requested), limit: Double(limit), frames: nil)
+    case .storage(let used, let incoming, let capacity) where capacity > 0:
+      QuotaMeter(used: Double(used), projected: Double(used + incoming), limit: Double(capacity), frames: nil)
+    case .syncObjectSize(let actual, let limit) where actual > 0 && limit > 0,
+         .uploadSize(let actual, let limit) where actual > 0 && limit > 0:
+      QuotaMeter(used: actual, projected: nil, limit: limit, frames: nil)
+    default:
+      nil
+    }
+  }
+}

@@ -1,10 +1,9 @@
 import UIKit
 
-final class DarkroomReviewSheetController: DarkroomSheetController {
+final class DarkroomReviewSheetController: AFSheetController {
   private let picks: [DarkroomPick]
   private var selection: DarkroomReviewSelection
   private var tags: DarkroomTagSelection
-  private let titleLabel = AFLabel.exhibit(nil, size: 24)
   private let startButton = DarkroomPillButton(style: .filled, height: 54)
   private var pickButtons: [String: DarkroomPickButton] = [:]
   private let chips = DarkroomChipFlowView()
@@ -17,21 +16,12 @@ final class DarkroomReviewSheetController: DarkroomSheetController {
     self.picks = picks
     selection = DarkroomReviewSelection(ids: picks.map(\.id))
     tags = DarkroomTagSelection(available: availableTags)
-    super.init()
+    super.init(title: " ", detent: .fit)
+    closeAction = { [weak self] in self?.cancel() }
   }
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    titleLabel.font = AFFont.exhibit(size: 24, relativeTo: .title2)
-    titleLabel.numberOfLines = 0
-    titleLabel.accessibilityTraits = .header
-    let closeBar = AFCloseBar { [weak self] in self?.cancel() }
-    closeBar.setContentHuggingPriority(.required, for: .horizontal)
-    closeBar.setContentCompressionResistancePriority(.required, for: .horizontal)
-    let header = UIStackView(arrangedSubviews: [titleLabel, closeBar])
-    header.alignment = .center
-    header.spacing = 12
-
     let strip = UIScrollView()
     strip.showsHorizontalScrollIndicator = false
     strip.alwaysBounceHorizontal = true
@@ -57,18 +47,17 @@ final class DarkroomReviewSheetController: DarkroomSheetController {
 
     startButton.addAction(UIAction { [weak self] _ in self?.start() }, for: .primaryActionTriggered)
 
-    let padded = UIStackView(arrangedSubviews: [header, tagLabel, chips, noTags, startButton])
+    let padded = UIStackView(arrangedSubviews: [tagLabel, chips, noTags, startButton])
     padded.axis = .vertical
     padded.spacing = 10
-    padded.setCustomSpacing(22, after: header)
     padded.setCustomSpacing(28, after: chips)
     padded.setCustomSpacing(28, after: noTags)
     for view in [padded, strip] as [UIView] {
       view.translatesAutoresizingMaskIntoConstraints = false
       sheetContent.addSubview(view)
     }
-    padded.insertArrangedSubview(UIView(), at: 1)
-    let stripSlot = padded.arrangedSubviews[1]
+    padded.insertArrangedSubview(UIView(), at: 0)
+    let stripSlot = padded.arrangedSubviews[0]
     padded.setCustomSpacing(22, after: stripSlot)
     NSLayoutConstraint.activate([
       padded.topAnchor.constraint(equalTo: sheetContent.topAnchor, constant: 2),
@@ -101,7 +90,7 @@ final class DarkroomReviewSheetController: DarkroomSheetController {
   }
 
   private func render(animated: Bool) {
-    titleLabel.text = String(localized: "Review · \(selection.count)")
+    setHeader(title: String(localized: "Review · \(selection.count)"))
     startButton.setTitle(String(localized: "Start developing \(selection.count)"), size: 16)
     startButton.isEnabled = selection.count > 0
     for (id, button) in pickButtons {

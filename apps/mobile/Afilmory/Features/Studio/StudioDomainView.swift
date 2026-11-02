@@ -43,18 +43,15 @@ struct StudioDomainView: View {
       }
       Button(String(localized: "Cancel"), role: .cancel) {}
     }
-    .sheet(isPresented: $showingPlan) {
-      SubscriptionView(focus: .customDomain(current: model.listing?.domains.count ?? 0, limit: 0))
+    .onChange(of: showingPlan) { _, showing in
+      guard showing else { return }
+      showingPlan = false
+      AppNavigator.shared.presentSubscription(focus: .customDomain(current: model.listing?.domains.count ?? 0, limit: 0))
     }
-    .sheet(
-      isPresented: Binding(
-        get: { model.quotaReason != nil },
-        set: { if !$0 { model.quotaReason = nil } }
-      )
-    ) {
-      if let reason = model.quotaReason {
-        QuotaWallSheet(reason: reason)
-      }
+    .onChange(of: model.quotaReason != nil) { _, hasReason in
+      guard hasReason, let reason = model.quotaReason else { return }
+      model.quotaReason = nil
+      QuotaWallPresenter.present(reason: reason)
     }
   }
 
@@ -85,12 +82,12 @@ struct StudioDomainView: View {
             .disabled(model.mutating || model.domainInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
           }
         } header: {
-          Text("Custom domain")
+          DarkroomSectionHeader(title: String(localized: "Custom domain"))
         } footer: {
           Text("A subdomain is recommended. Apex domains require compatible DNS flattening or Cloudflare Apex Proxying.")
         }
 
-        Section(String(localized: "Verification steps")) {
+        DarkroomSection(String(localized: "Verification steps")) {
           labeledStep(
             number: 1,
             title: String(localized: "Point CNAME to Afilmory"),
@@ -107,7 +104,7 @@ struct StudioDomainView: View {
           )
         }
 
-        Section(String(localized: "Bound domains")) {
+        DarkroomSection(String(localized: "Bound domains")) {
           if listing.domains.isEmpty {
             Text("No custom domains yet. Add one above to start verification.")
               .foregroundStyle(.secondary)

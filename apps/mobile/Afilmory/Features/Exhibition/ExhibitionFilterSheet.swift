@@ -4,55 +4,50 @@ import UIKit
 struct ExhibitionFilterSheet: View {
   let options: PhotoFilterOptions
   let onApply: (PhotoFilters) -> Void
-  let onCancel: () -> Void
   @State var filters: PhotoFilters
 
   var body: some View {
-    NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: 26) {
-          searchField
-          if !options.tags.isEmpty {
-            section(String(localized: "Tags")) {
-              Picker(String(localized: "Match"), selection: $filters.tagMode) {
-                Text(String(localized: "Any tag")).tag(TagMode.any)
-                Text(String(localized: "All tags")).tag(TagMode.all)
-              }
-              .pickerStyle(.segmented)
-              chips(options.tags, selection: $filters.tags, userText: true)
+    ScrollView {
+      VStack(alignment: .leading, spacing: 26) {
+        searchField
+        if !options.tags.isEmpty {
+          section(String(localized: "Tags")) {
+            Picker(String(localized: "Match"), selection: $filters.tagMode) {
+              Text(String(localized: "Any tag")).tag(TagMode.any)
+              Text(String(localized: "All tags")).tag(TagMode.all)
             }
+            .pickerStyle(.segmented)
+            chips(options.tags, selection: $filters.tags, userText: true)
           }
-          if !options.cameras.isEmpty {
-            section(String(localized: "Cameras")) { chips(options.cameras, selection: $filters.cameras, userText: false) }
-          }
-          if !options.lenses.isEmpty {
-            section(String(localized: "Lenses")) { chips(options.lenses, selection: $filters.lenses, userText: false) }
-          }
-          section(String(localized: "Date")) { datePresets }
-          if options.ratedCount > 0 {
-            section(String(localized: "Rating")) { ratingPicker }
-          }
-          Button(String(localized: "Reset")) { filters = .empty }
-            .font(.system(size: 15))
-            .foregroundStyle(Color(AFColor.destructive))
-            .disabled(filters == .empty)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.top, 6)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        if !options.cameras.isEmpty {
+          section(String(localized: "Cameras")) { chips(options.cameras, selection: $filters.cameras, userText: false) }
+        }
+        if !options.lenses.isEmpty {
+          section(String(localized: "Lenses")) { chips(options.lenses, selection: $filters.lenses, userText: false) }
+        }
+        section(String(localized: "Date")) { datePresets }
+        if options.ratedCount > 0 {
+          section(String(localized: "Rating")) { ratingPicker }
+        }
       }
+      .padding(.horizontal, 22)
+      .padding(.top, 4)
+      .padding(.bottom, 16)
+    }
+    .scrollDismissesKeyboard(.interactively)
+    .safeAreaInset(edge: .bottom, spacing: 0) {
+      VStack(spacing: 4) {
+        Button(String(localized: "Apply")) { onApply(filters) }
+          .buttonStyle(.afPrimary)
+        Button(String(localized: "Reset")) { filters = .empty }
+          .buttonStyle(.afText)
+          .disabled(filters == .empty)
+      }
+      .padding(.horizontal, 22)
+      .padding(.top, 10)
+      .padding(.bottom, 18)
       .background(Color(AFColor.sheet))
-      .navigationTitle(String(localized: "Search & Filter"))
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button(String(localized: "Cancel"), action: onCancel)
-        }
-        ToolbarItem(placement: .confirmationAction) {
-          Button(String(localized: "Done")) { onApply(filters) }.bold()
-        }
-      }
     }
     .tint(Color(AFColor.textPrimary))
     .preferredColorScheme(.dark)
@@ -208,26 +203,25 @@ struct ExhibitionChipFlow: Layout {
 
 @MainActor
 enum ExhibitionFilterPresenter {
-  static func present(from presenter: UIViewController, photos: [GalleryPhoto]) {
-    weak var host: UIHostingController<ExhibitionFilterSheet>?
-    let sheet = ExhibitionFilterSheet(
+  static func make(
+    photos: [GalleryPhoto],
+    onApply: @escaping (PhotoFilters) -> Void = { PhotoFilterStore.shared.replace($0) }
+  ) -> AFSheetController {
+    weak var sheet: AFSheetController?
+    let view = ExhibitionFilterSheet(
       options: PhotoFilterEngine.buildOptions(photos),
       onApply: { filters in
-        PhotoFilterStore.shared.replace(filters)
-        host?.dismiss(animated: true)
+        onApply(filters)
+        sheet?.dismiss(animated: true)
       },
-      onCancel: { host?.dismiss(animated: true) },
       filters: PhotoFilterStore.shared.filters
     )
-    let controller = UIHostingController(rootView: sheet)
-    host = controller
-    controller.modalPresentationStyle = .pageSheet
-    controller.overrideUserInterfaceStyle = .dark
-    if let sheetController = controller.sheetPresentationController {
-      sheetController.detents = [.medium(), .large()]
-      sheetController.prefersGrabberVisible = true
-      sheetController.preferredCornerRadius = AFRadius.sheet
-    }
-    presenter.present(controller, animated: true)
+    let controller = AFSheetController(title: String(localized: "Search & Filter"), detent: .fitAndExpanded, rootView: view)
+    sheet = controller
+    return controller
+  }
+
+  static func present(from presenter: UIViewController, photos: [GalleryPhoto]) {
+    presenter.present(make(photos: photos), animated: true)
   }
 }

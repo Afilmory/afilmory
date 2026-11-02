@@ -32,7 +32,14 @@ fetch SourceHanSerifJP-SemiBold.otf "$source_han/JP/SourceHanSerifJP-SemiBold.ot
 fetch SourceHanSerifKR-SemiBold.otf "$source_han/KR/SourceHanSerifKR-SemiBold.otf" f959ed812534357527574ab34b4a15d03f8922c6e15c967e56790a244a122eb3
 fetch texgyreschola-regular.otf "$tex_gyre/texgyreschola-regular.otf" 935b82e25f56b1d1276ca82793205e8ce254fbb37ebd38bedf7388cef21fbf44
 fetch texgyreschola-italic.otf "$tex_gyre/texgyreschola-italic.otf" 2f45b8c394037951aaec73d947f0b0c3af715950f8f207c9f4290ba37a53a4d2
-cp "$cache/texgyreschola-regular.otf" "$fonts/TeXGyreSchola-Regular.otf"
-cp "$cache/texgyreschola-italic.otf" "$fonts/TeXGyreSchola-Italic.otf"
 command -v pyftsubset >/dev/null || { echo "pyftsubset not found: brew install fonttools" >&2; exit 1; }
+# TeX Gyre Schola ships hhea metrics of 1135/-332 (1.47em), which CoreText uses as line height; titles need ~1.2em.
+tighten() {
+  local metrics="$cache/$2.hhea.ttx"
+  ttx -q -t hhea -o "$metrics" "$cache/$1"
+  sed -i '' -e 's/<ascent value="[-0-9]*"/<ascent value="920"/' -e 's/<descent value="[-0-9]*"/<descent value="-280"/' -e 's/<lineGap value="[-0-9]*"/<lineGap value="0"/' "$metrics"
+  ttx -q -m "$cache/$1" -o "$fonts/$2" "$metrics"
+}
+tighten texgyreschola-regular.otf TeXGyreSchola-Regular.otf
+tighten texgyreschola-italic.otf TeXGyreSchola-Italic.otf
 python3 "$here/subset_fonts.py" "$cache"

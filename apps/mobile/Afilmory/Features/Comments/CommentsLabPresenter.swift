@@ -1,4 +1,3 @@
-import SwiftUI
 import UIKit
 
 @MainActor
@@ -17,50 +16,7 @@ enum CommentsLabPresenter {
       transport: DemoCommentsTransport(outcome: resolvedOutcome, latencyMs: latencyMs)
     )
 
-    let hostingController = UIHostingController(rootView: PhotoCommentsSheetView(store: store))
-    hostingController.navigationItem.title = String(localized: "Comments")
-    hostingController.navigationItem.prompt = request.photoTitle
-    hostingController.navigationItem.rightBarButtonItem = UIBarButtonItem(
-      title: String(localized: "Done"),
-      primaryAction: UIAction { [weak hostingController] _ in
-        hostingController?.dismiss(animated: true)
-      }
-    )
-
-    let navigation = UINavigationController(rootViewController: hostingController)
-    navigation.modalPresentationStyle = .pageSheet
-    navigation.preferredContentSize = CGSize(width: 520, height: 700)
-    if let sheet = navigation.sheetPresentationController {
-      let compactIdentifier = UISheetPresentationController.Detent.Identifier(
-        "afilmory.comments-lab.compact"
-      )
-      let expandedIdentifier = UISheetPresentationController.Detent.Identifier(
-        "afilmory.comments-lab.expanded"
-      )
-      sheet.detents = [
-        .custom(identifier: compactIdentifier) { context in
-          context.maximumDetentValue * 0.62
-        },
-        .custom(identifier: expandedIdentifier) { context in
-          context.maximumDetentValue * 0.92
-        },
-      ]
-      sheet.selectedDetentIdentifier = compactIdentifier
-      sheet.prefersGrabberVisible = true
-      sheet.prefersScrollingExpandsWhenScrolledToEdge = true
-    }
-    topViewController()?.present(navigation, animated: true)
-  }
-
-  private static func topViewController() -> UIViewController? {
-    let window = UIApplication.shared.connectedScenes
-      .compactMap { $0 as? UIWindowScene }
-      .flatMap(\.windows)
-      .first { $0.isKeyWindow }
-    var top = window?.rootViewController
-    while let presented = top?.presentedViewController {
-      top = presented
-    }
-    return top
+    let sheet = CommentsSheetPresenter.make(store: store) { _ in }
+    AFSheetController.topPresenter()?.present(sheet, animated: true)
   }
 }

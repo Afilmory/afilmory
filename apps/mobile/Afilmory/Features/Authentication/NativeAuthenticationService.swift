@@ -84,25 +84,6 @@ private struct WorkspaceSwitchBody: Encodable {
   let tenantId: String
 }
 
-private struct WorkspaceDomainBody: Encodable {
-  let domain: String
-}
-
-private struct WorkspaceDomainRecord: Decodable {
-  let domain: String
-}
-
-private struct WorkspaceDomainListResponse: Decodable {
-  let domains: [WorkspaceDomainRecord]
-  let cnameTarget: String
-  let customDomainLimit: Int?
-}
-
-private struct WorkspaceDomainCreateResponse: Decodable {
-  let domain: WorkspaceDomainRecord
-  let cnameTarget: String
-}
-
 private struct WorkspaceCreationResponse: Decodable {
   struct Tenant: Decodable {
     let slug: String
@@ -569,51 +550,6 @@ final class NativeAuthenticationService {
 
   func activateWorkspaceSession(cookie: String) async throws {
     try await registerValidated(cookie: cookie, requiresWorkspace: true)
-  }
-
-  func requestCustomDomain(
-    _ domain: String,
-    cookie: String,
-    tenantSlug: String
-  ) async throws -> WorkspaceCustomDomainRequest {
-    let baseURL = try ApiEnvironmentStore.shared.galleryAPIBaseURL(slug: tenantSlug)
-    let payload: WorkspaceDomainListResponse
-    do {
-      let listing = try await client.request(path: "tenant/domains", cookie: cookie, baseURL: baseURL)
-      payload = try client.decode(WorkspaceDomainListResponse.self, from: listing.data)
-    } catch {
-      return .needsUpgrade(.customDomain(current: 0, limit: 0))
-    }
-    switch WorkspaceCustomDomain.decision(
-      for: domain,
-      limit: payload.customDomainLimit,
-      used: payload.domains.count
-    ) {
-    case .skipped:
-      throw NativeAuthError.server(String(localized: "Enter a domain to continue."))
-    case .needsUpgrade(let current, let limit):
-      return .needsUpgrade(.customDomain(current: current, limit: limit))
-    case .request(let host):
-      do {
-        let response = try await client.request(
-          path: "tenant/domains",
-          method: "POST",
-          body: WorkspaceDomainBody(domain: host),
-          cookie: cookie,
-          baseURL: baseURL
-        )
-        let created = try client.decode(WorkspaceDomainCreateResponse.self, from: response.data)
-        let resolved = created.domain.domain.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .bound(
-          domain: resolved.isEmpty ? host : resolved,
-          cnameTarget: created.cnameTarget
-        )
-      } catch NativeAuthError.server {
-        return .needsUpgrade(
-          .customDomain(current: payload.domains.count, limit: payload.customDomainLimit ?? 0)
-        )
-      }
-    }
   }
 
   func switchWorkspace(tenantId: String) async throws {

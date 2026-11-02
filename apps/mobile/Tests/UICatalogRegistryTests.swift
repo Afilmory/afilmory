@@ -42,4 +42,15 @@ final class UICatalogRegistryTests: XCTestCase {
       XCTAssertTrue(ids.contains(id), id)
     }
   }
+
+  func testOnboardingAndSheetStatesAreCatalogued() {
+    let ids = Set(UICatalog.entries.map(\.id))
+    for id in [
+      "onboarding.intro", "onboarding.intro-signin", "onboarding.signin", "onboarding.setup",
+      "onboarding.setup-waiting", "onboarding.permissions", "onboarding.first-roll",
+      "billing.subscription", "billing.quota-wall", "account.deletion", "auth.email-sheet",
+    ] {
+      XCTAssertTrue(ids.contains(id), id)
+    }
+  }
 }

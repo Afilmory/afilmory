@@ -120,7 +120,7 @@ struct CommentComposerView: View {
       .padding(.horizontal, 12)
       .padding(.vertical, 9)
     }
-    .background(.bar)
+    .background(Color(AFColor.sheet))
     .onChange(of: store.replyCommentId) { _, next in
       if next != nil {
         isFocused = true

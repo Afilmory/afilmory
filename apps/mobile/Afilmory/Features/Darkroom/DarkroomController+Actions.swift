@@ -18,7 +18,7 @@ extension DarkroomController {
     }
     rows.plan.addAction(UIAction { _ in AppNavigator.shared.presentSubscription(focus: nil) }, for: .primaryActionTriggered)
     rows.sponsor.addAction(UIAction { [weak self] _ in self?.sponsor() }, for: .primaryActionTriggered)
-    rows.accountSettings.addAction(UIAction { _ in AppNavigator.shared.presentAccountSettings(startsDeletion: false) }, for: .primaryActionTriggered)
+    rows.accountSettings.addAction(UIAction { [weak self] _ in self?.presentAccountSheet() }, for: .primaryActionTriggered)
     rows.cache.addAction(UIAction { [weak self] _ in self?.confirmClearCache() }, for: .primaryActionTriggered)
     rows.signOut.addAction(UIAction { [weak self] _ in self?.confirmSignOut() }, for: .primaryActionTriggered)
   }
@@ -171,7 +171,14 @@ extension DarkroomController {
     let session = model.session
     let parts = [model.galleryHost, DarkroomAccountSheetController.roleName(session?.activeMembership?.role)].compactMap { $0 }
     let sheet = DarkroomAccountSheetController(user: session?.user, subtitle: parts.joined(separator: " · "))
-    sheet.onAccountSettings = { AppNavigator.shared.presentAccountSettings(startsDeletion: false) }
+    sheet.onRow = { [weak self] row in
+      switch row {
+      case .manageSubscription: AppNavigator.shared.presentSubscription(focus: nil)
+      case .replayIntro: AppNavigator.shared.presentIntro()
+      case .signOut: self?.confirmSignOut()
+      case .deleteAccount: AppNavigator.shared.presentAccountSettings(startsDeletion: true)
+      }
+    }
     present(sheet, animated: true)
   }
 
@@ -205,7 +212,7 @@ extension DarkroomController {
     present(alert, animated: true)
   }
 
-  private func confirmSignOut() {
+  func confirmSignOut() {
     let alert = UIAlertController(title: String(localized: "Sign out of your gallery?"), message: nil, preferredStyle: .actionSheet)
     alert.addAction(UIAlertAction(title: String(localized: "Sign out"), style: .destructive) { _ in AppNavigator.shared.signOut() })
     alert.addAction(UIAlertAction(title: String(localized: "Cancel"), style: .cancel))

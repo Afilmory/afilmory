@@ -8,6 +8,7 @@ protocol AppNavigating: AnyObject {
   func openOwnExhibition(level: ContactSheetLevel, focusingPhotoID: String?)
   func openDarkroom(route: StudioHomeRoute?)
   func presentSignIn()
+  func presentIntro()
   func presentAccountSettings(startsDeletion: Bool)
   func presentSubscription(focus: QuotaWallReason?)
   func signOut()
@@ -47,6 +48,10 @@ final class AppNavigator {
 
   func presentSignIn() {
     host?.presentSignIn()
+  }
+
+  func presentIntro() {
+    host?.presentIntro()
   }
 
   func presentAccountSettings(startsDeletion: Bool = false) {

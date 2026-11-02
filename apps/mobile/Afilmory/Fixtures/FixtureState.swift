@@ -41,6 +41,7 @@
 
   struct FixtureStateData {
     var signedIn: Bool
+    var hasWorkspace = !UserDefaults.standard.bool(forKey: "fixture.setup")
     var hasLibrary: Bool
     var subscriptions: [(tenantId: String, createdAt: Date)]
     var comments: [FixtureComment]

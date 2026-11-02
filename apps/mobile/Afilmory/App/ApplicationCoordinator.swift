@@ -39,7 +39,12 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate, 
   func open(url: URL) -> Bool {
     guard let route = AfilmoryDeepLink.parse(url) else { return false }
     pendingDeepLink = route
-    applyPendingDeepLinkIfPossible(for: AfilmorySessionStore.shared.current().state)
+    let state = AfilmorySessionStore.shared.current().state
+    switch DeepLinkGate.decide(root: window.rootViewController, presented: window.rootViewController?.presentedViewController) {
+    case .apply: applyPendingDeepLinkIfPossible(for: state)
+    case .reroute: render(state)
+    case .hold: break
+    }
     return true
   }
 
@@ -70,21 +75,32 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate, 
   }
 
   private func render(_ state: AfilmorySessionState) {
+    let flags = OnboardingFlags.shared
+    flags.note(state.rootPresentation)
     let next: UIViewController
-    switch state.rootPresentation {
+    let route = LaunchRoute.resolve(state.rootPresentation, flags: flags, hasPendingDeepLink: pendingDeepLink != nil)
+    switch route {
     case .loading:
       next = LoadingViewController()
-    case .authenticatedTabs:
+    case .tabs:
       next = makeAuthenticatedTabs()
-    case .workspaceSetup:
+    case .setup:
       next = WorkspaceSetupViewController(
         mode: state.session?.workspaceSetupMode ?? .create
       )
+    case .intro:
+      next = IntroController(mode: .firstLaunch) { [weak self] in
+        self?.render(AfilmorySessionStore.shared.current().state)
+      }
     case .visitor:
       next = makeVisitorController()
     }
     replaceRoot(with: next)
-    applyPendingDeepLinkIfPossible(for: state)
+    if route == .tabs(postSetup: true) {
+      presentPostSetupIfNeeded()
+    } else {
+      applyPendingDeepLinkIfPossible(for: state)
+    }
     #if DEBUG
       if FixtureMode.isOn {
         applyCatalogEntryIfNeeded(for: state)
@@ -145,35 +161,47 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate, 
   }
 
   func presentSignIn() {
-    guard let presenter = topViewController() else { return }
-    let presentsAsForm = presenter.traitCollection.userInterfaceIdiom == .pad
-    let controller = UIHostingController(
-      rootView: SignInView(showsCloseButton: presentsAsForm)
-    )
+    guard let presenter = topViewController(), !(presenter is SignInPageController) else { return }
+    presenter.present(SignInPageController(), animated: true)
+  }
 
-    if presentsAsForm {
-      let availableSize = presenter.view.bounds.inset(by: presenter.view.safeAreaInsets).size
-      controller.modalPresentationStyle = .formSheet
-      controller.preferredContentSize = CGSize(
-        width: min(430, max(360, availableSize.width - 80)),
-        height: min(780, max(640, availableSize.height - 120))
-      )
-    } else {
-      controller.modalPresentationStyle = .pageSheet
+  private func presentPostSetupIfNeeded() {
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      guard let tabs, tabs.presentedViewController == nil, OnboardingFlags.shared.onboardingPending else {
+        applyPendingDeepLinkIfPossible(for: AfilmorySessionStore.shared.current().state)
+        return
+      }
+      let postSetup = PostSetupController { [weak self, weak tabs] _ in
+        tabs?.select(.exhibition, animated: false)
+        tabs?.dismiss(animated: true) {
+          guard let self else { return }
+          self.applyPendingDeepLinkIfPossible(for: AfilmorySessionStore.shared.current().state)
+        }
+      }
+      tabs.present(postSetup, animated: true)
     }
-    controller.sheetPresentationController?.prefersGrabberVisible = false
+  }
 
-    presenter.present(controller, animated: true)
+  func presentIntro() {
+    guard let presenter = topViewController() else { return }
+    let intro = IntroController(mode: .replay) { [weak presenter] in
+      presenter?.dismiss(animated: true)
+    }
+    presenter.present(intro, animated: true)
   }
 
   func presentAccountSettings(startsDeletion: Bool) {
-    presentSheet(
-      AccountSettingsView(
-        session: AfilmorySessionStore.shared.current().state.session,
-        startsDeletion: startsDeletion
-      )
-    )
+    switch AccountRoute(startsDeletion: startsDeletion) {
+    case .deletion:
+      let session = AfilmorySessionStore.shared.current().state.session
+      topViewController()?.present(AccountDeletionController(session: session), animated: true)
+    case .sheet:
+      openDarkroom(route: nil)
+      (navigation(for: .darkroom)?.viewControllers.first as? DarkroomController)?.presentAccountSheet()
+    }
   }
+
 
   private func applyPendingDeepLinkIfPossible(for state: AfilmorySessionState) {
     guard state.shouldApplyPendingDeepLink, let route = pendingDeepLink else {
@@ -246,13 +274,6 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate, 
     TestFlightAppStorePrompt.shared.present(from: root)
   }
 
-  private func presentSheet<Content: View>(_ content: Content) {
-    let controller = UIHostingController(rootView: content)
-    controller.modalPresentationStyle = .pageSheet
-    controller.sheetPresentationController?.prefersGrabberVisible = true
-    topViewController()?.present(controller, animated: true)
-  }
-
   private func topViewController() -> UIViewController? {
     var current = window.rootViewController
     while let presented = current?.presentedViewController {
@@ -281,7 +302,13 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate, 
     {
       return
     }
-    window.rootViewController = controller
+    guard window.rootViewController is IntroController else {
+      window.rootViewController = controller
+      return
+    }
+    UIView.transition(with: window, duration: AFMotion.reduceMotion ? 0.2 : 0.35, options: .transitionCrossDissolve) {
+      self.window.rootViewController = controller
+    }
   }
 }
 
@@ -327,7 +354,8 @@ extension ApplicationCoordinator {
   }
 
   func presentSubscription(focus: QuotaWallReason?) {
-    presentSheet(SubscriptionView(focus: focus))
+    guard let presenter = topViewController(), !(presenter is SubscriptionPageController) else { return }
+    presenter.present(SubscriptionPageController(focus: focus), animated: true)
   }
 
   func signOut() {
