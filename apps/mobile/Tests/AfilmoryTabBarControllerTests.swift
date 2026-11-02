@@ -31,4 +31,55 @@ final class AfilmoryTabBarControllerTests: XCTestCase {
     tabs.setFocusBarHidden(false, animated: false)
     XCTAssertFalse(tabs.isFocusBarHidden)
   }
+
+  private var windows: [UIWindow] = []
+
+  override func tearDown() {
+    windows.forEach { $0.isHidden = true }
+    windows = []
+    AFMotion.reduceMotionOverride = nil
+    super.tearDown()
+  }
+
+  private func hostedTabs() -> AfilmoryTabBarController {
+    AFMotion.reduceMotionOverride = false
+    let tabs = AfilmoryTabBarController(controllers: AppTab.allCases.map { _ in UIViewController() })
+    let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 402, height: 874))
+    window.rootViewController = tabs
+    window.makeKeyAndVisible()
+    windows.append(window)
+    tabs.view.layoutIfNeeded()
+    return tabs
+  }
+
+  private func blurs(in root: UIView) -> [AFBlurView] {
+    var found: [AFBlurView] = []
+    var queue = [root]
+    while let next = queue.popLast() {
+      if let blur = next as? AFBlurView { found.append(blur) }
+      queue.append(contentsOf: next.subviews)
+    }
+    return found
+  }
+
+  func testSwitchingTabsRacksTheIncomingPageIntoFocus() throws {
+    let tabs = hostedTabs()
+    tabs.select(.viewing, animated: true)
+    let incoming = try XCTUnwrap(tabs.viewControllers?[1].view)
+    XCTAssertEqual(tabs.selectedIndex, 1)
+    XCTAssertFalse(blurs(in: incoming).isEmpty)
+    XCTAssertEqual(blurs(in: tabs.view).count, 2)
+  }
+
+  func testASecondTapMidSwitchLandsAndDropsTheFirstSwitch() throws {
+    let tabs = hostedTabs()
+    tabs.select(.viewing, animated: true)
+    tabs.select(.darkroom, animated: true)
+    let interrupted = try XCTUnwrap(tabs.viewControllers?[1].view)
+    XCTAssertEqual(tabs.selectedIndex, 2)
+    XCTAssertEqual(tabs.focusBar.selectedTab, .darkroom)
+    XCTAssertTrue(blurs(in: interrupted).isEmpty)
+    XCTAssertEqual(interrupted.transform, .identity)
+    XCTAssertEqual(blurs(in: tabs.view).count, 2)
+  }
 }

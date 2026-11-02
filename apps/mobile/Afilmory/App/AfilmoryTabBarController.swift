@@ -9,6 +9,9 @@ final class AfilmoryTabBarController: UITabBarController {
   private var lastDeveloperLabTap: TimeInterval?
   private lazy var duoContextProvider = DuoContextProvider(controller: self)
   private var horizontalBarConstraints: [NSLayoutConstraint] = []
+  private var switchOverlay: UIView?
+  private var switchBlur: AFBlurView?
+  private weak var switchTarget: UIView?
 
   private var usesRail: Bool { traitCollection.duoContext.hasVerticalBar }
 
@@ -100,8 +103,80 @@ final class AfilmoryTabBarController: UITabBarController {
 
   func select(_ tab: AppTab, animated: Bool) {
     guard viewControllers?.indices.contains(tab.rawValue) == true else { return }
-    selectedIndex = tab.rawValue
+    if animated, tab.rawValue != selectedIndex, let outgoing = selectedViewController?.view,
+       let incoming = viewControllers?[tab.rawValue] {
+      settleSwitch()
+      let snapshot = outgoing.snapshotView(afterScreenUpdates: false)
+      let snapshotFrame = outgoing.convert(outgoing.bounds, to: view)
+      selectedIndex = tab.rawValue
+      playSwitch(snapshot: snapshot, frame: snapshotFrame, incoming: incoming.view)
+    } else {
+      selectedIndex = tab.rawValue
+    }
     focusBar.select(tab, animated: animated)
+  }
+
+  private func settleSwitch() {
+    switchOverlay?.removeFromSuperview()
+    switchOverlay = nil
+    switchBlur?.removeFromSuperview()
+    switchBlur = nil
+    if let target = switchTarget {
+      target.layer.removeAllAnimations()
+      target.alpha = 1
+      target.transform = .identity
+    }
+    switchTarget = nil
+  }
+
+  private func playSwitch(snapshot: UIView?, frame: CGRect, incoming: UIView) {
+    let overlay = UIView(frame: frame)
+    overlay.isUserInteractionEnabled = false
+    if let snapshot {
+      snapshot.frame = overlay.bounds
+      overlay.addSubview(snapshot)
+    }
+    view.insertSubview(overlay, belowSubview: focusBar)
+    switchOverlay = overlay
+    switchTarget = incoming
+    guard !AFMotion.reduceMotion else {
+      incoming.alpha = 0
+      UIView.animate(withDuration: 0.2, delay: 0, options: [.allowUserInteraction]) {
+        overlay.alpha = 0
+        incoming.alpha = 1
+      } completion: { [weak self, weak overlay] _ in
+        guard let overlay, self?.switchOverlay === overlay else { return }
+        self?.settleSwitch()
+      }
+      return
+    }
+    let outgoingBlur = AFBlurView(frame: overlay.bounds)
+    outgoingBlur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    overlay.addSubview(outgoingBlur)
+    outgoingBlur.setRadius(10, duration: 0.45)
+    UIView.animate(withDuration: 0.45, delay: 0, options: [.allowUserInteraction, .curveEaseOut]) {
+      overlay.alpha = 0
+      overlay.transform = CGAffineTransform(scaleX: 0.985, y: 0.985)
+    }
+
+    let incomingBlur = AFBlurView(frame: incoming.bounds)
+    incomingBlur.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    incoming.addSubview(incomingBlur)
+    incomingBlur.radius = 24
+    switchBlur = incomingBlur
+    incoming.alpha = 0
+    incoming.transform = CGAffineTransform(scaleX: 1.06, y: 1.06)
+    AFMotion.spring(duration: 0.7, animations: {
+      incoming.alpha = 1
+      incoming.transform = .identity
+    })
+    incomingBlur.setRadius(0, duration: 0.56) { [weak self, weak incomingBlur] in
+      guard let self, let incomingBlur, switchBlur === incomingBlur else { return }
+      incomingBlur.removeFromSuperview()
+      switchBlur = nil
+      switchOverlay?.removeFromSuperview()
+      switchOverlay = nil
+    }
   }
 
   func setFocusBarHidden(_ hidden: Bool, animated: Bool) {
