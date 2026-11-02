@@ -82,11 +82,7 @@ extension PhotoDetailViewController {
 
   func presentComments() {
     guard let photo = currentPhoto, let request = social.commentsRequest(for: photo) else { return }
-    let store = CommentsStore(request: request)
-    let sheet = CommentsSheetPresenter.make(store: store) { [weak self] count in
-      self?.social.commentCount.setCount(count)
-    }
-    present(sheet, animated: true)
+    openComments(store: CommentsStore(request: request))
   }
 
   func openLocation() {

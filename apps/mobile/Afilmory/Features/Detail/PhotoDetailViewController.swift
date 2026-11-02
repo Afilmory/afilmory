@@ -28,6 +28,7 @@ final class PhotoDetailViewController: UIViewController {
   var hasLaidOutPager = false
   var isTransitioning = true
   var isFullScreen = false
+  var commentsColumn: DetailCommentsColumn?
   private(set) var transitionDelegateRef: DetailTransitionDelegate?
 
   init(
@@ -173,6 +174,7 @@ final class PhotoDetailViewController: UIViewController {
 
   func showPage(_ index: Int, animated: Bool) {
     guard photos.indices.contains(index) else { return }
+    if index != currentIndex { closeCommentsColumn() }
     let photo = photos[index]
     currentIndex = index
     let model = DetailSheetModel.make(photo: photo, number: number(of: photo), localeIdentifier: PhotoDateLanguage.activeLocaleIdentifier)

@@ -83,6 +83,11 @@ extension PhotoDetailViewController {
       chips.alpha = chromeAlpha
       sheet.alpha = chromeAlpha
     }
+    if let column = commentsColumn {
+      column.frame = info
+      column.alpha = sheet.alpha
+      column.isUserInteractionEnabled = !isFullScreen
+    }
     sheet.isUserInteractionEnabled = !isFullScreen
     chips.isUserInteractionEnabled = !isFullScreen
     let area = duoPhotoArea(split)
@@ -110,6 +115,7 @@ extension PhotoDetailViewController {
     let changes = {
       self.chips.alpha = alpha
       self.sheet.alpha = alpha
+      self.commentsColumn?.alpha = alpha
       self.view.setNeedsLayout()
       self.view.layoutIfNeeded()
     }
@@ -139,8 +145,13 @@ extension PhotoDetailViewController {
   }
 
   func duoContextChanged() {
-    if !traitCollection.duoContext.isExpanded, isFullScreen {
-      isFullScreen = false
+    if !traitCollection.duoContext.isExpanded {
+      if isFullScreen {
+        isFullScreen = false
+        chips.alpha = 1
+        sheet.alpha = 1
+      }
+      closeCommentsColumn()
     }
     applyVerticalBar()
     if duoSplit == nil { leaveDuoLayout() }
