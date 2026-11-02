@@ -7,6 +7,7 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
   private(set) var isFocusBarHidden = false
   private var developerLabTapCount = 0
   private var lastDeveloperLabTap: TimeInterval?
+  private lazy var duoContextProvider = DuoContextProvider(controller: self)
 
   init(controllers: [UIViewController]) {
     super.init(nibName: nil, bundle: nil)
@@ -38,11 +39,13 @@ final class AfilmoryTabBarController: UITabBarController, UITabBarControllerDele
       focusBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -AFFocusTabBar.barHeight),
     ])
     applyContentInsets()
+    _ = duoContextProvider
   }
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
     view.bringSubviewToFront(focusBar)
+    duoContextProvider.refresh()
   }
 
   override func setViewControllers(_ viewControllers: [UIViewController]?, animated: Bool) {

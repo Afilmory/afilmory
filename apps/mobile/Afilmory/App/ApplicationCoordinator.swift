@@ -154,10 +154,7 @@ final class ApplicationCoordinator: NSObject, UNUserNotificationCenterDelegate, 
   }
 
   private static func chromelessNavigation(root: UIViewController) -> UINavigationController {
-    let navigation = UINavigationController(rootViewController: root)
-    navigation.setNavigationBarHidden(true, animated: false)
-    navigation.view.backgroundColor = AFColor.ground
-    return navigation
+    AFNavigationController(rootViewController: root)
   }
 
   func presentSignIn() {
