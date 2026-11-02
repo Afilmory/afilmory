@@ -21,6 +21,32 @@ final class DarkroomLibraryController: UIViewController, UICollectionViewDataSou
     fatalError("init(coder:) has not been implemented")
   }
 
+  private var lanes: [ClosedRange<CGFloat>]?
+  private var laneColumns = [3]
+
+  override func viewWillLayoutSubviews() {
+    super.viewWillLayoutSubviews()
+    applyLanes()
+  }
+
+  private func applyLanes() {
+    guard let collection else { return }
+    let safe = view.safeAreaInsets
+    let rect = CGRect(x: safe.left, y: 0, width: max(0, view.bounds.width - safe.left - safe.right), height: view.bounds.height)
+    let pages = DuoGeometry.lanes(in: rect, context: traitCollection.duoContext, view: view)
+    let next = pages.map { ($0.minX + 16)...($0.maxX - 16) }
+    guard next != lanes, rect.width > 0 else { return }
+    lanes = next
+    if next.count > 1 {
+      laneColumns = next.map { DarkroomLibraryCell.spreadColumns(laneWidth: $0.upperBound - $0.lowerBound) }
+      collection.setCollectionViewLayout(DarkroomLibraryCell.layout(lanes: next), animated: false)
+    } else {
+      laneColumns = [3]
+      collection.setCollectionViewLayout(DarkroomLibraryCell.layout(leading: 16 + safe.left, trailing: 16 + safe.right), animated: false)
+    }
+    collection.reloadData()
+  }
+
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = AFColor.ground
@@ -123,7 +149,7 @@ final class DarkroomLibraryController: UIViewController, UICollectionViewDataSou
     cell.configure(
       photo: item.photo,
       frame: ExhibitFormat.frameNumber(items.count - indexPath.item),
-      corners: DarkroomLibraryCell.corners(index: indexPath.item, count: items.count, columns: 3)
+      corners: DarkroomLibraryCell.laneCorners(index: indexPath.item, count: items.count, columns: laneColumns)
     )
     cell.setSelectionState(selection.isActive ? selection.contains(item.asset.id) : nil)
     return cell

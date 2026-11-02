@@ -80,7 +80,7 @@ final class DarkroomLibraryCell: UICollectionViewCell {
     return mask
   }
 
-  static func layout() -> UICollectionViewLayout {
+  static func layout(leading: CGFloat = 16, trailing: CGFloat = 16) -> UICollectionViewLayout {
     let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1 / 3), heightDimension: .fractionalWidth(1 / 3)))
     let group = NSCollectionLayoutGroup.horizontal(
       layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .fractionalWidth(1 / 3)),
@@ -90,7 +90,7 @@ final class DarkroomLibraryCell: UICollectionViewCell {
     group.interItemSpacing = .fixed(3)
     let section = NSCollectionLayoutSection(group: group)
     section.interGroupSpacing = 3
-    section.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 16, bottom: 24, trailing: 16)
+    section.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: leading, bottom: 24, trailing: trailing)
     let header = NSCollectionLayoutBoundarySupplementaryItem(
       layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .estimated(44)),
       elementKind: UICollectionView.elementKindSectionHeader,

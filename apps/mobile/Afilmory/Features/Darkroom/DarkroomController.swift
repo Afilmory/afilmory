@@ -14,6 +14,12 @@ final class DarkroomController: UIViewController {
   let rows = DarkroomRows()
   private let scrollView = UIScrollView()
   private let content = UIStackView()
+  private let primaryColumn = UIStackView()
+  private let secondaryColumn = UIStackView()
+  private var contentLeading: NSLayoutConstraint?
+  private var contentTrailing: NSLayoutConstraint?
+  private lazy var primaryWidth = primaryColumn.widthAnchor.constraint(equalToConstant: 0)
+  private var homePages: [CGRect] = []
   private lazy var header = DarkroomHeaderBar.root(title: String(localized: "Darkroom"), accessory: avatarButton)
   private var navigationDelegate: DarkroomNavigationDelegate?
   lazy var uploadFlow = DarkroomUploadFlow(host: self) { [weak self] in self?.model.libraryTags ?? [] }
@@ -126,14 +132,26 @@ final class DarkroomController: UIViewController {
     rows.manageLabel = manageLabel
     loadErrorNote.numberOfLines = 0
     loadErrorNote.font = UIFontMetrics(forTextStyle: .caption1).scaledFont(for: AFFont.mono(size: 11))
-    for item in [stageView, quotaStack, loadErrorNote, statsView, adminNote, manageLabel, rows.manageGroup, accountLabel, rows.accountGroup] as [UIView] {
-      content.addArrangedSubview(item)
+    for column in [primaryColumn, secondaryColumn] {
+      column.axis = .vertical
+      column.spacing = 14
+      content.addArrangedSubview(column)
     }
-    content.setCustomSpacing(30, after: statsView)
-    content.setCustomSpacing(30, after: adminNote)
-    content.setCustomSpacing(10, after: manageLabel)
-    content.setCustomSpacing(30, after: rows.manageGroup)
-    content.setCustomSpacing(10, after: accountLabel)
+    for item in [stageView, quotaStack, loadErrorNote, statsView, adminNote] as [UIView] {
+      primaryColumn.addArrangedSubview(item)
+    }
+    for item in [manageLabel, rows.manageGroup, accountLabel, rows.accountGroup] as [UIView] {
+      secondaryColumn.addArrangedSubview(item)
+    }
+    primaryColumn.setCustomSpacing(30, after: statsView)
+    content.setCustomSpacing(30, after: primaryColumn)
+    secondaryColumn.setCustomSpacing(10, after: manageLabel)
+    secondaryColumn.setCustomSpacing(30, after: rows.manageGroup)
+    secondaryColumn.setCustomSpacing(10, after: accountLabel)
+    let leading = content.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 16)
+    let trailing = content.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -16)
+    contentLeading = leading
+    contentTrailing = trailing
     NSLayoutConstraint.activate([
       scrollView.topAnchor.constraint(equalTo: view.topAnchor),
       scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -143,11 +161,43 @@ final class DarkroomController: UIViewController {
       header.leadingAnchor.constraint(equalTo: view.leadingAnchor),
       header.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       content.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: DarkroomHeaderBar.contentHeight + 12),
-      content.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 16),
-      content.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -16),
+      leading,
+      trailing,
       content.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -28),
     ])
     scrollView.verticalScrollIndicatorInsets.top = DarkroomHeaderBar.contentHeight
+  }
+
+  override func viewWillLayoutSubviews() {
+    super.viewWillLayoutSubviews()
+    applyHomeLayout()
+  }
+
+
+  private func applyHomeLayout() {
+    let safe = view.safeAreaInsets
+    let rect = CGRect(x: safe.left, y: 0, width: max(0, view.bounds.width - safe.left - safe.right), height: view.bounds.height)
+    let pages = DuoGeometry.lanes(in: rect, context: traitCollection.duoContext, view: view)
+    guard pages != homePages else { return }
+    homePages = pages
+    if pages.count == 2 {
+      let gap = pages[1].minX - pages[0].maxX + 32
+      content.axis = .horizontal
+      content.alignment = .top
+      content.setCustomSpacing(gap, after: primaryColumn)
+      contentLeading?.constant = pages[0].minX + 16
+      contentTrailing?.constant = -(view.bounds.width - pages[1].maxX + 16)
+      primaryWidth.constant = pages[0].width - 32
+      primaryWidth.isActive = true
+    } else {
+      primaryWidth.isActive = false
+      content.axis = .vertical
+      content.alignment = .fill
+      content.setCustomSpacing(30, after: primaryColumn)
+      contentLeading?.constant = 16 + safe.left
+      contentTrailing?.constant = -(16 + safe.right)
+    }
+    content.updateConstraintsIfNeeded()
   }
 
   func render() {
