@@ -2,7 +2,7 @@ import UIKit
 
 final class DarkroomNavigationDelegate: NSObject, UINavigationControllerDelegate, UIGestureRecognizerDelegate {
   private weak var navigation: UINavigationController?
-  private var interaction: UIPercentDrivenInteractiveTransition?
+  private var interaction: DarkroomBackInteraction?
   private let backPan = UIPanGestureRecognizer()
 
   init(navigation: UINavigationController) {
@@ -31,9 +31,11 @@ final class DarkroomNavigationDelegate: NSObject, UINavigationControllerDelegate
 
   func navigationController(
     _: UINavigationController,
-    interactionControllerFor _: UIViewControllerAnimatedTransitioning
+    interactionControllerFor animationController: UIViewControllerAnimatedTransitioning
   ) -> UIViewControllerInteractiveTransitioning? {
-    interaction
+    guard let interaction, let animator = animationController as? DarkroomPushAnimator else { return nil }
+    interaction.animator = animator
+    return interaction
   }
 
   func gestureRecognizerShouldBegin(_ gesture: UIGestureRecognizer) -> Bool {
@@ -50,25 +52,19 @@ final class DarkroomNavigationDelegate: NSObject, UINavigationControllerDelegate
 
   @objc private func handleBackPan(_ gesture: UIPanGestureRecognizer) {
     guard let view = gesture.view else { return }
-    let progress = min(1, max(0, gesture.translation(in: view).x / max(1, view.bounds.width)))
+    let width = max(1, view.bounds.width)
+    let progress = min(1, max(0, gesture.translation(in: view).x / width))
     switch gesture.state {
     case .began:
-      let interaction = UIPercentDrivenInteractiveTransition()
-      interaction.completionCurve = .easeOut
-      self.interaction = interaction
+      interaction = DarkroomBackInteraction()
       navigation?.popViewController(animated: true)
     case .changed:
       interaction?.update(progress)
     case .ended:
-      let velocity = gesture.velocity(in: view).x
-      if progress > 0.35 || velocity > 600 {
-        interaction?.finish()
-      } else {
-        interaction?.cancel()
-      }
+      interaction?.release(DarkroomBackRelease(progress: progress, velocity: gesture.velocity(in: view).x, width: width))
       interaction = nil
     case .cancelled, .failed:
-      interaction?.cancel()
+      interaction?.release(DarkroomBackRelease(progress: 0, velocity: 0, width: width))
       interaction = nil
     default:
       break
@@ -76,8 +72,57 @@ final class DarkroomNavigationDelegate: NSObject, UINavigationControllerDelegate
   }
 }
 
+@MainActor
+final class DarkroomBackInteraction: NSObject, UIViewControllerInteractiveTransitioning {
+  weak var animator: DarkroomPushAnimator?
+  private var context: UIViewControllerContextTransitioning?
+  private var driven: UIViewImplicitlyAnimating?
+  private var progress: CGFloat = 0
+  private var pending: DarkroomBackRelease?
+
+  var wantsInteractiveStart: Bool { true }
+
+  nonisolated func startInteractiveTransition(_ context: UIViewControllerContextTransitioning) {
+    MainActor.assumeIsolated { begin(context) }
+  }
+
+  private func begin(_ context: UIViewControllerContextTransitioning) {
+    guard let animator else {
+      context.completeTransition(false)
+      return
+    }
+    self.context = context
+    driven = animator.interruptibleAnimator(using: context)
+    update(progress)
+    if let pending { release(pending) }
+  }
+
+  func update(_ progress: CGFloat) {
+    self.progress = progress
+    guard let driven, let context else { return }
+    driven.fractionComplete = progress
+    context.updateInteractiveTransition(progress)
+  }
+
+  func release(_ release: DarkroomBackRelease) {
+    guard let driven, let context else {
+      pending = release
+      return
+    }
+    pending = nil
+    if release.finishes {
+      context.finishInteractiveTransition()
+    } else {
+      driven.isReversed = true
+      context.cancelInteractiveTransition()
+    }
+    driven.continueAnimation?(withTimingParameters: release.timing, durationFactor: 1)
+  }
+}
+
 final class DarkroomPushAnimator: NSObject, UIViewControllerAnimatedTransitioning {
   private let pushing: Bool
+  private var running: UIViewPropertyAnimator?
 
   init(pushing: Bool) {
     self.pushing = pushing
@@ -88,16 +133,28 @@ final class DarkroomPushAnimator: NSObject, UIViewControllerAnimatedTransitionin
   }
 
   func animateTransition(using context: UIViewControllerContextTransitioning) {
-    MainActor.assumeIsolated { run(context) }
+    MainActor.assumeIsolated { animator(for: context).startAnimation() }
+  }
+
+  func interruptibleAnimator(using context: UIViewControllerContextTransitioning) -> UIViewImplicitlyAnimating {
+    MainActor.assumeIsolated { animator(for: context) }
+  }
+
+  func animationEnded(_: Bool) {
+    MainActor.assumeIsolated { running = nil }
   }
 
   @MainActor
-  private func run(_ context: UIViewControllerContextTransitioning) {
+  private func animator(for context: UIViewControllerContextTransitioning) -> UIViewPropertyAnimator {
+    if let running { return running }
+    let animator = UIViewPropertyAnimator(duration: transitionDuration(using: context), dampingRatio: 1)
+    animator.isUserInteractionEnabled = true
+    running = animator
     guard let fromController = context.viewController(forKey: .from),
           let toController = context.viewController(forKey: .to)
     else {
-      context.completeTransition(false)
-      return
+      animator.addCompletion { _ in context.completeTransition(false) }
+      return animator
     }
     let container = context.containerView
     let width = container.bounds.width
@@ -133,17 +190,16 @@ final class DarkroomPushAnimator: NSObject, UIViewControllerAnimatedTransitionin
     } else {
       front.transform = CGAffineTransform(translationX: pushing ? width : 0, y: 0)
     }
-    let duration = transitionDuration(using: context)
-    let options: UIView.AnimationOptions = context.isInteractive ? [.curveLinear, .allowUserInteraction] : [.curveEaseOut, .allowUserInteraction]
-    let animations = {
+    let pushing = pushing
+    animator.addAnimations {
       apply(end)
       if reduce {
-        front.alpha = self.pushing ? 1 : 0
+        front.alpha = pushing ? 1 : 0
       } else {
-        front.transform = CGAffineTransform(translationX: self.pushing ? 0 : width, y: 0)
+        front.transform = CGAffineTransform(translationX: pushing ? 0 : width, y: 0)
       }
     }
-    let finish: (Bool) -> Void = { _ in
+    animator.addCompletion { _ in
       let cancelled = context.transitionWasCancelled
       follower?.stop()
       blur.removeFromSuperview()
@@ -152,17 +208,10 @@ final class DarkroomPushAnimator: NSObject, UIViewControllerAnimatedTransitionin
       front.transform = .identity
       front.alpha = 1
       front.layer.shadowOpacity = 0
-      if cancelled, self.pushing { front.removeFromSuperview() }
+      if cancelled, pushing { front.removeFromSuperview() }
       context.completeTransition(!cancelled)
     }
-    if context.isInteractive {
-      UIView.animate(withDuration: duration, delay: 0, options: options, animations: animations, completion: finish)
-    } else {
-      UIView.animate(
-        withDuration: duration, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 0,
-        options: options, animations: animations, completion: finish
-      )
-    }
+    return animator
   }
 }
 
