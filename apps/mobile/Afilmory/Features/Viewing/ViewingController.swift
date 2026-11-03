@@ -90,8 +90,15 @@ final class ViewingController: UIViewController, ViewingPageHost {
       isReceded = false
       let content = view!
       if let coordinator = transitionCoordinator, animated {
+        // The pop sets this view's frame after viewWillAppear; with the recede scale still applied UIKit inflates
+        // bounds to frame / scale and the page lays out oversized until completion, so scale only after that.
+        let receded = content.transform
+        content.transform = .identity
         // AFBlurView's scrubbed radius doesn't render inside the system pop; an alpha fade is driven by the transition itself.
-        coordinator.animate(alongsideTransition: { _ in AFMotion.refocusAlongsideTransition(content) }) { context in
+        coordinator.animate(alongsideTransition: { _ in
+          UIView.performWithoutAnimation { content.transform = receded }
+          AFMotion.refocusAlongsideTransition(content)
+        }) { context in
           if context.isCancelled {
             ViewingGalleryTransition.recede(content)
           } else {
