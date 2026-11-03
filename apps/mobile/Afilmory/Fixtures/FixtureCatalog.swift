@@ -119,8 +119,12 @@
             let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
             let photos = object["data"] as? [[String: Any]]
       else { return [] }
-      return photos
+      guard FixtureMode.storefront else { return photos }
+      return photos.filter { !storefrontExcludedIds.contains($0["id"] as? String ?? "") }
     }
+
+    // App Store screenshots must not show people or third-party characters.
+    static let storefrontExcludedIds: Set<String> = ["DSCF4632", "DSCF0038"]
 
     private static func rewritingMedia(_ photo: [String: Any]) -> [String: Any] {
       var photo = photo

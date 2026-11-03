@@ -37,6 +37,10 @@ enum FixtureMode {
     UserDefaults.standard.bool(forKey: "fixture.mediaFails")
   }
 
+  static var storefront: Bool {
+    UserDefaults.standard.bool(forKey: "fixture.storefront")
+  }
+
   static var latency: TimeInterval {
     let milliseconds = UserDefaults.standard.double(forKey: "fixture.latency")
     return milliseconds > 0 ? milliseconds / 1000 : 0.12

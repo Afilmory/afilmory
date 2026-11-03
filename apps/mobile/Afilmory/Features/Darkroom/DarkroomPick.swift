@@ -71,7 +71,9 @@ struct DarkroomPick: Equatable, Sendable {
 
 #if DEBUG
   enum DarkroomFixturePicks {
-    static let names = ["IMG_5469", "IMG_5484", "DSCF0842", "DSCF4632"]
+    static var names: [String] {
+      ["IMG_5469", "IMG_5484", "DSCF0842", FixtureMode.storefront ? "DSCF0436" : "DSCF4632"]
+    }
 
     static func picks() -> [DarkroomPick] {
       names.compactMap { Bundle.main.url(forResource: $0, withExtension: "jpg") }.compactMap(DarkroomPick.fromFile)
