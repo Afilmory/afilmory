@@ -117,11 +117,12 @@ final class DetailTransitionAnimator: NSObject, UIViewControllerAnimatedTransiti
     flyer.frame = start
     let end = source.map { $0.convert($0.bounds, to: container) }
     let endRadius = source.map(DetailTransitionGeometry.cornerRadius(of:)) ?? 0
+    let refocuses = !reduce && detail.dismissTranslation == 0
     if !reduce {
       container.addSubview(flyer)
       detail.photoLayer.isHidden = true
       source?.alpha = 0
-      if let background {
+      if let background, refocuses {
         AFMotion.defocus(background, amount: 1, animated: false)
         background.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
       }
@@ -152,7 +153,7 @@ final class DetailTransitionAnimator: NSObject, UIViewControllerAnimatedTransiti
       if cancelled { detail.photoLayer.isHidden = false }
       context.completeTransition(!cancelled)
     })
-    if let background, !reduce {
+    if let background, refocuses {
       AFMotion.refocus(background, animated: true)
     }
   }
