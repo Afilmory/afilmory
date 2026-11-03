@@ -90,7 +90,8 @@ final class ViewingController: UIViewController, ViewingPageHost {
       isReceded = false
       let content = view!
       if let coordinator = transitionCoordinator, animated {
-        coordinator.animate(alongsideTransition: { _ in ViewingGalleryTransition.restore(content, animated: true) }) { context in
+        // AFBlurView's scrubbed radius doesn't render inside the system pop; an alpha fade is driven by the transition itself.
+        coordinator.animate(alongsideTransition: { _ in AFMotion.refocusAlongsideTransition(content) }) { context in
           if context.isCancelled {
             ViewingGalleryTransition.recede(content)
           } else {

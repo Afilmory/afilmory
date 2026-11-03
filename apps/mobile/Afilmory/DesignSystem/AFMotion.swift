@@ -118,6 +118,12 @@ enum AFMotion {
     }
   }
 
+  static func refocusAlongsideTransition(_ view: UIView) {
+    view.transform = .identity
+    view.alpha = 1
+    view.subviews.compactMap { $0 as? PersistentBlur }.forEach { $0.alpha = 0 }
+  }
+
   static func afLock(label: UIView, dot: UIView? = nil, haptic: Bool = true) {
     let plan = plan(.afLock)
     let lock = {
@@ -213,6 +219,7 @@ enum AFMotion {
 
   private static func persistentBlur(on view: UIView) -> AFBlurView {
     if let existing = view.subviews.compactMap({ $0 as? PersistentBlur }).first {
+      existing.alpha = 1
       view.bringSubviewToFront(existing)
       return existing
     }
