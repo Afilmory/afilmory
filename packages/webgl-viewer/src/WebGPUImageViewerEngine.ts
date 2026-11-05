@@ -3,6 +3,7 @@ import { LoadingState } from './enum'
 import { ImageViewerEngineBase } from './ImageViewerEngineBase'
 import type { AppleGainMapSource, DebugInfo, ImageViewerOptions } from './interface'
 import type { GainMapMetadata, Matrix3 } from './jpeg-gainmap'
+import { needsExplicitColorConversion, uploadColorImage } from './webgpu-color-upload'
 import { IMAGE_SHADER } from './webgpu-shaders'
 import type { BitmapPlane, ImagePixels, Rect, TextureWorkerMessage, TilePixels, TileRequest } from './webgpu-tiles'
 import {
@@ -43,6 +44,7 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
   private metadata: GainMapMetadata | null = null
   private wideGamut = false
   private extendedRange = false
+  private explicitColorConversion = false
   private hdrMedia = window.matchMedia('(dynamic-range: high)')
   private textureBytes = 0
   private tileOutlineEnabled = false
@@ -88,6 +90,10 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
       throw new DOMException('Viewer disposed', 'AbortError')
     }
     this.device = device
+    this.explicitColorConversion = await needsExplicitColorConversion(device)
+    if (this.destroyed) {
+      throw new DOMException('Viewer disposed', 'AbortError')
+    }
     const context = this.canvas.getContext('webgpu')
     if (!context) {
       throw new Error('WebGPU canvas is not available')
@@ -258,11 +264,16 @@ export class WebGPUImageViewerEngine extends ImageViewerEngineBase {
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     })
     try {
-      device.queue.copyExternalImageToTexture(
-        { source: plane.bitmap },
-        { texture, colorSpace: gain ? 'srgb' : 'display-p3', premultipliedAlpha: false },
-        [width, height],
-      )
+      if (gain) {
+        device.queue.copyExternalImageToTexture(
+          { source: plane.bitmap },
+          { texture, colorSpace: 'srgb', premultipliedAlpha: false },
+          [width, height],
+        )
+      }
+      else {
+        uploadColorImage(device, texture, plane.bitmap, this.explicitColorConversion)
+      }
     }
     catch (error) {
       texture.destroy()
