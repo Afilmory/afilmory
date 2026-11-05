@@ -79,6 +79,7 @@ docs/app-store-assets/raw/11-photo-reactions.png
 scripts/generate-app-store-composites.mjs
 
 # build/report artifacts
+.local/
 .asc/
 tmp-asc/
 acceptance-report/

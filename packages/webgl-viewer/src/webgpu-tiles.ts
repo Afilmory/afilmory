@@ -16,6 +16,7 @@ export interface TileRequest {
 export interface BitmapPlane {
   bitmap: ImageBitmap
   uv: Rect
+  float16?: boolean
 }
 export interface TilePixels extends TileRequest {
   base: BitmapPlane
@@ -35,8 +36,7 @@ export type TextureWorkerMessage
     | { type: 'tile', tile: TilePixels }
     | { type: 'error', key?: string, message: string }
 export type TextureWorkerRequest
-  = | { type: 'load', url: string, gainMapSource?: AppleGainMapSource }
-    | { type: 'tile', tile: TileRequest }
+  = { type: 'load', url: string, gainMapSource?: AppleGainMapSource } | { type: 'tile', tile: TileRequest }
 
 export function intersects(a: Rect, b: Rect) {
   return a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1]
