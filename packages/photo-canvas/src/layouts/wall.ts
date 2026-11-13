@@ -27,6 +27,7 @@ export interface WallOptions {
 }
 
 const STAGGER_STEP = 173
+const REPEAT_FREE_COLUMNS = 3
 
 const mod = (value: number, n: number) => ((value % n) + n) % n
 
@@ -61,20 +62,22 @@ const packOnce = (heights: number[], columnCount: number, gap: number) => {
   return { stacks, filled }
 }
 
-const packRepeating = (heights: number[], minColumns: number, minHeight: number, gap: number) => {
+const packRepeating = (heights: number[], stride: number, minColumns: number, minHeight: number, gap: number) => {
   const count = heights.length
-  const maxPerColumn = Math.max(1, Math.floor(count / 2))
+  const averageHeight = heights.reduce((sum, height) => sum + height + gap, 0) / count
+  const balanced = Math.round(Math.sqrt((count * stride) / averageHeight))
+  const maxPerColumn = Math.max(1, Math.min(balanced, Math.floor(count / REPEAT_FREE_COLUMNS)))
   const stacks: number[][] = []
   let cursor = 0
   const isSettled = () => {
     if (stacks.length < minColumns || cursor < count) {
       return false
     }
-    if (count < 2 * maxPerColumn || stacks.length < 2) {
+    if (count < REPEAT_FREE_COLUMNS * maxPerColumn || stacks.length < REPEAT_FREE_COLUMNS) {
       return true
     }
-    const first = new Set(stacks[0])
-    return !stacks.at(-1)!.some(index => first.has(index))
+    const head = new Set(stacks.slice(0, REPEAT_FREE_COLUMNS - 1).flat())
+    return !stacks.slice(1 - REPEAT_FREE_COLUMNS).some(stack => stack.some(index => head.has(index)))
   }
   const limit = minColumns + count * 2
   while (!isSettled() && stacks.length < limit) {
@@ -107,7 +110,7 @@ export const createWallLayout = (photos: CanvasPhoto[], options: WallOptions): W
   const once = packOnce(heights, squareColumns, gap)
   const stacks = once.filled.every(height => height >= minPeriod.height)
     ? once.stacks
-    : packRepeating(heights, minColumns, minPeriod.height, gap)
+    : packRepeating(heights, stride, minColumns, minPeriod.height, gap)
 
   return { ...base, columns: finishColumns(stacks, heights, gap), tileWidth: stacks.length * stride }
 }

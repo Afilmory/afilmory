@@ -134,3 +134,14 @@ it('no photos produce no instances', () => {
   const layout = createWallLayout([], options)
   assert.deepEqual(wallInstances(layout, { x: 0, y: 0, w: 1280, h: 800 }), [])
 })
+
+it('with few photos a photo does not come back within the next two columns', () => {
+  const layout = createWallLayout(makePhotos(18), options)
+  const sets = layout.columns.map(column => new Set(column.items.map(item => item.photoIndex)))
+  sets.forEach((indexes, c) => {
+    for (const step of [1, 2]) {
+      const other = sets[(c + step) % sets.length]
+      assert.ok(![...indexes].some(index => other.has(index)), `columns ${c} and ${c + step} share a photo`)
+    }
+  })
+})

@@ -11,6 +11,7 @@
   },
   "main": "./src/index.ts",
   "scripts": {
+    "demo": "vite --config demo/vite.config.ts",
     "test": "vitest run",
     "type-check": "tsc --noEmit"
   },
