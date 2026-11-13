@@ -9,7 +9,7 @@ import type { Arrangement, CanvasPhoto, Point, Rect } from './types'
 
 export interface PhotoCanvasCallbacks {
   onPhotoClick: (photoId: string, screenRect: Rect) => void
-  onHover: (photoId: string | null) => void
+  onHover: (photoId: string | null, instanceKey: string | null) => void
   onFrame: (frame: FrameState) => void
   onUnavailable: () => void
   reducedMotion: boolean
@@ -36,7 +36,6 @@ export class PhotoCanvasEngine {
   private photos: CanvasPhoto[] = []
   private photosById = new Map<string, CanvasPhoto>()
   private hoveredKey: string | null = null
-  private hoveredId: string | null = null
   private raf = 0
   private lastFrameAt = 0
   private paused = false
@@ -305,10 +304,6 @@ export class PhotoCanvasEngine {
     this.hoveredKey = key
     this.canvas.style.cursor = hit ? 'pointer' : ''
     this.schedule()
-    const id = hit?.id ?? null
-    if (id !== this.hoveredId) {
-      this.hoveredId = id
-      this.callbacks.onHover(id)
-    }
+    this.callbacks.onHover(hit?.id ?? null, key)
   }
 }

@@ -13,6 +13,7 @@ import { canvasArrangeAtom } from './atoms'
 import { CanvasCaption } from './CanvasCaption'
 import { CanvasDock } from './CanvasDock'
 import { CanvasIslandLabels } from './CanvasIslandLabels'
+import { CanvasLivePhoto } from './CanvasLivePhoto'
 import { CanvasMinimap } from './CanvasMinimap'
 import { CanvasZoomControl } from './CanvasZoomControl'
 import { createFrameBus } from './frame-bus'
@@ -47,7 +48,7 @@ export const CanvasView = () => {
   const viewer = useAtomValue(viewerAtom)
   const [arrange, setArrange] = useAtom(canvasArrangeAtom)
   const setGallerySetting = useSetAtom(gallerySettingAtom)
-  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [hovered, setHovered] = useState<{ id: string, key: string } | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const proxyRef = useRef<HTMLDivElement>(null)
@@ -80,7 +81,7 @@ export const CanvasView = () => {
     try {
       engine = new PhotoCanvasEngine(canvas, {
         onPhotoClick: (id, rect) => openRef.current(id, rect),
-        onHover: setHoveredId,
+        onHover: (id, key) => setHovered(id && key ? { id, key } : null),
         onFrame: bus.emit,
         onUnavailable: leaveCanvas,
         reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -125,10 +126,11 @@ export const CanvasView = () => {
     }
   }, [viewer.isOpen, viewer.photoId])
 
-  const hovered = useMemo(
-    () => (hoveredId ? (photos.find(photo => photo.id === hoveredId) ?? null) : null),
-    [hoveredId, photos],
+  const hoveredPhoto = useMemo(
+    () => (hovered ? (photos.find(photo => photo.id === hovered.id) ?? null) : null),
+    [hovered, photos],
   )
+  const livePhoto = viewer.isOpen ? null : hoveredPhoto
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden">
@@ -147,7 +149,8 @@ export const CanvasView = () => {
           onSelect={key => engineRef.current?.flyToIsland(key)}
         />
       )}
-      <CanvasCaption photo={hovered} />
+      <CanvasLivePhoto photo={livePhoto} instanceKey={livePhoto && hovered ? hovered.key : null} bus={bus} />
+      <CanvasCaption photo={hoveredPhoto} />
       <CanvasDock arrangements={arrangements} value={activeArrange} onChange={setArrange} bus={bus} />
       {activeArrange !== 'wall' && (
         <CanvasMinimap bus={bus} onNavigate={point => engineRef.current?.flyToWorld(point)} />
