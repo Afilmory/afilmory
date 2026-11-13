@@ -15,7 +15,7 @@ export interface Point {
   y: number
 }
 
-export type Arrangement = 'wall' | 'month' | 'camera' | 'tag' | 'location'
+export type Arrangement = 'wall' | 'month' | 'camera' | 'tag' | 'location' | 'color'
 
 export interface CanvasPhoto {
   id: string

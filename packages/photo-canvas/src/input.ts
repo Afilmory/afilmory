@@ -11,9 +11,12 @@ export interface InputHandlers {
   click: (point: Point) => void
   doubleClick: (point: Point) => void
   hover: (point: Point | null) => void
+  hold: (point: Point) => boolean
+  holdEnd: () => void
 }
 
 const FLING_WINDOW_MS = 80
+const HOLD_MS = 250
 
 interface SafariGestureEvent extends Event {
   scale: number
@@ -29,6 +32,8 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
   let lastMoveAt = 0
   let velocity: Point = { x: 0, y: 0 }
   let gestureScale = 1
+  let holdTimer: ReturnType<typeof setTimeout> | undefined
+  let holding = false
 
   const local = (event: { clientX: number, clientY: number }): Point => {
     const rect = canvas.getBoundingClientRect()
@@ -54,6 +59,13 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
     return true
   }
 
+  const endHold = () => {
+    if (holding) {
+      holding = false
+      handlers.holdEnd()
+    }
+  }
+
   const onPointerDown = (event: PointerEvent) => {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       return
@@ -67,9 +79,17 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
       velocity = { x: 0, y: 0 }
       handlers.release(0, 0)
       handlers.panBy(0, 0)
+      const { pointerType } = event
+      holdTimer = setTimeout(() => {
+        if (pointers.size === 1 && isTap(moved, pointerType)) {
+          holding = handlers.hold(downAt)
+        }
+      }, HOLD_MS)
     }
     else {
       wasPinch = true
+      clearTimeout(holdTimer)
+      endHold()
     }
     canvas.style.cursor = 'grabbing'
   }
@@ -81,6 +101,10 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
       if (event.pointerType === 'mouse') {
         handlers.hover(point)
       }
+      return
+    }
+    if (holding) {
+      pointers.set(event.pointerId, point)
       return
     }
     if (pointers.size === 1) {
@@ -113,6 +137,11 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
       return
     }
     canvas.style.cursor = ''
+    clearTimeout(holdTimer)
+    if (holding) {
+      endHold()
+      return
+    }
     if (event.type === 'pointercancel' || wasPinch) {
       return
     }
@@ -177,6 +206,7 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
   canvas.addEventListener('gesturechange', onGestureChange)
 
   return () => {
+    clearTimeout(holdTimer)
     canvas.removeEventListener('pointerdown', onPointerDown)
     canvas.removeEventListener('pointermove', onPointerMove)
     canvas.removeEventListener('pointerup', onPointerEnd)

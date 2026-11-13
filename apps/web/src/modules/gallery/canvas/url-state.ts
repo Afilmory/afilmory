@@ -5,7 +5,7 @@ import type { GalleryViewMode } from '~/atoms/app'
 const VIEW_PARAM = 'view'
 const ARRANGE_PARAM = 'arrange'
 const CANVAS_VIEW = 'canvas'
-const ARRANGEMENTS: readonly Arrangement[] = ['wall', 'month', 'camera', 'tag', 'location']
+const ARRANGEMENTS: readonly Arrangement[] = ['wall', 'month', 'camera', 'tag', 'location', 'color']
 
 export interface CanvasUrlState {
   view: 'canvas' | null

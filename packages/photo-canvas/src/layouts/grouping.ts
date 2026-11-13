@@ -1,6 +1,6 @@
 import type { Arrangement, CanvasPhoto } from '../types'
 
-export type GroupDimension = Exclude<Arrangement, 'wall'>
+export type GroupDimension = Exclude<Arrangement, 'wall' | 'color'>
 
 export interface PhotoGroup {
   key: string
@@ -103,5 +103,6 @@ export const availableArrangements = (photos: CanvasPhoto[]): Arrangement[] => {
   return [
     'wall',
     ...dimensions.filter(dimension => photos.some(photo => valuesOf(photo, dimension, false).length > 0)),
+    ...(photos.some(photo => photo.thumbHash !== null) ? (['color'] as const) : []),
   ]
 }

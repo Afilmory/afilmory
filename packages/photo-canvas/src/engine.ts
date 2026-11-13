@@ -1,3 +1,4 @@
+import type { AttractBasis } from './attraction'
 import type { FrameState } from './core'
 import { CanvasCore } from './core'
 import { attachInput } from './input'
@@ -39,6 +40,8 @@ export class PhotoCanvasEngine {
   private raf = 0
   private lastFrameAt = 0
   private paused = false
+  private holding = false
+  private attractBasis: AttractBasis = 'color'
   private destroyed = false
   private wantedVersion = -1
   private wantedMoving = false
@@ -75,6 +78,8 @@ export class PhotoCanvasEngine {
       click: whileActive(point => this.handleClick(point)),
       doubleClick: whileActive(point => this.handleDoubleClick(point)),
       hover: whileActive(point => this.handleHover(point)),
+      hold: point => this.handleHold(point),
+      holdEnd: () => this.handleHoldEnd(),
     })
     this.resizeObserver = new ResizeObserver(() => this.handleResize())
     this.resizeObserver.observe(canvas)
@@ -108,6 +113,10 @@ export class PhotoCanvasEngine {
 
   flyToWorld(point: Point) {
     this.act(() => this.core.flyToWorld(point))
+  }
+
+  setAttractBasis(basis: AttractBasis) {
+    this.attractBasis = basis
   }
 
   zoomStep(direction: 1 | -1) {
@@ -283,6 +292,22 @@ export class PhotoCanvasEngine {
       return
     }
     this.callbacks.onPhotoClick(hit.id, this.core.screenRectOfInstance(hit))
+  }
+
+  private handleHold(point: Point) {
+    if (this.paused) {
+      return false
+    }
+    const hit = this.core.hitTest(point)
+    this.holding = hit !== null && this.core.attract(hit.key, this.attractBasis)
+    this.schedule()
+    return this.holding
+  }
+
+  private handleHoldEnd() {
+    this.holding = false
+    this.core.releaseAttraction()
+    this.schedule()
   }
 
   private handleDoubleClick(point: Point) {

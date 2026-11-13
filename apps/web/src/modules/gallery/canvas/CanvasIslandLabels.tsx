@@ -25,7 +25,7 @@ export const CanvasIslandLabels = ({
   onSelect,
 }: {
   bus: FrameBus
-  arrangement: Arrangement
+  arrangement: Exclude<Arrangement, 'wall' | 'color'>
   onSelect: (key: string) => void
 }) => {
   const { t } = useTranslation()
@@ -97,7 +97,7 @@ export const CanvasIslandLabels = ({
     if (island.kind === 'other') {
       return t('gallery.canvas.group.other')
     }
-    if (island.kind === 'missing' && arrangement !== 'wall') {
+    if (island.kind === 'missing') {
       return t(`gallery.canvas.group.missing.${arrangement}`)
     }
     return island.label

@@ -1,3 +1,5 @@
+import type { AttractBasis, AttractionPlan } from './attraction'
+import { applyAttraction, planAttraction } from './attraction'
 import type { CameraState, ScaleLimits } from './camera'
 import {
   clampToBounds,
@@ -9,32 +11,31 @@ import {
   worldRectToScreen,
   zoomAt,
 } from './camera'
+import type { PhotoColor } from './color'
+import { createColorCache } from './color'
+import { sameLayoutInput } from './layout-input'
 import type { GroupedLayout, Island } from './layouts/grouped'
-import { createGroupedLayout } from './layouts/grouped'
-import { availableArrangements, groupPhotos } from './layouts/grouping'
+import { availableArrangements } from './layouts/grouping'
 import type { WallLayout } from './layouts/wall'
-import { createWallLayout, wallInstances } from './layouts/wall'
-import { maxScale } from './textures/tiers'
+import { wallInstances } from './layouts/wall'
+import { buildScene, FIT_PADDING, sceneHome, sceneLimits, WALL_MIN_SCALE } from './scene'
 import type { TransitionPlan } from './transition'
 import { interpolateRect, planTransition } from './transition'
 import type { Arrangement, CanvasPhoto, Instance, Point, Rect, Size } from './types'
 
-export const WALL_COLUMN_WIDTH = 248
-export const WALL_GAP = 14
-export const ISLAND_COLUMN_WIDTH = 220
-export const ISLAND_GAP = 12
-export const ISLAND_SPACING = 260
-export const ISLAND_LABEL_HEIGHT = 56
+export {
+  ISLAND_COLUMN_WIDTH,
+  ISLAND_GAP,
+  ISLAND_LABEL_HEIGHT,
+  ISLAND_SPACING,
+  WALL_COLUMN_WIDTH,
+  WALL_GAP,
+} from './scene'
 
-const WALL_MIN_SCALE = 0.2
-const GROUPED_ZOOM_OUT_ALLOWANCE = 0.85
 const TRANSITION_MS = 400
 const FADE_MS = 200
-const FIT_PADDING = 96
 const VISIBLE_MARGIN = 240
 const ZOOM_STEP = 1.3
-const WALL_TOP_INSET = 64
-const REFERENCE_VIEWPORT: Size = { width: 1920, height: 1200 }
 const STOP_SPEED = 0.01
 const FAST_SPEED = 1.5
 
@@ -80,21 +81,6 @@ const mixCamera = (from: CameraState, to: CameraState, t: number): CameraState =
   scale: from.scale * (to.scale / from.scale) ** t,
 })
 
-const sameLayoutInput = (a: CanvasPhoto[], b: CanvasPhoto[]) =>
-  a.length === b.length
-  && a.every((photo, index) => {
-    const other = b[index]
-    return (
-      photo.id === other.id
-      && photo.aspectRatio === other.aspectRatio
-      && photo.dateTaken === other.dateTaken
-      && photo.camera === other.camera
-      && photo.place === other.place
-      && photo.tags.length === other.tags.length
-      && photo.tags.every((tag, tagIndex) => tag === other.tags[tagIndex])
-    )
-  })
-
 export class CanvasCore {
   private viewport: Size
   private dpr: number
@@ -109,6 +95,9 @@ export class CanvasCore {
   private velocity: Point = { x: 0, y: 0 }
   private flight: { target: CameraState, velocity: CameraState } | null = null
   private transition: ActiveTransition | null = null
+  private attraction: { plan: AttractionPlan, progress: number, velocity: number, target: 0 | 1 } | null = null
+  private colors: (PhotoColor | null)[] | null = null
+  private readonly colorCache = createColorCache()
   private current: DrawInstance[] = []
   private dirty = true
   private cameraVersion = 0
@@ -190,6 +179,33 @@ export class CanvasCore {
     this.flyTo({ ...fitted, scale: Math.min(Math.max(fitted.scale, this.limits.min), this.limits.max) })
   }
 
+  attract(key: string, basis: AttractBasis): boolean {
+    const plan = this.transition
+      ? null
+      : planAttraction(this.settledInstances(), this.photos, basis === 'color' ? this.photoColors() : [], key, basis)
+    if (!plan) {
+      return false
+    }
+    this.flight = null
+    this.velocity = { x: 0, y: 0 }
+    this.attraction = { plan, progress: this.reducedMotion ? 1 : 0, velocity: 0, target: 1 }
+    this.dirty = true
+    return true
+  }
+
+  releaseAttraction() {
+    if (!this.attraction) {
+      return
+    }
+    if (this.reducedMotion) {
+      this.attraction = null
+    }
+    else {
+      this.attraction.target = 0
+    }
+    this.dirty = true
+  }
+
   flyToWorld(point: Point) {
     this.flyTo({ ...this.camera, x: point.x, y: point.y })
   }
@@ -199,7 +215,11 @@ export class CanvasCore {
     let travelled = this.pannedSinceTick
     this.pannedSinceTick = 0
 
-    if (this.transition) {
+    if (this.attraction && this.attraction.progress !== this.attraction.target) {
+      active = true
+      this.advanceAttraction(dtMs)
+    }
+    else if (this.transition) {
       active = true
       this.advanceTransition(dtMs)
     }
@@ -256,7 +276,7 @@ export class CanvasCore {
   }
 
   hitTest(point: Point): DrawInstance | null {
-    if (this.transition) {
+    if (this.transition || this.attraction) {
       return null
     }
     const world = screenToWorld(this.camera, this.viewport, point)
@@ -312,10 +332,6 @@ export class CanvasCore {
     )
   }
 
-  zoomLimits(): ScaleLimits {
-    return this.limits
-  }
-
   arrangements(): Arrangement[] {
     return availableArrangements(this.photos)
   }
@@ -328,8 +344,10 @@ export class CanvasCore {
     this.photos = photos
     this.arrangement = arrangement
     this.transition = null
+    this.attraction = null
     this.flight = null
     this.velocity = { x: 0, y: 0 }
+    this.colors = null
     this.buildLayout()
     this.limits = this.computeLimits()
     const toCamera = this.homeCamera()
@@ -361,46 +379,29 @@ export class CanvasCore {
     this.camera = this.transition.fromCamera
   }
 
+  private photoColors() {
+    this.colors ??= this.colorCache.colorsOf(this.photos)
+    return this.colors
+  }
+
   private buildLayout() {
-    this.wall = null
-    this.grouped = null
-    this.groupedDraw = []
-    if (this.arrangement === 'wall') {
-      this.wall = createWallLayout(this.photos, {
-        columnWidth: WALL_COLUMN_WIDTH,
-        gap: WALL_GAP,
-        minPeriod: {
-          width: (Math.max(this.viewport.width, REFERENCE_VIEWPORT.width) * 2) / WALL_MIN_SCALE,
-          height: (Math.max(this.viewport.height, REFERENCE_VIEWPORT.height) * 2) / WALL_MIN_SCALE,
-        },
-      })
-      return
-    }
-    this.grouped = createGroupedLayout(groupPhotos(this.photos, this.arrangement), this.photos, {
-      columnWidth: ISLAND_COLUMN_WIDTH,
-      gap: ISLAND_GAP,
-      islandGap: ISLAND_SPACING,
-      labelHeight: ISLAND_LABEL_HEIGHT,
-      aspect: this.viewport.width / Math.max(1, this.viewport.height),
-    })
-    this.groupedDraw = this.decorate(this.grouped.instances, this.photos)
+    const scene = buildScene(
+      this.photos,
+      this.arrangement === 'color' ? this.photoColors() : [],
+      this.arrangement,
+      this.viewport,
+    )
+    this.wall = scene.wall
+    this.grouped = scene.grouped
+    this.groupedDraw = scene.grouped ? this.decorate(scene.grouped.instances, this.photos) : []
   }
 
   private computeLimits(): ScaleLimits {
-    if (!this.grouped) {
-      return { min: WALL_MIN_SCALE, max: Math.max(WALL_MIN_SCALE, maxScale(WALL_COLUMN_WIDTH, this.dpr)) }
-    }
-    const max = maxScale(ISLAND_COLUMN_WIDTH, this.dpr)
-    const fitted = Math.min(fitRect(this.grouped.bounds, this.viewport, FIT_PADDING).scale, max)
-    return { min: fitted * GROUPED_ZOOM_OUT_ALLOWANCE, max }
+    return sceneLimits(this.grouped, this.viewport, this.dpr)
   }
 
   private homeCamera(): CameraState {
-    if (!this.grouped) {
-      return { x: this.viewport.width / 2, y: this.viewport.height / 2 - WALL_TOP_INSET, scale: 1 }
-    }
-    const fitted = fitRect(this.grouped.bounds, this.viewport, FIT_PADDING)
-    return { ...fitted, scale: Math.min(fitted.scale, this.limits.max) }
+    return sceneHome(this.grouped, this.viewport, this.limits)
   }
 
   private constrain(camera: CameraState): CameraState {
@@ -425,7 +426,8 @@ export class CanvasCore {
   private computeInstances(): DrawInstance[] {
     const transition = this.transition
     if (!transition) {
-      return this.settledInstances()
+      const settled = this.settledInstances()
+      return this.attraction ? applyAttraction(settled, this.attraction.plan, this.attraction.progress) : settled
     }
     const { plan, progress } = transition
     const fade = Math.min(1, transition.elapsed / FADE_MS)
@@ -452,6 +454,20 @@ export class CanvasCore {
     if (transition.elapsed >= TRANSITION_MS && 1 - transition.progress < 0.002) {
       this.camera = transition.toCamera
       this.transition = null
+    }
+    this.dirty = true
+  }
+
+  private advanceAttraction(dtMs: number) {
+    const attraction = this.attraction!
+    const next = springToward(attraction.progress, attraction.target, attraction.velocity, dtMs, TRANSITION_MS)
+    attraction.progress = Math.min(1, Math.max(0, next.value))
+    attraction.velocity = next.velocity
+    if (Math.abs(attraction.target - attraction.progress) < 0.002) {
+      attraction.progress = attraction.target
+      if (attraction.target === 0) {
+        this.attraction = null
+      }
     }
     this.dirty = true
   }

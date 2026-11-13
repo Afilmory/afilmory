@@ -1,4 +1,4 @@
-import type { Point, Rect } from '@afilmory/photo-canvas'
+import type { AttractBasis, Point, Rect } from '@afilmory/photo-canvas'
 import { availableArrangements, PhotoCanvasEngine } from '@afilmory/photo-canvas'
 import { getViewerTransitionTriggerProps } from '@afilmory/viewer-motion'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
@@ -9,7 +9,7 @@ import { gallerySettingAtom } from '~/atoms/app'
 import { viewerAtom } from '~/atoms/viewer'
 import { useContextPhotos, usePhotoViewer } from '~/hooks/usePhotoViewer'
 
-import { canvasArrangeAtom } from './atoms'
+import { canvasArrangeAtom, canvasAttractBasisAtom } from './atoms'
 import { CanvasCaption } from './CanvasCaption'
 import { CanvasDock } from './CanvasDock'
 import { CanvasIslandLabels } from './CanvasIslandLabels'
@@ -18,6 +18,8 @@ import { CanvasMinimap } from './CanvasMinimap'
 import { CanvasZoomControl } from './CanvasZoomControl'
 import { createFrameBus } from './frame-bus'
 import { toCanvasPhoto } from './to-canvas-photo'
+
+const ATTRACT_BASES: AttractBasis[] = ['color', 'month', 'camera', 'tag']
 
 const placeTriggerProxy = (element: HTMLDivElement | null, id: string, rect: Rect | null) => {
   if (!element) {
@@ -48,6 +50,7 @@ export const CanvasView = () => {
   const viewer = useAtomValue(viewerAtom)
   const [arrange, setArrange] = useAtom(canvasArrangeAtom)
   const setGallerySetting = useSetAtom(gallerySettingAtom)
+  const [basis, setBasis] = useAtom(canvasAttractBasisAtom)
   const [hovered, setHovered] = useState<{ id: string, key: string } | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -59,6 +62,9 @@ export const CanvasView = () => {
   const canvasPhotos = useMemo(() => photos.map(toCanvasPhoto), [photos])
   const arrangements = useMemo(() => availableArrangements(canvasPhotos), [canvasPhotos])
   const activeArrange = arrangements.includes(arrange) ? arrange : 'wall'
+  const bases = useMemo(() => ATTRACT_BASES.filter(candidate => arrangements.includes(candidate)), [arrangements])
+  const activeBasis = bases.includes(basis) ? basis : (bases[0] ?? 'color')
+  const islandArrange = activeArrange === 'wall' || activeArrange === 'color' ? null : activeArrange
 
   const openRef = useRef((_id: string, _rect: Rect) => {})
   openRef.current = (id, rect) => {
@@ -107,6 +113,10 @@ export const CanvasView = () => {
   }, [canvasPhotos])
 
   useEffect(() => {
+    engineRef.current?.setAttractBasis(activeBasis)
+  }, [activeBasis])
+
+  useEffect(() => {
     const engine = engineRef.current
     if (!engine) {
       return
@@ -142,19 +152,25 @@ export const CanvasView = () => {
         className="outline-accent absolute inset-0 size-full cursor-grab touch-none outline-0 -outline-offset-2 focus-visible:outline-2"
       />
       <div ref={proxyRef} aria-hidden="true" className="pointer-events-none absolute z-1 rounded-md" />
-      {activeArrange !== 'wall' && (
+      {islandArrange && (
         <CanvasIslandLabels
           bus={bus}
-          arrangement={activeArrange}
+          arrangement={islandArrange}
           onSelect={key => engineRef.current?.flyToIsland(key)}
         />
       )}
       <CanvasLivePhoto photo={livePhoto} instanceKey={livePhoto && hovered ? hovered.key : null} bus={bus} />
       <CanvasCaption photo={hoveredPhoto} />
-      <CanvasDock arrangements={arrangements} value={activeArrange} onChange={setArrange} bus={bus} />
-      {activeArrange !== 'wall' && (
-        <CanvasMinimap bus={bus} onNavigate={point => engineRef.current?.flyToWorld(point)} />
-      )}
+      <CanvasDock
+        arrangements={arrangements}
+        value={activeArrange}
+        onChange={setArrange}
+        bases={bases}
+        basis={activeBasis}
+        onBasisChange={setBasis}
+        bus={bus}
+      />
+      {islandArrange && <CanvasMinimap bus={bus} onNavigate={point => engineRef.current?.flyToWorld(point)} />}
       <CanvasZoomControl
         bus={bus}
         onStep={direction => engineRef.current?.zoomStep(direction)}

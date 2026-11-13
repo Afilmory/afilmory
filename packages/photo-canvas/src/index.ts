@@ -1,3 +1,4 @@
+export type { AttractBasis } from './attraction'
 export type { CameraState, ScaleLimits } from './camera'
 export { worldRectToScreen, worldToScreen } from './camera'
 export type { DrawInstance, FrameState } from './core'

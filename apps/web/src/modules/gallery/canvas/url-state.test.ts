@@ -55,3 +55,9 @@ it('other view modes are never changed', () => {
   assert.equal(resolveViewMode({ requested: 'list', supported: false, isLargeScreen: false }), 'list')
   assert.equal(resolveViewMode({ requested: 'masonry', supported: true, isLargeScreen: true }), 'masonry')
 })
+
+it('the colour arrangement round-trips through the URL', () => {
+  const written = writeCanvasUrl(new URLSearchParams(), { view: 'canvas', arrange: 'color' })
+  assert.equal(written.toString(), 'view=canvas&arrange=color')
+  assert.deepEqual(parseCanvasUrl(written), { view: 'canvas', arrange: 'color' })
+})

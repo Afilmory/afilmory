@@ -75,7 +75,7 @@ it('the wall cannot zoom out past 20%', () => {
   core.setPhotos(makePhotos(18))
   core.zoomAt({ x: 640, y: 400 }, 0.01)
   assert.equal(core.frame().camera.scale, 0.2)
-  assert.equal(core.zoomLimits().min, 0.2)
+  assert.equal(core.frame().limits.min, 0.2)
 })
 
 it('a grouped arrangement opens fitted to all islands', () => {
@@ -305,4 +305,87 @@ it('panning and zooming a grouped arrangement moves the camera without changing 
   assert.equal(after.instances, before.instances)
   assert.notEqual(after.cameraVersion, before.cameraVersion)
   assert.notDeepEqual(after.camera, before.camera)
+})
+
+const withCameras = (count: number) =>
+  makePhotos(count).map((photo, index) => ({ ...photo, camera: index % 2 === 0 ? 'X-T5' : 'Z f' }))
+
+it('holding a photo pulls related photos around it and dims the rest', () => {
+  const core = makeCore()
+  core.setPhotos(withCameras(300))
+  core.setArrangement('month')
+  settle(core)
+  const before = core.frame().instances
+  const held = before.find(i => core.screenRectOf(i.id))!
+  assert.equal(core.attract(held.key, 'camera'), true)
+  settle(core)
+  const frame = core.frame()
+  assert.equal(frame.instances.at(-1)!.key, held.key)
+  const moved = frame.instances.filter(i => i.alpha === 1 && i.key !== held.key)
+  assert.equal(moved.length, 24)
+  assert.ok(moved.every(i => i.photoIndex % 2 === held.photoIndex % 2))
+  assert.ok(frame.instances.filter(i => i.alpha < 0.2).length > 200)
+  assert.equal(core.hitTest({ x: 640, y: 400 }), null)
+})
+
+it('letting go sends every photo back to where it was', () => {
+  const core = makeCore()
+  core.setPhotos(withCameras(300))
+  core.setArrangement('month')
+  settle(core)
+  const before = core.frame().instances
+  const held = before.find(i => core.screenRectOf(i.id))!
+  core.attract(held.key, 'camera')
+  settle(core)
+  core.releaseAttraction()
+  assert.equal(core.tick(16), true)
+  settle(core)
+  assert.equal(core.frame().instances, before)
+  assert.equal(core.tick(16), false)
+})
+
+it('holding a photo with nothing related does nothing', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(30))
+  const held = core.frame().instances[0]
+  assert.equal(core.attract(held.key, 'camera'), false)
+  assert.equal(core.tick(16), false)
+})
+
+it('offers a colour arrangement only when photos carry a thumbhash, and lays every photo out once', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(60))
+  assert.equal(core.arrangements().includes('color'), false)
+  const hash = new Uint8Array([
+    99,
+    8,
+    10,
+    13,
+    0,
+    136,
+    119,
+    135,
+    127,
+    135,
+    120,
+    144,
+    135,
+    8,
+    136,
+    120,
+    128,
+    151,
+    119,
+    7,
+    120,
+    136,
+  ])
+  core.setPhotos(makePhotos(60).map(photo => ({ ...photo, thumbHash: hash })))
+  assert.equal(core.arrangements().includes('color'), true)
+  core.setArrangement('color')
+  settle(core)
+  const frame = core.frame()
+  assert.equal(frame.instances.length, 60)
+  assert.deepEqual(frame.islands, [])
+  assert.ok(frame.bounds!.w > 0)
 })
