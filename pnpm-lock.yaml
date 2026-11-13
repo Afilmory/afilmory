@@ -653,6 +653,9 @@ importers:
       '@afilmory/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@afilmory/photo-canvas':
+        specifier: workspace:*
+        version: link:../../packages/photo-canvas
       '@afilmory/viewer-motion':
         specifier: workspace:*
         version: link:../../packages/viewer-motion

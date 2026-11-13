@@ -2,7 +2,7 @@ import { atom } from 'jotai'
 
 export type GallerySortBy = 'date'
 export type GallerySortOrder = 'asc' | 'desc'
-export type GalleryViewMode = 'masonry' | 'list'
+export type GalleryViewMode = 'masonry' | 'list' | 'canvas'
 
 export interface DateRangeFilter {
   from: string | null

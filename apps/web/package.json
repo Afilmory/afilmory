@@ -25,6 +25,7 @@
     "@6over3/zeroperl-ts": "1.0.10",
     "@afilmory/data": "workspace:*",
     "@afilmory/hooks": "workspace:*",
+    "@afilmory/photo-canvas": "workspace:*",
     "@afilmory/sdk": "workspace:*",
     "@afilmory/typing": "workspace:*",
     "@afilmory/ui": "workspace:*",
