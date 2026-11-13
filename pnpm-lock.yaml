@@ -1549,6 +1549,12 @@ importers:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
 
+  packages/photo-canvas:
+    dependencies:
+      thumbhash:
+        specifier: 0.1.1
+        version: 0.1.1
+
   packages/renderer:
     devDependencies:
       '@resvg/resvg-js':
