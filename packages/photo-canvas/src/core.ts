@@ -79,6 +79,21 @@ const mixCamera = (from: CameraState, to: CameraState, t: number): CameraState =
   scale: from.scale * (to.scale / from.scale) ** t,
 })
 
+const sameLayoutInput = (a: CanvasPhoto[], b: CanvasPhoto[]) =>
+  a.length === b.length
+  && a.every((photo, index) => {
+    const other = b[index]
+    return (
+      photo.id === other.id
+      && photo.aspectRatio === other.aspectRatio
+      && photo.dateTaken === other.dateTaken
+      && photo.camera === other.camera
+      && photo.place === other.place
+      && photo.tags.length === other.tags.length
+      && photo.tags.every((tag, tagIndex) => tag === other.tags[tagIndex])
+    )
+  })
+
 export class CanvasCore {
   private viewport: Size
   private dpr: number
@@ -106,6 +121,10 @@ export class CanvasCore {
   }
 
   setPhotos(photos: CanvasPhoto[]) {
+    if (sameLayoutInput(this.photos, photos)) {
+      this.photos = photos
+      return
+    }
     const hadPhotos = this.photos.length > 0
     this.relayout(photos, this.arrangement, hadPhotos)
   }

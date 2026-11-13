@@ -248,3 +248,29 @@ it('an empty photo list draws nothing', () => {
   assert.deepEqual(core.frame().instances, [])
   assert.equal(core.hitTest({ x: 10, y: 10 }), null)
 })
+
+it('receiving the same photo list again mid-flight does not restart the flight off screen', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  core.panBy(-4200, 3100)
+  core.release(0, 0)
+  settle(core, 200)
+  core.setArrangement('month')
+  core.tick(16)
+  core.setPhotos(makePhotos(18))
+  for (let elapsed = 0; elapsed < 400; elapsed += 16) {
+    core.tick(16)
+    const { camera, instances } = core.frame()
+    const halfWidth = viewport.width / 2 / camera.scale
+    const halfHeight = viewport.height / 2 / camera.scale
+    const visible = instances.filter(
+      i =>
+        i.alpha > 0.5
+        && i.x < camera.x + halfWidth
+        && i.x + i.w > camera.x - halfWidth
+        && i.y < camera.y + halfHeight
+        && i.y + i.h > camera.y - halfHeight,
+    )
+    assert.ok(visible.length >= 6, `only ${visible.length} photos in view ${elapsed}ms into the flight`)
+  }
+})
