@@ -42,8 +42,12 @@ const finishColumns = (stacks: number[][], heights: number[], gap: number): Wall
   })
 
 const packOnce = (heights: number[], columnCount: number, gap: number) => {
-  const stacks: number[][] = Array.from({ length: columnCount }).fill([])
-  const filled = Array.from({ length: columnCount }).fill(0)
+  const stacks: number[][] = []
+  const filled: number[] = []
+  for (let c = 0; c < columnCount; c++) {
+    stacks.push([])
+    filled.push(0)
+  }
   heights.forEach((height, photoIndex) => {
     let shortest = 0
     for (let c = 1; c < columnCount; c++) {
