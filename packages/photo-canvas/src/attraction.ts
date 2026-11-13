@@ -1,3 +1,4 @@
+import { springToward } from './camera'
 import type { PhotoColor } from './color'
 import { hueDistance, isNeutral } from './color'
 import type { DrawInstance } from './core'
@@ -9,6 +10,8 @@ export interface AttractionPlan {
   heldKey: string
   held: Rect
   targets: Map<string, Rect>
+  source: DrawInstance
+  pulled: DrawInstance[]
 }
 
 export const DIMMED_ALPHA = 0.14
@@ -115,7 +118,7 @@ export const planAttraction = (
     })
     slot += 1
   }
-  return { heldKey, held, targets }
+  return { heldKey, held, targets, source: { ...source }, pulled: pulled.map(instance => ({ ...instance })) }
 }
 
 const mix = (from: Rect, to: Rect, t: number): Rect =>
@@ -129,21 +132,32 @@ const mix = (from: Rect, to: Rect, t: number): Rect =>
       }
 
 export const applyAttraction = (instances: DrawInstance[], plan: AttractionPlan, progress: number): DrawInstance[] => {
-  const dimmed: DrawInstance[] = []
-  const pulled: DrawInstance[] = []
-  let held: DrawInstance | null = null
+  const drawn: DrawInstance[] = []
   for (const instance of instances) {
-    if (instance.key === plan.heldKey) {
-      held = { ...instance, ...mix(instance, plan.held, progress) }
-      continue
-    }
-    const target = plan.targets.get(instance.key)
-    if (target) {
-      pulled.push({ ...instance, ...mix(instance, target, progress) })
-    }
-    else {
-      dimmed.push({ ...instance, alpha: instance.alpha * (1 - progress) + instance.alpha * DIMMED_ALPHA * progress })
+    if (instance.key !== plan.heldKey && !plan.targets.has(instance.key)) {
+      drawn.push({ ...instance, alpha: instance.alpha * (1 - progress) + instance.alpha * DIMMED_ALPHA * progress })
     }
   }
-  return held ? [...dimmed, ...pulled, held] : [...dimmed, ...pulled]
+  for (const instance of plan.pulled) {
+    drawn.push({ ...instance, ...mix(instance, plan.targets.get(instance.key)!, progress) })
+  }
+  drawn.push({ ...plan.source, ...mix(plan.source, plan.held, progress) })
+  return drawn
+}
+
+export interface AttractionState {
+  plan: AttractionPlan
+  progress: number
+  velocity: number
+  target: 0 | 1
+}
+
+export const stepAttraction = (state: AttractionState, dtMs: number, durationMs: number) => {
+  const next = springToward(state.progress, state.target, state.velocity, dtMs, durationMs)
+  state.progress = Math.min(1, Math.max(0, next.value))
+  state.velocity = next.velocity
+  if (Math.abs(state.target - state.progress) < 0.002) {
+    state.progress = state.target
+  }
+  return state.target === 0 && state.progress === 0
 }

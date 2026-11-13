@@ -13,6 +13,7 @@ export interface InputHandlers {
   hover: (point: Point | null) => void
   hold: (point: Point) => boolean
   holdEnd: () => void
+  dismiss: () => void
 }
 
 const FLING_WINDOW_MS = 80
@@ -166,6 +167,10 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.metaKey || event.ctrlKey || event.altKey) {
+      return
+    }
+    if (event.key === 'Escape') {
+      handlers.dismiss()
       return
     }
     const rect = canvas.getBoundingClientRect()

@@ -1,8 +1,9 @@
-import type { AttractBasis, AttractionPlan } from './attraction'
-import { applyAttraction, planAttraction } from './attraction'
+import type { AttractBasis, AttractionState } from './attraction'
+import { applyAttraction, planAttraction, stepAttraction } from './attraction'
 import type { CameraState, ScaleLimits } from './camera'
 import {
   clampToBounds,
+  containsPoint,
   decayVelocity,
   fitRect,
   screenToWorld,
@@ -95,7 +96,7 @@ export class CanvasCore {
   private velocity: Point = { x: 0, y: 0 }
   private flight: { target: CameraState, velocity: CameraState } | null = null
   private transition: ActiveTransition | null = null
-  private attraction: { plan: AttractionPlan, progress: number, velocity: number, target: 0 | 1 } | null = null
+  private attraction: AttractionState | null = null
   private colors: (PhotoColor | null)[] | null = null
   private readonly colorCache = createColorCache()
   private current: DrawInstance[] = []
@@ -276,23 +277,24 @@ export class CanvasCore {
   }
 
   hitTest(point: Point): DrawInstance | null {
-    if (this.transition || this.attraction) {
+    if (this.transition) {
       return null
     }
     const world = screenToWorld(this.camera, this.viewport, point)
+    const plan = this.attraction?.plan
     const { instances } = this.frame()
     for (let i = instances.length - 1; i >= 0; i--) {
       const instance = instances[i]
-      if (
-        world.x >= instance.x
-        && world.x <= instance.x + instance.w
-        && world.y >= instance.y
-        && world.y <= instance.y + instance.h
-      ) {
+      const pickable = !plan || instance.key === plan.heldKey || plan.targets.has(instance.key)
+      if (pickable && containsPoint(instance, world)) {
         return instance
       }
     }
     return null
+  }
+
+  attracted() {
+    return this.attraction !== null && this.attraction.target === 1
   }
 
   screenRectOfInstance(instance: Rect): Rect {
@@ -324,12 +326,7 @@ export class CanvasCore {
 
   islandAt(point: Point): Island | null {
     const world = screenToWorld(this.camera, this.viewport, point)
-    return (
-      this.grouped?.islands.find(
-        ({ rect }) =>
-          world.x >= rect.x && world.x <= rect.x + rect.w && world.y >= rect.y && world.y <= rect.y + rect.h,
-      ) ?? null
-    )
+    return this.grouped?.islands.find(({ rect }) => containsPoint(rect, world)) ?? null
   }
 
   arrangements(): Arrangement[] {
@@ -459,15 +456,8 @@ export class CanvasCore {
   }
 
   private advanceAttraction(dtMs: number) {
-    const attraction = this.attraction!
-    const next = springToward(attraction.progress, attraction.target, attraction.velocity, dtMs, TRANSITION_MS)
-    attraction.progress = Math.min(1, Math.max(0, next.value))
-    attraction.velocity = next.velocity
-    if (Math.abs(attraction.target - attraction.progress) < 0.002) {
-      attraction.progress = attraction.target
-      if (attraction.target === 0) {
-        this.attraction = null
-      }
+    if (stepAttraction(this.attraction!, dtMs, TRANSITION_MS)) {
+      this.attraction = null
     }
     this.dirty = true
   }

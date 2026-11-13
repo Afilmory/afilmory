@@ -325,7 +325,57 @@ it('holding a photo pulls related photos around it and dims the rest', () => {
   assert.equal(moved.length, 24)
   assert.ok(moved.every(i => i.photoIndex % 2 === held.photoIndex % 2))
   assert.ok(frame.instances.filter(i => i.alpha < 0.2).length > 200)
-  assert.equal(core.hitTest({ x: 640, y: 400 }), null)
+  const center = (i: { x: number, y: number, w: number, h: number }) => {
+    const rect = core.screenRectOfInstance(i)
+    return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 }
+  }
+  assert.equal(core.hitTest(center(frame.instances.at(-1)!))!.key, held.key)
+  assert.equal(core.hitTest(center(moved[0]))!.key, moved[0].key)
+  assert.equal(core.attracted(), true)
+})
+
+it('a gathered cluster stays together while the wall is panned far away and back', () => {
+  const core = makeCore()
+  core.setPhotos(withCameras(18))
+  const held = core.frame().instances.find(i => core.screenRectOf(i.id))!
+  core.attract(held.key, 'camera')
+  settle(core)
+  const cluster = core
+    .frame()
+    .instances
+    .filter(i => i.alpha === 1)
+    .map(i => ({ ...i }))
+  assert.ok(cluster.length > 1)
+  core.panBy(-5000, 0)
+  const away = core.frame().instances.filter(i => i.alpha === 1)
+  assert.deepEqual(
+    away.map(i => ({ ...i })),
+    cluster,
+  )
+  assert.ok(core.frame().instances.some(i => i.alpha < 0.2))
+})
+
+it('only gathered photos can be picked while a cluster is shown', () => {
+  const core = makeCore()
+  core.setPhotos(withCameras(300))
+  core.setArrangement('month')
+  settle(core)
+  const held = core.frame().instances.find(i => core.screenRectOf(i.id))!
+  core.attract(held.key, 'camera')
+  settle(core)
+  const frame = core.frame()
+  const taken = frame.instances.filter(i => i.alpha === 1)
+  const dimmed = frame.instances.find((i) => {
+    const rect = core.screenRectOfInstance(i)
+    const point = { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 }
+    const covered = taken.some((t) => {
+      const r = core.screenRectOfInstance(t)
+      return point.x >= r.x && point.x <= r.x + r.w && point.y >= r.y && point.y <= r.y + r.h
+    })
+    return i.alpha < 0.2 && !covered && point.x > 0 && point.x < 1280 && point.y > 0 && point.y < 800
+  })!
+  const rect = core.screenRectOfInstance(dimmed)
+  assert.equal(core.hitTest({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 }), null)
 })
 
 it('letting go sends every photo back to where it was', () => {

@@ -83,3 +83,6 @@ export const springToward = (value: number, target: number, velocity: number, dt
     velocity: (velocity - drift * omega * dt) * decay,
   }
 }
+
+export const containsPoint = (rect: Rect, point: Point) =>
+  point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h

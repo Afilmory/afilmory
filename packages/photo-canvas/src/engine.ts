@@ -80,6 +80,7 @@ export class PhotoCanvasEngine {
       hover: whileActive(point => this.handleHover(point)),
       hold: point => this.handleHold(point),
       holdEnd: () => this.handleHoldEnd(),
+      dismiss: whileActive(() => this.dismissAttraction()),
     })
     this.resizeObserver = new ResizeObserver(() => this.handleResize())
     this.resizeObserver.observe(canvas)
@@ -288,14 +289,16 @@ export class PhotoCanvasEngine {
 
   private handleClick(point: Point) {
     const hit = this.core.hitTest(point)
-    if (!hit) {
-      return
+    if (hit) {
+      this.callbacks.onPhotoClick(hit.id, this.core.screenRectOfInstance(hit))
     }
-    this.callbacks.onPhotoClick(hit.id, this.core.screenRectOfInstance(hit))
+    else if (this.core.attracted()) {
+      this.dismissAttraction()
+    }
   }
 
   private handleHold(point: Point) {
-    if (this.paused) {
+    if (this.paused || this.core.attracted()) {
       return false
     }
     const hit = this.core.hitTest(point)
@@ -306,6 +309,9 @@ export class PhotoCanvasEngine {
 
   private handleHoldEnd() {
     this.holding = false
+  }
+
+  private dismissAttraction() {
     this.core.releaseAttraction()
     this.schedule()
   }
