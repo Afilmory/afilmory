@@ -70,12 +70,12 @@ it('dragging right moves the content right, so the camera moves left', () => {
   assert.equal(core.frame().camera.x, before - 100)
 })
 
-it('the wall cannot zoom out past 50%', () => {
+it('the wall cannot zoom out past 20%', () => {
   const core = makeCore()
   core.setPhotos(makePhotos(18))
   core.zoomAt({ x: 640, y: 400 }, 0.01)
-  assert.equal(core.frame().camera.scale, 0.5)
-  assert.equal(core.zoomLimits().min, 0.5)
+  assert.equal(core.frame().camera.scale, 0.2)
+  assert.equal(core.zoomLimits().min, 0.2)
 })
 
 it('a grouped arrangement opens fitted to all islands', () => {
@@ -272,5 +272,21 @@ it('receiving the same photo list again mid-flight does not restart the flight o
         && i.y + i.h > camera.y - halfHeight,
     )
     assert.ok(visible.length >= 6, `only ${visible.length} photos in view ${elapsed}ms into the flight`)
+  }
+})
+
+it('screenRectOf picks the copy of a repeated photo nearest to the given point', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  core.zoomAt({ x: 640, y: 400 }, 0.01)
+  settle(core)
+  const { instances } = core.frame()
+  const copies = instances
+    .filter(i => i.id === 'p3')
+    .map(i => core.screenRectOfInstance(i))
+    .filter(r => r.x > 0 && r.y > 0 && r.x + r.w < 1280 && r.y + r.h < 800)
+  assert.ok(copies.length >= 2, 'the photo repeats on screen')
+  for (const copy of copies) {
+    assert.deepEqual(core.screenRectOf('p3', { x: copy.x + copy.w / 2, y: copy.y + copy.h / 2 }), copy)
   }
 })

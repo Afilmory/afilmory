@@ -4,13 +4,13 @@ import { it } from 'vitest'
 
 import { maxScale, pickTier, textureBytes } from './tiers'
 
-it('pickTier stays on the placeholder below 64 CSS pixels', () => {
-  assert.equal(pickTier(63, 2), 0)
+it('pickTier stays on the placeholder below 48 CSS pixels', () => {
+  assert.equal(pickTier(47, 2), 0)
   assert.equal(pickTier(10, 3), 0)
 })
 
 it('pickTier picks the smallest tier that covers the device pixels', () => {
-  assert.equal(pickTier(64, 1), 128)
+  assert.equal(pickTier(48, 1), 128)
   assert.equal(pickTier(128, 1), 128)
   assert.equal(pickTier(129, 1), 256)
   assert.equal(pickTier(100, 2), 256)

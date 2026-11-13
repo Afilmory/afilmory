@@ -1,4 +1,4 @@
-export const THUMBNAIL_MIN_SCREEN_PX = 64
+export const THUMBNAIL_MIN_SCREEN_PX = 48
 export const THUMBNAIL_TIERS = [128, 256, 512] as const
 export const THUMBNAIL_SOURCE_WIDTH = 600
 

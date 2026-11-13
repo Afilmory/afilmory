@@ -98,8 +98,8 @@ export class PhotoCanvasEngine {
     return this.core.arrangements()
   }
 
-  screenRectOf(photoId: string) {
-    return this.core.screenRectOf(photoId)
+  screenRectOf(photoId: string, near?: Point) {
+    return this.core.screenRectOf(photoId, near)
   }
 
   flyToIsland(key: string) {
@@ -275,10 +275,7 @@ export class PhotoCanvasEngine {
     if (!hit) {
       return
     }
-    const rect = this.core.screenRectOf(hit.id)
-    if (rect) {
-      this.callbacks.onPhotoClick(hit.id, rect)
-    }
+    this.callbacks.onPhotoClick(hit.id, this.core.screenRectOfInstance(hit))
   }
 
   private handleDoubleClick(point: Point) {

@@ -26,7 +26,7 @@ export const ISLAND_GAP = 12
 export const ISLAND_SPACING = 260
 export const ISLAND_LABEL_HEIGHT = 56
 
-const WALL_MIN_SCALE = 0.5
+const WALL_MIN_SCALE = 0.2
 const GROUPED_ZOOM_OUT_ALLOWANCE = 0.85
 const TRANSITION_MS = 400
 const FADE_MS = 200
@@ -268,23 +268,25 @@ export class CanvasCore {
     return null
   }
 
-  screenRectOf(photoId: string): Rect | null {
+  screenRectOfInstance(instance: Rect): Rect {
+    return worldRectToScreen(this.camera, this.viewport, instance)
+  }
+
+  screenRectOf(photoId: string, near?: Point): Rect | null {
+    const anchor = near ?? { x: this.viewport.width / 2, y: this.viewport.height / 2 }
     let best: Rect | null = null
     let bestDistance = Infinity
     for (const instance of this.frame().instances) {
       if (instance.id !== photoId) {
         continue
       }
-      const rect = worldRectToScreen(this.camera, this.viewport, instance)
+      const rect = this.screenRectOfInstance(instance)
       const onScreen
         = rect.x < this.viewport.width && rect.x + rect.w > 0 && rect.y < this.viewport.height && rect.y + rect.h > 0
       if (!onScreen) {
         continue
       }
-      const distance = Math.hypot(
-        rect.x + rect.w / 2 - this.viewport.width / 2,
-        rect.y + rect.h / 2 - this.viewport.height / 2,
-      )
+      const distance = Math.hypot(rect.x + rect.w / 2 - anchor.x, rect.y + rect.h / 2 - anchor.y)
       if (distance < bestDistance) {
         best = rect
         bestDistance = distance

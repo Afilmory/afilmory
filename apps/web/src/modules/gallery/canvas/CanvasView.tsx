@@ -1,4 +1,4 @@
-import type { Rect } from '@afilmory/photo-canvas'
+import type { Point, Rect } from '@afilmory/photo-canvas'
 import { availableArrangements, PhotoCanvasEngine } from '@afilmory/photo-canvas'
 import { getViewerTransitionTriggerProps } from '@afilmory/viewer-motion'
 import { useAtom, useAtomValue } from 'jotai'
@@ -50,6 +50,7 @@ export const CanvasView = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const proxyRef = useRef<HTMLDivElement>(null)
   const engineRef = useRef<PhotoCanvasEngine | null>(null)
+  const openedAtRef = useRef<Point | null>(null)
   const bus = useMemo(createFrameBus, [])
 
   const canvasPhotos = useMemo(() => photos.map(toCanvasPhoto), [photos])
@@ -62,6 +63,7 @@ export const CanvasView = () => {
     if (index === -1) {
       return
     }
+    openedAtRef.current = { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 }
     placeTriggerProxy(proxyRef.current, id, rect)
     photoViewer.openViewer(index, proxyRef.current ?? undefined)
   }
@@ -104,12 +106,17 @@ export const CanvasView = () => {
       return
     }
     if (!viewer.isOpen) {
+      openedAtRef.current = null
       engine.resume()
       return
     }
     engine.pause()
     if (viewer.photoId) {
-      placeTriggerProxy(proxyRef.current, viewer.photoId, engine.screenRectOf(viewer.photoId))
+      placeTriggerProxy(
+        proxyRef.current,
+        viewer.photoId,
+        engine.screenRectOf(viewer.photoId, openedAtRef.current ?? undefined),
+      )
     }
   }, [viewer.isOpen, viewer.photoId])
 
