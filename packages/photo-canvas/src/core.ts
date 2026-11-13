@@ -49,6 +49,7 @@ export interface FrameState {
   dpr: number
   instances: DrawInstance[]
   version: number
+  cameraVersion: number
   islands: Island[]
   bounds: Rect | null
   arrangement: Arrangement
@@ -110,6 +111,7 @@ export class CanvasCore {
   private transition: ActiveTransition | null = null
   private current: DrawInstance[] = []
   private dirty = true
+  private cameraVersion = 0
   private version = 0
   private pannedSinceTick = 0
   private speed = 0
@@ -229,8 +231,12 @@ export class CanvasCore {
 
   frame(): FrameState {
     if (this.dirty) {
-      this.current = this.computeInstances()
-      this.version += 1
+      const next = this.computeInstances()
+      if (next !== this.current) {
+        this.current = next
+        this.version += 1
+      }
+      this.cameraVersion += 1
       this.dirty = false
     }
     return {
@@ -239,6 +245,7 @@ export class CanvasCore {
       dpr: this.dpr,
       instances: this.current,
       version: this.version,
+      cameraVersion: this.cameraVersion,
       islands: this.grouped?.islands ?? [],
       bounds: this.grouped?.bounds ?? null,
       arrangement: this.arrangement,

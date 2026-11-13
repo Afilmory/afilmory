@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 
 import { it } from 'vitest'
 
-import { keyAction, pinchStep, wheelAction } from './input-actions'
+import { isTap, keyAction, pinchStep, wheelAction } from './input-actions'
 
 const wheel = (patch: Partial<Parameters<typeof wheelAction>[0]>) =>
   wheelAction({ deltaX: 0, deltaY: 0, deltaMode: 0, ctrlKey: false, metaKey: false, ...patch })
@@ -58,4 +58,14 @@ it('a pinch zooms by the change in finger distance around the fingers midpoint',
     ],
   )
   assert.deepEqual(step, { factor: 2, center: { x: 250, y: 120 }, dx: 50, dy: 20 })
+})
+
+it('a mouse press that travels under 5 pixels is a click', () => {
+  assert.equal(isTap(4, 'mouse'), true)
+  assert.equal(isTap(6, 'mouse'), false)
+})
+
+it('a finger gets 10 pixels of jitter before a tap becomes a drag', () => {
+  assert.equal(isTap(9, 'touch'), true)
+  assert.equal(isTap(11, 'touch'), false)
 })

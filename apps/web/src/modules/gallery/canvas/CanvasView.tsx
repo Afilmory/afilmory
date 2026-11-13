@@ -1,10 +1,11 @@
 import type { Point, Rect } from '@afilmory/photo-canvas'
 import { availableArrangements, PhotoCanvasEngine } from '@afilmory/photo-canvas'
 import { getViewerTransitionTriggerProps } from '@afilmory/viewer-motion'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { gallerySettingAtom } from '~/atoms/app'
 import { viewerAtom } from '~/atoms/viewer'
 import { useContextPhotos, usePhotoViewer } from '~/hooks/usePhotoViewer'
 
@@ -45,6 +46,7 @@ export const CanvasView = () => {
   const photoViewer = usePhotoViewer()
   const viewer = useAtomValue(viewerAtom)
   const [arrange, setArrange] = useAtom(canvasArrangeAtom)
+  const setGallerySetting = useSetAtom(gallerySettingAtom)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -73,18 +75,27 @@ export const CanvasView = () => {
     if (!canvas) {
       return
     }
-    const engine = new PhotoCanvasEngine(canvas, {
-      onPhotoClick: (id, rect) => openRef.current(id, rect),
-      onHover: setHoveredId,
-      onFrame: bus.emit,
-      reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    })
+    const leaveCanvas = () => setGallerySetting(prev => ({ ...prev, viewMode: 'masonry' }))
+    let engine: PhotoCanvasEngine
+    try {
+      engine = new PhotoCanvasEngine(canvas, {
+        onPhotoClick: (id, rect) => openRef.current(id, rect),
+        onHover: setHoveredId,
+        onFrame: bus.emit,
+        onUnavailable: leaveCanvas,
+        reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      })
+    }
+    catch {
+      leaveCanvas()
+      return
+    }
     engineRef.current = engine
     return () => {
       engineRef.current = null
       engine.destroy()
     }
-  }, [bus])
+  }, [bus, setGallerySetting])
 
   useEffect(() => {
     engineRef.current?.setArrangement(activeArrange)
@@ -93,12 +104,6 @@ export const CanvasView = () => {
   useEffect(() => {
     engineRef.current?.setPhotos(canvasPhotos)
   }, [canvasPhotos])
-
-  useEffect(() => {
-    if (activeArrange !== arrange) {
-      setArrange(activeArrange)
-    }
-  }, [activeArrange, arrange, setArrange])
 
   useEffect(() => {
     const engine = engineRef.current
@@ -132,7 +137,7 @@ export const CanvasView = () => {
         tabIndex={0}
         role="application"
         aria-label={t('gallery.canvas.label')}
-        className="absolute inset-0 size-full cursor-grab touch-none outline-none"
+        className="outline-accent absolute inset-0 size-full cursor-grab touch-none outline-0 -outline-offset-2 focus-visible:outline-2"
       />
       <div ref={proxyRef} aria-hidden="true" className="pointer-events-none absolute z-1 rounded-md" />
       {activeArrange !== 'wall' && (

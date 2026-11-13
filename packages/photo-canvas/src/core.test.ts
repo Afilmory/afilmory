@@ -290,3 +290,19 @@ it('screenRectOf picks the copy of a repeated photo nearest to the given point',
     assert.deepEqual(core.screenRectOf('p3', { x: copy.x + copy.w / 2, y: copy.y + copy.h / 2 }), copy)
   }
 })
+
+it('panning and zooming a grouped arrangement moves the camera without changing the instance list', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(300))
+  core.setArrangement('month')
+  settle(core)
+  const before = core.frame()
+  core.zoomAt({ x: 640, y: 400 }, 3)
+  settle(core)
+  core.panBy(-40, 25)
+  const after = core.frame()
+  assert.equal(after.version, before.version)
+  assert.equal(after.instances, before.instances)
+  assert.notEqual(after.cameraVersion, before.cameraVersion)
+  assert.notDeepEqual(after.camera, before.camera)
+})

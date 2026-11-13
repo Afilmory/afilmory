@@ -1,5 +1,5 @@
 import type { InputAction } from './input-actions'
-import { keyAction, pinchStep, wheelAction } from './input-actions'
+import { isTap, keyAction, pinchStep, wheelAction } from './input-actions'
 import type { Point } from './types'
 
 export interface InputHandlers {
@@ -13,7 +13,6 @@ export interface InputHandlers {
   hover: (point: Point | null) => void
 }
 
-const CLICK_SLOP_PX = 5
 const FLING_WINDOW_MS = 80
 
 interface SafariGestureEvent extends Event {
@@ -25,6 +24,7 @@ interface SafariGestureEvent extends Event {
 export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) => {
   const pointers = new Map<number, Point>()
   let moved = 0
+  let downAt: Point = { x: 0, y: 0 }
   let wasPinch = false
   let lastMoveAt = 0
   let velocity: Point = { x: 0, y: 0 }
@@ -62,6 +62,7 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
     pointers.set(event.pointerId, local(event))
     if (pointers.size === 1) {
       moved = 0
+      downAt = local(event)
       wasPinch = false
       velocity = { x: 0, y: 0 }
       handlers.release(0, 0)
@@ -89,7 +90,7 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
       const dt = Math.max(1, now - lastMoveAt)
       velocity = { x: dx / dt, y: dy / dt }
       lastMoveAt = now
-      moved += Math.abs(dx) + Math.abs(dy)
+      moved = Math.max(moved, Math.hypot(point.x - downAt.x, point.y - downAt.y))
       handlers.panBy(dx, dy)
       pointers.set(event.pointerId, point)
       return
@@ -115,7 +116,7 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
     if (event.type === 'pointercancel' || wasPinch) {
       return
     }
-    if (moved < CLICK_SLOP_PX) {
+    if (isTap(moved, event.pointerType)) {
       handlers.click(local(event))
       return
     }
@@ -148,11 +149,17 @@ export const attachInput = (canvas: HTMLCanvasElement, handlers: InputHandlers) 
 
   const onGestureStart = (event: Event) => {
     event.preventDefault()
+    if (pointers.size > 0) {
+      return
+    }
     gestureScale = 1
   }
 
   const onGestureChange = (event: Event) => {
     event.preventDefault()
+    if (pointers.size > 0) {
+      return
+    }
     const gesture = event as SafariGestureEvent
     handlers.zoomAt(local(gesture), gesture.scale / gestureScale)
     gestureScale = gesture.scale

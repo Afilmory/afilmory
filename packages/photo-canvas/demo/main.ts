@@ -51,6 +51,7 @@ const engine = new PhotoCanvasEngine(document.querySelector<HTMLCanvasElement>('
     lastClick = { id, rect }
   },
   onHover: () => {},
+  onUnavailable: () => {},
   onFrame: (frame) => {
     const now = performance.now()
     if (lastFrame > 0 && now - lastFrame < 200) {

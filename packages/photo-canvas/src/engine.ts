@@ -11,6 +11,7 @@ export interface PhotoCanvasCallbacks {
   onPhotoClick: (photoId: string, screenRect: Rect) => void
   onHover: (photoId: string | null) => void
   onFrame: (frame: FrameState) => void
+  onUnavailable: () => void
   reducedMotion: boolean
 }
 
@@ -184,7 +185,14 @@ export class PhotoCanvasEngine {
     if (this.destroyed) {
       return
     }
-    this.createGpuState()
+    try {
+      this.createGpuState()
+    }
+    catch {
+      this.disposeGpuState()
+      this.callbacks.onUnavailable()
+      return
+    }
     this.schedule()
   }
 
@@ -239,10 +247,10 @@ export class PhotoCanvasEngine {
   }
 
   private requestTextures(frame: FrameState) {
-    if (frame.version === this.wantedVersion && frame.moving === this.wantedMoving) {
+    if (frame.cameraVersion === this.wantedVersion && frame.moving === this.wantedMoving) {
       return
     }
-    this.wantedVersion = frame.version
+    this.wantedVersion = frame.cameraVersion
     this.wantedMoving = frame.moving
     const { camera, viewport, dpr } = frame
     const halfWidth = (viewport.width / 2 + WANTED_MARGIN_PX) / camera.scale

@@ -37,12 +37,10 @@ export const useCanvasUrlSync = () => {
       skipNextWriteRef.current = false
       return
     }
-    setSearchParams(
-      (current) => {
-        const next = writeCanvasUrl(current, { view: isCanvas ? 'canvas' : null, arrange })
-        return next.toString() === current.toString() ? current : next
-      },
-      { replace: true },
-    )
+    const current = new URLSearchParams(window.location.search)
+    const next = writeCanvasUrl(current, { view: isCanvas ? 'canvas' : null, arrange })
+    if (next.toString() !== current.toString()) {
+      setSearchParams(next, { replace: true })
+    }
   }, [isCanvas, arrange, setSearchParams])
 }

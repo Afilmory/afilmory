@@ -52,9 +52,13 @@ export const PhotosRoot = () => {
     return (
       <>
         <PageHeader />
-        <Suspense fallback={null}>
-          <CanvasView />
-        </Suspense>
+        {photos.length === 0 && hasActiveFilters ? (
+          <ActiveFiltersHero />
+        ) : (
+          <Suspense fallback={null}>
+            <CanvasView />
+          </Suspense>
+        )}
       </>
     )
   }

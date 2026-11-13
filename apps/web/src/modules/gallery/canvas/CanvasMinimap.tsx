@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { FrameBus } from './frame-bus'
-import { canvasGlass } from './styles'
+import { canvasFocusRing, canvasGlass } from './styles'
 
 const WIDTH = 192
 const HEIGHT = 112
@@ -22,6 +22,14 @@ const projection = (frame: FrameState) => {
     offsetX: WIDTH / 2 - (bounds.x + bounds.w / 2) * scale,
     offsetY: HEIGHT / 2 - (bounds.y + bounds.h / 2) * scale,
   }
+}
+
+const KEY_STEP_PX = 240
+const KEY_STEPS: Record<string, Point | undefined> = {
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
 }
 
 export const CanvasMinimap = ({ bus, onNavigate }: { bus: FrameBus, onNavigate: (point: Point) => void }) => {
@@ -93,12 +101,23 @@ export const CanvasMinimap = ({ bus, onNavigate }: { bus: FrameBus, onNavigate: 
   }
 
   return (
-    <div className={clsxm(canvasGlass, 'absolute right-4 bottom-16 z-30 overflow-hidden rounded-xl')}>
+    <div className={clsxm(canvasGlass, 'absolute right-4 bottom-16 z-30 rounded-xl')}>
       <canvas
         ref={canvasRef}
-        role="img"
+        tabIndex={0}
+        role="application"
         aria-label={t('gallery.canvas.minimap')}
-        className="text-text-tertiary block cursor-pointer touch-none"
+        className={clsxm(canvasFocusRing, 'text-text-tertiary block cursor-pointer touch-none rounded-xl')}
+        onKeyDown={(event) => {
+          const step = KEY_STEPS[event.key]
+          const frame = frameRef.current
+          if (!step || !frame) {
+            return
+          }
+          event.preventDefault()
+          const distance = KEY_STEP_PX / frame.camera.scale
+          onNavigate({ x: frame.camera.x + step.x * distance, y: frame.camera.y + step.y * distance })
+        }}
         style={{ width: WIDTH, height: HEIGHT }}
         onPointerDown={(event) => {
           event.currentTarget.setPointerCapture(event.pointerId)

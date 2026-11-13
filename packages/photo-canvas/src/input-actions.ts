@@ -18,6 +18,11 @@ const LINE_HEIGHT_PX = 16
 const ZOOM_SENSITIVITY = 0.012
 const MAX_ZOOM_DELTA = 50
 const KEY_PAN_PX = 120
+const CLICK_SLOP_PX = 5
+const TOUCH_SLOP_PX = 10
+
+export const isTap = (travelPx: number, pointerType: string) =>
+  travelPx < (pointerType === 'touch' ? TOUCH_SLOP_PX : CLICK_SLOP_PX)
 
 export const wheelAction = (input: WheelInput): InputAction => {
   const unit = input.deltaMode === 1 ? LINE_HEIGHT_PX : 1
