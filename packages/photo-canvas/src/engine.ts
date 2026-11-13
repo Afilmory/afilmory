@@ -59,15 +59,22 @@ export class PhotoCanvasEngine {
     })
     this.createGpuState()
 
+    const whileActive
+      = <A extends unknown[]>(handler: (...args: A) => void) =>
+        (...args: A) => {
+          if (!this.paused) {
+            handler(...args)
+          }
+        }
     this.detachInput = attachInput(canvas, {
-      panBy: (dx, dy) => this.act(() => this.core.panBy(dx, dy)),
-      release: (vx, vy) => this.act(() => this.core.release(vx, vy)),
-      zoomAt: (point, factor) => this.act(() => this.core.zoomAt(point, factor)),
-      step: direction => this.zoomStep(direction),
-      reset: () => this.reset(),
-      click: point => this.handleClick(point),
-      doubleClick: point => this.handleDoubleClick(point),
-      hover: point => this.handleHover(point),
+      panBy: whileActive((dx, dy) => this.act(() => this.core.panBy(dx, dy))),
+      release: whileActive((vx, vy) => this.act(() => this.core.release(vx, vy))),
+      zoomAt: whileActive((point, factor) => this.act(() => this.core.zoomAt(point, factor))),
+      step: whileActive(direction => this.zoomStep(direction)),
+      reset: whileActive(() => this.reset()),
+      click: whileActive(point => this.handleClick(point)),
+      doubleClick: whileActive(point => this.handleDoubleClick(point)),
+      hover: whileActive(point => this.handleHover(point)),
     })
     this.resizeObserver = new ResizeObserver(() => this.handleResize())
     this.resizeObserver.observe(canvas)

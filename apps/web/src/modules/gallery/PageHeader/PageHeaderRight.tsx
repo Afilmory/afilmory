@@ -20,6 +20,7 @@ import { useMobile } from '~/hooks/useMobile'
 import { authApi, canAccessDashboard } from '~/lib/api/auth'
 
 import { UserAvatar } from '../../social/comments/UserAvatar'
+import { useEffectiveViewMode } from '../canvas/useEffectiveViewMode'
 import { ViewPanel } from '../panels/ViewPanel'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { ActionIconButton, resolveSocialUrl } from './utils'
@@ -97,7 +98,8 @@ export const PageHeaderRight = () => {
 
 const MoreActionMenu = () => {
   const { t } = useTranslation()
-  const [settings, setSettings] = useAtom(gallerySettingAtom)
+  const setSettings = useSetAtom(gallerySettingAtom)
+  const viewMode = useEffectiveViewMode()
 
   const githubUrl
     = siteConfig.social && siteConfig.social.github
@@ -130,7 +132,7 @@ const MoreActionMenu = () => {
             <i className="i-mingcute-grid-line text-base" />
             {t('gallery.view.masonry')}
           </span>
-          {settings.viewMode === 'masonry' && <i className="i-mingcute-check-line text-base" />}
+          {viewMode === 'masonry' && <i className="i-mingcute-check-line text-base" />}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setSettings(prev => ({ ...prev, viewMode: 'list' }))}
@@ -140,7 +142,7 @@ const MoreActionMenu = () => {
             <i className="i-mingcute-list-ordered-line text-base" />
             {t('gallery.view.list')}
           </span>
-          {settings.viewMode === 'list' && <i className="i-mingcute-check-line text-base" />}
+          {viewMode === 'list' && <i className="i-mingcute-check-line text-base" />}
         </DropdownMenuItem>
 
         {(githubUrl || twitterUrl || hasRss) && <DropdownMenuSeparator />}
