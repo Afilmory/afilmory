@@ -86,3 +86,39 @@ export const springToward = (value: number, target: number, velocity: number, dt
 
 export const containsPoint = (rect: Rect, point: Point) =>
   point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h
+
+export interface Flight {
+  target: CameraState
+  velocity: CameraState
+}
+
+export const stepFlight = (camera: CameraState, flight: Flight, dtMs: number, durationMs: number) => {
+  const x = springToward(camera.x, flight.target.x, flight.velocity.x, dtMs, durationMs)
+  const y = springToward(camera.y, flight.target.y, flight.velocity.y, dtMs, durationMs)
+  const scale = springToward(
+    Math.log(camera.scale),
+    Math.log(flight.target.scale),
+    flight.velocity.scale,
+    dtMs,
+    durationMs,
+  )
+  flight.velocity = { x: x.velocity, y: y.velocity, scale: scale.velocity }
+  const next = { x: x.value, y: y.value, scale: Math.exp(scale.value) }
+  const remaining = Math.hypot(flight.target.x - next.x, flight.target.y - next.y) * next.scale
+  const done = remaining < 0.5 && Math.abs(flight.target.scale / next.scale - 1) < 0.001
+  return { camera: done ? flight.target : next, done }
+}
+
+export const nearestOnScreen = (rects: Rect[], viewport: Size, anchor: Point): Rect | null => {
+  let best: Rect | null = null
+  let bestDistance = Infinity
+  for (const rect of rects) {
+    const onScreen = rect.x < viewport.width && rect.x + rect.w > 0 && rect.y < viewport.height && rect.y + rect.h > 0
+    const distance = Math.hypot(rect.x + rect.w / 2 - anchor.x, rect.y + rect.h / 2 - anchor.y)
+    if (onScreen && distance < bestDistance) {
+      best = rect
+      bestDistance = distance
+    }
+  }
+  return best
+}

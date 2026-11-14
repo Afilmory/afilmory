@@ -1,6 +1,7 @@
 import type { CameraState, ScaleLimits } from './camera'
 import { fitRect } from './camera'
 import type { PhotoColor } from './color'
+import { FILM_SCALE, FILM_START_SCALE } from './layouts/film'
 import type { GroupedLayout } from './layouts/grouped'
 import { createGroupedLayout } from './layouts/grouped'
 import { groupPhotos } from './layouts/grouping'
@@ -16,7 +17,6 @@ export const ISLAND_COLUMN_WIDTH = 220
 export const ISLAND_GAP = 12
 export const ISLAND_SPACING = 260
 export const ISLAND_LABEL_HEIGHT = 56
-export const WALL_MIN_SCALE = 0.2
 export const FIT_PADDING = 96
 
 const GROUPED_ZOOM_OUT_ALLOWANCE = 0.85
@@ -41,8 +41,8 @@ export const buildScene = (
         columnWidth: WALL_COLUMN_WIDTH,
         gap: WALL_GAP,
         minPeriod: {
-          width: (Math.max(viewport.width, REFERENCE_VIEWPORT.width) * 2) / WALL_MIN_SCALE,
-          height: (Math.max(viewport.height, REFERENCE_VIEWPORT.height) * 2) / WALL_MIN_SCALE,
+          width: (Math.max(viewport.width, REFERENCE_VIEWPORT.width) * 2) / FILM_START_SCALE,
+          height: (Math.max(viewport.height, REFERENCE_VIEWPORT.height) * 2) / FILM_START_SCALE,
         },
       }),
     }
@@ -68,7 +68,7 @@ export const buildScene = (
 
 export const sceneLimits = (grouped: GroupedLayout | null, viewport: Size, dpr: number): ScaleLimits => {
   if (!grouped) {
-    return { min: WALL_MIN_SCALE, max: Math.max(WALL_MIN_SCALE, maxScale(WALL_COLUMN_WIDTH, dpr)) }
+    return { min: FILM_SCALE, max: Math.max(FILM_START_SCALE, maxScale(WALL_COLUMN_WIDTH, dpr)) }
   }
   const max = maxScale(ISLAND_COLUMN_WIDTH, dpr)
   const fitted = Math.min(fitRect(grouped.bounds, viewport, FIT_PADDING).scale, max)

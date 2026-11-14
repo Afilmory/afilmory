@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { it } from 'vitest'
 
 import type { CanvasPhoto, Instance, Rect } from '../types'
-import { createWallLayout, wallInstances } from './wall'
+import { createWallLayout, nearestWallCopy, wallInstances } from './wall'
 
 const RATIOS = [0.667, 1.5, 1.333, 0.75]
 const makePhotos = (count: number): CanvasPhoto[] =>
@@ -144,4 +144,26 @@ it('with few photos a photo does not come back within the next two columns', () 
       assert.ok(![...indexes].some(index => other.has(index)), `columns ${c} and ${c + step} share a photo`)
     }
   })
+})
+
+it('nearestWallCopy finds the copy of a photo closest to a point, however far the wall was panned', () => {
+  for (const count of [7, 60]) {
+    const layout = createWallLayout(makePhotos(count), options)
+    for (const point of [
+      { x: 0, y: 0 },
+      { x: 123_456, y: -98_765 },
+      { x: -40_000, y: 70_000 },
+    ]) {
+      const around = { x: point.x - 6000, y: point.y - 6000, w: 12_000, h: 12_000 }
+      const instances = wallInstances(layout, around)
+      for (const photoIndex of [0, Math.floor(count / 2), count - 1]) {
+        const copy = nearestWallCopy(layout, photoIndex, point)!
+        assert.equal(copy.photoIndex, photoIndex)
+        const distance = (i: Rect) => Math.hypot(i.x + i.w / 2 - point.x, i.y + i.h / 2 - point.y)
+        const best = Math.min(...instances.filter(i => i.photoIndex === photoIndex).map(distance))
+        assert.ok(Math.abs(distance(copy) - best) < 1e-6, `copy is ${distance(copy)} away, nearest is ${best}`)
+        assert.ok(instances.some(i => i.key === copy.key))
+      }
+    }
+  }
 })

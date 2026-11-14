@@ -1,27 +1,32 @@
+import type { ActiveTransition } from './arrange-transition'
+import { arrangeTransitionInstances, stepArrangeTransition } from './arrange-transition'
 import type { AttractBasis, AttractionState } from './attraction'
 import { applyAttraction, planAttraction, stepAttraction } from './attraction'
-import type { CameraState, ScaleLimits } from './camera'
+import type { CameraState, Flight, ScaleLimits } from './camera'
 import {
   clampToBounds,
   containsPoint,
   decayVelocity,
   fitRect,
+  nearestOnScreen,
   screenToWorld,
-  springToward,
+  stepFlight,
   visibleWorldRect,
   worldRectToScreen,
   zoomAt,
 } from './camera'
 import type { PhotoColor } from './color'
 import { createColorCache } from './color'
+import type { FilmState } from './film-stage'
+import { FilmRoll } from './film-stage'
 import { sameLayoutInput } from './layout-input'
+import { FILM_START_SCALE, filmOrder, filmProgress } from './layouts/film'
 import type { GroupedLayout, Island } from './layouts/grouped'
 import { availableArrangements } from './layouts/grouping'
 import type { WallLayout } from './layouts/wall'
-import { wallInstances } from './layouts/wall'
-import { buildScene, FIT_PADDING, sceneHome, sceneLimits, WALL_MIN_SCALE } from './scene'
-import type { TransitionPlan } from './transition'
-import { interpolateRect, planTransition } from './transition'
+import { nearestWallCopy, wallInstances } from './layouts/wall'
+import { buildScene, FIT_PADDING, sceneHome, sceneLimits } from './scene'
+import { planTransition } from './transition'
 import type { Arrangement, CanvasPhoto, Instance, Point, Rect, Size } from './types'
 
 export {
@@ -34,11 +39,11 @@ export {
 } from './scene'
 
 const TRANSITION_MS = 400
-const FADE_MS = 200
 const VISIBLE_MARGIN = 240
 const ZOOM_STEP = 1.3
 const STOP_SPEED = 0.01
 const FAST_SPEED = 1.5
+const FILM_SCROLL_AT = 0.5
 
 export interface DrawInstance extends Instance {
   id: string
@@ -58,6 +63,7 @@ export interface FrameState {
   moving: boolean
   transitioning: boolean
   limits: ScaleLimits
+  film: FilmState | null
 }
 
 export interface CanvasCoreOptions {
@@ -65,22 +71,6 @@ export interface CanvasCoreOptions {
   dpr: number
   reducedMotion: boolean
 }
-
-interface ActiveTransition {
-  plan: TransitionPlan
-  fromIds: string[]
-  fromCamera: CameraState
-  toCamera: CameraState
-  progress: number
-  velocity: number
-  elapsed: number
-}
-
-const mixCamera = (from: CameraState, to: CameraState, t: number): CameraState => ({
-  x: from.x + (to.x - from.x) * t,
-  y: from.y + (to.y - from.y) * t,
-  scale: from.scale * (to.scale / from.scale) ** t,
-})
 
 export class CanvasCore {
   private viewport: Size
@@ -92,14 +82,15 @@ export class CanvasCore {
   private wall: WallLayout | null = null
   private grouped: GroupedLayout | null = null
   private groupedDraw: DrawInstance[] = []
-  private limits: ScaleLimits = { min: WALL_MIN_SCALE, max: 2 }
+  private limits: ScaleLimits = { min: 0, max: 2 }
   private velocity: Point = { x: 0, y: 0 }
-  private flight: { target: CameraState, velocity: CameraState } | null = null
+  private flight: Flight | null = null
   private transition: ActiveTransition | null = null
   private attraction: AttractionState | null = null
   private colors: (PhotoColor | null)[] | null = null
   private readonly colorCache = createColorCache()
   private current: DrawInstance[] = []
+  private readonly film = new FilmRoll()
   private dirty = true
   private cameraVersion = 0
   private version = 0
@@ -139,6 +130,13 @@ export class CanvasCore {
   panBy(dxPx: number, dyPx: number) {
     this.flight = null
     this.velocity = { x: 0, y: 0 }
+    this.film.stop()
+    if (this.filmScrolls()) {
+      this.frame()
+      this.pannedSinceTick += this.film.scroll(Math.abs(dxPx) >= Math.abs(dyPx) ? dxPx : dyPx)
+      this.dirty = true
+      return
+    }
     this.camera = this.constrain({
       ...this.camera,
       x: this.camera.x - dxPx / this.camera.scale,
@@ -152,22 +150,33 @@ export class CanvasCore {
     if (this.reducedMotion) {
       return
     }
+    if (this.filmScrolls()) {
+      this.film.fling(Math.abs(vxPxPerMs) >= Math.abs(vyPxPerMs) ? vxPxPerMs : vyPxPerMs)
+      return
+    }
     this.velocity = { x: -vxPxPerMs / this.camera.scale, y: -vyPxPerMs / this.camera.scale }
   }
 
   zoomAt(point: Point, factor: number) {
     this.flight = null
-    this.camera = this.constrain(zoomAt(this.camera, this.viewport, point, factor, this.limits))
+    this.settleFilmOnWall()
+    const next = zoomAt(this.camera, this.viewport, point, factor, this.limits)
+    const anchor = this.wall && next.scale < FILM_START_SCALE ? this.center() : point
+    this.camera = this.constrain(
+      anchor === point ? next : zoomAt(this.camera, this.viewport, anchor, factor, this.limits),
+    )
     this.dirty = true
   }
 
   zoomStep(direction: 1 | -1) {
-    const center = { x: this.viewport.width / 2, y: this.viewport.height / 2 }
+    this.settleFilmOnWall()
+    const center = this.center()
     const factor = direction > 0 ? ZOOM_STEP : 1 / ZOOM_STEP
     this.flyTo(zoomAt(this.flight?.target ?? this.camera, this.viewport, center, factor, this.limits))
   }
 
   reset() {
+    this.settleFilmOnWall()
     this.flyTo(this.homeCamera())
   }
 
@@ -181,9 +190,10 @@ export class CanvasCore {
   }
 
   attract(key: string, basis: AttractBasis): boolean {
-    const plan = this.transition
-      ? null
-      : planAttraction(this.settledInstances(), this.photos, basis === 'color' ? this.photoColors() : [], key, basis)
+    const plan
+      = this.transition || this.filmProgress() > 0
+        ? null
+        : planAttraction(this.settledInstances(), this.photos, basis === 'color' ? this.photoColors() : [], key, basis)
     if (!plan) {
       return false
     }
@@ -223,6 +233,12 @@ export class CanvasCore {
     else if (this.transition) {
       active = true
       this.advanceTransition(dtMs)
+    }
+    else if (this.film.gliding) {
+      this.frame()
+      travelled += this.film.glide(dtMs, decayVelocity, STOP_SPEED)
+      active = this.film.gliding
+      this.dirty = true
     }
     else if (this.flight) {
       active = true
@@ -273,6 +289,7 @@ export class CanvasCore {
       moving: this.transition !== null || this.speed > FAST_SPEED,
       transitioning: this.transition !== null,
       limits: this.limits,
+      film: this.film.state,
     }
   }
 
@@ -285,7 +302,8 @@ export class CanvasCore {
     const { instances } = this.frame()
     for (let i = instances.length - 1; i >= 0; i--) {
       const instance = instances[i]
-      const pickable = !plan || instance.key === plan.heldKey || plan.targets.has(instance.key)
+      const pickable
+        = instance.alpha >= 0.5 && (!plan || instance.key === plan.heldKey || plan.targets.has(instance.key))
       if (pickable && containsPoint(instance, world)) {
         return instance
       }
@@ -302,26 +320,11 @@ export class CanvasCore {
   }
 
   screenRectOf(photoId: string, near?: Point): Rect | null {
-    const anchor = near ?? { x: this.viewport.width / 2, y: this.viewport.height / 2 }
-    let best: Rect | null = null
-    let bestDistance = Infinity
-    for (const instance of this.frame().instances) {
-      if (instance.id !== photoId) {
-        continue
-      }
-      const rect = this.screenRectOfInstance(instance)
-      const onScreen
-        = rect.x < this.viewport.width && rect.x + rect.w > 0 && rect.y < this.viewport.height && rect.y + rect.h > 0
-      if (!onScreen) {
-        continue
-      }
-      const distance = Math.hypot(rect.x + rect.w / 2 - anchor.x, rect.y + rect.h / 2 - anchor.y)
-      if (distance < bestDistance) {
-        best = rect
-        bestDistance = distance
-      }
-    }
-    return best
+    const rects = this.frame()
+      .instances
+      .filter(instance => instance.id === photoId)
+      .map(instance => this.screenRectOfInstance(instance))
+    return nearestOnScreen(rects, this.viewport, near ?? this.center())
   }
 
   islandAt(point: Point): Island | null {
@@ -390,6 +393,7 @@ export class CanvasCore {
     )
     this.wall = scene.wall
     this.grouped = scene.grouped
+    this.film.reset(scene.wall ? filmOrder(this.photos) : [])
     this.groupedDraw = scene.grouped ? this.decorate(scene.grouped.instances, this.photos) : []
   }
 
@@ -422,34 +426,49 @@ export class CanvasCore {
 
   private computeInstances(): DrawInstance[] {
     const transition = this.transition
+    this.film.state = null
     if (!transition) {
       const settled = this.settledInstances()
+      const progress = this.filmProgress()
+      if (progress > 0) {
+        return this.film.compose({
+          settled,
+          progress,
+          camera: this.camera,
+          viewport: this.viewport,
+          photos: this.photos,
+        })
+      }
       return this.attraction ? applyAttraction(settled, this.attraction.plan, this.attraction.progress) : settled
     }
-    const { plan, progress } = transition
-    const fade = Math.min(1, transition.elapsed / FADE_MS)
-    const out: DrawInstance[] = []
-    for (const instance of plan.fadeOut) {
-      out.push({ ...instance, id: transition.fromIds[instance.photoIndex], alpha: 1 - fade })
+    return arrangeTransitionInstances(transition, this.photos)
+  }
+
+  private center(): Point {
+    return { x: this.viewport.width / 2, y: this.viewport.height / 2 }
+  }
+
+  private filmProgress() {
+    return this.wall && this.photos.length > 0 ? filmProgress(this.camera.scale) : 0
+  }
+
+  private filmScrolls() {
+    return this.filmProgress() >= FILM_SCROLL_AT
+  }
+
+  private settleFilmOnWall() {
+    const photoIndex = this.film.takeCenteredPhoto()
+    const copy = photoIndex === null || !this.wall ? null : nearestWallCopy(this.wall, photoIndex, this.camera)
+    if (copy) {
+      this.camera = { ...this.camera, x: copy.x + copy.w / 2, y: copy.y + copy.h / 2 }
+      this.dirty = true
     }
-    for (const instance of plan.fadeIn) {
-      out.push({ ...instance, id: this.photos[instance.photoIndex].id, alpha: fade })
-    }
-    for (const move of plan.moves) {
-      out.push({ ...move.to, ...interpolateRect(move.from, move.to, progress), id: move.id, alpha: 1 })
-    }
-    return out
   }
 
   private advanceTransition(dtMs: number) {
-    const transition = this.transition!
-    transition.elapsed += dtMs
-    const next = springToward(transition.progress, 1, transition.velocity, dtMs, TRANSITION_MS)
-    transition.progress = Math.min(1, next.value)
-    transition.velocity = next.velocity
-    this.camera = mixCamera(transition.fromCamera, transition.toCamera, transition.progress)
-    if (transition.elapsed >= TRANSITION_MS && 1 - transition.progress < 0.002) {
-      this.camera = transition.toCamera
+    const { camera, done } = stepArrangeTransition(this.transition!, dtMs, TRANSITION_MS)
+    this.camera = camera
+    if (done) {
       this.transition = null
     }
     this.dirty = true
@@ -463,26 +482,14 @@ export class CanvasCore {
   }
 
   private advanceFlight(dtMs: number) {
-    const flight = this.flight!
     const before = this.camera
-    const x = springToward(before.x, flight.target.x, flight.velocity.x, dtMs, TRANSITION_MS)
-    const y = springToward(before.y, flight.target.y, flight.velocity.y, dtMs, TRANSITION_MS)
-    const scale = springToward(
-      Math.log(before.scale),
-      Math.log(flight.target.scale),
-      flight.velocity.scale,
-      dtMs,
-      TRANSITION_MS,
-    )
-    flight.velocity = { x: x.velocity, y: y.velocity, scale: scale.velocity }
-    this.camera = { x: x.value, y: y.value, scale: Math.exp(scale.value) }
-    const remaining = Math.hypot(flight.target.x - this.camera.x, flight.target.y - this.camera.y) * this.camera.scale
-    if (remaining < 0.5 && Math.abs(flight.target.scale / this.camera.scale - 1) < 0.001) {
-      this.camera = flight.target
+    const { camera, done } = stepFlight(before, this.flight!, dtMs, TRANSITION_MS)
+    this.camera = camera
+    if (done) {
       this.flight = null
     }
     this.dirty = true
-    return Math.hypot(this.camera.x - before.x, this.camera.y - before.y) * before.scale
+    return Math.hypot(camera.x - before.x, camera.y - before.y) * before.scale
   }
 
   private flyTo(target: CameraState) {

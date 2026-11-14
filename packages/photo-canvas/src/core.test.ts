@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { it } from 'vitest'
 
 import { CanvasCore } from './core'
+import { FILM_FRAME, filmOrder } from './layouts/film'
 import type { CanvasPhoto } from './types'
 
 const RATIOS = [0.667, 1.5, 1.333, 0.75]
@@ -70,12 +71,138 @@ it('dragging right moves the content right, so the camera moves left', () => {
   assert.equal(core.frame().camera.x, before - 100)
 })
 
-it('the wall cannot zoom out past 20%', () => {
+const CENTER = { x: 640, y: 400 }
+const FILM_STEP = FILM_FRAME.width + FILM_FRAME.gap
+const middleFrame = (core: CanvasCore) => {
+  const film = core.frame().film!
+  return film.frames.reduce((best, f) =>
+    Math.abs(f.rect.x + f.rect.w / 2 - 640) < Math.abs(best.rect.x + best.rect.w / 2 - 640) ? f : best)
+}
+const rollUp = (core: CanvasCore) => core.zoomAt(CENTER, 0.01)
+
+it('the wall stays flat down to 20%, then rolls into a film strip that is complete at 10%', () => {
   const core = makeCore()
   core.setPhotos(makePhotos(18))
-  core.zoomAt({ x: 640, y: 400 }, 0.01)
-  assert.equal(core.frame().camera.scale, 0.2)
-  assert.equal(core.frame().limits.min, 0.2)
+  core.zoomAt(CENTER, 0.2)
+  assert.equal(core.frame().film, null)
+  core.zoomAt(CENTER, 0.75)
+  const partway = core.frame().film!.progress
+  assert.ok(partway > 0 && partway < 1)
+  rollUp(core)
+  assert.equal(core.frame().camera.scale, 0.1)
+  assert.equal(core.frame().limits.min, 0.1)
+  assert.equal(core.frame().film!.progress, 1)
+})
+
+it('a grouped arrangement never rolls into film', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(400))
+  core.setArrangement('month')
+  settle(core)
+  core.zoomAt(CENTER, 0.01)
+  assert.ok(core.frame().camera.scale < 0.2)
+  assert.equal(core.frame().film, null)
+})
+
+it('zooming below 20% keeps the screen center fixed, whatever the pointer', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  core.zoomAt(CENTER, 0.2)
+  const { x, y } = core.frame().camera
+  core.zoomAt({ x: 10, y: 10 }, 0.7)
+  assert.equal(core.frame().camera.x, x)
+  assert.equal(core.frame().camera.y, y)
+})
+
+it('the photo under the screen center becomes the middle frame, with its neighbours in time on either side', () => {
+  const core = makeCore()
+  const photos = makePhotos(18)
+  core.setPhotos(photos)
+  core.zoomAt(CENTER, 0.3)
+  const centered = core.hitTest(CENTER)!
+  rollUp(core)
+  const order = filmOrder(photos)
+  const middle = middleFrame(core)
+  assert.equal(middle.photoId, centered.id)
+  for (const frame of core.frame().film!.frames) {
+    assert.equal(frame.photoId, photos[order[frame.rank]].id)
+    assert.ok(Math.abs(frame.rect.x - middle.rect.x - (frame.rank - middle.rank) * FILM_STEP) < 1e-6)
+  }
+})
+
+it('once rolled up, only the frames are drawn and each photo appears once', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  rollUp(core)
+  const { instances, film } = core.frame()
+  assert.equal(instances.length, film!.frames.length)
+  assert.equal(new Set(instances.map(i => i.id)).size, instances.length)
+  assert.ok(instances.every(i => i.alpha === 1))
+})
+
+it('dragging the rolled-up strip scrolls through time and leaves the camera alone', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  rollUp(core)
+  const camera = core.frame().camera
+  const start = middleFrame(core).rank
+  core.panBy(-FILM_STEP * 2, 0)
+  assert.equal(middleFrame(core).rank, start + 2)
+  assert.deepEqual(core.frame().camera, camera)
+})
+
+it('the strip stops with the first or last frame in the middle', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  rollUp(core)
+  core.panBy(1e6, 0)
+  assert.equal(middleFrame(core).rank, 0)
+  core.panBy(-1e7, 0)
+  assert.equal(middleFrame(core).rank, 17)
+})
+
+it('releasing a drag on the strip lets it glide, then stop', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  rollUp(core)
+  const start = middleFrame(core).rect.x
+  core.release(-1.2, 0)
+  settle(core, 3000)
+  const end = middleFrame(core).rect.x
+  assert.notEqual(end, start)
+  assert.equal(core.tick(16), false)
+})
+
+it('a click on a frame hits its photo', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  rollUp(core)
+  core.panBy(-FILM_STEP, 0)
+  assert.equal(core.hitTest(CENTER)!.id, middleFrame(core).photoId)
+})
+
+it('zooming back in from the strip lands the wall on the photo that was in the middle', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  rollUp(core)
+  core.panBy(-FILM_STEP * 3, 0)
+  const photoId = middleFrame(core).photoId
+  core.zoomAt(CENTER, 4)
+  assert.equal(core.frame().film, null)
+  assert.equal(core.hitTest(CENTER)!.id, photoId)
+})
+
+it('holding a photo does not gather once the wall starts rolling up', () => {
+  const core = makeCore()
+  core.setPhotos(makePhotos(18))
+  core.zoomAt(CENTER, 0.2)
+  assert.equal(core.attract(core.hitTest(CENTER)!.key, 'month'), true)
+  core.releaseAttraction()
+  settle(core)
+  core.zoomAt(CENTER, 0.9)
+  assert.ok(core.frame().film!.progress > 0)
+  const wallTile = core.frame().instances.find(i => i.key.startsWith('w:') && i.alpha > 0.5)!
+  assert.equal(core.attract(wallTile.key, 'month'), false)
 })
 
 it('a grouped arrangement opens fitted to all islands', () => {
@@ -278,7 +405,7 @@ it('receiving the same photo list again mid-flight does not restart the flight o
 it('screenRectOf picks the copy of a repeated photo nearest to the given point', () => {
   const core = makeCore()
   core.setPhotos(makePhotos(18))
-  core.zoomAt({ x: 640, y: 400 }, 0.01)
+  core.zoomAt({ x: 640, y: 400 }, 0.2)
   settle(core)
   const { instances } = core.frame()
   const copies = instances

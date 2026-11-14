@@ -12,6 +12,7 @@ import { useContextPhotos, usePhotoViewer } from '~/hooks/usePhotoViewer'
 import { canvasArrangeAtom, canvasAttractBasisAtom } from './atoms'
 import { CanvasCaption } from './CanvasCaption'
 import { CanvasDock } from './CanvasDock'
+import { CanvasFilmStrip } from './CanvasFilmStrip'
 import { CanvasIslandLabels } from './CanvasIslandLabels'
 import { CanvasLivePhoto } from './CanvasLivePhoto'
 import { CanvasMinimap } from './CanvasMinimap'
@@ -144,6 +145,7 @@ export const CanvasView = () => {
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden">
+      {activeArrange === 'wall' && <CanvasFilmStrip bus={bus} />}
       <canvas
         ref={canvasRef}
         tabIndex={0}

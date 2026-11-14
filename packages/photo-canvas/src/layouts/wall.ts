@@ -1,4 +1,4 @@
-import type { CanvasPhoto, Instance, Rect, Size } from '../types'
+import type { CanvasPhoto, Instance, Point, Rect, Size } from '../types'
 
 export interface WallItem {
   photoIndex: number
@@ -148,4 +148,34 @@ export const wallInstances = (layout: WallLayout, rect: Rect): Instance[] => {
     }
   }
   return instances
+}
+
+export const nearestWallCopy = (layout: WallLayout, photoIndex: number, point: Point): Instance | null => {
+  const { columns, stride, columnWidth } = layout
+  const count = columns.length
+  let best: Instance | null = null
+  let bestDistance = Infinity
+  columns.forEach((column, c) => {
+    if (column.period <= 0) {
+      return
+    }
+    const nearestK = c + count * Math.round(((point.x - columnWidth / 2) / stride - c) / count)
+    for (const item of column.items) {
+      if (item.photoIndex !== photoIndex) {
+        continue
+      }
+      const nearestCycle = Math.round((point.y + column.offset - item.y - item.h / 2) / column.period)
+      for (const k of [nearestK - count, nearestK, nearestK + count]) {
+        for (const cycle of [nearestCycle - 1, nearestCycle, nearestCycle + 1]) {
+          const y = cycle * column.period - column.offset + item.y
+          const distance = Math.hypot(k * stride + columnWidth / 2 - point.x, y + item.h / 2 - point.y)
+          if (distance < bestDistance) {
+            bestDistance = distance
+            best = { key: `w:${photoIndex}:${k}:${cycle}`, photoIndex, x: k * stride, y, w: columnWidth, h: item.h }
+          }
+        }
+      }
+    }
+  })
+  return best
 }
