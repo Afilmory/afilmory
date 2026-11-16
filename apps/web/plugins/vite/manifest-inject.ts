@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 
+import { escapeJsonForScript } from '@afilmory/utils'
 import type { Plugin } from 'vite'
 
 import { MANIFEST_PATH } from './__internal__/constants'
@@ -59,7 +60,7 @@ export function manifestInjectPlugin(): Plugin {
         return html
       }
 
-      const manifestContent = getManifestContent()
+      const manifestContent = escapeJsonForScript(getManifestContent())
 
       // 将 manifest 内容注入到 script#manifest 标签中
       const scriptContent = `window.__MANIFEST__ = ${manifestContent};`

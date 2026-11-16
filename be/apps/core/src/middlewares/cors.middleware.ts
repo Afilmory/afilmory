@@ -8,10 +8,11 @@ import { injectable } from 'tsyringe'
 @injectable()
 export class CorsMiddleware implements HttpMiddleware {
   private readonly corsMiddleware = cors({
-    origin: (origin) => {
-      return origin || '*'
-    },
-    credentials: true,
+    // Gallery/dashboard authentication is same-origin. Public assets may be
+    // fetched across origins, but tenant galleries must never read another
+    // host's cookie-authenticated responses (including sibling tenant hosts).
+    origin: '*',
+    credentials: false,
     allowMethods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Lang'],
   })

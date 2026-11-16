@@ -1,3 +1,4 @@
+import { escapeJsonForScript } from '@afilmory/utils'
 import { DOMParser } from 'linkedom'
 import type { Plugin } from 'vite'
 
@@ -7,7 +8,7 @@ const CONFIG_SCRIPT_ID = 'config'
 const INJECTED_SCRIPT_ID = 'config-runtime'
 
 export function siteConfigInjectPlugin(): Plugin {
-  const siteConfigPayload = JSON.stringify(siteConfig)
+  const siteConfigPayload = escapeJsonForScript(JSON.stringify(siteConfig))
   const scriptContent = `window.__SITE_CONFIG__ = ${siteConfigPayload};`
   const parser = new DOMParser()
 

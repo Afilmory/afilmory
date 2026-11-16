@@ -2,6 +2,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { PhotoManifestItem } from '@afilmory/builder'
+import { escapeJsonForScript } from '@afilmory/utils'
 import { SiteSettingService } from '@core/modules/configuration/site-setting/site-setting.service'
 import { ManifestService } from '@core/modules/content/manifest/manifest.service'
 import type { Context } from 'hono'
@@ -161,7 +162,7 @@ export class StaticWebService extends StaticAssetService {
     const payload = JSON.stringify({
       useCloud: true,
     })
-    const siteConfigPayload = JSON.stringify(siteConfig)
+    const siteConfigPayload = escapeJsonForScript(JSON.stringify(siteConfig))
     configScript.textContent = `window.__CONFIG__ = ${payload};window.__SITE_CONFIG__ = ${siteConfigPayload}`
   }
 
@@ -208,7 +209,7 @@ export class StaticWebService extends StaticAssetService {
     }
 
     const manifest = await this.manifestService.getManifest()
-    manifestScript.textContent = `window.__MANIFEST__ = ${JSON.stringify(manifest)};`
+    manifestScript.textContent = `window.__MANIFEST__ = ${escapeJsonForScript(JSON.stringify(manifest))};`
   }
 
   private async findPhoto(photoId: string): Promise<PhotoManifestItem | null> {

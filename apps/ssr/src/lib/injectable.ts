@@ -1,3 +1,4 @@
+import { escapeJsonForScript } from '@afilmory/utils'
 import siteConfig from '@config'
 import type { DOMParser } from 'linkedom'
 
@@ -12,7 +13,7 @@ export const injectConfigToDocument = (document: OnlyHTMLDocument) => {
     useNext: true,
   }
   if ($config) {
-    $config.innerHTML = `window.__CONFIG__ = ${JSON.stringify(injectConfigBase)};window.__SITE_CONFIG__ = ${JSON.stringify(siteConfig)};`
+    $config.innerHTML = `window.__CONFIG__ = ${escapeJsonForScript(JSON.stringify(injectConfigBase))};window.__SITE_CONFIG__ = ${escapeJsonForScript(JSON.stringify(siteConfig))};`
   }
   return document
 }
