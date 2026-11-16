@@ -1,4 +1,4 @@
-import { escapeJsonForScript } from '@afilmory/utils'
+import { escapeJsonForScript } from '@afilmory/utils/escape-json-for-script'
 import siteConfig from '@config'
 import type { DOMParser } from 'linkedom'
 

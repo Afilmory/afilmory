@@ -2,7 +2,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import type { PhotoManifestItem } from '@afilmory/builder'
-import { escapeJsonForScript } from '@afilmory/utils'
+import { escapeJsonForScript } from '@afilmory/utils/escape-json-for-script'
 import { SiteSettingService } from '@core/modules/configuration/site-setting/site-setting.service'
 import { ManifestService } from '@core/modules/content/manifest/manifest.service'
 import type { Context } from 'hono'

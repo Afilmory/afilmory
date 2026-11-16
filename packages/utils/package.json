@@ -5,6 +5,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
+    "./escape-json-for-script": "./src/escape-json-for-script.ts",
     "./*": "./src/*"
   },
   "dependencies": {

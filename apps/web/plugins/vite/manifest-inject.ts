@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-import { escapeJsonForScript } from '@afilmory/utils'
+import { escapeJsonForScript } from '@afilmory/utils/escape-json-for-script'
 import type { Plugin } from 'vite'
 
 import { MANIFEST_PATH } from './__internal__/constants'
