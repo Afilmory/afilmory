@@ -25,8 +25,8 @@ export function Hero({ copy }: { copy: Translations['hero'] }) {
         <div className="lp-stage" data-scroll data-scroll-range="520">
           <div className="lp-window">
             <picture>
-              <source media="(max-width: 720px)" srcSet="/landing/viewer-m.jpg" />
-              <img src="/landing/viewer.jpg" alt={copy.shotAlt} width={1600} height={1000} fetchPriority="high" />
+              <source media="(max-width: 720px)" srcSet="/landing/viewer-m@2x.jpg" />
+              <img src="/landing/viewer@2x.jpg" alt={copy.shotAlt} width={1600} height={1000} fetchPriority="high" />
             </picture>
           </div>
           <div className="lp-floor" />
