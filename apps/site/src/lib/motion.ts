@@ -31,12 +31,26 @@ export function useLandingMotion() {
       },
       { rootMargin: '0px 0px -12% 0px' },
     )
-    const revealed = document.querySelectorAll<HTMLElement>('[data-reveal]')
-    revealed.forEach(el => observer.observe(el))
+    const watched = new WeakSet<Element>()
+    let scrubbed: HTMLElement[] = []
+    const scan = () => {
+      document.querySelectorAll<HTMLElement>('[data-reveal]:not([data-inview])').forEach((el) => {
+        if (!watched.has(el)) {
+          watched.add(el)
+          observer.observe(el)
+        }
+      })
+      scrubbed = [...document.querySelectorAll<HTMLElement>('[data-scroll]')]
+    }
+    scan()
+    const mutations = new MutationObserver(() => {
+      scan()
+      schedule()
+    })
+    mutations.observe(document.body, { childList: true, subtree: true })
 
-    const scrubbed = [...document.querySelectorAll<HTMLElement>('[data-scroll]')]
     let frame = 0
-    const update = () => {
+    function update() {
       frame = 0
       const viewport = window.innerHeight
       for (const el of scrubbed) {
@@ -44,7 +58,7 @@ export function useLandingMotion() {
       }
       root.style.setProperty('--nav-p', clamp01(window.scrollY / 120).toFixed(3))
     }
-    const schedule = () => {
+    function schedule() {
       if (!frame) {
         frame = requestAnimationFrame(update)
       }
@@ -55,6 +69,7 @@ export function useLandingMotion() {
 
     return () => {
       observer.disconnect()
+      mutations.disconnect()
       cancelAnimationFrame(frame)
       window.removeEventListener('scroll', schedule)
       window.removeEventListener('resize', schedule)
