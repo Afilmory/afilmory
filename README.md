@@ -9,8 +9,8 @@
 </p>
 
 <p align="center">
-  <a href="https://afilmory.art/">Official SaaS</a> •
-  <a href="https://docs.afilmory.art/">Documentation</a> •
+  <a href="https://afilmory.art">Official SaaS</a> •
+  <a href="https://docs.afilmory.art">Documentation</a> •
   <a href="#-live-galleries">Live Examples</a> •
   <a href="#-self-hosting">Self-Hosting</a>
 </p>
@@ -23,36 +23,41 @@
 
 ---
 
-**Afilmory** (/əˈfɪlməri/, "uh-FIL-muh-ree") is a comprehensive photo gallery solution that combines **Auto Focus (AF)**, **Aperture** (light control), **Film** (vintage medium), and **Memory** (captured moments). Built with React + TypeScript, it offers automatic photo synchronization from multiple storage sources, a GPU-accelerated image viewer (WebGPU first, WebGL fallback) with HDR gain-map support, professional EXIF metadata display, and a native iOS companion app.
+**Afilmory** (/əˈfɪlməri/, "uh-FIL-muh-ree") is a comprehensive photo gallery solution that combines **Auto Focus (AF)**, **Aperture** (light control), **Film** (vintage medium), and **Memory** (captured moments).
+Built with React + TypeScript, it offers automatic photo synchronization from multiple storage sources, a GPU-accelerated image viewer (WebGPU first, WebGL fallback) with HDR gain-map support, professional EXIF metadata display, and a native iOS companion app.
 
 ## 🚀 Quick Start
 
 ### Option 1: Official SaaS (Recommended)
 
-**👉 [Get Started at afilmory.art](https://afilmory.art/)** - Zero setup, live in minutes!
+**👉 [Get Started at afilmory.art](https://afilmory.art)** - Zero setup, live in minutes!
 
-The easiest way to create your photo gallery. No deployment, no servers, no maintenance required.
+The easiest way to create your photo gallery.
+No deployment, no servers, no maintenance required.
 
 **Why Choose SaaS?**
+
 - ✅ **Zero Configuration** - Sign up and go live immediately
 - ✅ **Live CMS** - Edit photos, titles, and metadata in real-time
 - ✅ **Custom Domains** - Bind your own domain with DNS verification
 - ✅ **Auto Updates** - Always running the latest features
 - ✅ **Managed Infrastructure** - We handle scaling, backups, and maintenance
 
-[**Start Your Gallery Now →**](https://afilmory.art/)
+[**Start Your Gallery Now →**](https://afilmory.art)
 
 ### Option 2: Self-Hosting
 
 For developers who need full control over their deployment:
 
 **Docker (Recommended)**
+
 ```bash
 # See our Docker deployment guide
 https://github.com/Afilmory/docker
 ```
 
 **Manual Installation**
+
 ```bash
 # 1. Clone and install
 git clone https://github.com/Afilmory/Afilmory.git
@@ -266,13 +271,14 @@ pnpm type-check             # Type checking
 ### Configuration Files
 
 **`config.json`** - Site presentation config:
+
 ```json
 {
   "name": "My Gallery",
   "title": "My Photography",
   "description": "Capturing beautiful moments",
   "url": "https://gallery.example.com",
-  "accentColor": "#007bff",
+  "accentColor": "#86c9ae",
   "author": {
     "name": "Your Name",
     "url": "https://example.com",
@@ -289,6 +295,7 @@ pnpm type-check             # Type checking
 ```
 
 **`builder.config.ts`** - Photo processing config:
+
 ```typescript
 import { defineBuilderConfig } from '@afilmory/builder'
 
@@ -319,7 +326,9 @@ export default defineBuilderConfig(() => ({
 Implement the `StorageProvider` interface:
 
 ```typescript
-import type { StorageProvider, StorageObject } from '@afilmory/builder'
+import { Buffer } from 'node:buffer'
+
+import type { StorageObject, StorageProvider } from '@afilmory/builder'
 
 class MyStorageProvider implements StorageProvider {
   async getFile(key: string): Promise<Buffer | null> {
@@ -360,7 +369,7 @@ Register it in `builder.config.ts` under `plugins`.
 
 ## 📚 Documentation
 
-- **[Official Documentation](https://docs.afilmory.art/)** - Complete guides and API reference
+- **[Official Documentation](https://docs.afilmory.art)** - Complete guides and API reference
 - **[Quick Start Guide](https://docs.afilmory.art/getting-started/quick-start)** - Get running in 5 minutes
 - **[SaaS Mode](https://docs.afilmory.art/saas)** - Learn about hosted galleries
 - **[Storage Providers](https://docs.afilmory.art/storage/providers)** - Setup guides for all storage options
@@ -369,7 +378,8 @@ Register it in `builder.config.ts` under `plugins`.
 
 ## 🤝 Contributing
 
-We welcome contributions! See [AGENTS.md](./AGENTS.md) for architecture notes and [DESIGN.md](./DESIGN.md) for the web design system.
+We welcome contributions!
+See [AGENTS.md](./AGENTS.md) for architecture notes and [DESIGN.md](./DESIGN.md) for the web design system.
 
 ### Development Workflow
 
@@ -389,14 +399,15 @@ See [LICENSE](./LICENSE) for more details.
 
 ## 🔗 Links
 
-- **[Official SaaS](https://afilmory.art/)** - Hosted gallery service
-- **[Documentation](https://docs.afilmory.art/)** - Full documentation
+- **[Official SaaS](https://afilmory.art)** - Hosted gallery service
+- **[Documentation](https://docs.afilmory.art)** - Full documentation
 - **[GitHub](https://github.com/Afilmory/Afilmory)** - Source code
 - **[Creator's Website](https://innei.in)** - Project creator
 
 ## 🙏 Acknowledgments
 
-Built with love by the Afilmory team and contributors. Special thanks to all photographers using Afilmory to share their work with the world.
+Built with love by the Afilmory team and contributors.
+Special thanks to all photographers using Afilmory to share their work with the world.
 
 ---
 

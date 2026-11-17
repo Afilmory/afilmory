@@ -34,7 +34,7 @@ interface LayoutConfig {
   arrangement: 'split' | 'stack' | 'wide'
   padding: number
   gap: number
-  photoBox: { maxWidth: number; maxHeight: number }
+  photoBox: { maxWidth: number, maxHeight: number }
   infoCompact: boolean
   photoFit: 'cover' | 'contain'
 }
@@ -54,7 +54,7 @@ export function OgTemplate({
   exifInfo,
   thumbnailSrc,
   photoDimensions,
-  accentColor = '#007bff',
+  accentColor = '#86c9ae',
 }: OgTemplateProps) {
   const width = Number.isFinite(photoDimensions.width) && photoDimensions.width > 0 ? photoDimensions.width : 1
   const height = Number.isFinite(photoDimensions.height) && photoDimensions.height > 0 ? photoDimensions.height : 1
@@ -80,8 +80,8 @@ export function OgTemplate({
     />
   )
 
-  const layoutComponent =
-    layout.arrangement === 'wide' ? WideLayout : layout.arrangement === 'stack' ? StackLayout : SplitLayout
+  const layoutComponent
+    = layout.arrangement === 'wide' ? WideLayout : layout.arrangement === 'stack' ? StackLayout : SplitLayout
 
   return (
     <BaseCanvas padding={layout.padding} siteName={siteName}>
@@ -174,11 +174,19 @@ function fitWithinBox(aspect: number, { maxWidth, maxHeight }: LayoutConfig['pho
 }
 
 function buildExifItems(exifInfo?: ExifInfo | null) {
-  const items: Array<{ label: string; text: string }> = []
-  if (exifInfo?.aperture) items.push({ label: 'f', text: exifInfo.aperture })
-  if (exifInfo?.shutterSpeed) items.push({ label: 's', text: exifInfo.shutterSpeed })
-  if (exifInfo?.iso) items.push({ label: 'iso', text: `${exifInfo.iso}` })
-  if (exifInfo?.focalLength) items.push({ label: 'mm', text: exifInfo.focalLength })
+  const items: Array<{ label: string, text: string }> = []
+  if (exifInfo?.aperture) {
+    items.push({ label: 'f', text: exifInfo.aperture })
+  }
+  if (exifInfo?.shutterSpeed) {
+    items.push({ label: 's', text: exifInfo.shutterSpeed })
+  }
+  if (exifInfo?.iso) {
+    items.push({ label: 'iso', text: `${exifInfo.iso}` })
+  }
+  if (exifInfo?.focalLength) {
+    items.push({ label: 'mm', text: exifInfo.focalLength })
+  }
   return items
 }
 
@@ -230,7 +238,9 @@ function BaseCanvas({ padding, siteName, children }: BaseCanvasProps) {
           display: 'flex',
         }}
       >
-        {siteName} · Afilmory
+        {siteName}
+        {' '}
+        · Afilmory
       </div>
 
       <div
@@ -404,7 +414,7 @@ function PhotoFrame({ width, height, fit, src }: PhotoFrameProps) {
 interface InfoPanelProps {
   title: string
   tags: string[]
-  exifItems: Array<{ label: string; text: string }>
+  exifItems: Array<{ label: string, text: string }>
   camera: string | null
   formattedDate?: string
   accentColor: string
@@ -444,7 +454,7 @@ function InfoPanel({ title, tags, exifItems, camera, formattedDate, accentColor,
             flexWrap: 'wrap',
           }}
         >
-          {tags.slice(0, tagLimit).map((tag) => (
+          {tags.slice(0, tagLimit).map(tag => (
             <div
               key={tag}
               style={{
@@ -459,7 +469,8 @@ function InfoPanel({ title, tags, exifItems, camera, formattedDate, accentColor,
                 letterSpacing: '0.2px',
               }}
             >
-              #{tag}
+              #
+              {tag}
             </div>
           ))}
         </div>
@@ -499,7 +510,7 @@ function InfoPanel({ title, tags, exifItems, camera, formattedDate, accentColor,
             flexWrap: 'wrap',
           }}
         >
-          {exifItems.map((item) => (
+          {exifItems.map(item => (
             <div key={`${item.label}-${item.text}`} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
               <span
                 style={{
@@ -562,7 +573,7 @@ export function HomepageOgTemplate({
   siteName,
   siteDescription,
   authorAvatar,
-  accentColor = '#007bff',
+  accentColor = '#86c9ae',
   stats,
   featuredPhotos,
 }: HomepageOgTemplateProps) {
