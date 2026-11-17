@@ -33,21 +33,23 @@ export function Story({
         </div>
       </section>
       <section className="lp-principles">
-        {principles.map((item, index) => {
-          const Art = ARTS[index]
-          return (
-            <div
-              key={item.title}
-              className="lp-principle"
-              data-reveal
-              style={{ '--d': `${index * 120}ms` } as CSSProperties}
-            >
-              <Art />
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </div>
-          )
-        })}
+        <div className="lp-in lp-principles-grid">
+          {principles.map((item, index) => {
+            const Art = ARTS[index]
+            return (
+              <div
+                key={item.title}
+                className="lp-principle"
+                data-reveal
+                style={{ '--d': `${index * 120}ms` } as CSSProperties}
+              >
+                <Art />
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
+              </div>
+            )
+          })}
+        </div>
       </section>
     </>
   )
