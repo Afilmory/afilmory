@@ -1,0 +1,46 @@
+<doc>
+  <h1 id="ppWii2qt">iOS 重设计 · 剩余页面（登录 / Onboarding / Sheet）</h1>
+  <p id="xQnQ4kVf">回答方式：觉得哪条建议不对，直接在原文上改，或者加评论；没动过的条目我按「同意」处理。这一轮看完了，在终端里告诉我。</p>
+  <h2 id="SsK5CDc1">我目前的理解</h2>
+  <p id="msuIvaug">11-02 的重设计已经把三个 Tab（展览、观展、暗房）和照片详情换成了新风格：深色底、Schola 和思源宋体做标题、强调色从照片里取、转场用「对焦」来表达。没换到的是用户进 App 时最先看到的那几屏，以及所有弹出层。具体是：</p>
+  <ul id="IjnfYYAq">
+    <li><b>登录</b>：<code>SignInView</code>，背景是 <code>SignInShowcaseView</code> 的三列照片滚动墙，用的是系统颜色；还有评论区里的 <code>CommentSignInView</code>。</li>
+    <li><b>Onboarding</b>：目前只有一个两步表单 <code>WorkspaceSetupView</code>。第一步填名字，第二步填工作区名称、URL 标识、自定义域名，之后可能弹出额度墙或 CNAME 说明。没有欢迎页，也没有引导用户上传第一批照片。相册权限要等第一次上传时才申请，通知权限在别的地方单独申请。</li>
+    <li><b>Sheet</b>：评论、筛选、额度墙、订阅、CNAME 说明、账号设置，全部是系统 sheet 加系统表单样式。暗房里已经有一个自定义的 <code>DarkroomSheetController</code>：四边留 8pt、圆角 47、自带 grabber、下拉可关闭、背景变暗。审片 sheet 和账号 sheet 用的就是它。</li>
+    <li><b>暗房二级页</b>：<code>Studio{Site, Domain, Operations, Analytics, Comments}View</code> 和 <code>DeveloperLabView</code> 还是旧的系统列表。</li>
+  </ul>
+  <p id="IO3Y8AHn">我的猜测：你说「onboarding 基本没做」，指的是新用户注册之后，只看到一个冷冰冰的表单就直接进了 App，没有被带着走一遍。这一点请你确认。</p>
+  <h2 id="tpCSnwEF">已定</h2>
+  <ul id="ruAAh9iF">
+    <li>先做 A（风格补齐），iPhone Duo 适配放到后面 —— <i>你定的</i></li>
+    <li>Sheet 基本都不用系统样式，改用自定义样式 —— <i>你定的</i></li>
+    <li>新用户第一分钟要搞明白：这个 App 是做什么的、有哪些特点、能给他带来什么 —— <i>你定的</i></li>
+    <li>Onboarding 分两段：<b>登录前</b>是曝光开场加 3 页介绍（展览、观展、暗房各一页，每页一张照片配一句话），最后一页是登录，也可以选「先逛逛」；<b>登录后</b>依次是建站（只填展厅名和网址）、权限说明、冲洗第一卷，除建站外都可以跳过 —— <i>你定的（第 1 条，按你的回答改过）</i></li>
+    <li>Onboarding 全屏、一步一页，步骤之间用对焦转场，顶部用细刻度显示进度 —— <i>你接受了我的建议</i></li>
+    <li>做一个通用组件 <code>AFSheet</code>，从 <code>DarkroomSheetController</code> 抽出来：悬浮、四边留 8pt、同心圆角 47；弹出时背景变暗并轻微失焦；高度跟随内容，长内容可以多开一档；所有 sheet 都迁过去 —— <i>你接受了我的建议</i></li>
+    <li>评论、筛选、额度墙、CNAME 说明、评论区登录用 AFSheet；登录页和订阅页用全屏；自定义域名的设置移到暗房「站点」 —— <i>你接受了我的建议</i></li>
+    <li>订阅页结构不变（方案、价格、恢复购买、条款），只换视觉 —— <i>你接受了我的建议</i></li>
+    <li>暗房二级页这次一起换成 AF 样式的分组列表，信息结构不变；<code>DeveloperLabView</code> 只换底色 —— <i>你接受了我的建议</i></li>
+    <li>颜色、字体、圆角、动效沿用 <code>2026-11-02-mobile-darkroom-redesign-design.md</code> 和 <code>AFTheme</code> —— <i>我的决定</i></li>
+  </ul>
+  <h3 id="0tez1oEw">画板上已选（第 2、3 轮）</h3>
+  <ul id="0e2X4gZS">
+    <li>介绍页用展签版式：照片卡在上，展签文字在下（q1-a） —— <i>你接受了推荐</i></li>
+    <li>登录页沿用同一种展签版式，作为介绍的最后一页（q2-a）；建站在一页里填展厅名，网址自动生成（q3-a）；AFSheet 头部用 Schola 标题加圆形关闭按钮（q4-a） —— <i>你选的</i></li>
+    <li>Onboarding 里不用带文字的刻度。进度改成贴着主按钮的一排小点，当前那一点拉长并用强调色（q5-a） —— <i>你选的</i></li>
+    <li>权限页用一个「允许并继续」按钮，依次弹出两个系统权限框；每个权限下面配一个预览，相册配一张展签、通知配一条通知横幅（q6-b，按你的评论补过） —— <i>你选的</i>。原第 2 轮第 4 条因此撤掉</li>
+    <li>第一卷复用暗房的冲洗卡片（q7-a）；订阅页顶部用用户自己的照片做头图，套餐竖排成展签卡（q8-a） —— <i>你选的</i></li>
+  </ul>
+  <h2 id="lkFEW0Ns">第 2 轮</h2>
+  <p id="YqzH4gKh">页面的样子放在画板上选：<a href="https://ryugi.innei.dev/a/8LPmjYMpCGdU4YESGM2sW">登录与 onboarding 画板</a>。下面几条不涉及视觉，留在文档里定。</p>
+  <h3 id="2oxJyMCP">1. 账号设置合并到哪里？</h3>
+  <p id="T3BQHgLj"><b>建议</b>：删掉 <code>AccountSettingsView</code>，把它的功能并进暗房的账号 sheet。sheet 里依次放：身份卡、管理订阅、退出登录，最下面用一行红字放「删除账号」。点「删除账号」后进入全屏的删除流程，内容和现在一样：列出名下的工作区，再用密码或 Apple 重新验证。</p>
+  <p id="xdunU_o_"><i>理由</i>：我读了这两个文件。现在的账号 sheet 只有身份卡和一个「账号设置」按钮，点下去又弹出一个系统 sheet，等于两层弹窗，第二层只放了三个操作。删除账号属于不可撤销的操作，需要足够的空间把后果讲清楚，所以单独做成全屏。</p>
+  <h3 id="mfOsik_6">2. 登录前的介绍什么时候出现？</h3>
+  <p id="kBwbIVde"><b>建议</b>：只在第一次打开 App 时出现。看过一次之后，冷启动时如果没登录就直接进观展，登录入口放在暗房和评论区。设置里留一个「重看介绍」。</p>
+  <p id="nK-Uip7B"><i>理由</i>：介绍是讲给新用户听的。每次都放，老访客会觉得是在挡路。</p>
+  <h3 id="CLGbbsk2">3. 介绍页用哪些照片？</h3>
+  <p id="vrPB1MdB"><b>建议</b>：在 App 里内置 3 张你自己的作品，展览、观展、暗房各一张，压缩后每张大约 200KB。画板上暂时先用 <code>apps/site/public/demo</code> 里的照片占位。</p>
+  <p id="JLw7_uN-"><i>理由</i>：登录前还没有任何数据。如果从网上拉公开展厅的照片，首次启动没网或者网慢的时候，介绍页就是空的。具体用哪 3 张，请你来选。</p>
+</doc>
+

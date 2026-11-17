@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "mobile",
+      "name": "iOS app",
+      "description": "The mobile app: sign-in, onboarding, sheets, transitions.",
+      "paths": [
+        "apps/mobile/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "gallery",
+      "name": "Web gallery",
+      "description": "Browsing the photo collection on the web: masonry, list and canvas views, filters and sorting.",
+      "paths": [
+        "apps/web/src/modules/gallery/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "photo-detail",
+      "name": "Photo detail",
+      "description": "The photo detail view and loading the original.",
+      "paths": [
+        "packages/webgl-viewer/**",
+        "apps/web/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "exhibition",
+      "name": "Exhibition",
+      "description": "Exhibition pages.",
+      "paths": [
+        "apps/web/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "darkroom",
+      "name": "Darkroom",
+      "description": "The darkroom.",
+      "paths": [
+        "apps/web/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "store",
+      "name": "App Store & promo",
+      "description": "Store screenshots and promotional material.",
+      "paths": [
+        "apps/promo/**"
+      ],
+      "aliases": []
+    },
+    {
+      "id": "site",
+      "name": "Landing site",
+      "description": "The afilmory.art marketing and landing site: hero, feature sections, create-space flow, legal pages.",
+      "paths": [
+        "apps/site/**"
+      ],
+      "aliases": []
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+config.json
+artifacts/*
+!artifacts/document/
+artifacts/document/*/.artifact-id
