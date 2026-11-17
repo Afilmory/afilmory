@@ -227,7 +227,7 @@ EXIF 参数: rgba(255,255,255,0.8)
 品牌标识: rgba(255,255,255,0.4)
 
 /* 装饰元素 */
-强调色条: siteConfig.accentColor (默认 #007bff)
+强调色条: siteConfig.accentColor (默认 #86c9ae)
 照片阴影: 0 20px 60px rgba(0,0,0,0.5)
 ```
 
@@ -263,7 +263,7 @@ https://your-site.com/og/DSCF1234
 
 ## 布局决策逻辑
 
-```typescript
+```text
 照片宽高比 = 照片宽度 / 照片高度
 
 if (比例 < 0.85) {

@@ -23,7 +23,7 @@ they are enumerated in `/DESIGN.md` §13.
 - **Dark-only.** `index.html` hardcodes `data-theme="dark"`. Never write a hand-rolled
   `dark:` pair, add a theme toggle, or branch on `prefers-color-scheme` for chrome.
 - **Accent is content-derived.** Consume `var(--color-accent)` / `bg-accent`. Never hardcode
-  `#007aff`.
+  the accent hex.
 - **Springs for spatial motion.** `Spring.presets.*` from `@afilmory/utils`; no new
   `cubic-bezier`. `duration-200` and friends are for opacity/colour only.
 - **z-index comes from the two tiers in `/DESIGN.md` §7.** No new magic numbers.

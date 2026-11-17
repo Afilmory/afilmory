@@ -11,7 +11,7 @@ import {
 test('normalizes valid colors for the browser color control', () => {
   assert.equal(normalizeColorPickerValue('#12abEF'), '#12ABEF')
   assert.equal(normalizeColorPickerValue('#12abEF80'), '#12ABEF')
-  assert.equal(normalizeColorPickerValue('invalid'), '#007BFF')
+  assert.equal(normalizeColorPickerValue('invalid'), '#86C9AE')
 })
 
 test('parses only unique string options from multi-select storage', () => {

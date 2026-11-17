@@ -524,7 +524,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
                     className={clsxm(
                       'rounded-full px-3 py-1 text-xs font-medium transition-all duration-200',
                       gallerySetting.tagFilterMode === 'union'
-                        ? 'bg-accent text-white'
+                        ? 'bg-accent text-accent-content'
                         : 'bg-fill-tertiary text-text-secondary hover:text-text',
                     )}
                   >
@@ -536,7 +536,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
                     className={clsxm(
                       'rounded-full px-3 py-1 text-xs font-medium transition-all duration-200',
                       gallerySetting.tagFilterMode === 'intersection'
-                        ? 'bg-accent text-white'
+                        ? 'bg-accent text-accent-content'
                         : 'bg-fill-tertiary text-text-secondary hover:text-text',
                     )}
                   >
@@ -581,7 +581,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
                             </span>
                           )}
                           {cmd.active && (
-                            <span className="bg-accent flex h-4 w-4 items-center justify-center rounded-full text-white">
+                            <span className="bg-accent text-accent-content flex h-4 w-4 items-center justify-center rounded-full">
                               <i className="i-mingcute-check-line text-[10px]" />
                             </span>
                           )}
@@ -610,9 +610,7 @@ export const CommandPalette = ({ isOpen, onClose }: CommandPaletteProps) => {
                     </span>
                   </div>
                   {filteredCommands.length > 0 && (
-                    <span>
-                      {t('action.results', { count: filteredCommands.length })}
-                    </span>
+                    <span>{t('action.results', { count: filteredCommands.length })}</span>
                   )}
                 </div>
               </div>

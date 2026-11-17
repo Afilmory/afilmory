@@ -8,9 +8,21 @@ import { getViewer, setViewer } from '~/atoms/viewer'
 import { siteConfig } from '~/config'
 import { useMobile } from '~/hooks/useMobile'
 import { usePhotos } from '~/hooks/usePhotoViewer'
+import { contrastRatio, hexToRgb } from '~/lib/color'
 import { normalizeDateRange } from '~/modules/gallery/dateRangeUtils'
 import { PhotosRoot } from '~/modules/gallery/PhotosRoot'
 import { PhotosProvider } from '~/providers/photos-provider'
+
+const ON_ACCENT_DARK = { r: 12, g: 13, b: 14 }
+const ON_ACCENT_LIGHT = { r: 255, g: 255, b: 255 }
+
+const accentContentFor = (hex: string) => {
+  const rgb = hexToRgb(hex)
+  if (!rgb) {
+    return '#ffffff'
+  }
+  return contrastRatio(rgb, ON_ACCENT_DARK) >= contrastRatio(rgb, ON_ACCENT_LIGHT) ? '#0c0d0e' : '#ffffff'
+}
 
 export const Component = () => {
   useSyncGallerySettingsWithUrl()
@@ -31,6 +43,7 @@ export const Component = () => {
             --color-primary: ${siteConfig.accentColor};
             --color-accent: ${siteConfig.accentColor};
             --color-secondary: ${siteConfig.accentColor};
+            --color-accent-content: ${accentContentFor(siteConfig.accentColor)};
           }
           `,
             }}

@@ -19,7 +19,7 @@ const DEFAULT_SITE_CONFIG: SiteConfig = {
   title: 'Default Site',
   description: 'Default Site',
   url: '',
-  accentColor: '#007bff',
+  accentColor: '#86c9ae',
   author: {
     name: '',
   },

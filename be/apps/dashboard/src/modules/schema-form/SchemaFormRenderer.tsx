@@ -128,7 +128,7 @@ function FieldRenderer<Key extends string>({ field, value, onChange, renderSlot,
         <Input
           value={stringValue}
           onInput={event => onChange(field.key, event.currentTarget.value)}
-          placeholder="#007BFF"
+          placeholder="#86C9AE"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}

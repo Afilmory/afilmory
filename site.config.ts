@@ -94,7 +94,7 @@ const defaultConfig: SiteConfig = {
   title: 'New Afilmory',
   description: 'A modern photo gallery website.',
   url: 'https://afilmory.art',
-  accentColor: '#007bff',
+  accentColor: '#86c9ae',
   viewer: {
     regions: {
       accentSource: 'system',

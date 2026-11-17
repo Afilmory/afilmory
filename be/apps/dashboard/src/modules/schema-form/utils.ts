@@ -17,7 +17,7 @@ export function collectFieldNodes<Key extends string>(nodes: ReadonlyArray<UiNod
   return fields
 }
 
-export function normalizeColorPickerValue(value: unknown, fallback = '#007BFF'): string {
+export function normalizeColorPickerValue(value: unknown, fallback = '#86C9AE'): string {
   if (typeof value !== 'string' || !HEX_COLOR_PATTERN.test(value)) {
     return fallback
   }
