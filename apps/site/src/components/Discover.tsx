@@ -1,8 +1,11 @@
+import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
 
 import type { Translations } from '../i18n'
 import type { FeaturedGallery } from '../lib/api'
 import { fetchFeaturedGalleries, galleryPublicUrl } from '../lib/api'
+import { trackPointer } from '../lib/motion'
+import { FeatureHead } from './Features'
 
 const VISIBLE = 6
 
@@ -10,10 +13,25 @@ function hostOf(gallery: FeaturedGallery) {
   return galleryPublicUrl(gallery).replace(/^https:\/\//, '')
 }
 
-function GalleryCard({ gallery, photosLabel }: { gallery: FeaturedGallery, photosLabel: string }) {
+function GalleryCard({
+  gallery,
+  photosLabel,
+  index,
+}: {
+  gallery: FeaturedGallery
+  photosLabel: string
+  index: number
+}) {
   const initial = (gallery.author?.name ?? gallery.name).slice(0, 1)
   return (
-    <a className="lp-gallery" href={galleryPublicUrl(gallery)} target="_blank" rel="noreferrer">
+    <a
+      className="lp-gallery lp-rise"
+      style={{ '--d': `${index * 70}ms` } as CSSProperties}
+      href={galleryPublicUrl(gallery)}
+      target="_blank"
+      rel="noreferrer"
+      onPointerMove={trackPointer}
+    >
       <div className="lp-gallery-who">
         <span className="lp-avatar">
           {gallery.author?.avatar ? <img src={gallery.author.avatar} alt="" loading="lazy" /> : initial}
@@ -64,15 +82,13 @@ export function Discover({ copy }: { copy: Translations['discover'] }) {
   return (
     <section className="lp-feat" id="visit">
       <div className="lp-in">
-        <div className="lp-feat-head">
-          <h2>{copy.title}</h2>
-        </div>
+        <FeatureHead title={[copy.title]} />
         {status ? (
           <p className="lp-status">{status}</p>
         ) : (
-          <div className="lp-rail">
-            {galleries.map(gallery => (
-              <GalleryCard key={gallery.id} gallery={gallery} photosLabel={copy.photos} />
+          <div className="lp-rail" data-reveal>
+            {galleries.map((gallery, index) => (
+              <GalleryCard key={gallery.id} gallery={gallery} photosLabel={copy.photos} index={index} />
             ))}
           </div>
         )}

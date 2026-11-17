@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import type { Translations } from '../i18n'
 import { APP_STORE_URL, DOCKER_COMMAND, GITHUB_URL, SELF_HOST_URL } from '../lib/links'
+import { FeatureHead } from './Features'
 import { IconApple, IconCopy } from './icons'
 
 const PROVIDERS = ['S3', 'Backblaze B2', 'GitHub', 'Eagle', 'Local']
@@ -39,16 +40,9 @@ export function Ways({ copy }: { copy: Translations['ways'] }) {
   return (
     <section className="lp-feat">
       <div className="lp-in">
-        <div className="lp-feat-head">
-          <h2>
-            {copy.title[0]}
-            <br />
-            {copy.title[1]}
-          </h2>
-          <p>{copy.body}</p>
-        </div>
-        <div className="lp-ways">
-          <div className="lp-way lp-way-phone">
+        <FeatureHead title={copy.title} body={copy.body} />
+        <div className="lp-ways" data-reveal>
+          <div className="lp-way lp-way-phone lp-rise">
             <h3>{copy.iphone.title}</h3>
             <p>{copy.iphone.body}</p>
             <div className="lp-way-act">
@@ -57,7 +51,7 @@ export function Ways({ copy }: { copy: Translations['ways'] }) {
                 App Store
               </a>
             </div>
-            <div className="lp-phone">
+            <div className="lp-phone" data-scroll data-scroll-start="1" data-scroll-end="0.4">
               <div className="lp-phone-screen">
                 <img
                   src="/landing/ios-exhibition.jpg"
@@ -69,7 +63,7 @@ export function Ways({ copy }: { copy: Translations['ways'] }) {
               </div>
             </div>
           </div>
-          <div className="lp-way">
+          <div className="lp-way lp-rise" style={{ '--d': '100ms' } as React.CSSProperties}>
             <h3>{copy.selfHost.title}</h3>
             <p>{copy.selfHost.body}</p>
             <CopyCommand copy={copy.selfHost} />
@@ -79,12 +73,7 @@ export function Ways({ copy }: { copy: Translations['ways'] }) {
               ))}
             </div>
             <div className="lp-way-act">
-              <a
-                className="lp-more"
-                href={SELF_HOST_URL}
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a className="lp-more" href={SELF_HOST_URL} target="_blank" rel="noreferrer">
                 {`${copy.selfHost.guide} →`}
               </a>
               <a className="lp-more" href={GITHUB_URL} target="_blank" rel="noreferrer">

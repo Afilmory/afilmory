@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import type { Translations } from '../i18n'
 import { useCreateSpace } from '../lib/create-space'
+import { Mark } from './Mark'
 
 interface OpenSectionProps {
   copy: Translations['open']
@@ -21,13 +22,15 @@ export function OpenSection({ copy, createCopy }: OpenSectionProps) {
   return (
     <section className="lp-open" id="open">
       <div className="lp-floor lp-floor-top" />
-      <div className="lp-in lp-open-row">
-        <h2>
-          {copy.title[0]}
-          <br />
-          {copy.title[1]}
-        </h2>
-        <div className="lp-open-form">
+      <div className="lp-in lp-open-row" data-reveal>
+        <div>
+          <Mark className="lp-mark-open" />
+          <h2>
+            <span className="lp-line">{copy.title[0]}</span>
+            <span className="lp-line">{copy.title[1]}</span>
+          </h2>
+        </div>
+        <div className="lp-open-form lp-rise" style={{ '--d': '240ms' } as React.CSSProperties}>
           <form className="lp-claim" onSubmit={onSubmit}>
             <label>
               <input

@@ -3,11 +3,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Locale } from '../i18n'
 import { otherLocale, resolveLocale, t as translate } from '../i18n'
 import { APP_STORE_URL, DOCS_URL, GITHUB_URL, SELF_HOST_URL } from '../lib/links'
+import { useLandingMotion } from '../lib/motion'
 import { CreateSpaceModal } from './CreateSpaceModal'
 import { Discover } from './Discover'
 import { CanvasFeature, WallFeature } from './Features'
 import { Hero } from './Hero'
 import { LoginSpaceModal } from './LoginSpaceModal'
+import { Mark } from './Mark'
 import { OpenSection } from './OpenSection'
 import { Story } from './Story'
 import { Ways } from './Ways'
@@ -22,6 +24,7 @@ export function LandingApp({ initialLocale }: LandingAppProps) {
   const [loginOpen, setLoginOpen] = useState(false)
   const copy = useMemo(() => translate(locale), [locale])
   const home = locale === 'en' ? '/en/' : '/'
+  useLandingMotion()
 
   useEffect(() => {
     document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en'
@@ -43,8 +46,16 @@ export function LandingApp({ initialLocale }: LandingAppProps) {
   return (
     <>
       <header className="lp-nav">
+        <div className="lp-nav-blur" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
+        </div>
         <div className="lp-in">
-          <a className="lp-mark" href={home}>
+          <a className="lp-mark lp-brand" href={home}>
+            <Mark className="lp-mark-nav" />
             Afilmory
           </a>
           <button type="button" className="lp-nav-link lp-hide-sm" onClick={switchLocale}>
@@ -72,7 +83,10 @@ export function LandingApp({ initialLocale }: LandingAppProps) {
       <footer className="lp-footer">
         <div className="lp-in">
           <div>
-            <span className="lp-mark">Afilmory</span>
+            <span className="lp-mark lp-brand">
+              <Mark className="lp-mark-nav" />
+              Afilmory
+            </span>
             <span>afilmory.art</span>
           </div>
           <nav aria-label="Footer">

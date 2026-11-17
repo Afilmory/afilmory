@@ -36,6 +36,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site)
       rel="stylesheet"
     />
     <link rel="preload" as="image" href="/landing/viewer.jpg" media="(min-width: 721px)" />
+    <script is:inline>
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.dataset.motion = 'on'
+    </script>
     <title>{title}</title>
   </head>
   <body>

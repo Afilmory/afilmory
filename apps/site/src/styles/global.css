@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './landing.css';
+@import './motion.css';
 
 @theme {
   --font-sans: -apple-system, 'SF Pro Text', 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
