@@ -54,7 +54,7 @@ export function Ways({ copy }: { copy: Translations['ways'] }) {
             <div className="lp-phone" data-scroll data-scroll-start="1" data-scroll-end="0.4">
               <div className="lp-phone-screen">
                 <img
-                  src="/landing/ios-exhibition.jpg"
+                  src="/landing/ios-exhibition.webp"
                   alt={copy.iphone.shotAlt}
                   width={600}
                   height={1304}
