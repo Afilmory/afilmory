@@ -30,16 +30,12 @@
   content: ''; position: absolute; inset: 0; opacity: var(--nav-p, 1);
   background: linear-gradient(to bottom, rgb(15 16 17 / 0.62), rgb(15 16 17 / 0.28) 55%, transparent);
 }
-.lp-nav-blur i {
-  position: absolute; inset: 0;
-  backdrop-filter: blur(calc(var(--b) * var(--nav-p, 1)));
-  -webkit-backdrop-filter: blur(calc(var(--b) * var(--nav-p, 1)));
-}
-.lp-nav-blur i:nth-child(1) { --b: 1px; mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%); }
-.lp-nav-blur i:nth-child(2) { --b: 2px; mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 84%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 84%); }
-.lp-nav-blur i:nth-child(3) { --b: 4px; mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 68%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 68%); }
-.lp-nav-blur i:nth-child(4) { --b: 8px; mask-image: linear-gradient(to bottom, #000 0%, #000 28%, transparent 52%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 28%, transparent 52%); }
-.lp-nav-blur i:nth-child(5) { --b: 16px; mask-image: linear-gradient(to bottom, #000 0%, #000 14%, transparent 36%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 14%, transparent 36%); }
+.lp-nav-blur i { position: absolute; inset: 0; opacity: var(--nav-p, 1); }
+.lp-nav-blur i:nth-child(1) { -webkit-backdrop-filter: blur(1px); backdrop-filter: blur(1px); mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%); }
+.lp-nav-blur i:nth-child(2) { -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 84%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 84%); }
+.lp-nav-blur i:nth-child(3) { -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 68%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 68%); }
+.lp-nav-blur i:nth-child(4) { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); mask-image: linear-gradient(to bottom, #000 0%, #000 28%, transparent 52%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 28%, transparent 52%); }
+.lp-nav-blur i:nth-child(5) { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); mask-image: linear-gradient(to bottom, #000 0%, #000 14%, transparent 36%); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 14%, transparent 36%); }
 .lp-nav .lp-in {
   height: 100%; display: flex; align-items: center; gap: 24px;
   padding: 0 var(--lp-pad); max-width: calc(var(--lp-max) + var(--lp-pad) * 2);
