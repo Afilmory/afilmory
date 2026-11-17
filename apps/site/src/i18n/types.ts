@@ -1,85 +1,61 @@
 export type Locale = 'zh' | 'en'
 
+interface TextItem {
+  title: string
+  body: string
+}
+
 export interface Translations {
   meta: {
     title: string
     description: string
   }
   nav: {
-    features?: string
-    demo: string
-    discover: string
-    docs: string
-    github: string
     login: string
     create: string
     lang: string
   }
   hero: {
-    eyebrow: string
-    title: string
+    title: [string, string]
     subtitle: string
-    cta: string
-    login: string
-    secondary: string
-    note: string
-    appStoreEyebrow: string
-    appStore: string
+    newsLabel: string
+    news: string
+    shotAlt: string
   }
-  bento: {
-    eyebrow: string
+  statement: {
+    lead: string
+    rest: string
+  }
+  principles: [TextItem, TextItem, TextItem]
+  wall: {
+    title: [string, string]
+    body: string
+    shotAlt: string
+    details: [TextItem, TextItem, TextItem, TextItem]
+  }
+  canvas: {
+    title: [string, string]
+    body: string
+    shotAlt: string
+  }
+  discover: {
     title: string
-    subtitle: string
-    exif: {
-      badge: string
-      title: string
-      description: string
-    }
-    color: {
-      badge: string
-      title: string
-      description: string
-    }
-    live: {
-      badge: string
-      title: string
-      description: string
-    }
-    map: {
-      badge: string
-      title: string
-      description: string
-    }
-    arch: {
-      badge: string
-      title: string
-      description: string
-    }
+    photos: string
+    loading: string
+    empty: string
+    error: string
   }
-  demo: {
-    label: string
-    chapters: {
-      grid: { index: string, title: string, body: string }
-      lightbox: { index: string, title: string, body: string }
-      create: { index: string, title: string, body: string, cta: string }
-    }
-    exif: {
-      headerTitle: string
-      basicInfo: string
-      captureParams: string
-      deviceInfo: string
-      filename: string
-      format: string
-      dimensions: string
-      size: string
-      pixels: string
-      colorSpace: string
-      dateTaken: string
-      camera: string
-      lens: string
-      focalActual: string
-      focalEquiv: string
-    }
+  ways: {
+    title: [string, string]
+    body: string
+    iphone: TextItem & { shotAlt: string }
+    selfHost: TextItem & { copy: string, copied: string, copyLabel: string, guide: string }
+  }
+  open: {
+    title: [string, string]
+    button: string
+    pending: string
+    fine: string
   }
   createModal: {
     label: string
@@ -119,15 +95,6 @@ export interface Translations {
       invalid: string
     }
   }
-  discover: {
-    label: string
-    title: string
-    description: string
-    photos: string
-    loading: string
-    empty: string
-    error: string
-  }
   footer: {
     terms: string
     privacy: string
@@ -135,6 +102,5 @@ export interface Translations {
     github: string
     selfHost: string
     appStore: string
-    copy: string
   }
 }

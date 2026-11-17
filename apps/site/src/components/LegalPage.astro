@@ -22,8 +22,8 @@ const langSwitchLabel = isEn ? '中文' : 'English'
 
 <main class="mx-auto min-h-screen max-w-3xl px-6 py-12 sm:px-8 sm:py-20">
   <nav class="mb-16 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">
-    <a href={homeHref} class="font-serif text-2xl tracking-tight">Afilmory</a>
-    <div class="flex items-center gap-5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+    <a href={homeHref} class="text-lg font-semibold tracking-tight">Afilmory</a>
+    <div class="flex items-center gap-5 text-sm text-muted">
       <a class="transition-colors hover:text-fg" href={supportHref}>{isEn ? 'Support' : '支持'}</a>
       <a class="transition-colors hover:text-fg" href={privacyHref}>{isEn ? 'Privacy' : '隐私'}</a>
       <a class="transition-colors hover:text-fg" href={termsHref}>{isEn ? 'Terms' : '条款'}</a>
@@ -36,10 +36,10 @@ const langSwitchLabel = isEn ? '中文' : 'English'
   </nav>
 
   <header class="mb-14 border-b border-line pb-12">
-    <p class="mb-5 font-mono text-[11px] uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
-    <h1 class="font-serif text-5xl leading-none sm:text-6xl">{title}</h1>
+    <p class="mb-4 text-sm text-dim">{eyebrow}</p>
+    <h1 class="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{title}</h1>
     <p class="mt-6 max-w-2xl text-base leading-7 text-muted">{description}</p>
-    <p class="mt-5 font-mono text-[11px] uppercase tracking-[0.14em] text-dim">
+    <p class="mt-5 text-sm text-dim">
       {lastUpdatedLabel}{updatedAt}
     </p>
   </header>
@@ -48,7 +48,7 @@ const langSwitchLabel = isEn ? '中文' : 'English'
     <slot />
   </article>
 
-  <footer class="mt-20 flex flex-wrap justify-between gap-4 border-t border-line pt-6 font-mono text-[11px] uppercase tracking-[0.14em] text-dim">
+  <footer class="mt-20 flex flex-wrap justify-between gap-4 border-t border-line pt-6 text-sm text-dim">
     <span>© 2026 Afilmory</span>
     <a class="transition-colors hover:text-fg" href={homeHref}>{backHomeLabel}</a>
   </footer>
@@ -62,9 +62,9 @@ const langSwitchLabel = isEn ? '中文' : 'English'
   .legal-copy :global(h2) {
     margin: 0 0 1rem;
     color: var(--color-fg);
-    font-family: var(--font-serif);
-    font-size: clamp(1.8rem, 4vw, 2.25rem);
-    font-weight: 400;
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
     line-height: 1.15;
   }
 

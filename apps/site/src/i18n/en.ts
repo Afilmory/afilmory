@@ -2,104 +2,86 @@ import type { Translations } from './types'
 
 export const en: Translations = {
   meta: {
-    title: 'Afilmory — Give your photos a real exhibition',
+    title: 'Afilmory — One photo, one exhibition',
     description:
-      'Turn photographs into an online exhibition instead of burying them in cloud storage. Your space, careful viewing, live in minutes.',
+      'Afilmory reads the EXIF and dominant colour of every photo and hangs your work as an online exhibition people can take their time in. On the web, on iPhone and on your own server, it is the same gallery.',
   },
   nav: {
-    features: 'Features',
-    demo: 'Exhibition',
-    discover: 'Galleries',
-    docs: 'Docs',
-    github: 'GitHub',
     login: 'Log in',
-    create: 'Create space',
+    create: 'Open a gallery',
     lang: '中文',
   },
   hero: {
-    eyebrow: 'A Film + Memory',
-    title: 'Photos should not live in a drive.',
+    title: ['One photo,', 'one exhibition.'],
     subtitle:
-      'They deserve an exhibition floor. Afilmory gives you a space of your own: hang work in your order, open a frame to read EXIF, share a link that feels like a show.',
-    cta: 'Create my space',
-    login: 'Log in',
-    secondary: 'Explore exhibition →',
-    note: 'SaaS live in minutes · self-host if you prefer',
-    appStoreEyebrow: 'Download on the',
-    appStore: 'App Store',
+      'Afilmory reads the EXIF and dominant colour of every photo and hangs your work as an online exhibition people can take their time in. On the web, on iPhone and on your own server, it is the same gallery.',
+    newsLabel: 'New',
+    news: 'Wander wall',
+    shotAlt: 'The Afilmory photo viewer: the photo, the Photo Inspector panel and the thumbnail strip',
   },
-  bento: {
-    eyebrow: 'Crafted for Photographers',
-    title: 'Precision in every detail.',
-    subtitle:
-      'From color spaces and sensor ratios to lossless EXIF inspection and interactive map journeys, Afilmory treats digital photography with real respect.',
-    exif: {
-      badge: 'Sensor & Optics',
-      title: 'Geek-grade EXIF Inspector',
-      description:
-        'Read full exposure triangles, sensor models, focal lengths, and lenses directly from image headers with zero compression.',
+  statement: {
+    lead: 'Photos should not be buried in a cloud drive. ',
+    rest: 'Afilmory reads the settings, colours and places out of your originals and arranges them into a gallery you can share and take your time in. Hosted, self-hosted or on iPhone, it is the same gallery.',
+  },
+  principles: [
+    {
+      title: 'Reads the original',
+      body: 'Camera, lens, exposure, colour space and histogram, read straight from the original file, never recompressed.',
     },
-    color: {
-      badge: 'Dynamic Aesthetics',
-      title: 'Adaptive Ambience',
-      description:
-        'Background radiance and translucent glass chrome dynamically harmonize with the dominant tones of the active photograph.',
+    {
+      title: 'Follows the photo',
+      body: 'Open a photo and the interface takes its accent from it, tuned to stay readable.',
     },
-    live: {
-      badge: 'Time & Motion',
-      title: 'Live Photos & Parallax',
-      description:
-        'Long press or hover to play original Live Photos with synchronized audio and fluid motion gestures.',
+    {
+      title: 'One gallery, three doors',
+      body: 'The web, the iPhone app and your own server share the same exhibition and data.',
     },
-    map: {
-      badge: 'Geography & Travel',
-      title: 'MapLibre Footprints',
-      description:
-        'Trace journeys across the world with vector tile clusters, GPS pins, and chronological location tracks.',
+  ],
+  wall: {
+    title: ['Hang it', 'on the wall'],
+    body: 'Your work is laid out in its true proportions as a masonry wall, or as a list or a canvas. Filter by tag, camera, lens, rating and date; open a photo and the Photo Inspector lays out its settings, tones and histogram.',
+    shotAlt: 'The Afilmory gallery home: photos in a masonry wall at their original aspect ratios',
+    details: [
+      { title: 'Live Photo', body: 'Hover or hold to play motion and sound' },
+      { title: 'Map', body: 'Geotagged photos gather by place' },
+      { title: 'Progressive originals', body: 'Thumbnail first, original loads behind it' },
+      { title: 'Your own domain', body: 'your-name.afilmory.art, or your own' },
+    ],
+  },
+  canvas: {
+    title: ['Wander', 'wall'],
+    body: 'The whole gallery on one infinite canvas you can drag around. Rearrange it by month, camera, tag or colour; hold a photo and similar ones gather around it; zoom out past 20% and the wall rolls into a film strip.',
+    shotAlt: 'The wander wall: photos on an infinite canvas with Wander, Month, Camera, Tag and Color arrangements',
+  },
+  discover: {
+    title: 'See how others exhibit',
+    photos: 'photos',
+    loading: 'Loading galleries…',
+    empty: 'No featured galleries yet.',
+    error: 'Could not load galleries.',
+  },
+  ways: {
+    title: ['Wherever you develop,', 'it is the same gallery'],
+    body: 'Upload straight from your iPhone, or keep your photos in your own storage. Afilmory generates the thumbnails, blur placeholders and EXIF index.',
+    iphone: {
+      title: 'iPhone',
+      body: 'Upload and curate your gallery, and visit others.',
+      shotAlt: 'The exhibition screen of the Afilmory iPhone app',
     },
-    arch: {
-      badge: 'Freedom of Choice',
-      title: 'SaaS & Self-Hosting',
-      description: 'Host on our zero-config cloud or deploy your own node with Docker, S3, MinIO, and Cloudflare.',
+    selfHost: {
+      title: 'Self-host',
+      body: 'Open source. One command and your photos stay in your own storage.',
+      copy: 'Copy',
+      copied: 'Copied',
+      copyLabel: 'Copy command',
+      guide: 'Self-hosting guide',
     },
   },
-  demo: {
-    label: 'Live exhibition',
-    chapters: {
-      grid: {
-        index: '01',
-        title: 'Hung on the wall first.',
-        body: 'Not a folder of thumbnails. Work laid out by proportion — scrolling is walking the room. Click a frame to look closer.',
-      },
-      lightbox: {
-        index: '02',
-        title: 'Look carefully. Specs stay.',
-        body: 'Large image, camera, lens, aperture, shutter, ISO beside it — how photographers look, not another social swipe.',
-      },
-      create: {
-        index: '03',
-        title: 'Your gallery next.',
-        body: 'Pick a short name for your URL. You decide the order. Visitors open an exhibition, not a dump.',
-        cta: 'Create my space',
-      },
-    },
-    exif: {
-      headerTitle: 'Photo Inspector',
-      basicInfo: 'Basic Information',
-      captureParams: 'Capture Parameters',
-      deviceInfo: 'Device Information',
-      filename: 'Filename',
-      format: 'Format',
-      dimensions: 'Dimensions',
-      size: 'File Size',
-      pixels: 'Pixels',
-      colorSpace: 'Color Space',
-      dateTaken: 'Capture Time',
-      camera: 'Camera',
-      lens: 'Lens',
-      focalActual: 'Focal Length',
-      focalEquiv: '35mm Equivalent',
-    },
+  open: {
+    title: ['Give your photos', 'an exhibition.'],
+    button: 'Open a gallery',
+    pending: 'Checking…',
+    fine: 'Free for 500 photos / 5 GB · bring your own domain later',
   },
   createModal: {
     label: 'Create space',
@@ -143,22 +125,12 @@ export const en: Translations = {
       invalid: 'Only lowercase letters, numbers, and hyphens are allowed',
     },
   },
-  discover: {
-    label: 'Community galleries',
-    title: 'Spaces in the wild',
-    description: 'Explore live exhibitions curated by photographers using Afilmory.',
-    photos: 'photos',
-    loading: 'Loading galleries...',
-    empty: 'No featured galleries yet.',
-    error: 'Failed to load galleries.',
-  },
   footer: {
-    terms: 'Terms of Service',
-    privacy: 'Privacy Policy',
-    docs: 'Documentation',
+    terms: 'Terms',
+    privacy: 'Privacy',
+    docs: 'Docs',
     github: 'GitHub',
-    selfHost: 'Self-Host Guide',
+    selfHost: 'Self-hosting',
     appStore: 'App Store',
-    copy: 'Give your photos a real exhibition.',
   },
 }

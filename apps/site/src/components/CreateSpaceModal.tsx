@@ -1,9 +1,10 @@
 import type { FormEvent } from 'react'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import type { Locale } from '../i18n'
 import { t as translate } from '../i18n'
-import { checkTenantSlug } from '../lib/api'
+import { useCreateSpace } from '../lib/create-space'
+import { SpaceModal } from './SpaceModal'
 
 export interface CreateSpaceModalProps {
   open: boolean
@@ -13,129 +14,43 @@ export interface CreateSpaceModalProps {
 
 export function CreateSpaceModal({ open, onClose, locale }: CreateSpaceModalProps) {
   const copy = translate(locale).createModal
-  const titleId = useId()
-  const [spaceName, setSpaceName] = useState('')
-  const [isChecking, setIsChecking] = useState(false)
-  const [error, setError] = useState('')
+  const [name, setName] = useState('')
+  const { submit, pending, error, reset } = useCreateSpace(copy)
 
   useEffect(() => {
-    if (!open) {
-      return
+    if (open) {
+      setName('')
+      reset()
     }
-    setSpaceName('')
-    setError('')
-    setIsChecking(false)
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, reset])
 
-  if (!open) {
-    return null
-  }
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    const slug = spaceName.trim().toLowerCase()
-
-    if (!slug) {
-      setError(copy.validations.required)
-      return
-    }
-    if (!/^[a-z0-9-]+$/.test(slug)) {
-      setError(copy.validations.invalid)
-      return
-    }
-    if (slug.length < 3) {
-      setError(copy.validations.minLength)
-      return
-    }
-
-    setError('')
-    setIsChecking(true)
-    try {
-      const payload = await checkTenantSlug(slug)
-      if (!payload.ok) {
-        setError(payload.message ?? copy.errors.generic)
-        return
-      }
-      const nextUrl = payload.next_url ?? payload.nextUrl ?? payload.redirect_url ?? payload.redirectUrl ?? null
-      if (!nextUrl) {
-        setError(copy.errors.missingRedirect)
-        return
-      }
-      window.location.href = nextUrl
-    }
-    catch {
-      setError(copy.errors.network)
-    }
-    finally {
-      setIsChecking(false)
-    }
+  const onSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    void submit(name)
   }
 
   return (
-    <div className="modal-root fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
-        aria-label={copy.close}
-        onClick={onClose}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="relative w-full max-w-lg border border-line bg-card p-8 shadow-2xl"
-      >
-        <p className="font-mono text-xs tracking-widest uppercase text-accent">{copy.label}</p>
-        <h2 id={titleId} className="mt-3 font-serif text-3xl text-fg">
-          {copy.title}
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-muted">{copy.description}</p>
-
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-          <label className="block">
-            <span className="text-xs tracking-wide text-dim">{copy.inputLabel}</span>
-            <div className="mt-2 flex items-center border border-line bg-page focus-within:border-accent">
-              <input
-                value={spaceName}
-                onChange={e => setSpaceName(e.target.value.toLowerCase())}
-                autoFocus
-                autoComplete="off"
-                spellCheck={false}
-                placeholder={copy.placeholder}
-                className="min-w-0 flex-1 bg-transparent px-3 py-3 font-mono text-sm outline-none"
-              />
-              <span className="shrink-0 pr-3 font-mono text-xs text-dim">{copy.domainSuffix}</span>
-            </div>
-          </label>
-
-          {error ? <p className="text-sm text-red-400">{error}</p> : null}
-
-          <div className="border border-line bg-page-60 px-4 py-3">
-            <p className="text-xs tracking-wide text-dim">{copy.tipsTitle}</p>
-            <ul className="mt-2 space-y-1 text-xs text-muted">
-              {copy.tips.map(tip => (
-                <li key={tip}>{`· ${tip}`}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="flex flex-wrap gap-3 pt-1">
-            <button type="submit" className="btn" disabled={isChecking}>
-              {isChecking ? copy.buttonPending : copy.button}
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>
-              {copy.close}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <SpaceModal
+      open={open}
+      onClose={onClose}
+      title={copy.title}
+      description={copy.description}
+      closeLabel={copy.close}
+      inputLabel={copy.inputLabel}
+      placeholder={copy.placeholder}
+      domainSuffix={copy.domainSuffix}
+      value={name}
+      onValueChange={setName}
+      onSubmit={onSubmit}
+      submitLabel={pending ? copy.buttonPending : copy.button}
+      pending={pending}
+      error={error}
+    >
+      <ul className="lp-modal-tips">
+        {copy.tips.map(tip => (
+          <li key={tip}>{tip}</li>
+        ))}
+      </ul>
+    </SpaceModal>
   )
 }
