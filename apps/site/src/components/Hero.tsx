@@ -10,7 +10,7 @@ export function Hero({ copy }: { copy: Translations['hero'] }) {
             <span className="lp-line">{copy.title[0]}</span>
             <span className="lp-line">{copy.title[1]}</span>
           </h1>
-          <div className="lp-hero-mark" data-scroll data-scroll-start="0.35" data-scroll-end="-0.2">
+          <div className="lp-hero-mark" data-scroll data-scroll-range="420">
             <Mark className="lp-mark-glass" />
           </div>
         </div>
@@ -22,7 +22,7 @@ export function Hero({ copy }: { copy: Translations['hero'] }) {
             <span className="lp-arrow">→</span>
           </a>
         </div>
-        <div className="lp-stage" data-scroll data-scroll-start="1" data-scroll-end="0.18">
+        <div className="lp-stage" data-scroll data-scroll-range="520">
           <div className="lp-window">
             <picture>
               <source media="(max-width: 720px)" srcSet="/landing/viewer-m.jpg" />

@@ -3,6 +3,10 @@ import { useEffect } from 'react'
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 function progressOf(el: HTMLElement, viewport: number) {
+  const range = Number(el.dataset.scrollRange)
+  if (range) {
+    return clamp01(window.scrollY / range)
+  }
   const rect = el.getBoundingClientRect()
   const start = Number(el.dataset.scrollStart ?? 1)
   const end = Number(el.dataset.scrollEnd ?? 0.25)
