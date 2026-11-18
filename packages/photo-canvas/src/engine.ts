@@ -4,7 +4,7 @@ import { CanvasCore } from './core'
 import { attachInput } from './input'
 import { Renderer } from './renderer'
 import { TextureScheduler } from './textures/scheduler'
-import { pickTier } from './textures/tiers'
+import { minScreenPx, pickTier } from './textures/tiers'
 import { loadThumbnail } from './thumbnail-loader'
 import type { Arrangement, CanvasPhoto, Point, Rect } from './types'
 
@@ -264,20 +264,23 @@ export class PhotoCanvasEngine {
     const { camera, viewport, dpr } = frame
     const halfWidth = (viewport.width / 2 + WANTED_MARGIN_PX) / camera.scale
     const halfHeight = (viewport.height / 2 + WANTED_MARGIN_PX) / camera.scale
-    const wanted = new Map<string, { id: string, tier: number, distance: number }>()
-    for (const instance of frame.instances) {
+    const inView = frame.instances.filter((instance) => {
       const centerX = instance.x + instance.w / 2
       const centerY = instance.y + instance.h / 2
-      if (
-        Math.abs(centerX - camera.x) > halfWidth + instance.w / 2
-        || Math.abs(centerY - camera.y) > halfHeight + instance.h / 2
-      ) {
-        continue
-      }
-      const tier = pickTier(Math.max(instance.w, instance.h) * camera.scale, dpr)
+      return (
+        Math.abs(centerX - camera.x) <= halfWidth + instance.w / 2
+        && Math.abs(centerY - camera.y) <= halfHeight + instance.h / 2
+      )
+    })
+    const minPx = minScreenPx(inView.length)
+    const wanted = new Map<string, { id: string, tier: number, distance: number }>()
+    for (const instance of inView) {
+      const tier = pickTier(Math.max(instance.w, instance.h) * camera.scale, dpr, minPx)
       if (tier === 0) {
         continue
       }
+      const centerX = instance.x + instance.w / 2
+      const centerY = instance.y + instance.h / 2
       const distance = Math.hypot(centerX - camera.x, centerY - camera.y)
       const existing = wanted.get(instance.id)
       if (!existing || distance < existing.distance) {

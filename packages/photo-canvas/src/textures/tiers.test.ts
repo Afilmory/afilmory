@@ -2,11 +2,22 @@ import assert from 'node:assert/strict'
 
 import { it } from 'vitest'
 
-import { maxScale, pickTier, textureBytes } from './tiers'
+import { maxScale, minScreenPx, pickTier, textureBytes } from './tiers'
 
 it('pickTier stays on the placeholder below 48 CSS pixels', () => {
   assert.equal(pickTier(47, 2), 0)
   assert.equal(pickTier(10, 3), 0)
+})
+
+it('minScreenPx drops the threshold while few photos are in view', () => {
+  assert.equal(minScreenPx(1), 0)
+  assert.equal(minScreenPx(600), 0)
+  assert.equal(minScreenPx(601), 48)
+})
+
+it('pickTier loads the smallest tier for tiny photos once the threshold is dropped', () => {
+  assert.equal(pickTier(10, 2, 0), 128)
+  assert.equal(pickTier(47, 3, 0), 256)
 })
 
 it('pickTier picks the smallest tier that covers the device pixels', () => {
