@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 type Section = {
   title: string
-  rows: { label: string; value: string }[]
+  rows: { label: string, value: string }[]
 }
 
 type PhotoExifDetailsModalProps = {
@@ -125,7 +125,9 @@ const candidateKeys = (key: string): string[] => {
 }
 
 const getExifValue = <T = unknown,>(exif: PickedExif | null, ...keys: string[]): T | null => {
-  if (!exif) return null
+  if (!exif) {
+    return null
+  }
   const record = exif
   for (const key of keys) {
     for (const candidate of candidateKeys(key)) {
@@ -141,7 +143,9 @@ const getExifValue = <T = unknown,>(exif: PickedExif | null, ...keys: string[]):
 }
 
 const parseNumber = (value: unknown): number | null => {
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
   if (typeof value === 'string' && value.trim()) {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : null
@@ -150,7 +154,9 @@ const parseNumber = (value: unknown): number | null => {
 }
 
 const formatFileSize = (size?: number | null): string | null => {
-  if (!size || size <= 0) return null
+  if (!size || size <= 0) {
+    return null
+  }
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   const exponent = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1)
   const value = size / 1024 ** exponent
@@ -159,7 +165,9 @@ const formatFileSize = (size?: number | null): string | null => {
 
 const formatShutterSpeed = (exif: PickedExif | null): string | null => {
   const source = getExifValue<number | string>(exif, 'ExposureTime', 'ShutterSpeedValue', 'ShutterSpeed')
-  if (!source) return null
+  if (!source) {
+    return null
+  }
   if (typeof source === 'number') {
     if (source >= 1) {
       return `${source.toFixed(1).replace(/\\.0$/, '')}s`
@@ -173,7 +181,9 @@ const formatShutterSpeed = (exif: PickedExif | null): string | null => {
 
 const formatAperture = (exif: PickedExif | null): string | null => {
   const value = getExifValue<number | string>(exif, 'FNumber', 'Aperture', 'ApertureValue', 'MaxApertureValue')
-  if (value === null) return null
+  if (value === null) {
+    return null
+  }
   const numeric = parseNumber(value)
   if (numeric === null) {
     const stringified = String(value)
@@ -183,54 +193,75 @@ const formatAperture = (exif: PickedExif | null): string | null => {
 }
 
 const formatExposureCompensation = (value?: number | string | null): string | null => {
-  if (value === undefined || value === null || value === '') return null
+  if (value === undefined || value === null || value === '') {
+    return null
+  }
   const normalized = parseNumber(value)
-  if (normalized === null) return String(value)
+  if (normalized === null) {
+    return String(value)
+  }
   const formatted = normalized === 0 ? '0' : normalized.toFixed(1).replace(/\\.0$/, '')
   return `${normalized > 0 ? '+' : ''}${formatted} EV`
 }
 
 const formatFocalLength = (source?: string | number | null): string | null => {
-  if (!source && source !== 0) return null
+  if (!source && source !== 0) {
+    return null
+  }
   const value = String(source)
-  if (/mm$/i.test(value)) return value
+  if (/mm$/i.test(value)) {
+    return value
+  }
   const numeric = parseNumber(source)
   return numeric !== null ? `${numeric}mm` : value
 }
 
 const formatDateLabel = (value: string | null | undefined, locale: string): string | null => {
-  if (!value) return null
+  if (!value) {
+    return null
+  }
   const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return null
+  if (Number.isNaN(parsed.getTime())) {
+    return null
+  }
   try {
     return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(parsed)
-  } catch {
+  }
+  catch {
     return parsed.toLocaleString()
   }
 }
 
 const toReadableValue = (maybeValue: unknown): string | null => {
-  if (maybeValue === null || maybeValue === undefined) return null
-  if (Array.isArray(maybeValue)) return maybeValue.join(', ')
+  if (maybeValue === null || maybeValue === undefined) {
+    return null
+  }
+  if (Array.isArray(maybeValue)) {
+    return maybeValue.join(', ')
+  }
   return String(maybeValue)
 }
 
 const convertGPSToDecimal = (
   exif: PickedExif | null,
   t: (key: I18nKeys, options?: Record<string, unknown>) => string,
-): { latitude: string; longitude: string; altitude?: string } | null => {
+): { latitude: string, longitude: string, altitude?: string } | null => {
   const latitudeValue = getExifValue<number | string>(exif, 'GPSLatitude')
   const longitudeValue = getExifValue<number | string>(exif, 'GPSLongitude')
-  if (latitudeValue === null || longitudeValue === null) return null
+  if (latitudeValue === null || longitudeValue === null) {
+    return null
+  }
   const latitude = Number(latitudeValue)
   const longitude = Number(longitudeValue)
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null
+  }
   const latitudeRef = getExifValue<string>(exif, 'GPSLatitudeRef')
   const longitudeRef = getExifValue<string>(exif, 'GPSLongitudeRef')
   const altitudeRaw = getExifValue<number | string>(exif, 'GPSAltitude')
   const altitudeNumber = parseNumber(altitudeRaw)
-  const altitudeValue =
-    altitudeNumber !== null
+  const altitudeValue
+    = altitudeNumber !== null
       ? altitudeNumber < 0
         ? t(exifKeys.altitude.below, { value: Math.abs(altitudeNumber) })
         : t(exifKeys.altitude.above, { value: altitudeNumber })
@@ -245,10 +276,14 @@ const convertGPSToDecimal = (
 
 const getFormatLabel = (manifest: PhotoManifestItem): string | null => {
   const source = manifest.originalUrl || manifest.s3Key
-  if (!source) return null
+  if (!source) {
+    return null
+  }
   const cleanPath = source.split(/[?#]/)[0]
   const parts = cleanPath.split('.')
-  if (parts.length <= 1) return null
+  if (parts.length <= 1) {
+    return null
+  }
   return parts.pop()?.toUpperCase() ?? null
 }
 
@@ -272,7 +307,7 @@ const buildSections = (
     { label: t(exifKeys.rows.fileSize), value: formatFileSize(manifest.size) },
     { label: t(exifKeys.rows.fileFormat), value: getFormatLabel(manifest) },
     { label: t(exifKeys.rows.aspectRatio), value: manifest.aspectRatio ? manifest.aspectRatio.toFixed(2) : null },
-  ].filter((row) => row.value)
+  ].filter(row => row.value)
 
   if (basicRows.length > 0) {
     sections.push({ title: t(exifKeys.sections.basic), rows: basicRows as Section['rows'] })
@@ -326,7 +361,7 @@ const buildSections = (
     },
     { label: t(exifKeys.rows.scaleFactor), value: toReadableValue(getExifValue(exif, 'ScaleFactor35efl')) },
     { label: t(exifKeys.rows.sensor), value: toReadableValue(getExifValue(exif, 'SensingMethod')) },
-  ].filter((row) => row.value)
+  ].filter(row => row.value)
 
   if (captureRows.length > 0) {
     sections.push({ title: t(exifKeys.sections.capture), rows: captureRows as Section['rows'] })
@@ -350,7 +385,7 @@ const buildSections = (
       label: t(exifKeys.rows.timeOffset),
       value: toReadableValue(getExifValue(exif, 'OffsetTime', 'OffsetTimeOriginal')),
     },
-  ].filter((row) => row.value)
+  ].filter(row => row.value)
 
   if (metaRows.length > 0) {
     sections.push({ title: t(exifKeys.sections.metadata), rows: metaRows as Section['rows'] })
@@ -361,7 +396,7 @@ const buildSections = (
     { label: t(exifKeys.rows.latitude), value: gps?.latitude ?? null },
     { label: t(exifKeys.rows.longitude), value: gps?.longitude ?? null },
     { label: t(exifKeys.rows.altitude), value: gps?.altitude ?? null },
-  ].filter((row) => row.value)
+  ].filter(row => row.value)
 
   if (locationRows.length > 0) {
     sections.push({ title: t(exifKeys.sections.location), rows: locationRows as Section['rows'] })
@@ -373,11 +408,11 @@ const buildSections = (
       .map(([key, value]) => ({
         label: key
           .replaceAll(/([A-Z])/g, ' $1')
-          .replace(/^./, (char) => char.toUpperCase())
+          .replace(/^./, char => char.toUpperCase())
           .trim(),
         value: toReadableValue(value),
       }))
-      .filter((row) => row.value)
+      .filter(row => row.value)
 
     if (recipeRows.length > 0) {
       sections.push({ title: t(exifKeys.sections.fuji), rows: recipeRows as Section['rows'] })
@@ -408,11 +443,11 @@ export const PhotoExifDetailsModal: ModalComponent<PhotoExifDetailsModalProps> =
         {hasExif ? (
           <ScrollArea rootClassName="h-[60vh]" viewportClassName="px-6 pb-6">
             <div className="space-y-6">
-              {sections.map((section) => (
+              {sections.map(section => (
                 <section key={section.title}>
                   <h3 className="text-text-secondary text-sm font-semibold">{section.title}</h3>
                   <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 text-sm sm:grid-cols-2">
-                    {section.rows.map((row) => (
+                    {section.rows.map(row => (
                       <div key={`${section.title}-${row.label}`}>
                         <dt className="text-text-tertiary text-[11px] uppercase tracking-wider">{row.label}</dt>
                         <dd className="text-text mt-0.5 font-medium">{row.value}</dd>
