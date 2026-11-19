@@ -1,4 +1,6 @@
 /// <reference lib="webworker" />
+import { inspectAVIFGainMap, MAX_AVIF_GAIN_MAP_BYTES } from './avif-gainmap'
+import { decodeAVIFGainMap } from './avif-gainmap-decode'
 import type { GainMapMetadata } from './jpeg-gainmap'
 import { extractJPEGGainMap } from './jpeg-gainmap'
 import type {
@@ -15,6 +17,9 @@ import { OVERVIEW_SIZE, TILE_GUTTER } from './webgpu-tiles'
 declare const self: DedicatedWorkerGlobalScope
 let base: ImageBitmap | undefined
 let gain: ImageBitmap | undefined
+let gainIsData = false
+let gainFloat16 = false
+let gainBitDepth = 8
 
 function post(message: TextureWorkerMessage, transfer: Transferable[] = []) {
   self.postMessage(message, transfer)
@@ -46,7 +51,14 @@ async function orientGainMap(bitmap: ImageBitmap, orientation: number) {
   return canvas.transferToImageBitmap()
 }
 
-async function plane(bitmap: ImageBitmap, rect: Rect, level: number, ratioX = 1, ratioY = 1): Promise<BitmapPlane> {
+async function plane(
+  bitmap: ImageBitmap,
+  rect: Rect,
+  level: number,
+  ratioX = 1,
+  ratioY = 1,
+  dataPlane = false,
+): Promise<BitmapPlane> {
   const downsample = 2 ** level
   const x = rect[0] * ratioX
   const y = rect[1] * ratioY
@@ -61,8 +73,13 @@ async function plane(bitmap: ImageBitmap, rect: Rect, level: number, ratioX = 1,
     resizeWidth: Math.max(1, Math.ceil(sw / downsample)),
     resizeHeight: Math.max(1, Math.ceil(sh / downsample)),
     resizeQuality: 'high',
+    colorSpaceConversion: dataPlane ? 'none' : 'default',
   })
-  return { bitmap: resized, uv: [(x - sx) / sw, (y - sy) / sh, width / sw, height / sh] }
+  return {
+    bitmap: resized,
+    uv: [(x - sx) / sw, (y - sy) / sh, width / sw, height / sh],
+    float16: dataPlane && gainFloat16,
+  }
 }
 
 async function tilePixels(tile: TileRequest): Promise<TilePixels> {
@@ -72,7 +89,7 @@ async function tilePixels(tile: TileRequest): Promise<TilePixels> {
   const basePlane = await plane(base, tile.rect, tile.level)
   try {
     const gainPlane = gain
-      ? await plane(gain, tile.rect, tile.level, gain.width / base.width, gain.height / base.height)
+      ? await plane(gain, tile.rect, tile.level, gain.width / base.width, gain.height / base.height, gainIsData)
       : undefined
     return { ...tile, base: basePlane, gain: gainPlane }
   }
@@ -94,7 +111,13 @@ self.onmessage = async ({ data: request }: MessageEvent<TextureWorkerRequest>) =
       throw new Error(`Image fetch failed: ${response.status}`)
     }
     const blob = await response.blob()
-    const header = new Uint8Array(await blob.slice(0, 2).arrayBuffer())
+    base?.close()
+    gain?.close()
+    base = gain = undefined
+    gainIsData = false
+    gainFloat16 = false
+    gainBitDepth = 8
+    const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer())
     let extracted: ReturnType<typeof extractJPEGGainMap> = null
     let warning: string | undefined
     if (header[0] === 0xFF && header[1] === 0xD8) {
@@ -105,10 +128,46 @@ self.onmessage = async ({ data: request }: MessageEvent<TextureWorkerRequest>) =
         warning = `HDR metadata could not be decoded: ${String(error)}`
       }
     }
-    base = await createImageBitmap(extracted?.base ?? blob)
+    else if (blob.type === 'image/avif' || String.fromCharCode(...header.slice(4, 8)) === 'ftyp') {
+      if (blob.size > MAX_AVIF_GAIN_MAP_BYTES) {
+        warning = 'AVIF gain map unsupported: file exceeds extraction budget; using browser decoding'
+      }
+      else {
+        const result = inspectAVIFGainMap(await blob.arrayBuffer())
+        if (result.status === 'supported') {
+          extracted = result.image
+          gainIsData = true
+          gainBitDepth = result.image.gainBitDepth
+          // Even 8-bit YUV produces fractional RGB samples. Quantizing those
+          // to rgba8 amplifies color errors during exponential reconstruction.
+          // Mono 8-bit gain has no chroma conversion and is already lossless.
+          gainFloat16 = gainBitDepth > 8 || !result.image.gainMonochrome
+        }
+        else if (result.status !== 'none') {
+          warning = `AVIF gain map ${result.status}: ${result.reason}; using browser decoding`
+        }
+      }
+    }
+    try {
+      base = await createImageBitmap(extracted?.base ?? blob)
+    }
+    catch (error) {
+      if (!extracted) {
+        throw error
+      }
+      extracted = null
+      gainIsData = false
+      warning = `Extracted base could not be decoded: ${String(error)}; using browser decoding`
+      base = await createImageBitmap(blob)
+    }
     if (extracted) {
       try {
-        gain = await orientGainMap(await createImageBitmap(extracted.gain), extracted.orientation)
+        gain = await orientGainMap(
+          gainFloat16
+            ? await decodeAVIFGainMap(extracted.gain, gainBitDepth)
+            : await createImageBitmap(extracted.gain, { colorSpaceConversion: gainIsData ? 'none' : 'default' }),
+          extracted.orientation,
+        )
         if (Math.abs(gain.width / gain.height - base.width / base.height) > 0.01) {
           throw new Error('Gain map aspect ratio does not match photo')
         }
@@ -132,6 +191,7 @@ self.onmessage = async ({ data: request }: MessageEvent<TextureWorkerRequest>) =
           throw new Error(`Gain map fetch failed: ${response.status}`)
         }
         gain?.close()
+        gainIsData = false
         gain = await createImageBitmap(await response.blob())
         if (Math.abs(gain.width / gain.height - base.width / base.height) > 0.01) {
           throw new Error('Gain map aspect ratio does not match photo')

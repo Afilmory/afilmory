@@ -45,3 +45,5 @@ jobs:
       - name: Type check
         run: |
           pnpm type-check
+      - name: Viewer unit tests
+        run: pnpm --filter @afilmory/webgl-viewer test
