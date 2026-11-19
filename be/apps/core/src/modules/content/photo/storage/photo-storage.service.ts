@@ -44,12 +44,6 @@ export class PhotoStorageService {
     tenantId: string,
     overrides: ResolveOverrides = {},
   ): Promise<{ builderConfig: BuilderConfig, storageConfig: StorageConfig }> {
-    const activeProviderIdRaw = await this.settingService.get('builder.storage.activeProvider', { tenantId })
-    const activeProviderId
-      = typeof activeProviderIdRaw === 'string' && activeProviderIdRaw.trim().length > 0
-        ? activeProviderIdRaw.trim()
-        : null
-
     if (overrides.builderConfig) {
       const storageConfig = overrides.storageConfig ?? overrides.builderConfig.user?.storage
       if (!storageConfig) {
@@ -60,14 +54,12 @@ export class PhotoStorageService {
       return { builderConfig: overrides.builderConfig, storageConfig }
     }
 
-    if (activeProviderId === MANAGED_ACTIVE_PROVIDER_ID) {
-      const managedConfig = await this.tryResolveManagedStorageConfig(tenantId)
-      if (managedConfig) {
-        const builderConfig = await this.builderConfigService.getConfigForTenant(tenantId)
-        const userSettings = this.ensureUserSettings(builderConfig)
-        userSettings.storage = managedConfig
-        return { builderConfig, storageConfig: managedConfig }
-      }
+    if (await this.isManagedStorageActiveForTenant(tenantId)) {
+      const managedConfig = await this.resolveManagedStorageConfig(tenantId)
+      const builderConfig = await this.builderConfigService.getConfigForTenant(tenantId)
+      const userSettings = this.ensureUserSettings(builderConfig)
+      userSettings.storage = managedConfig
+      return { builderConfig, storageConfig: managedConfig }
     }
 
     const activeProvider = await this.settingService.getActiveStorageProvider({ tenantId })
@@ -85,16 +77,24 @@ export class PhotoStorageService {
     return { builderConfig, storageConfig }
   }
 
-  private async tryResolveManagedStorageConfig(tenantId: string): Promise<ManagedStorageConfig | null> {
-    const [plan, provider] = await Promise.all([
-      this.storagePlanService.getActivePlanSummaryForTenant(tenantId),
-      this.systemSettingService.getManagedStorageProvider(),
-    ])
-
-    if (!plan) {
-      return null
+  /**
+   * Whether the tenant's effective storage is Afilmory managed storage: managed is the active
+   * provider and the tenant holds an active storage plan. This is the branch
+   * `resolveConfigForTenant()` takes, exposed without resolving BYO credentials so callers that only
+   * need the storage mode (e.g. billing overview) never fail on an incomplete BYO configuration.
+   */
+  async isManagedStorageActiveForTenant(tenantId: string): Promise<boolean> {
+    const activeProviderIdRaw = await this.settingService.get('builder.storage.activeProvider', { tenantId })
+    const activeProviderId = typeof activeProviderIdRaw === 'string' ? activeProviderIdRaw.trim() : null
+    if (activeProviderId !== MANAGED_ACTIVE_PROVIDER_ID) {
+      return false
     }
+    const plan = await this.storagePlanService.getActivePlanSummaryForTenant(tenantId)
+    return plan !== null
+  }
 
+  private async resolveManagedStorageConfig(tenantId: string): Promise<ManagedStorageConfig> {
+    const provider = await this.systemSettingService.getManagedStorageProvider()
     if (!provider) {
       throw new BizException(ErrorCode.COMMON_BAD_REQUEST, {
         message: '托管存储尚未启用或未配置 Provider。',

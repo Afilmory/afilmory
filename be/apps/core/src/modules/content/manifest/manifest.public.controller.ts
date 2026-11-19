@@ -9,7 +9,7 @@ import { z } from 'zod'
 
 import { ManifestSyncService } from '../manifest-sync/manifest-sync.service'
 import { MANIFEST_REVISION_HEADER, revisionETag } from '../manifest-sync/manifest-sync.types'
-import { ManifestService } from './manifest.service'
+import { MANIFEST_SEARCH_MAX_LIMIT, ManifestService } from './manifest.service'
 
 const GetPhotosByIdsSchema = z.object({
   ids: z
@@ -23,7 +23,7 @@ const GetPhotosByIdsSchema = z.object({
     .refine(arr => arr.length > 0, 'ids must contain at least one id'),
 })
 
-const SearchPhotosSchema = z.object({
+export const SearchPhotosSchema = z.object({
   tags: z.array(z.string().min(1)).optional(),
   tagMode: z.enum(['union', 'intersection']).optional(),
   cameras: z.array(z.string().min(1)).optional(),
@@ -38,7 +38,7 @@ const SearchPhotosSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
   sort: z.enum(['asc', 'desc']).optional(),
-  limit: z.number().int().positive().max(100).optional(),
+  limit: z.number().int().positive().max(MANIFEST_SEARCH_MAX_LIMIT).optional(),
   offset: z.number().int().nonnegative().optional(),
 })
 
