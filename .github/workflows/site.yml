@@ -40,4 +40,4 @@ jobs:
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: pnpm dlx wrangler@4 pages deploy apps/site/dist --project-name=afilmory-site --branch=main
+        run: pnpm dlx --allow-build=esbuild --allow-build=workerd wrangler@4 pages deploy apps/site/dist --project-name=afilmory-site --branch=main
